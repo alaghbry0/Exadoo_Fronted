@@ -2,15 +2,3 @@
 @tailwind components;
 @tailwind utilities;
 
-/* إضافة بعض التعديلات المخصصة */
-body {
-  background-color: #f8f9fa;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-
-.animate-shimmer {
-  animation: shimmer 2.5s infinite linear;
-}
