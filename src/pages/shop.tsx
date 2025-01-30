@@ -4,20 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Lottie from 'lottie-react'
 import SubscriptionModal from '../components/SubscriptionModal'
 import { FiZap } from 'react-icons/fi'
+import Image from 'next/image'
+
+// استيراد الرسوم المتحركة
 import forexAnimation from '../animations/forex.json'
 import cryptoAnimation from '../animations/crypto.json'
 
+// تحديد نوع البيانات لخطة الاشتراك
 type SubscriptionPlan = {
   id: number
   name: string
   price: string
   description: string
   features: string[]
-  animation: any
+  animation: object
   color: string
 }
 
-const subscriptionPlans: SubscriptionPlan[] = [
+// ✅ بيانات خطط الاشتراك مع `as const` لجعلها ثابتة
+const subscriptionPlans: readonly SubscriptionPlan[] = [
   {
     id: 1,
     name: 'قناة الفوركس المميزة',
@@ -29,7 +34,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
       'تنبيهات دخول/خروج',
       'دعم مباشر من الخبراء'
     ],
-    animation: forexAnimation,
+    animation: forexAnimation as object, // ✅ إصلاح خطأ `any`
     color: '#2390f1'
   },
   {
@@ -43,10 +48,10 @@ const subscriptionPlans: SubscriptionPlan[] = [
       'إشعارات الصفقات الحصرية',
       'وصول مبكر للتقارير'
     ],
-    animation: cryptoAnimation,
+    animation: cryptoAnimation as object, // ✅ إصلاح خطأ `any`
     color: '#2390f1'
   }
-]
+] as const
 
 const Shop: React.FC = () => {
   // ✅ إصلاح الخطأ: تحديد نوع بيانات useState

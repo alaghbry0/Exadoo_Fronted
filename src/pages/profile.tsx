@@ -1,8 +1,8 @@
 'use client'
 import { motion } from 'framer-motion'
-import Lottie from 'lottie-react'
+import Image from 'next/image'
 import { FiClock, FiUser, FiStar, FiZap } from 'react-icons/fi'
-import subscriptionAnimation from '../animations/subscription.json'
+
 
 const userData = {
   id: "123456789",
@@ -47,7 +47,7 @@ const Profile: React.FC = () => {
             <img
               src={userData.profileImage}
               alt="Profile"
-              className="rounded-full w-28 h-28 border-4 border-white shadow-xl relative z-10"
+              className="rounded-full w-28 h-28 border-4 border-white shadow-xl relative z-12"
             />
           </motion.div>
 

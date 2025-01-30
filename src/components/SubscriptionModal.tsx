@@ -1,6 +1,5 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
-import Lottie from 'lottie-react'
 import { FiCheckCircle, FiX } from 'react-icons/fi'
 import usdtAnimation from '../animations/usdt.json';
 import starsAnimation from '../animations/stars.json';
