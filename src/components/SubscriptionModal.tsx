@@ -1,11 +1,24 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiCheckCircle, FiX } from 'react-icons/fi'
-import usdtAnimation from '../animations/usdt.json';
-import starsAnimation from '../animations/stars.json';
+import Lottie from 'lottie-react' // ✅ إضافة استيراد Lottie
+import usdtAnimation from '../animations/usdt.json'
+import starsAnimation from '../animations/stars.json'
 
 
-const SubscriptionModal = ({ plan, onClose }: { plan: any; onClose: () => void }) => {
+// ✅ تحديد نوع بيانات `SubscriptionPlan`
+type SubscriptionPlan = {
+  id: number
+  name: string
+  price: string
+  description: string
+  features: string[]
+  animation: object
+  color: string
+}
+
+// ✅ استبدال `any` بنوع `SubscriptionPlan | null`
+const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   if (!plan) return null
 
   return (
@@ -52,7 +65,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: any; onClose: () => void }
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-gray-500 text-right">المزايا المضمنة:</h3>
                 <ul className="space-y-2.5">
-                  {plan.features.map((feature: string, index: number) => (
+                  {plan.features.map((feature, index) => (
                     <li
                       key={index}
                       className="flex items-start gap-2 text-gray-600 text-sm text-right"

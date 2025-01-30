@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Lottie from 'lottie-react'
 import SubscriptionModal from '../components/SubscriptionModal'
 import { FiZap } from 'react-icons/fi'
-import Image from 'next/image'
 
 // استيراد الرسوم المتحركة
 import forexAnimation from '../animations/forex.json'

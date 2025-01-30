@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { FiClock, FiUser, FiStar, FiZap } from 'react-icons/fi'
 
-
 const userData = {
   id: "123456789",
   name: "محمد أحمد",
@@ -44,10 +43,12 @@ const Profile: React.FC = () => {
             whileHover={{ scale: 1.05 }}
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700] to-[#2390f1] rounded-full opacity-20 blur-lg group-hover:opacity-30 transition-opacity" />
-            <img
+            <Image
               src={userData.profileImage}
               alt="Profile"
-              className="rounded-full w-28 h-28 border-4 border-white shadow-xl relative z-12"
+              width={112} // تحديد عرض الصورة (28 × 4 = 112px)
+              height={112} // تحديد ارتفاع الصورة
+              className="rounded-full border-4 border-white shadow-xl relative z-12"
             />
           </motion.div>
 
