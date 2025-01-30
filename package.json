@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NEXT_DISABLE_ESLINT=1 NEXT_DISABLE_TSC=1 next build",
+    "build": "NEXT_DISABLE_ESLINT=1 && NEXT_DISABLE_TSC=1 && next build",
     "start": "next start -p 3000",
-    "lint": "next lint",
-    "postinstall": "yarn build"
+    "lint": "next lint"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.1.6",
@@ -33,7 +32,7 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=18 <20",
-    "npm": ">=9.0.0"
+    "node": "18.x",
+    "npm": "9.x"
   }
 }
