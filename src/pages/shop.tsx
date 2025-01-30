@@ -1,13 +1,15 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Lottie from 'lottie-react'
 import SubscriptionModal from '../components/SubscriptionModal'
 import { FiZap } from 'react-icons/fi'
-
-// استيراد الرسوم المتحركة
 import forexAnimation from '../animations/forex.json'
 import cryptoAnimation from '../animations/crypto.json'
+import dynamic from 'next/dynamic'
+
+// استيراد Lottie بدون SSR
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+
 
 // تحديد نوع البيانات لخطة الاشتراك
 type SubscriptionPlan = {

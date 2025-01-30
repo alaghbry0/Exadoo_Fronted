@@ -1,9 +1,13 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiCheckCircle, FiX } from 'react-icons/fi'
-import Lottie from 'lottie-react' // ✅ إضافة استيراد Lottie
 import usdtAnimation from '../animations/usdt.json'
 import starsAnimation from '../animations/stars.json'
+import dynamic from 'next/dynamic'
+
+// استيراد Lottie بدون SSR
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+
 
 
 // ✅ تحديد نوع بيانات `SubscriptionPlan`

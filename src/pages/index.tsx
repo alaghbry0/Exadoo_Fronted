@@ -1,10 +1,14 @@
 'use client'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import Lottie from 'lottie-react'
 import subscriptionAnimation from '../animations/subscription.json'
 import securePaymentAnimation from '../animations/secure-payment.json'
 import supportAnimation from '../animations/support.json'
+import dynamic from 'next/dynamic'
+
+// استيراد Lottie بدون SSR
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+
 
 const Home: React.FC = () => {
   const DESIGN_SETTINGS = {
