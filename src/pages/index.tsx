@@ -2,11 +2,10 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import supportAnimation from '../animations/support.json'
+import securePaymentAnimation from '../animations/secure-payment.json'
+import subscriptionAnimation from '../animations/subscription.json'
 
-// استيراد الرسوم المتحركة
-const subscriptionAnimation = require('../animations/subscription.json')
-const securePaymentAnimation = require('../animations/secure-payment.json')
-const supportAnimation = require('../animations/support.json')
 
 // استيراد Lottie بدون SSR
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
