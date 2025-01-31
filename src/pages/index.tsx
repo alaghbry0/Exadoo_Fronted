@@ -43,7 +43,7 @@ const Home: React.FC = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding">
+    <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-20">
       {/* شريط العروض */}
       <motion.div
         className="w-full bg-[#2390f1] bg-opacity-95 backdrop-blur-sm"

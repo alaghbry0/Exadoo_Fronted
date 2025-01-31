@@ -1,99 +1,88 @@
-'use client';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
-import { FaHome, FaRegCreditCard, FaUserCircle } from 'react-icons/fa';
+'use client'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { usePathname } from 'next/navigation'
+import { FaHome, FaRegCreditCard, FaUserCircle } from 'react-icons/fa'
 
 const NavigationBar: React.FC = () => {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
-  // إعدادات الشريط القابلة للتعديل
   const NAV_SETTINGS = {
-    height: 52,
-    iconSize: 22,
+    height: 64, // زيادة الارتفاع لتحسين UX
+    iconSize: 24,
     textSize: '0.75rem',
     activeColor: '#2390f1',
     inactiveColor: '#99a6b2',
-    spacing: '0.3rem',
-    borderWidth: '1px',
-    blurIntensity: '8px',
-    containerMaxWidth: '500px' // إضافة تحديد عرض أقصى
-  };
+    blurIntensity: '12px',
+    hitSlop: 20 // مساحة نقر إضافية
+  }
 
   const navItems = [
     { path: '/', icon: FaHome, label: 'الرئيسية' },
     { path: '/shop', icon: FaRegCreditCard, label: 'الاشتراكات' },
-    { path: '/profile', icon: FaUserCircle, label: 'الملف الشخصي' },
-  ];
+    { path: '/profile', icon: FaUserCircle, label: 'الملف' },
+  ]
 
   return (
     <motion.nav
       dir="rtl"
-      className="fixed bottom-0 w-full backdrop-blur-lg bg-[#eff8ff]/90 border-t"
+      className="fixed bottom-0 w-full backdrop-blur-lg bg-[#eff8ff]/95 border-t-2 border-[#2390f1]/10 z-50 shadow-upward"
       style={{
         height: `${NAV_SETTINGS.height}px`,
-        borderColor: `${NAV_SETTINGS.activeColor}30`,
-        borderWidth: NAV_SETTINGS.borderWidth,
         backdropFilter: `blur(${NAV_SETTINGS.blurIntensity})`,
       }}
     >
-      <div
-        className="mx-auto h-full relative"
-        style={{ maxWidth: NAV_SETTINGS.containerMaxWidth }}
-      >
-        <div className="flex justify-evenly items-center h-full w-full">
+      <div className="mx-auto h-full max-w-lg relative">
+        <div className="flex justify-around items-center h-full w-full px-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.path;
+            const isActive = pathname === item.path
 
             return (
               <Link
                 href={item.path}
                 key={item.path}
-                className="flex flex-col items-center justify-end relative z-10 flex-1"
-                style={{
-                  paddingBottom: NAV_SETTINGS.spacing,
-                  minWidth: '70px' // تحديد عرض أدنى لكل عنصر
-                }}
+                className="relative flex-1 h-full"
               >
+                {/* مساحة نقرة موسعة */}
+                <div
+                  className="absolute inset-0 -top-4 z-20 cursor-pointer"
+                  style={{ padding: NAV_SETTINGS.hitSlop }}
+                />
+
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className={`p-2 rounded-full`}
-                  style={{
-                    color: isActive ? NAV_SETTINGS.activeColor : NAV_SETTINGS.inactiveColor,
-                  }}
+                  className="flex flex-col items-center justify-center h-full gap-1"
+                  whileTap={{ scale: 0.95 }}
                 >
                   <item.icon
                     size={NAV_SETTINGS.iconSize}
-                    className="transition-all mx-auto" // إضافة mx-auto للتأكد من المركزية
+                    className={`transition-colors ${
+                      isActive ? 'text-[#2390f1]' : 'text-[#99a6b2]'
+                    }`}
                   />
+
+                  <span
+                    className={`text-xs font-medium transition-colors ${
+                      isActive ? 'text-[#2390f1]' : 'text-[#99a6b2]'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+
+                  {isActive && (
+                    <motion.div
+                      className="w-1.5 h-1.5 rounded-full bg-[#2390f1] mt-1"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                    />
+                  )}
                 </motion.div>
-
-                <motion.span
-                  className={`font-medium text-center`} // إضافة text-center
-                  style={{
-                    color: isActive ? NAV_SETTINGS.activeColor : NAV_SETTINGS.inactiveColor,
-                    fontSize: NAV_SETTINGS.textSize,
-                    lineHeight: 1,
-                  }}
-                >
-                  {item.label}
-                </motion.span>
-
-                {isActive && (
-                  <motion.div
-                    className="absolute top-1 w-1 h-1 rounded-full"
-                    style={{ backgroundColor: NAV_SETTINGS.activeColor }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                  />
-                )}
               </Link>
-            );
+            )
           })}
         </div>
       </div>
     </motion.nav>
-  );
-};
+  )
+}
 
-export default NavigationBar;
+export default NavigationBar

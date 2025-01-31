@@ -2,3 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .shadow-upward {
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
+
+body {
+  font-family: 'Noto Sans Arabic', sans-serif;
+}
+
+
+/* تحسين التمرير للنوافذ المنبثقة */
+.modal-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: #2390f1;
+  border-radius: 4px;
+}
+
+/* تحسين safe-area للهواتف الحديثة */
+@supports (padding: max(0px)) {
+  .safe-area-padding {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
