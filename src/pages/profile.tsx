@@ -9,6 +9,16 @@ import SubscriptionModal from '../components/SubscriptionModal'
 // استيراد Lottie بدون SSR
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
+// ✅ نوع بيانات المستخدم
+type UserProfile = {
+  telegram_id: number;
+  full_name: string;
+  username: string | null;
+  profile_photo: string;
+  join_date: string;
+  subscriptions: Subscription[];
+};
+
 type Subscription = {
   id: number
   name: string
@@ -22,53 +32,45 @@ type Subscription = {
   status: string
 }
 
-const userData = {
-  id: "123456789",
-  name: "محمد أحمد",
-  username: "@mohamed_trader",
-  profileImage: "/profile-placeholder.jpg",
-  joinDate: "يناير 2024",
-  subscriptions: [
-    {
-      id: 1,
-      name: "قناة الفوركس VIP",
-      price: "5 دولار/شهر",
-      description: "تحليلات حصرية وإشارات تداول فورية",
-      features: [
-        "إشارات تداول يومية مباشرة",
-        "تحليلات فنية مفصلة",
-        "تنبيهات دخول/خروج"
-      ],
-      animation: {}, // سيتم استبدالها بالرسوم المتحركة الفعلية
-      color: '#2390f1',
-      expiry: "12 يومًا متبقي",
-      progress: 70,
-      status: "نشط"
-    },
-    {
-      id: 2,
-      name: "قناة الكريبتو المميزة",
-      price: "10 دولار/شهر",
-      description: "توصيات متقدمة لسوق الكريبتو",
-      features: [
-        "توصيات تداول يومية",
-        "تحليل السوق العميق",
-        "إشعارات الصفقات الحصرية"
-      ],
-      animation: {}, // سيتم استبدالها بالرسوم المتحركة الفعلية
-      color: '#FFD700',
-      expiry: "5 أيام متبقي",
-      progress: 30,
-      status: "ينتهي قريبًا"
-    },
-  ] as Subscription[],
-}
-
 const Profile: React.FC = () => {
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const searchParams = useSearchParams();
+  const telegramId = searchParams.get("telegram_id");
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
 
-  const handleRenew = (subscription: Subscription) => {
-    setSelectedSubscription(subscription)
+  useEffect(() => {
+    if (!telegramId) {
+      setError("❌ لم يتم العثور على Telegram ID.");
+      setLoading(false);
+      return;
+    }
+
+ const fetchUserProfile = async () => {
+      try {
+        const response = await fetch(`/api/user?telegram_id=${telegramId}`);
+        if (!response.ok) {
+          throw new Error("❌ فشل في جلب بيانات المستخدم.");
+        }
+        const data: UserProfile = await response.json();
+        setUser(data);
+      } catch (err) {
+        setError("❌ حدث خطأ أثناء تحميل البيانات.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [telegramId]);
+
+  if (loading) {
+    return <div className="text-center py-10 text-gray-500">⏳ جاري تحميل البيانات...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">{error}</div>;
   }
 
   return (
@@ -86,7 +88,7 @@ const Profile: React.FC = () => {
             whileHover={{ scale: 1.05 }}
           >
             <Image
-              src={userData.profileImage}
+              src={user?.profile_photo || "/default_profile.png"}
               alt="Profile"
               width={80}
               height={80}
@@ -102,14 +104,16 @@ const Profile: React.FC = () => {
             initial={{ y: 20 }}
             animate={{ y: 0 }}
           >
-            <h1 className="text-lg font-bold text-white">{userData.name}</h1>
-            <p className="text-white/90 mt-1 text-xs flex items-center justify-center gap-1">
-              <FiUser className="text-[0.7rem]" />
-              {userData.username}
-            </p>
+            <h1 className="text-lg font-bold text-white">{user?.full_name}</h1>
+            {user?.username && (
+              <p className="text-white/90 mt-1 text-xs flex items-center justify-center gap-1">
+                <FiUser className="text-[0.7rem]" />
+                @{user.username}
+              </p>
+            )}
             <p className="text-white/80 mt-1 text-xs flex items-center justify-center gap-1">
               <FiClock className="text-[0.7rem]" />
-              عضو منذ {userData.joinDate}
+              عضو منذ {user?.join_date}
             </p>
           </motion.div>
         </div>
@@ -130,9 +134,9 @@ const Profile: React.FC = () => {
             <h2 className="text-base font-semibold text-[#1a202c]">الاشتراكات النشطة</h2>
           </div>
 
-          {userData.subscriptions.length > 0 ? (
+          {user?.subscriptions.length > 0 ? (
             <div className="space-y-2">
-              {userData.subscriptions.map((sub) => (
+              {user.subscriptions.map((sub) => (
                 <motion.div
                   key={sub.id}
                   className="bg-[#f8fbff] rounded-lg p-2 border border-[#eff8ff]"
@@ -153,7 +157,7 @@ const Profile: React.FC = () => {
                         {sub.status}
                       </span>
                       <button
-                        onClick={() => handleRenew(sub)}
+                        onClick={() => setSelectedSubscription(sub)}
                         className="p-1 bg-[#2390f1] text-white rounded-md hover:bg-[#1a75c4] transition-colors"
                       >
                         <FiRefreshCw className="text-xs" />
@@ -190,7 +194,7 @@ const Profile: React.FC = () => {
         onClose={() => setSelectedSubscription(null)}
       />
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

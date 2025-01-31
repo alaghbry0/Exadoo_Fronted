@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer components {
-  .shadow-upward {
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  .safe-area-padding {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .shadow-custom {
+    box-shadow: 0 2px 15px rgba(35, 144, 241, 0.1);
   }
 }
 
@@ -32,3 +37,10 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+@layer base {
+  html {
+    font-family: 'Noto Sans Arabic', system-ui, sans-serif;
+  }
+}
+
