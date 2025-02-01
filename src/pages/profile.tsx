@@ -7,7 +7,7 @@ import SubscriptionModal from '../components/SubscriptionModal'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 import { useTelegram } from "../context/TelegramContext";
-err
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
 
 type UserProfile = {
