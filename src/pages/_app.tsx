@@ -1,13 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { AppProps } from 'next/app'
+import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
 import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext' // ✅ استيراد `TelegramProvider`
 
-function AppContent({ Component, pageProps }: AppProps) {
+function AppContent({ Component, pageProps, router }: AppProps) {
   const { telegramId } = useTelegram(); // ✅ جلب `telegram_id`
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,17 +36,17 @@ function AppContent({ Component, pageProps }: AppProps) {
         exit={{ opacity: 0 }}
         transition={{ duration: 1 }}
       >
-        <Component {...pageProps} />
+        <Component {...pageProps} router={router} /> {/* ✅ تمرير `router` */}
         <FooterNav />
       </motion.div>
     )
   );
 }
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps, router }: AppProps) {
   return (
     <TelegramProvider> {/* ✅ جعل `telegram_id` متاحًا في جميع الصفحات */}
-      <AppContent Component={Component} pageProps={pageProps} />
+      <AppContent Component={Component} pageProps={pageProps} router={router} />
     </TelegramProvider>
   );
 }
