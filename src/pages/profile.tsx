@@ -275,21 +275,21 @@ const Profile: React.FC = () => {
   }, [telegramId]);
 
   useEffect(() => {
-    const controller = new AbortController();
+  const controller = new AbortController();
 
-    if (telegramId) {
-      console.log(`🔄 جلب البيانات لـ telegramId: ${telegramId}`);
-      fetchUserData(controller);
-    } else {
-      console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
-      setLoading(false);
-    }
+  if (telegramId) {
+    console.log(`🔄 جلب البيانات لـ telegramId: ${telegramId}`);
+    fetchUserData(controller.signal); // ✅ تمرير `controller.signal` فقط
+  } else {
+    console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
+    setLoading(false);
+  }
 
-    return () => {
-      console.log("🛑 إلغاء الطلب بسبب تغيير `telegramId`.");
-      controller.abort();
-    };
-  }, [telegramId, fetchUserData]);
+  return () => {
+    console.log("🛑 إلغاء الطلب بسبب تغيير `telegramId`.");
+    controller.abort();
+  };
+}, [telegramId, fetchUserData]);
 
   const handleRenew = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
