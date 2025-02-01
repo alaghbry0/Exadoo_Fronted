@@ -7,6 +7,7 @@ import SubscriptionModal from '../components/SubscriptionModal'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
 
 type UserProfile = {
   telegram_id?: number;
@@ -60,59 +61,57 @@ const Profile: React.FC = () => {
     return () => window.removeEventListener('popstate', handleURLChange)
   }, [])
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true)
-        setError('')
+useEffect(() => {
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError('');
 
-        // حالة خاصة عند فتح التطبيق من خارج تليجرام
-        if (!telegramId) {
-          setUserData({
-            ...defaultUserData,
-            subscriptions: [] // تأكيد إعادة تعيين الاشتراكات
-          })
-          setLoading(false)
-          return
-        }
-
-        const response = await fetch(`/api/user?telegram_id=${telegramId}`)
-        if (!response.ok) throw new Error('فشل في تحميل البيانات')
-
-        const data: UserProfile = await response.json()
-
-        // معالجة بيانات الاشتراكات
-        const processedSubscriptions = data.subscriptions?.map(sub => ({
-          ...sub,
-          // إضافة قيم افتراضية للخصائص المفقودة
-          description: sub.description || 'لا يوجد وصف',
-          features: sub.features || [],
-          animation: sub.animation || {},
-          color: sub.color || '#2390f1'
-        })) || []
-
-        setUserData({
-          ...defaultUserData,
-          ...data,
-          full_name: data.full_name || defaultUserData.full_name,
-          username: data.username ? `@${data.username}` : defaultUserData.username,
-          profile_photo: data.profile_photo?.startsWith('http')
-            ? data.profile_photo
-            : defaultUserData.profile_photo,
-          join_date: data.join_date || defaultUserData.join_date,
-          subscriptions: processedSubscriptions
-        })
-      } catch (err) {
-          console.error("Error fetching user data:", err)
-        setError('حدث خطأ أثناء جلب البيانات')
-        setUserData(defaultUserData)
-      } finally {
-        setLoading(false)
+      if (!telegramId) {
+        console.warn("⚠️ لا يوجد telegram_id، سيتم استخدام البيانات الافتراضية.");
+        setUserData({ ...defaultUserData, subscriptions: [] });
+        setLoading(false);
+        return;
       }
-    }
 
-    if (telegramId !== null) fetchUserData()
-  }, [telegramId])
+      console.log(`📡 إرسال طلب إلى: ${BACKEND_URL}/api/user?telegram_id=${telegramId}`);
+
+      const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${telegramId}`);
+      console.log("📩 الرد من السيرفر:", response);
+
+      if (!response.ok) {
+        throw new Error(`❌ HTTP Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data: UserProfile = await response.json();
+      console.log("✅ البيانات المستلمة:", data);
+
+      setUserData({
+        ...defaultUserData,
+        ...data,
+        full_name: data.full_name || defaultUserData.full_name,
+        username: data.username ? `@${data.username}` : defaultUserData.username,
+        profile_photo: data.profile_photo?.startsWith('http') ? data.profile_photo : defaultUserData.profile_photo,
+        subscriptions: data.subscriptions || []
+      });
+
+    } catch (err) {
+      console.error("❌ خطأ أثناء جلب البيانات:", err);
+      setError('حدث خطأ أثناء جلب البيانات');
+      setUserData(defaultUserData);
+    } finally {
+      console.log("✅ تم إنهاء تحميل البيانات.");
+      setLoading(false);
+    }
+  };
+
+  if (telegramId) {
+    fetchUserData();
+  } else {
+    console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
+  }
+}, [telegramId]);
+
 
   const handleRenew = (subscription: Subscription) => {
     setSelectedSubscription(subscription)
@@ -150,7 +149,7 @@ const Profile: React.FC = () => {
     )
   }
 
-  return (
+   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
       <ProfileHeader userData={userData} />
       <SubscriptionsSection
