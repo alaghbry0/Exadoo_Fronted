@@ -52,17 +52,14 @@ const ProfileHeader = ({ userData }: { userData: UserProfile }) => (
         className="relative w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden"
         whileHover={{ scale: 1.05 }}
       >
-        <Image
-          src={userData.profile_photo || '/default-profile.png'}
-          alt="Profile"
-          width={80}
-          height={80}
-          className="object-cover"
-          priority
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/default-profile.png'
-          }}
-        />
+        <img
+  src={userData.profile_photo || '/default-profile.png'}
+  alt="Profile"
+  width={80}
+  height={80}
+  className="object-cover rounded-full"
+  onError={(e) => (e.currentTarget.src = "/default-profile.png")}
+/>
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700]/20 to-[#2390f1]/20 backdrop-blur-[2px]" />
       </motion.div>
 
