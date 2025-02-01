@@ -268,7 +268,7 @@ const Profile: React.FC = () => {
   setUserData(defaultUserData);
 }
 
-    } finally {
+     finally {
       console.log("✅ تم إنهاء تحميل البيانات.");
       setLoading(false);
     }
