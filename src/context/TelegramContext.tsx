@@ -1,12 +1,27 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
+// ✅ تعريف `window.Telegram` لتجنب خطأ TypeScript
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        initDataUnsafe?: {
+          user?: {
+            id?: number;
+          };
+        };
+      };
+    };
+  }
+}
+
 // ✅ إنشاء `Context` لحفظ بيانات المستخدم من Telegram API
 const TelegramContext = createContext<{
   telegramId: string | null;
   setTelegramId: (id: string | null) => void;
 }>({
   telegramId: null,
-  setTelegramId: () => {}
+  setTelegramId: () => {},
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
@@ -19,12 +34,9 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     if (typeof window === "undefined") return;
 
     // ✅ 1️⃣ الحصول على `telegram_id` من Telegram Mini App إذا كان مفتوحًا داخل Telegram
-    if (window.Telegram && window.Telegram.WebApp) {
-      const tgData = window.Telegram.WebApp.initDataUnsafe;
-      if (tgData?.user?.id) {
-        newTelegramId = tgData.user.id.toString();
-        console.log(`✅ تم الحصول على telegram_id من Telegram API: ${newTelegramId}`);
-      }
+    if (window?.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+      newTelegramId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+      console.log(`✅ تم الحصول على telegram_id من Telegram API: ${newTelegramId}`);
     }
 
     // ✅ 2️⃣ في حال عدم توفر `Telegram API`، نستخدم `URL Parameters`
