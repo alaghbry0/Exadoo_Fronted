@@ -3,12 +3,10 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { FiClock, FiUser, FiStar, FiZap, FiRefreshCw } from 'react-icons/fi'
-import dynamic from 'next/dynamic'
 import SubscriptionModal from '../components/SubscriptionModal'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
 type UserProfile = {
   telegram_id?: number;
@@ -105,6 +103,7 @@ const Profile: React.FC = () => {
           subscriptions: processedSubscriptions
         })
       } catch (err) {
+          console.error("Error fetching user data:", err)
         setError('حدث خطأ أثناء جلب البيانات')
         setUserData(defaultUserData)
       } finally {
