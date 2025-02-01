@@ -8,9 +8,7 @@ import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 import { useTelegram } from "../context/TelegramContext";
 
-
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
-
 
 type UserProfile = {
   telegram_id?: number;
@@ -40,146 +38,6 @@ const defaultUserData: UserProfile = {
   profile_photo: '/default-profile.png',
   join_date: 'N/L',
   subscriptions: []
-}
-
-  const Profile: React.FC = () => {
-  const { telegramId, setTelegramId } = useTelegram();
-  const [userData, setUserData] = useState<UserProfile>(defaultUserData);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
-
-  // معالجة تغيير عنوان URL
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleURLChange = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const newTelegramId = urlParams.get('telegram_id');
-      setTelegramId(newTelegramId);
-    };
-
-    window.addEventListener('popstate', handleURLChange);
-    handleURLChange();
-
-    return () => window.removeEventListener('popstate', handleURLChange);
-  }, [setTelegramId]);
-
-  // جلب بيانات المستخدم
-  const fetchUserData = useCallback(async (controller?: AbortController) => {
-    if (!telegramId) {
-      console.warn("⚠️ لا يوجد `telegram_id`، سيتم استخدام البيانات الافتراضية.");
-      setUserData({ ...defaultUserData, subscriptions: [] });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-
-      console.log(`📡 إرسال طلب إلى: ${BACKEND_URL}/api/user?telegram_id=${telegramId}`);
-      const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${telegramId}`, {
-        signal: controller?.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`❌ HTTP Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data: UserProfile = await response.json();
-      console.log("✅ البيانات المستلمة:", data);
-
-      setUserData({
-        ...defaultUserData,
-        ...data,
-        full_name: data.full_name || defaultUserData.full_name,
-        username: data.username ? `@${data.username}` : defaultUserData.username,
-        profile_photo: data.profile_photo?.startsWith('http')
-          ? data.profile_photo
-          : defaultUserData.profile_photo,
-        subscriptions: data.subscriptions || [],
-      });
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.warn("⏳ تم إلغاء الطلب بسبب إعادة التحميل.");
-      } else {
-        console.error("❌ خطأ أثناء جلب البيانات:", err);
-        setError("حدث خطأ أثناء جلب البيانات");
-        setUserData(defaultUserData);
-      }
-    } finally {
-      console.log("✅ تم إنهاء تحميل البيانات.");
-      setLoading(false);
-    }
-  }, [telegramId]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    if (telegramId) {
-      fetchUserData(controller);
-    } else {
-      console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
-      setLoading(false);
-    }
-
-    return () => {
-      console.log("🛑 إلغاء الطلب بسبب تغيير `telegramId`.");
-      controller.abort();
-    };
-  }, [telegramId, fetchUserData]);
-
-  const handleRenew = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
-        <SkeletonTheme
-          baseColor="#f0f0f0"
-          highlightColor="#f8f8f8"
-          borderRadius="0.5rem"
-          duration={1.2}
-        >
-          <ProfileHeaderSkeleton />
-          <SubscriptionsSkeleton />
-        </SkeletonTheme>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24 flex items-center justify-center">
-        <div className="text-center text-red-500">
-          <p className="mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-
-   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
-      <ProfileHeader userData={userData} />
-      <SubscriptionsSection
-        subscriptions={userData.subscriptions || []}
-        handleRenew={handleRenew}
-      />
-      <SubscriptionModal
-        plan={selectedSubscription}
-        onClose={() => setSelectedSubscription(null)}
-      />
-    </div>
-  )
 }
 
 // مكونات فرعية محسنة
@@ -337,5 +195,149 @@ const SubscriptionsSkeleton = () => (
     </div>
   </SkeletonTheme>
 )
+
+const Profile: React.FC = () => {
+  const { telegramId, setTelegramId } = useTelegram();
+  const [userData, setUserData] = useState<UserProfile>(defaultUserData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+
+  // معالجة تغيير عنوان URL
+  useEffect(() => {
+    const handleURLChange = () => {
+      if (typeof window === 'undefined') return;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const newTelegramId = urlParams.get('telegram_id');
+
+      if (newTelegramId !== telegramId?.toString()) {
+        console.log(`🔄 تحديث telegramId إلى: ${newTelegramId}`);
+        setTelegramId(newTelegramId);
+      }
+    };
+
+    window.addEventListener('popstate', handleURLChange);
+    handleURLChange();
+
+    return () => window.removeEventListener('popstate', handleURLChange);
+  }, [telegramId, setTelegramId]);
+
+  // جلب بيانات المستخدم
+  const fetchUserData = useCallback(async (controller?: AbortController) => {
+    if (!telegramId) {
+      console.warn("⚠️ لا يوجد `telegram_id`، سيتم استخدام البيانات الافتراضية.");
+      setUserData({ ...defaultUserData, subscriptions: [] });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      console.log(`📡 إرسال طلب إلى: ${BACKEND_URL}/api/user?telegram_id=${telegramId}`);
+
+      const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${telegramId}`, {
+        signal: controller?.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`❌ HTTP Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data: UserProfile = await response.json();
+      console.log("✅ البيانات المستلمة:", data);
+
+      setUserData({
+        ...defaultUserData,
+        ...data,
+        full_name: data.full_name || defaultUserData.full_name,
+        username: data.username ? `@${data.username}` : defaultUserData.username,
+        profile_photo: data.profile_photo?.startsWith('http')
+          ? data.profile_photo
+          : defaultUserData.profile_photo,
+        subscriptions: data.subscriptions || [],
+      });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.warn("⏳ تم إلغاء الطلب بسبب إعادة التحميل.");
+      } else {
+        console.error("❌ خطأ أثناء جلب البيانات:", err);
+        setError("حدث خطأ أثناء جلب البيانات");
+        setUserData(defaultUserData);
+      }
+    } finally {
+      console.log("✅ تم إنهاء تحميل البيانات.");
+      setLoading(false);
+    }
+  }, [telegramId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (telegramId) {
+      console.log(`🔄 جلب البيانات لـ telegramId: ${telegramId}`);
+      fetchUserData(controller);
+    } else {
+      console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
+      setLoading(false);
+    }
+
+    return () => {
+      console.log("🛑 إلغاء الطلب بسبب تغيير `telegramId`.");
+      controller.abort();
+    };
+  }, [telegramId, fetchUserData]);
+
+  const handleRenew = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
+        <SkeletonTheme
+          baseColor="#f0f0f0"
+          highlightColor="#f8f8f8"
+          borderRadius="0.5rem"
+          duration={1.2}
+        >
+          <ProfileHeaderSkeleton />
+          <SubscriptionsSkeleton />
+        </SkeletonTheme>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24 flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p className="mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
+      <ProfileHeader userData={userData} />
+      <SubscriptionsSection
+        subscriptions={userData.subscriptions || []}
+        handleRenew={handleRenew}
+      />
+      <SubscriptionModal
+        plan={selectedSubscription}
+        onClose={() => setSelectedSubscription(null)}
+      />
+    </div>
+  )
+}
 
 export default Profile
