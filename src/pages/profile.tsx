@@ -7,7 +7,7 @@ import SubscriptionModal from '../components/SubscriptionModal'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 import { useTelegram } from "../context/TelegramContext";
-
+err
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
 
 type UserProfile = {
@@ -258,14 +258,16 @@ const Profile: React.FC = () => {
           : defaultUserData.profile_photo,
         subscriptions: data.subscriptions || [],
       });
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.warn("⏳ تم إلغاء الطلب بسبب إعادة التحميل.");
-      } else {
-        console.error("❌ خطأ أثناء جلب البيانات:", err);
-        setError("حدث خطأ أثناء جلب البيانات");
-        setUserData(defaultUserData);
-      }
+    } catch (err) {
+  if (err instanceof Error) {
+    console.error("❌ خطأ أثناء جلب البيانات:", err.message);
+  } else {
+    console.error("❌ خطأ غير معروف أثناء جلب البيانات:", err);
+  }
+  setError("حدث خطأ أثناء جلب البيانات");
+  setUserData(defaultUserData);
+}
+
     } finally {
       console.log("✅ تم إنهاء تحميل البيانات.");
       setLoading(false);
