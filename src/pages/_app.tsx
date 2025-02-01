@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { AppProps } from 'next/app'
-import { useRouter } from 'next/router'
+//import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
