@@ -5,7 +5,8 @@ import Image from 'next/image'
 import { FiClock, FiUser, FiStar, FiZap, FiRefreshCw } from 'react-icons/fi'
 import dynamic from 'next/dynamic'
 import SubscriptionModal from '../components/SubscriptionModal'
-import Skeleton from 'react-loading-skeleton' // تأكد من تثبيت الحزمة
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -44,40 +45,75 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const [telegramId, setTelegramId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleURLChange = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const newTelegramId = urlParams.get('telegram_id')
+      setTelegramId(newTelegramId)
+    }
+
+    window.addEventListener('popstate', handleURLChange)
+    handleURLChange()
+
+    return () => window.removeEventListener('popstate', handleURLChange)
+  }, [])
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const urlParams = new URLSearchParams(window.location.search)
-        const telegramId = urlParams.get('telegram_id')
+        setLoading(true)
+        setError('')
 
+        // حالة خاصة عند فتح التطبيق من خارج تليجرام
         if (!telegramId) {
-          setUserData(defaultUserData)
+          setUserData({
+            ...defaultUserData,
+            subscriptions: [] // تأكيد إعادة تعيين الاشتراكات
+          })
+          setLoading(false)
           return
         }
 
         const response = await fetch(`/api/user?telegram_id=${telegramId}`)
-        if (!response.ok) throw new Error('Failed to fetch user data')
+        if (!response.ok) throw new Error('فشل في تحميل البيانات')
 
         const data: UserProfile = await response.json()
+
+        // معالجة بيانات الاشتراكات
+        const processedSubscriptions = data.subscriptions?.map(sub => ({
+          ...sub,
+          // إضافة قيم افتراضية للخصائص المفقودة
+          description: sub.description || 'لا يوجد وصف',
+          features: sub.features || [],
+          animation: sub.animation || {},
+          color: sub.color || '#2390f1'
+        })) || []
+
         setUserData({
           ...defaultUserData,
           ...data,
-          full_name: data.full_name || 'N/L',
-          username: data.username ? `@${data.username}` : 'N/L',
-          profile_photo: data.profile_photo || '/default-profile.png',
-          join_date: data.join_date || 'N/L',
+          full_name: data.full_name || defaultUserData.full_name,
+          username: data.username ? `@${data.username}` : defaultUserData.username,
+          profile_photo: data.profile_photo?.startsWith('http')
+            ? data.profile_photo
+            : defaultUserData.profile_photo,
+          join_date: data.join_date || defaultUserData.join_date,
+          subscriptions: processedSubscriptions
         })
       } catch (err) {
-        setError('فشل في تحميل بيانات المستخدم')
+        setError('حدث خطأ أثناء جلب البيانات')
         setUserData(defaultUserData)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchUserData()
-  }, [])
+    if (telegramId !== null) fetchUserData()
+  }, [telegramId])
 
   const handleRenew = (subscription: Subscription) => {
     setSelectedSubscription(subscription)
@@ -86,8 +122,15 @@ const Profile: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
-        <ProfileHeaderSkeleton />
-        <SubscriptionsSkeleton />
+        <SkeletonTheme
+          baseColor="#f0f0f0"
+          highlightColor="#f8f8f8"
+          borderRadius="0.5rem"
+          duration={1.2}
+        >
+          <ProfileHeaderSkeleton />
+          <SubscriptionsSkeleton />
+        </SkeletonTheme>
       </div>
     )
   }
@@ -96,10 +139,10 @@ const Profile: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24 flex items-center justify-center">
         <div className="text-center text-red-500">
-          <p>{error}</p>
+          <p className="mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
           >
             إعادة المحاولة
           </button>
@@ -110,15 +153,11 @@ const Profile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
-      {/* Profile Header */}
       <ProfileHeader userData={userData} />
-
-      {/* Subscriptions Section */}
       <SubscriptionsSection
         subscriptions={userData.subscriptions || []}
         handleRenew={handleRenew}
       />
-
       <SubscriptionModal
         plan={selectedSubscription}
         onClose={() => setSelectedSubscription(null)}
@@ -127,7 +166,7 @@ const Profile: React.FC = () => {
   )
 }
 
-// مكون فرعي لرأس الملف الشخصي
+// مكونات فرعية محسنة
 const ProfileHeader = ({ userData }: { userData: UserProfile }) => (
   <motion.div
     className="w-full bg-gradient-to-b from-[#2390f1] to-[#1a75c4] pt-4 pb-8"
@@ -146,6 +185,9 @@ const ProfileHeader = ({ userData }: { userData: UserProfile }) => (
           height={80}
           className="object-cover"
           priority
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/default-profile.png'
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700]/20 to-[#2390f1]/20 backdrop-blur-[2px]" />
       </motion.div>
@@ -165,7 +207,6 @@ const ProfileHeader = ({ userData }: { userData: UserProfile }) => (
   </motion.div>
 )
 
-// مكون فرعي لقسم الاشتراكات
 const SubscriptionsSection = ({ subscriptions, handleRenew }: {
   subscriptions: Subscription[]
   handleRenew: (sub: Subscription) => void
@@ -201,7 +242,6 @@ const SubscriptionsSection = ({ subscriptions, handleRenew }: {
   </motion.div>
 )
 
-// مكون عنصر اشتراك فردي
 const SubscriptionItem = ({ sub, handleRenew }: {
   sub: Subscription
   handleRenew: (sub: Subscription) => void
@@ -225,6 +265,7 @@ const SubscriptionItem = ({ sub, handleRenew }: {
         <button
           onClick={() => handleRenew(sub)}
           className="p-1 bg-[#2390f1] text-white rounded-md hover:bg-[#1a75c4] transition-colors"
+          aria-label="تجديد الاشتراك"
         >
           <FiRefreshCw className="text-xs" />
         </button>
@@ -242,7 +283,6 @@ const SubscriptionItem = ({ sub, handleRenew }: {
   </motion.div>
 )
 
-// رسالة عدم وجود اشتراكات
 const NoSubscriptionsMessage = () => (
   <div className="text-center py-3">
     <div className="inline-block bg-[#eff8ff] p-2 rounded-full mb-1.5">
@@ -252,30 +292,34 @@ const NoSubscriptionsMessage = () => (
   </div>
 )
 
-// مكونات الهيكل العظمي للتحميل
+// مكونات الهيكل العظمي المحسنة
 const ProfileHeaderSkeleton = () => (
-  <div className="w-full bg-gradient-to-b from-[#2390f1] to-[#1a75c4] pt-4 pb-8">
-    <div className="container mx-auto px-4 flex flex-col items-center">
-      <Skeleton circle width={80} height={80} />
-      <Skeleton width={150} height={20} className="mt-3" />
-      <Skeleton width={100} height={16} className="mt-1" />
-      <Skeleton width={120} height={16} className="mt-1" />
+  <SkeletonTheme baseColor="#e3e3e3" highlightColor="#f0f0f0">
+    <div className="w-full bg-gradient-to-b from-[#2390f1] to-[#1a75c4] pt-4 pb-8">
+      <div className="container mx-auto px-4 flex flex-col items-center">
+        <Skeleton circle width={80} height={80} className="mb-4" />
+        <Skeleton width={150} height={20} className="mb-2" />
+        <Skeleton width={120} height={16} />
+        <Skeleton width={140} height={16} className="mt-1" />
+      </div>
     </div>
-  </div>
+  </SkeletonTheme>
 )
 
 const SubscriptionsSkeleton = () => (
-  <div className="container mx-auto px-4 -mt-6">
-    <div className="bg-white rounded-xl shadow-sm p-3">
-      <div className="flex items-center gap-2 mb-3">
-        <Skeleton width={30} height={30} />
-        <Skeleton width={120} height={20} />
+  <SkeletonTheme baseColor="#f0f0f0" highlightColor="#f8f8f8">
+    <div className="container mx-auto px-4 -mt-6">
+      <div className="bg-white rounded-xl shadow-sm p-3">
+        <div className="flex items-center gap-2 mb-4">
+          <Skeleton circle width={30} height={30} />
+          <Skeleton width={140} height={20} />
+        </div>
+        {[...Array(2)].map((_, i) => (
+          <Skeleton key={i} height={80} className="mb-3 rounded-lg" />
+        ))}
       </div>
-      {[...Array(2)].map((_, i) => (
-        <Skeleton key={i} height={80} className="mb-2" />
-      ))}
     </div>
-  </div>
+  </SkeletonTheme>
 )
 
 export default Profile
