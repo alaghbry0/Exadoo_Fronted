@@ -1,13 +1,16 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from "react";
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { FiClock, FiUser, FiStar, FiZap, FiRefreshCw } from 'react-icons/fi'
 import SubscriptionModal from '../components/SubscriptionModal'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
+import { useTelegram } from "../context/TelegramContext";
+
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
+
 
 type UserProfile = {
   telegram_id?: number;
@@ -39,45 +42,46 @@ const defaultUserData: UserProfile = {
   subscriptions: []
 }
 
-const Profile: React.FC = () => {
-  const [userData, setUserData] = useState<UserProfile>(defaultUserData)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
-  const [telegramId, setTelegramId] = useState<string | null>(null)
+  const Profile: React.FC = () => {
+  const { telegramId, setTelegramId } = useTelegram();
+  const [userData, setUserData] = useState<UserProfile>(defaultUserData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
 
+  // معالجة تغيير عنوان URL
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return;
 
     const handleURLChange = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const newTelegramId = urlParams.get('telegram_id')
-      setTelegramId(newTelegramId)
+      const urlParams = new URLSearchParams(window.location.search);
+      const newTelegramId = urlParams.get('telegram_id');
+      setTelegramId(newTelegramId);
+    };
+
+    window.addEventListener('popstate', handleURLChange);
+    handleURLChange();
+
+    return () => window.removeEventListener('popstate', handleURLChange);
+  }, [setTelegramId]);
+
+  // جلب بيانات المستخدم
+  const fetchUserData = useCallback(async (controller?: AbortController) => {
+    if (!telegramId) {
+      console.warn("⚠️ لا يوجد `telegram_id`، سيتم استخدام البيانات الافتراضية.");
+      setUserData({ ...defaultUserData, subscriptions: [] });
+      setLoading(false);
+      return;
     }
 
-    window.addEventListener('popstate', handleURLChange)
-    handleURLChange()
-
-    return () => window.removeEventListener('popstate', handleURLChange)
-  }, [])
-
-useEffect(() => {
-  const fetchUserData = async () => {
     try {
       setLoading(true);
       setError('');
 
-      if (!telegramId) {
-        console.warn("⚠️ لا يوجد telegram_id، سيتم استخدام البيانات الافتراضية.");
-        setUserData({ ...defaultUserData, subscriptions: [] });
-        setLoading(false);
-        return;
-      }
-
       console.log(`📡 إرسال طلب إلى: ${BACKEND_URL}/api/user?telegram_id=${telegramId}`);
-
-      const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${telegramId}`);
-      console.log("📩 الرد من السيرفر:", response);
+      const response = await fetch(`${BACKEND_URL}/api/user?telegram_id=${telegramId}`, {
+        signal: controller?.signal,
+      });
 
       if (!response.ok) {
         throw new Error(`❌ HTTP Error ${response.status}: ${response.statusText}`);
@@ -91,31 +95,44 @@ useEffect(() => {
         ...data,
         full_name: data.full_name || defaultUserData.full_name,
         username: data.username ? `@${data.username}` : defaultUserData.username,
-        profile_photo: data.profile_photo?.startsWith('http') ? data.profile_photo : defaultUserData.profile_photo,
-        subscriptions: data.subscriptions || []
+        profile_photo: data.profile_photo?.startsWith('http')
+          ? data.profile_photo
+          : defaultUserData.profile_photo,
+        subscriptions: data.subscriptions || [],
       });
-
-    } catch (err) {
-      console.error("❌ خطأ أثناء جلب البيانات:", err);
-      setError('حدث خطأ أثناء جلب البيانات');
-      setUserData(defaultUserData);
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.warn("⏳ تم إلغاء الطلب بسبب إعادة التحميل.");
+      } else {
+        console.error("❌ خطأ أثناء جلب البيانات:", err);
+        setError("حدث خطأ أثناء جلب البيانات");
+        setUserData(defaultUserData);
+      }
     } finally {
       console.log("✅ تم إنهاء تحميل البيانات.");
       setLoading(false);
     }
-  };
+  }, [telegramId]);
 
-  if (telegramId) {
-    fetchUserData();
-  } else {
-    console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
-  }
-}, [telegramId]);
+  useEffect(() => {
+    const controller = new AbortController();
 
+    if (telegramId) {
+      fetchUserData(controller);
+    } else {
+      console.warn("⚠️ `telegramId` غير موجود، لن يتم جلب البيانات.");
+      setLoading(false);
+    }
+
+    return () => {
+      console.log("🛑 إلغاء الطلب بسبب تغيير `telegramId`.");
+      controller.abort();
+    };
+  }, [telegramId, fetchUserData]);
 
   const handleRenew = (subscription: Subscription) => {
-    setSelectedSubscription(subscription)
-  }
+    setSelectedSubscription(subscription);
+  };
 
   if (loading) {
     return (
@@ -148,6 +165,7 @@ useEffect(() => {
       </div>
     )
   }
+
 
    return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">

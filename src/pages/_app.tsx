@@ -5,38 +5,49 @@ import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
 import { motion } from 'framer-motion'
+import { TelegramProvider, useTelegram } from '../context/TelegramContext' // ✅ استيراد `TelegramProvider`
 
-function MyApp({ Component, pageProps }: AppProps) {
-  const [isLoading, setIsLoading] = useState(true)
+function AppContent({ Component, pageProps }: AppProps) {
+  const { telegramId } = useTelegram(); // ✅ جلب `telegram_id`
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // هنا يجب أن تضع كود تحميل البيانات الفعلية
-    const fetchData = async () => {
-      // مثال: جلب بيانات المستخدم أو الاشتراكات من API
-      await new Promise((resolve) => setTimeout(resolve, 2500)) // محاكاة تحميل البيانات
-      setIsLoading(false) // إخفاء شاشة الانتظار بعد اكتمال تحميل البيانات
-    }
+    const checkData = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // ⏳ محاكاة تحميل البيانات
+      if (telegramId) {
+        console.log("✅ `telegram_id` متاح:", telegramId);
+        setIsLoading(false); // 🚀 إخفاء شاشة التحميل بعد التأكد من `telegram_id`
+      } else {
+        console.warn("⚠️ لا يوجد `telegram_id`، التطبيق ينتظر البيانات...");
+      }
+    };
 
-    fetchData()
-  }, [])
+    checkData();
+  }, [telegramId]); // 🔁 يتم التحقق عند تغيير `telegram_id`
 
   return (
-    <>
-      {isLoading ? (
-        <SplashScreen />
-      ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-        >
-          <Component {...pageProps} />
-          <FooterNav />
-        </motion.div>
-      )}
-    </>
-  )
+    isLoading ? (
+      <SplashScreen />
+    ) : (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 1 }}
+      >
+        <Component {...pageProps} />
+        <FooterNav />
+      </motion.div>
+    )
+  );
 }
 
-export default MyApp
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <TelegramProvider> {/* ✅ جعل `telegram_id` متاحًا في جميع الصفحات */}
+      <AppContent Component={Component} pageProps={pageProps} />
+    </TelegramProvider>
+  );
+}
+
+export default MyApp;
