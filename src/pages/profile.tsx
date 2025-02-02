@@ -42,11 +42,9 @@ const defaultUserData: UserProfile = {
 
 // مكونات فرعية محسنة
 const ProfileHeader = ({ userData }: { userData: UserProfile }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const profilePhoto = userData.profile_photo?.startsWith('http') && !imageError
-    ? userData.profile_photo
-    : '/default-profile.png';
+  const [imageSrc, setImageSrc] = useState(
+    userData.profile_photo?.startsWith("http") ? userData.profile_photo : "/default-profile.png"
+  );
 
   return (
     <motion.div
@@ -59,25 +57,15 @@ const ProfileHeader = ({ userData }: { userData: UserProfile }) => {
           className="relative w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden"
           whileHover={{ scale: 1.05 }}
         >
-          {!imageError ? (
-            <Image
-              src={profilePhoto}
-              alt="Profile"
-              width={80}
-              height={80}
-              className="object-cover rounded-full"
-              priority
-              onError={() => setImageError(true)} // ✅ في حال فشل تحميل الصورة يتم تعيين الصورة الافتراضية
-            />
-          ) : (
-            <img
-              src="/default-profile.png"
-              alt="Profile"
-              width={80}
-              height={80}
-              className="object-cover rounded-full"
-            />
-          )}
+          <Image
+            src={imageSrc}
+            alt="Profile"
+            width={80}
+            height={80}
+            className="object-cover rounded-full"
+            priority
+            onError={() => setImageSrc("/default-profile.png")} // ✅ الحل النهائي
+          />
           <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700]/20 to-[#2390f1]/20 backdrop-blur-[2px]" />
         </motion.div>
 
@@ -96,6 +84,7 @@ const ProfileHeader = ({ userData }: { userData: UserProfile }) => {
     </motion.div>
   );
 };
+
 
 
 const SubscriptionsSection = ({ subscriptions, handleRenew }: {
@@ -274,7 +263,7 @@ const Profile: React.FC = () => {
           : defaultUserData.profile_photo,
         subscriptions: data.subscriptions || [],
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err.name === 'AbortError') {
         console.warn("⏳ تم إلغاء الطلب بسبب إعادة التحميل.");
       } else {

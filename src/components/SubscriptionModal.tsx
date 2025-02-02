@@ -4,6 +4,7 @@ import { FiCheckCircle, FiX } from 'react-icons/fi'
 import usdtAnimation from '../animations/usdt.json'
 import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
+import { useTelegramPayment } from '../hooks/useTelegramPayment' // ✅ استيراد نظام الدفع بـ Telegram Stars
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -18,11 +19,10 @@ type SubscriptionPlan = {
   color: string
 }
 
-
-
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   if (!plan) return null
 
+  const { handleTelegramStarsPayment, loading } = useTelegramPayment() // ✅ استخدام نظام الدفع بـ Telegram Stars
 
   return (
     <AnimatePresence>
@@ -100,17 +100,20 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 <span className="font-medium ml-2">الدفع عبر USDT</span>
               </motion.button>
 
+              {/* ✅ زر الدفع بـ Telegram Stars */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm"
+                onClick={() => handleTelegramStarsPayment(plan.id, plan.price, onClose)} // ✅ استدعاء الدفع عند النقر
+                disabled={loading} // ✅ تعطيل الزر أثناء التحميل
+                className={`w-full flex items-center justify-between px-4 py-2.5
+                  bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
+                  ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                <Lottie
-                  animationData={starsAnimation}
-                  className="w-8 h-8"
-                  loop={true}
-                />
-                <span className="font-medium ml-2">الدفع بـ Telegram Stars</span>
+                <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />
+                <span className="font-medium ml-2">
+                  {loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
+                </span>
               </motion.button>
             </div>
           </div>
