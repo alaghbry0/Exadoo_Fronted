@@ -1,61 +1,39 @@
-'use client';
+'use client'
 import { createContext, useContext, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import { TonConnectUI, TonConnectUIProvider } from "@tonconnect/ui-react";
 
-// ✅ تحميل `TonConnectUIProvider` فقط داخل المتصفح لمنع SSR
-const TonConnectUIProvider = dynamic(
-  () => import("@tonconnect/ui-react").then((mod) => mod.TonConnectUIProvider),
-  { ssr: false }
-);
-
-// ✅ تعريف نوع بيانات `Context`
-interface TonWalletContextType {
+// ✅ إنشاء `Context` لإدارة بيانات المحفظة
+const TonWalletContext = createContext<{
   walletAddress: string | null;
-  tonConnectUI: any | null; // يمكنك استبداله لاحقًا بنوع محدد بعد التحقق
-}
-
-// ✅ إنشاء `Context`
-const TonWalletContext = createContext<TonWalletContextType>({
-  walletAddress: null,
-  tonConnectUI: null,
-});
+  tonConnectUI: TonConnectUI | null;
+}>({ walletAddress: null, tonConnectUI: null });
 
 export const TonWalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [tonConnectUI, setTonConnectUI] = useState<any | null>(null);
-  const [isClient, setIsClient] = useState(false); // ✅ لمعرفة ما إذا كان الكود يعمل في المتصفح
+  const [tonConnectUI, setTonConnectUI] = useState<TonConnectUI | null>(null);
 
   useEffect(() => {
-    setIsClient(true); // ✅ تأكيد تحميل المتصفح
+    const tonConnect = new TonConnectUI({
+      manifestUrl: "https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json", // ✅ قم بتحديث هذا الرابط لاحقًا
+    });
 
-    if (typeof window !== "undefined") {
-      import("@tonconnect/ui-react").then((mod) => {
-        const tonConnectInstance = new mod.TonConnectUI({
-          manifestUrl:
-            "https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json",
-        });
+    setTonConnectUI(tonConnect);
 
-        setTonConnectUI(tonConnectInstance);
-
-        // ✅ تحديث عنوان المحفظة عند تغيّر الحالة
-        tonConnectInstance.onStatusChange((wallet: any) => {
-          setWalletAddress(wallet?.account?.address || null);
-        });
-      });
-    }
+    // التحقق من المحفظة المتصلة عند التحميل
+    tonConnect.onStatusChange((wallet) => {
+      if (wallet?.account?.address) {
+        setWalletAddress(wallet.account.address);
+      } else {
+        setWalletAddress(null);
+      }
+    });
   }, []);
 
   return (
     <TonWalletContext.Provider value={{ walletAddress, tonConnectUI }}>
-      {isClient ? (
-        <TonConnectUIProvider
-          manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json"
-        >
-          {children}
-        </TonConnectUIProvider>
-      ) : (
-        children
-      )}
+      <TonConnectUIProvider> {/* ✅ إزالة `value` لأنه غير مطلوب */}
+        {children}
+      </TonConnectUIProvider>
     </TonWalletContext.Provider>
   );
 };
