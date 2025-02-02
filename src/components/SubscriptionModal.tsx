@@ -5,8 +5,8 @@ import usdtAnimation from '../animations/usdt.json'
 import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
-import { useTelegram } from '../context/TelegramContext' // أضف هذا الاستيراد
-import { useEffect } from 'react' // أضف هذا الاستيراد
+import { useTelegram } from '../context/TelegramContext'
+import { useEffect } from 'react'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -22,40 +22,47 @@ type SubscriptionPlan = {
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment, loading } = useTelegramPayment()
-  const { telegramId } = useTelegram() // أضف هذا السطر
+  const { telegramId } = useTelegram()
+
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+  }, []);
 
   useEffect(() => {
     const handleInvoiceEvent = (event: { status: string }) => {
       if (event.status === 'paid') {
-        onClose()
-        window.location.reload()
+        onClose();
+        window.location.reload();
       }
-    }
+    };
 
-    if (window.Telegram?.WebApp?.onEvent) {
-    window.Telegram.WebApp.onEvent('invoiceClosed', handleInvoiceEvent);
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.onEvent('invoiceClosed', handleInvoiceEvent);
     }
 
     return () => {
-      if (window.Telegram?.WebApp?.offEvent) {
-          window.Telegram.WebApp.offEvent('invoiceClosed', handleInvoiceEvent);
-          }
-    }
-  }, [onClose])
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.offEvent('invoiceClosed', handleInvoiceEvent);
+      }
+    };
+  }, [onClose]);
 
   const handlePayment = async () => {
-    if (!plan) return
+    if (!plan) return;
 
-    const price = parseFloat(plan.price.replace(/[^0-9.]/g, ''))
+    const price = parseFloat(plan.price.replace(/[^0-9.]/g, ''));
 
     await handleTelegramStarsPayment(
       plan.id,
       price,
       () => {}
-    )
-  }
+    );
+  };
 
-  if (!plan) return null
+  if (!plan) return null;
 
   return (
     <AnimatePresence>
@@ -78,7 +85,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           exit={{ y: "100%" }}
           transition={{ type: "spring", stiffness: 150, damping: 20 }}
           onClick={(e) => e.stopPropagation()}
-          >
+        >
           {/* 🔹 رأس النافذة */}
           <div className="bg-[#f8fbff] px-4 py-3 flex justify-between items-center border-b sticky top-0">
             <button

@@ -11,6 +11,13 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   const { telegramId } = useTelegram()
   const [isLoading, setIsLoading] = useState(true)
 
+    useEffect(() => {
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+}, []);
+
   useEffect(() => {
     const checkData = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000))
