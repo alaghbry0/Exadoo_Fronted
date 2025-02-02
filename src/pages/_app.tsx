@@ -8,30 +8,28 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId } = useTelegram(); // جلب telegram_id من السياق
-  const [isLoading, setIsLoading] = useState(true);
+  const { telegramId } = useTelegram()
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const checkData = async () => {
-      // انتظر لمدة ثانية لمحاكاة تحميل البيانات
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       if (telegramId) {
-        console.log("✅ telegram_id متاح:", telegramId);
-        setIsLoading(false); // إخفاء شاشة التحميل بعد التأكد من وجود telegram_id
+        console.log("✅ telegram_id متاح:", telegramId)
+        setIsLoading(false)
       } else {
-        console.warn("⚠️ لا يوجد telegram_id، التطبيق ينتظر البيانات...");
-        // إذا لم يتم العثور على telegram_id بعد 3 ثوانٍ، تخطّى شاشة التحميل
+        console.warn("⚠️ لا يوجد telegram_id، التطبيق ينتظر البيانات...")
         const timeout = setTimeout(() => {
-          setIsLoading(false);
-        }, 3000);
+          setIsLoading(false)
+        }, 3000)
 
-        return () => clearTimeout(timeout); // تنظيف الـ timeout عند إلغاء المكون
+        return () => clearTimeout(timeout)
       }
-    };
+    }
 
-    checkData();
-  }, [telegramId]); // يعاد التشغيل عند تغيير telegram_id
+    checkData()
+  }, [telegramId])
 
   return (
     isLoading ? (
@@ -43,19 +41,33 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         exit={{ opacity: 0 }}
         transition={{ duration: 1 }}
       >
-        <Component {...pageProps} router={router} /> {/* تمرير router */}
+        <Component {...pageProps} router={router} />
         <FooterNav />
       </motion.div>
     )
-  );
+  )
 }
 
 function MyApp({ Component, pageProps, router }: AppProps) {
+  const [isTelegramReady, setIsTelegramReady] = useState(false)
+
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready()
+      window.Telegram.WebApp.expand()
+      setIsTelegramReady(true)
+    }
+  }, [])
+
   return (
-    <TelegramProvider> {/* جعل telegram_id متاحًا في جميع الصفحات */}
-      <AppContent Component={Component} pageProps={pageProps} router={router} />
+    <TelegramProvider>
+      {isTelegramReady ? (
+        <AppContent Component={Component} pageProps={pageProps} router={router} />
+      ) : (
+        <SplashScreen />
+      )}
     </TelegramProvider>
-  );
+  )
 }
 
-export default MyApp;
+export default MyApp

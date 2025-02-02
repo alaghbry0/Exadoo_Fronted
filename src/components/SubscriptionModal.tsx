@@ -4,11 +4,12 @@ import { FiCheckCircle, FiX } from 'react-icons/fi'
 import usdtAnimation from '../animations/usdt.json'
 import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
-import { useTelegramPayment } from '../hooks/useTelegramPayment' // ✅ استيراد نظام الدفع بـ Telegram Stars
+import { useTelegramPayment } from '../hooks/useTelegramPayment'
+import { useTelegram } from '../context/TelegramContext' // أضف هذا الاستيراد
+import { useEffect } from 'react' // أضف هذا الاستيراد
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
-// ✅ تعريف نوع بيانات خطة الاشتراك
 type SubscriptionPlan = {
   id: number
   name: string
@@ -20,10 +21,37 @@ type SubscriptionPlan = {
 }
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
-  // ✅ ضمان استدعاء الـ Hook قبل أي شرط
   const { handleTelegramStarsPayment, loading } = useTelegramPayment()
+  const { telegramId } = useTelegram() // أضف هذا السطر
 
-  if (!plan) return null // ✅ الآن الشرط لا يؤثر على الـ Hook
+  useEffect(() => {
+    const handleInvoiceEvent = (event: { status: string }) => {
+      if (event.status === 'paid') {
+        onClose()
+        window.location.reload()
+      }
+    }
+
+    window.Telegram?.WebApp?.onEvent('invoiceClosed', handleInvoiceEvent)
+
+    return () => {
+      window.Telegram?.WebApp?.offEvent('invoiceClosed', handleInvoiceEvent)
+    }
+  }, [onClose])
+
+  const handlePayment = async () => {
+    if (!plan) return
+
+    const price = parseFloat(plan.price.replace(/[^0-9.]/g, ''))
+
+    await handleTelegramStarsPayment(
+      plan.id,
+      price,
+      () => {}
+    )
+  }
+
+  if (!plan) return null
 
   return (
     <AnimatePresence>
@@ -39,14 +67,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           style={{
             height: '65vh',
             maxHeight: 'calc(180vh - 70px)',
-            marginBottom: '59px' // يتوافق مع ارتفاع شريط التنقل الجديد
+            marginBottom: '59px'
           }}
           initial={{ y: "100%" }}
           animate={{ y: "0%" }}
           exit={{ y: "100%" }}
           transition={{ type: "spring", stiffness: 150, damping: 20 }}
           onClick={(e) => e.stopPropagation()}
-        >
+          >
           {/* 🔹 رأس النافذة */}
           <div className="bg-[#f8fbff] px-4 py-3 flex justify-between items-center border-b sticky top-0">
             <button
@@ -103,21 +131,20 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
               {/* ✅ زر الدفع بـ Telegram Stars */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleTelegramStarsPayment(plan.id, plan.price, onClose)} // ✅ استدعاء الدفع عند النقر
-                disabled={loading} // ✅ تعطيل الزر أثناء التحميل
-                className={`w-full flex items-center justify-between px-4 py-2.5
-                  bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
-                  ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />
-                <span className="font-medium ml-2">
-                  {loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
-                </span>
-              </motion.button>
-            </div>
-          </div>
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handlePayment}
+            disabled={loading || !telegramId}
+            className={`w-full flex items-center justify-between px-4 py-2.5
+              bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
+              ${loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />
+            <span className="font-medium ml-2">
+              {loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
+              {!telegramId && " (يتطلب فتح التطبيق داخل تليجرام)"}
+            </span>
+          </motion.button>
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -125,3 +152,4 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 }
 
 export default SubscriptionModal
+
