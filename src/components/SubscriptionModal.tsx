@@ -145,7 +145,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               {!telegramId && " (يتطلب فتح التطبيق داخل تليجرام)"}
             </span>
           </motion.button>
-        </motion.div>
+            </div> {/* أضف هذا السطر لإغلاق div خيارات الدفع */}
+          </div> {/* أضف هذا السطر لإغلاق div محتوى النافذة */}
+        </motion.div> {/* أضف هذا السطر لإغلاق motion.div الرئيسي */}
       </motion.div>
     </AnimatePresence>
   )

@@ -1,6 +1,6 @@
 // useTelegramPayment.ts
 'use client'
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTelegram } from "../context/TelegramContext";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
