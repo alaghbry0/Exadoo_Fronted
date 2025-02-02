@@ -1,6 +1,12 @@
 'use client'
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
+// تعريف نوع الأحداث الخاصة بتلغرام
+type TelegramEvent =
+  | { type: 'invoiceClosed', callback: (event: { status: 'paid' | 'cancelled' | 'failed' }) => void }
+  | { type: 'themeChanged', callback: () => void }
+  | { type: 'viewportChanged', callback: () => void };
+
 declare global {
   interface Window {
     Telegram?: {
@@ -13,9 +19,10 @@ declare global {
         };
         ready: () => void;
         expand: () => void;
-        onEvent: (eventType: string, callback: (event: any) => void) => void;
-        offEvent: (eventType: string, callback: (event: any) => void) => void;
         openInvoice: (url: string, callback: (status: string) => void) => void;
+        // استخدام التعميم لتعريف onEvent و offEvent بأنواع متعددة
+        onEvent: <T extends TelegramEvent>(eventType: T['type'], callback: T['callback']) => void;
+        offEvent: <T extends TelegramEvent>(eventType: T['type'], callback: T['callback']) => void;
       };
     };
   }
@@ -23,10 +30,10 @@ declare global {
 
 const TelegramContext = createContext<{
   telegramId: string | null;
-  setTelegramId: (id: string | null) => void; // أضف هذه السطر
+  setTelegramId: (id: string | null) => void;
 }>({
   telegramId: null,
-  setTelegramId: () => {}, // أضف قيمة افتراضية
+  setTelegramId: () => {},
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
@@ -70,7 +77,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   }, [initializeTelegram]);
 
   return (
-    <TelegramContext.Provider value={{ telegramId, setTelegramId }}> {/* ✅ أضف setTelegramId هنا */}
+    <TelegramContext.Provider value={{ telegramId, setTelegramId }}>
       {children}
     </TelegramContext.Provider>
   );
