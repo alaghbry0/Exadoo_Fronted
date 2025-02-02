@@ -1,12 +1,6 @@
 'use client'
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-// تعريف نوع الأحداث الخاصة بتلغرام
-type TelegramEvent =
-  | { type: 'invoiceClosed', callback: (event: { status: 'paid' | 'cancelled' | 'failed' }) => void }
-  | { type: 'themeChanged', callback: () => void }
-  | { type: 'viewportChanged', callback: () => void };
-
 declare global {
   interface Window {
     Telegram?: {
@@ -19,10 +13,15 @@ declare global {
         };
         ready: () => void;
         expand: () => void;
+        onEvent: (
+          eventType: 'invoiceClosed',
+          callback: (event: { status: 'paid' | 'cancelled' | 'failed' }) => void
+        ) => void;
+        offEvent: (
+          eventType: 'invoiceClosed',
+          callback: (event: { status: 'paid' | 'cancelled' | 'failed' }) => void
+        ) => void;
         openInvoice: (url: string, callback: (status: string) => void) => void;
-        // استخدام التعميم لتعريف onEvent و offEvent بأنواع متعددة
-        onEvent: <T extends TelegramEvent>(eventType: T['type'], callback: T['callback']) => void;
-        offEvent: <T extends TelegramEvent>(eventType: T['type'], callback: T['callback']) => void;
       };
     };
   }
