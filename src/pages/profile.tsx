@@ -1,43 +1,22 @@
 'use client'
-import {  useEffect, useState } from "react"
-import { useTelegram } from "../context/TelegramContext"
-import SubscriptionModal from '../components/SubscriptionModal'
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
-import ProfileHeader from '../components/Profile/ProfileHeader'
-import SubscriptionsSection from '../components/Profile/SubscriptionsSection'
-import useSWR from 'swr'
+import { useEffect, useState } from "react";
+import { useTelegram } from "../context/TelegramContext";
+import SubscriptionModal from '../components/SubscriptionModal';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import ProfileHeader from '../components/Profile/ProfileHeader';
+import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
+import useSWR from 'swr';
+import { UserProfile, Subscription } from '../types'; // ✅ استيراد الأنواع الموحدة
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com"
-const DEFAULT_PROFILE = '/default-profile.png'
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
+const DEFAULT_PROFILE = '/default-profile.png';
 
-type UserProfile = {
-  telegram_id?: number
-  full_name?: string
-  username?: string | null
-  profile_photo?: string
-  join_date?: string
-  subscriptions?: Subscription[]
-}
-
-type Subscription = {
-  id: number
-  name: string
-  price: string
-  description: string
-  features: string[]
-  animation: object
-  color: string
-  expiry: string
-  progress: number
-  status: string
-}
-
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Profile() {
-  const { telegramId, setTelegramId } = useTelegram()
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const { telegramId, setTelegramId } = useTelegram();
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
 
   const { data, error, isLoading } = useSWR<UserProfile>(
     telegramId ? `${BACKEND_URL}/api/user?telegram_id=${telegramId}` : null,
@@ -47,27 +26,27 @@ export default function Profile() {
       shouldRetryOnError: false,
       dedupingInterval: 10000,
     }
-  )
+  );
 
   // معالجة تغيير عنوان URL
   useEffect(() => {
     const handleURLChange = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const newTelegramId = urlParams.get('telegram_id')
+      const urlParams = new URLSearchParams(window.location.search);
+      const newTelegramId = urlParams.get('telegram_id');
       if (newTelegramId !== telegramId?.toString()) {
-        setTelegramId(newTelegramId)
+        setTelegramId(newTelegramId);
       }
-    }
+    };
 
-    window.addEventListener('popstate', handleURLChange)
-    handleURLChange()
+    window.addEventListener('popstate', handleURLChange);
+    handleURLChange();
 
-    return () => window.removeEventListener('popstate', handleURLChange)
-  }, [telegramId, setTelegramId])
+    return () => window.removeEventListener('popstate', handleURLChange);
+  }, [telegramId, setTelegramId]);
 
   const handleRenew = (subscription: Subscription) => {
-    setSelectedSubscription(subscription)
-  }
+    setSelectedSubscription(subscription);
+  };
 
   if (isLoading) {
     return (
@@ -77,7 +56,7 @@ export default function Profile() {
           <SubscriptionsSkeleton />
         </SkeletonTheme>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -93,7 +72,7 @@ export default function Profile() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   const userData = data ? {
@@ -102,7 +81,7 @@ export default function Profile() {
     username: data.username ? `${data.username}` : 'N/L',
     profile_photo: data.profile_photo?.startsWith('http') ? data.profile_photo : DEFAULT_PROFILE,
     subscriptions: data.subscriptions || [],
-  } : null
+  } : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
@@ -120,7 +99,7 @@ export default function Profile() {
         onClose={() => setSelectedSubscription(null)}
       />
     </div>
-  )
+  );
 }
 
 const ProfileHeaderSkeleton = () => (
@@ -134,7 +113,7 @@ const ProfileHeaderSkeleton = () => (
       </div>
     </div>
   </SkeletonTheme>
-)
+);
 
 const SubscriptionsSkeleton = () => (
   <SkeletonTheme baseColor="#f0f0f0" highlightColor="#f8f8f8">
@@ -150,4 +129,4 @@ const SubscriptionsSkeleton = () => (
       </div>
     </div>
   </SkeletonTheme>
-)
+);

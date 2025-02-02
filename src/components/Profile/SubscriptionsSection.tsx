@@ -1,15 +1,8 @@
 'use client'
 import { motion } from 'framer-motion'
 import { FiZap, FiRefreshCw, FiStar } from 'react-icons/fi'
+import { Subscription } from '../types';
 
-// ✅ تعريف نوع البيانات للاشتراك
-type Subscription = {
-  id: number
-  name: string
-  expiry: string
-  status: 'نشط' | 'منتهي'
-  progress: number
-}
 
 type SubscriptionsSectionProps = {
   subscriptions: Subscription[]
