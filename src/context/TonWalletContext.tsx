@@ -31,7 +31,7 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
 
   return (
     <TonWalletContext.Provider value={{ walletAddress, tonConnectUI }}>
-      <TonConnectUIProvider value={tonConnectUI}>
+      <TonConnectUIProvider> {/* ✅ إزالة `value` لأنه غير مطلوب */}
         {children}
       </TonConnectUIProvider>
     </TonWalletContext.Provider>
