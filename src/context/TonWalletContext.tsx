@@ -14,7 +14,7 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     const tonConnect = new TonConnectUI({
-      manifestUrl: "https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json", // ✅ قم بتحديث هذا الرابط لاحقًا
+      manifestUrl: "https://your-domain.com/tonconnect-manifest.json", // ✅ قم بتحديث هذا الرابط لاحقًا
     });
 
     setTonConnectUI(tonConnect);
@@ -31,7 +31,7 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
 
   return (
     <TonWalletContext.Provider value={{ walletAddress, tonConnectUI }}>
-      <TonConnectUIProvider> {/* ✅ إزالة `value` لأنه غير مطلوب */}
+      <TonConnectUIProvider value={tonConnectUI}>
         {children}
       </TonConnectUIProvider>
     </TonWalletContext.Provider>
