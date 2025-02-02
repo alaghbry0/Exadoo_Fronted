@@ -13,6 +13,9 @@ declare global {
         };
         ready: () => void;
         expand: () => void;
+        onEvent: (eventType: string, callback: (event: any) => void) => void;
+        offEvent: (eventType: string, callback: (event: any) => void) => void;
+        openInvoice: (url: string, callback: (status: string) => void) => void;
       };
     };
   }

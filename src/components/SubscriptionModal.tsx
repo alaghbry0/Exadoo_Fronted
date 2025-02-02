@@ -32,10 +32,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       }
     }
 
-    window.Telegram?.WebApp?.onEvent('invoiceClosed', handleInvoiceEvent)
+    if (window.Telegram?.WebApp?.onEvent) {
+    window.Telegram.WebApp.onEvent('invoiceClosed', handleInvoiceEvent);
+    }
 
     return () => {
-      window.Telegram?.WebApp?.offEvent('invoiceClosed', handleInvoiceEvent)
+      if (window.Telegram?.WebApp?.offEvent) {
+          window.Telegram.WebApp.offEvent('invoiceClosed', handleInvoiceEvent);
+          }
     }
   }, [onClose])
 
