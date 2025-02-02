@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
         hostname: "api.telegram.org",
       },
     ],
-    minimumCacheTTL: 86400,
+    unoptimized: true, // ✅ تعطيل تحسين الصور لجميع الصور
   },
   webpack: (config, { isServer }) => {
     if (isServer) config.resolve.fallback = { fs: false }
