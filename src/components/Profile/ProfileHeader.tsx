@@ -13,11 +13,28 @@ type UserProfile = {
 
 export default function ProfileHeader({ userData }: { userData: UserProfile }) {
   const defaultProfile = '/default-profile.png'
-  const [imageSrc, setImageSrc] = useState<string>(defaultProfile)
+  const [imageSrc, setImageSrc] = useState(defaultProfile)
 
   useEffect(() => {
-    const telegramPhoto = userData.profile_photo?.startsWith('https://api.telegram.org')
-    setImageSrc(telegramPhoto ? userData.profile_photo : defaultProfile)
+    const verifyImage = async (url: string) => {
+      try {
+        const res = await fetch(url, { method: 'HEAD' })
+        return res.ok
+      } catch {
+        return false
+      }
+    }
+
+    const loadImage = async () => {
+      if (userData.profile_photo?.startsWith('https://api.telegram.org')) {
+        const isValid = await verifyImage(userData.profile_photo)
+        setImageSrc(isValid ? userData.profile_photo : defaultProfile)
+      } else {
+        setImageSrc(defaultProfile)
+      }
+    }
+
+    loadImage()
   }, [userData.profile_photo])
 
   return (
@@ -34,11 +51,10 @@ export default function ProfileHeader({ userData }: { userData: UserProfile }) {
           <Image
             src={imageSrc}
             alt="Profile"
-            width={80}
+             width={80}
             height={80}
-            className="object-cover rounded-full"
+             className="object-cover rounded-full"
             priority
-            unoptimized // حل مؤقت للصور الخارجية
             onError={() => setImageSrc(defaultProfile)}
           />
           <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700]/20 to-[#2390f1]/20 backdrop-blur-[2px]" />
