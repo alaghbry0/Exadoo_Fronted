@@ -21,9 +21,8 @@ export const useTelegramPayment = () => {
     }
 
     try {
-      const confirm = await window.Telegram.WebApp.showConfirm(
-        `⚡ هل تريد شراء اشتراك مقابل ${price} نجمة؟`
-      );
+      // ✅ استخدام `window.confirm()` بدلاً من `showConfirm`
+      const confirm = window.confirm(`⚡ هل تريد شراء اشتراك مقابل ${price} نجمة؟`);
 
       if (!confirm) {
         console.warn("❌ تم إلغاء الدفع.");
@@ -44,7 +43,7 @@ export const useTelegramPayment = () => {
       });
 
       const data = await response.json();
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(`❌ فشل الدفع: ${data.error || "خطأ غير معروف"}`);
       }
 
