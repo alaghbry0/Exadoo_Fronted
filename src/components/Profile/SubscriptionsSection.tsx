@@ -1,8 +1,7 @@
 'use client'
 import { motion } from 'framer-motion'
 import { FiZap, FiRefreshCw, FiStar } from 'react-icons/fi'
-import { Subscription } from '../types';
-
+import { Subscription } from '@/types';
 
 type SubscriptionsSectionProps = {
   subscriptions: Subscription[]

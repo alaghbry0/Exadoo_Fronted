@@ -7,7 +7,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
 import useSWR from 'swr';
-import { UserProfile, Subscription } from '../types'; // ✅ استيراد الأنواع الموحدة
+import { UserProfile, Subscription } from '@/types'; // ✅ استيراد الأنواع الموحدة
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
 const DEFAULT_PROFILE = '/default-profile.png';
