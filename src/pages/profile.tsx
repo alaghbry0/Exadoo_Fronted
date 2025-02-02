@@ -29,20 +29,22 @@ export default function Profile() {
   );
 
   // معالجة تغيير عنوان URL
-  useEffect(() => {
+    useEffect(() => {
     const handleURLChange = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const newTelegramId = urlParams.get('telegram_id');
-      if (newTelegramId !== telegramId?.toString()) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const newTelegramId = urlParams.get('telegram_id');
+
+        // ✅ تحقق من القيمة قبل التحديث
+        if (newTelegramId && newTelegramId !== telegramId) {
         setTelegramId(newTelegramId);
-      }
+        }
     };
 
     window.addEventListener('popstate', handleURLChange);
     handleURLChange();
 
     return () => window.removeEventListener('popstate', handleURLChange);
-  }, [telegramId, setTelegramId]);
+    }, [telegramId, setTelegramId]);
 
   const handleRenew = (subscription: Subscription) => {
     setSelectedSubscription(subscription);

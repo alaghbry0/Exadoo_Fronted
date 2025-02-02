@@ -20,8 +20,10 @@ declare global {
 
 const TelegramContext = createContext<{
   telegramId: string | null;
+  setTelegramId: (id: string | null) => void; // أضف هذه السطر
 }>({
   telegramId: null,
+  setTelegramId: () => {}, // أضف قيمة افتراضية
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
@@ -65,7 +67,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   }, [initializeTelegram]);
 
   return (
-    <TelegramContext.Provider value={{ telegramId }}>
+    <TelegramContext.Provider value={{ telegramId, setTelegramId }}> {/* ✅ أضف setTelegramId هنا */}
       {children}
     </TelegramContext.Provider>
   );
