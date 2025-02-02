@@ -2,18 +2,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
-// ✅ تحميل `@tonconnect/ui-react` فقط على المتصفح لمنع `ReactCurrentDispatcher` Error
+// ✅ استيراد `TonConnectUIProvider` فقط في المتصفح لمنع الخطأ
 const TonConnectUIProvider = dynamic(
   () => import("@tonconnect/ui-react").then((mod) => mod.TonConnectUIProvider),
   { ssr: false }
 );
 
-const TonConnectUI = dynamic(
-  () => import("@tonconnect/ui-react").then((mod) => mod.TonConnectUI),
-  { ssr: false }
-);
-
-// ✅ تحديد نوع بيانات `Context`
+// ✅ تعريف نوع بيانات `Context`
 interface TonWalletContextType {
   walletAddress: string | null;
   tonConnectUI: any | null;
@@ -28,10 +23,10 @@ const TonWalletContext = createContext<TonWalletContextType>({
 export const TonWalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [tonConnectUI, setTonConnectUI] = useState<any | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  const [isClient, setIsClient] = useState(false); // ✅ لمعرفة ما إذا كان الكود يعمل في المتصفح
 
   useEffect(() => {
-    setIsClient(true); // ✅ تأكيد تشغيل الكود في المتصفح فقط
+    setIsClient(true); // ✅ تفعيل العميل بعد تحميل الصفحة
 
     if (typeof window !== "undefined") {
       import("@tonconnect/ui-react").then((mod) => {
@@ -42,7 +37,7 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
 
         setTonConnectUI(tonConnectInstance);
 
-        // ✅ التحقق من المحفظة المتصلة عند التحميل
+        // ✅ تحديث عنوان المحفظة عند تغيّر الحالة
         tonConnectInstance.onStatusChange((wallet: any) => {
           setWalletAddress(wallet?.account?.address || null);
         });
@@ -52,7 +47,7 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
 
   return (
     <TonWalletContext.Provider value={{ walletAddress, tonConnectUI }}>
-      {isClient && TonConnectUIProvider ? (
+      {isClient ? (
         <TonConnectUIProvider
           manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json"
         >
@@ -65,5 +60,5 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
   );
 };
 
-// ✅ دالة `useTonWallet` للوصول إلى بيانات المحفظة بسهولة
+// ✅ دالة `useTonWallet` لاستخدام المحفظة بسهولة في أي مكون
 export const useTonWallet = () => useContext(TonWalletContext);
