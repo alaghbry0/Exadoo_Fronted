@@ -8,7 +8,7 @@ import { useTelegramPayment } from '../hooks/useTelegramPayment' // ✅ استي
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
-// تحديد نوع البيانات لخطة الاشتراك
+// ✅ تعريف نوع بيانات خطة الاشتراك
 type SubscriptionPlan = {
   id: number
   name: string
@@ -20,9 +20,10 @@ type SubscriptionPlan = {
 }
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
-  if (!plan) return null
+  // ✅ ضمان استدعاء الـ Hook قبل أي شرط
+  const { handleTelegramStarsPayment, loading } = useTelegramPayment()
 
-  const { handleTelegramStarsPayment, loading } = useTelegramPayment() // ✅ استخدام نظام الدفع بـ Telegram Stars
+  if (!plan) return null // ✅ الآن الشرط لا يؤثر على الـ Hook
 
   return (
     <AnimatePresence>
@@ -46,7 +47,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           transition={{ type: "spring", stiffness: 150, damping: 20 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* رأس النافذة */}
+          {/* 🔹 رأس النافذة */}
           <div className="bg-[#f8fbff] px-4 py-3 flex justify-between items-center border-b sticky top-0">
             <button
               onClick={onClose}
@@ -59,16 +60,16 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </h2>
           </div>
 
-          {/* محتوى النافذة مع مساحة مضمونة */}
+          {/* 🔹 محتوى النافذة */}
           <div className="p-4 h-[calc(82vh-56px)] flex flex-col overflow-y-auto pb-4">
             <div className="space-y-4 flex-1">
-              {/* السعر والمدة */}
+              {/* 🔹 السعر والمدة */}
               <div className="flex items-baseline gap-2 justify-end mb-4">
                 <span className="text-gray-500 text-sm">/ شهرياً</span>
                 <span className="text-xl font-bold text-[#2390f1]">{plan.price}</span>
               </div>
 
-              {/* الميزات */}
+              {/* 🔹 الميزات */}
               <div className="space-y-3">
                 <h3 className="text-sm font-medium text-gray-500 text-right">المزايا المضمنة:</h3>
                 <ul className="space-y-2">
@@ -85,7 +86,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               </div>
             </div>
 
-            {/* خيارات الدفع مع هامش آمن */}
+            {/* 🔹 خيارات الدفع */}
             <div className="sticky bottom-20 bg-white pt-4 pb-8 space-y-2">
               <motion.button
                 whileHover={{ scale: 1.02 }}
