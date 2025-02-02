@@ -38,8 +38,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           className="bg-white rounded-t-2xl shadow-xl w-full max-w-lg mx-auto overflow-hidden"
           style={{
             height: '65vh',
-            maxHeight: 'calc(150vh - 70px)',
-            marginBottom: '56px' // يتوافق مع ارتفاع شريط التنقل الجديد
+            maxHeight: 'calc(180vh - 70px)',
+            marginBottom: '59px' // يتوافق مع ارتفاع شريط التنقل الجديد
           }}
           initial={{ y: "100%" }}
           animate={{ y: "0%" }}
@@ -61,7 +61,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           </div>
 
           {/* 🔹 محتوى النافذة */}
-          <div className="p-4 h-[calc(82vh-56px)] flex flex-col overflow-y-auto pb-4">
+          <div className="p-4 h-[calc(80.4vh-56px)] flex flex-col overflow-y-auto pb-4">
             <div className="space-y-4 flex-1">
               {/* 🔹 السعر والمدة */}
               <div className="flex items-baseline gap-2 justify-end mb-4">
