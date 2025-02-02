@@ -1,30 +1,37 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { AppProps } from 'next/app'
-//import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
 import { motion } from 'framer-motion'
-import { TelegramProvider, useTelegram } from '../context/TelegramContext' // ✅ استيراد TelegramProvider
+import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId } = useTelegram(); // ✅ جلب telegram_id
+  const { telegramId } = useTelegram(); // جلب telegram_id من السياق
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // ⏳ محاكاة تحميل البيانات
+      // انتظر لمدة ثانية لمحاكاة تحميل البيانات
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       if (telegramId) {
         console.log("✅ telegram_id متاح:", telegramId);
-        setIsLoading(false); // 🚀 إخفاء شاشة التحميل بعد التأكد من telegram_id
+        setIsLoading(false); // إخفاء شاشة التحميل بعد التأكد من وجود telegram_id
       } else {
         console.warn("⚠️ لا يوجد telegram_id، التطبيق ينتظر البيانات...");
+        // إذا لم يتم العثور على telegram_id بعد 3 ثوانٍ، تخطّى شاشة التحميل
+        const timeout = setTimeout(() => {
+          setIsLoading(false);
+        }, 3000);
+
+        return () => clearTimeout(timeout); // تنظيف الـ timeout عند إلغاء المكون
       }
     };
 
     checkData();
-  }, [telegramId]); // 🔁 يتم التحقق عند تغيير telegram_id
+  }, [telegramId]); // يعاد التشغيل عند تغيير telegram_id
 
   return (
     isLoading ? (
@@ -36,7 +43,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         exit={{ opacity: 0 }}
         transition={{ duration: 1 }}
       >
-        <Component {...pageProps} router={router} /> {/* ✅ تمرير router */}
+        <Component {...pageProps} router={router} /> {/* تمرير router */}
         <FooterNav />
       </motion.div>
     )
@@ -45,7 +52,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
 
 function MyApp({ Component, pageProps, router }: AppProps) {
   return (
-    <TelegramProvider> {/* ✅ جعل telegram_id متاحًا في جميع الصفحات */}
+    <TelegramProvider> {/* جعل telegram_id متاحًا في جميع الصفحات */}
       <AppContent Component={Component} pageProps={pageProps} router={router} />
     </TelegramProvider>
   );
