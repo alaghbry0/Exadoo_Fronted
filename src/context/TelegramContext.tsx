@@ -1,6 +1,7 @@
+'use client'
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-// ✅ تعريف `window.Telegram` لتجنب خطأ TypeScript
+// ✅ تعريف `window.Telegram` لتجنب أخطاء TypeScript
 declare global {
   interface Window {
     Telegram?: {
@@ -16,7 +17,7 @@ declare global {
   }
 }
 
-// ✅ إنشاء `Context` لحفظ بيانات المستخدم من Telegram API
+// ✅ إنشاء `Context` لحفظ بيانات Telegram
 const TelegramContext = createContext<{
   telegramId: string | null;
   setTelegramId: (id: string | null) => void;
@@ -27,48 +28,56 @@ const TelegramContext = createContext<{
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const [telegramId, setTelegramId] = useState<string | null>(null);
+  const [isTelegramLoaded, setIsTelegramLoaded] = useState(false); // ✅ التأكد من تحميل Telegram API
 
-  // ✅ دالة لجلب `telegram_id` من Telegram Mini App أو من `URL Parameters`
   const fetchTelegramId = useCallback(() => {
-    let newTelegramId: string | null = null;
-
     if (typeof window === "undefined") return;
 
-    // ✅ 1️⃣ التأكد من أن Telegram WebApp جاهز
-    if (window?.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready();
-    }
+    try {
+      let newTelegramId: string | null = null;
 
-    // ✅ 2️⃣ الحصول على `telegram_id` من Telegram API إذا كان متاحًا
-    if (window?.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-      newTelegramId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
-      console.log(`✅ تم الحصول على telegram_id من Telegram API: ${newTelegramId}`);
-    }
-
-    // ✅ 3️⃣ في حال عدم توفر `Telegram API`، نستخدم `URL Parameters`
-    if (!newTelegramId) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlTelegramId = urlParams.get("telegram_id");
-
-      if (urlTelegramId) {
-        newTelegramId = urlTelegramId;
-        console.log(`✅ تم الحصول على telegram_id من URL: ${urlTelegramId}`);
-      } else {
-        console.warn("⚠️ لم يتم العثور على `telegram_id` من Telegram API أو URL.");
+      // ✅ 1️⃣ التحقق مما إذا كان Telegram API متاحًا
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        console.warn("⚠️ Telegram API غير متاح، سيتم إعادة المحاولة...");
+        setTimeout(fetchTelegramId, 1000); // إعادة المحاولة بعد 1 ثانية
+        return;
       }
-    }
 
-    // ✅ 4️⃣ تحديث `telegramId` فقط إذا كانت قيمة جديدة وغير فارغة
-    if (newTelegramId && newTelegramId !== telegramId) {
-      setTelegramId(newTelegramId);
-    } else {
-      // ✅ 5️⃣ إعادة المحاولة بعد 500 مللي ثانية إذا لم يتم العثور على `telegram_id`
-      setTimeout(fetchTelegramId, 500);
+      // ✅ 2️⃣ التأكد من تحميل Telegram WebApp بالكامل
+      if (!isTelegramLoaded) {
+        window.Telegram.WebApp.ready();
+        setIsTelegramLoaded(true);
+      }
+
+      // ✅ 3️⃣ استخراج `telegram_id` من Telegram API
+      if (window.Telegram.WebApp.initDataUnsafe?.user?.id) {
+        newTelegramId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+        console.log(`✅ تم الحصول على telegram_id من Telegram API: ${newTelegramId}`);
+      }
+
+      // ✅ 4️⃣ إذا لم يكن متاحًا، جرب البحث في URL
+      if (!newTelegramId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        newTelegramId = urlParams.get("telegram_id");
+
+        if (newTelegramId) {
+          console.log(`✅ تم الحصول على telegram_id من URL: ${newTelegramId}`);
+        } else {
+          console.warn("⚠️ لم يتم العثور على `telegram_id` من Telegram API أو URL.");
+        }
+      }
+
+      // ✅ 5️⃣ تحديث الحالة إذا تم العثور على `telegram_id`
+      if (newTelegramId && newTelegramId !== telegramId) {
+        setTelegramId(newTelegramId);
+      }
+    } catch (error) {
+      console.error("❌ خطأ أثناء جلب `telegram_id`:", error);
     }
-  }, [telegramId]);
+  }, [telegramId, isTelegramLoaded]);
 
   useEffect(() => {
-    fetchTelegramId();
+    setTimeout(fetchTelegramId, 500); // ⏳ تأخير أولي قبل محاولة جلب `telegram_id`
     window.addEventListener("popstate", fetchTelegramId);
 
     return () => {
