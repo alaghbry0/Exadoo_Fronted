@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTelegram } from "../context/TelegramContext"
 import SubscriptionModal from '../components/SubscriptionModal'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
