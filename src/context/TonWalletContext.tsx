@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
-// ✅ استيراد `TonConnectUIProvider` فقط في المتصفح لمنع الخطأ
+// ✅ تحميل `TonConnectUIProvider` فقط داخل المتصفح لمنع SSR
 const TonConnectUIProvider = dynamic(
   () => import("@tonconnect/ui-react").then((mod) => mod.TonConnectUIProvider),
   { ssr: false }
@@ -11,7 +11,7 @@ const TonConnectUIProvider = dynamic(
 // ✅ تعريف نوع بيانات `Context`
 interface TonWalletContextType {
   walletAddress: string | null;
-  tonConnectUI: any | null;
+  tonConnectUI: any | null; // يمكنك استبداله لاحقًا بنوع محدد بعد التحقق
 }
 
 // ✅ إنشاء `Context`
@@ -26,7 +26,7 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
   const [isClient, setIsClient] = useState(false); // ✅ لمعرفة ما إذا كان الكود يعمل في المتصفح
 
   useEffect(() => {
-    setIsClient(true); // ✅ تفعيل العميل بعد تحميل الصفحة
+    setIsClient(true); // ✅ تأكيد تحميل المتصفح
 
     if (typeof window !== "undefined") {
       import("@tonconnect/ui-react").then((mod) => {
@@ -60,5 +60,5 @@ export const TonWalletProvider = ({ children }: { children: React.ReactNode }) =
   );
 };
 
-// ✅ دالة `useTonWallet` لاستخدام المحفظة بسهولة في أي مكون
+// ✅ دالة `useTonWallet` للوصول إلى بيانات المحفظة بسهولة في أي مكون
 export const useTonWallet = () => useContext(TonWalletContext);

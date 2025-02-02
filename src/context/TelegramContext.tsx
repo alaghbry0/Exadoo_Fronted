@@ -10,6 +10,7 @@ declare global {
             id?: number;
           };
         };
+        ready: () => void;
       };
     };
   }
@@ -33,13 +34,18 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
     if (typeof window === "undefined") return;
 
-    // ✅ 1️⃣ الحصول على `telegram_id` من Telegram Mini App إذا كان مفتوحًا داخل Telegram
+    // ✅ 1️⃣ التأكد من أن Telegram WebApp جاهز
+    if (window?.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+    }
+
+    // ✅ 2️⃣ الحصول على `telegram_id` من Telegram API إذا كان متاحًا
     if (window?.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
       newTelegramId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
       console.log(`✅ تم الحصول على telegram_id من Telegram API: ${newTelegramId}`);
     }
 
-    // ✅ 2️⃣ في حال عدم توفر `Telegram API`، نستخدم `URL Parameters`
+    // ✅ 3️⃣ في حال عدم توفر `Telegram API`، نستخدم `URL Parameters`
     if (!newTelegramId) {
       const urlParams = new URLSearchParams(window.location.search);
       const urlTelegramId = urlParams.get("telegram_id");
@@ -52,9 +58,12 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       }
     }
 
-    // ✅ تحديث `telegramId` فقط إذا كانت قيمة جديدة وغير فارغة
+    // ✅ 4️⃣ تحديث `telegramId` فقط إذا كانت قيمة جديدة وغير فارغة
     if (newTelegramId && newTelegramId !== telegramId) {
       setTelegramId(newTelegramId);
+    } else {
+      // ✅ 5️⃣ إعادة المحاولة بعد 500 مللي ثانية إذا لم يتم العثور على `telegram_id`
+      setTimeout(fetchTelegramId, 500);
     }
   }, [telegramId]);
 
