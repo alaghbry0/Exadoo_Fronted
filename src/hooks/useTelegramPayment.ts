@@ -1,11 +1,33 @@
 'use client'
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTelegram } from "../context/TelegramContext";
 
 export const useTelegramPayment = () => {
   const { telegramId } = useTelegram();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | 'cancelled' | null>(null);
+
+  useEffect(() => {
+    if (!window.Telegram?.WebApp) return;
+
+    // متابعة الدفع بعد إغلاق النافذة
+    const handleInvoiceClosed = (event: { status: 'paid' | 'cancelled' | 'failed' }) => {
+      setLoading(false);
+
+      if (event.status === 'paid') {
+        console.log("✅ الدفع تم بنجاح!");
+        setPaymentStatus('paid');
+      } else {
+        console.warn(`❌ الدفع فشل: ${event.status}`);
+        setError(`فشلت عملية الدفع (${event.status})`);
+        setPaymentStatus(event.status);
+      }
+    };
+
+    window.Telegram.WebApp.onEvent("invoiceClosed", handleInvoiceClosed);
+    return () => window.Telegram.WebApp.offEvent("invoiceClosed", handleInvoiceClosed);
+  }, []);
 
   const handleTelegramStarsPayment = async (
     planId: number,
@@ -20,6 +42,7 @@ export const useTelegramPayment = () => {
     try {
       setLoading(true);
       setError(null);
+      setPaymentStatus('pending');
 
       const payload = JSON.stringify({
         planId,
@@ -39,9 +62,12 @@ export const useTelegramPayment = () => {
         (status) => {
           if (status === 'paid') {
             console.log("✅ تم الدفع بنجاح");
+            setPaymentStatus('paid');
             onSuccess();
           } else {
-            console.warn(`❌ حالة الدفع: ${status}`); // تم التصحيح
+            console.warn(`❌ حالة الدفع: ${status}`);
+            setPaymentStatus(status);
+            setError(`فشلت عملية الدفع (${status})`);
           }
         }
       );
@@ -49,6 +75,7 @@ export const useTelegramPayment = () => {
     } catch (error) {
       console.error("❌ خطأ في الدفع:", error);
       setError(error instanceof Error ? error.message : "خطأ غير متوقع");
+      setPaymentStatus('failed');
       alert("فشلت عملية الدفع، يرجى المحاولة لاحقًا");
     } finally {
       setLoading(false);
@@ -60,6 +87,7 @@ export const useTelegramPayment = () => {
     paymentState: {
       loading,
       error,
+      paymentStatus,
       resetError: () => setError(null)
     }
   };

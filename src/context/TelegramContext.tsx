@@ -14,12 +14,12 @@ declare global {
         ready: () => void;
         expand: () => void;
         onEvent: (
-          eventType: 'invoiceClosed',
-          callback: (event: { status: 'paid' | 'cancelled' | 'failed' }) => void
+          eventType: 'invoiceClosed' | 'themeChanged',
+          callback: () => void
         ) => void;
         offEvent: (
-          eventType: 'invoiceClosed',
-          callback: (event: { status: 'paid' | 'cancelled' | 'failed' }) => void
+          eventType: 'invoiceClosed' | 'themeChanged',
+          callback: () => void
         ) => void;
         openInvoice: (url: string, callback: (status: string) => void) => void;
       };
@@ -29,19 +29,22 @@ declare global {
 
 const TelegramContext = createContext<{
   telegramId: string | null;
+  isTelegramReady: boolean;
   setTelegramId: (id: string | null) => void;
 }>({
   telegramId: null,
+  isTelegramReady: false,
   setTelegramId: () => {},
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const [telegramId, setTelegramId] = useState<string | null>(null);
+  const [isTelegramReady, setIsTelegramReady] = useState(false);
 
   const initializeTelegram = useCallback(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg) {
-      console.warn("Telegram WebApp not available");
+      console.warn("⚠️ Telegram WebApp not available");
       return false;
     }
 
@@ -51,7 +54,8 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     const userId = tg.initDataUnsafe?.user?.id?.toString();
     if (userId) {
       setTelegramId(userId);
-      console.log("Telegram User ID:", userId);
+      setIsTelegramReady(true);
+      console.log("✅ Telegram User ID:", userId);
       return true;
     }
 
@@ -75,8 +79,20 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     return () => clearTimeout(timeout);
   }, [initializeTelegram]);
 
+  useEffect(() => {
+    if (!window.Telegram?.WebApp) return;
+
+    const handleThemeChange = () => {
+      console.log("🎨 Theme changed, reloading Telegram data...");
+      initializeTelegram();
+    };
+
+    window.Telegram.WebApp.onEvent("themeChanged", handleThemeChange);
+    return () => window.Telegram.WebApp.offEvent("themeChanged", handleThemeChange);
+  }, [initializeTelegram]);
+
   return (
-    <TelegramContext.Provider value={{ telegramId, setTelegramId }}>
+    <TelegramContext.Provider value={{ telegramId, isTelegramReady, setTelegramId }}>
       {children}
     </TelegramContext.Provider>
   );

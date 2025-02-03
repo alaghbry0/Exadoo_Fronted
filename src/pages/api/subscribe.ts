@@ -10,9 +10,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { telegram_id, plan_id } = req.body
+  const { telegram_id, plan_id, payment_id } = req.body
 
-  if (!telegram_id || !plan_id) {
+  if (!telegram_id || !plan_id || !payment_id) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
@@ -21,7 +21,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await client.query('BEGIN')
 
-    // 1. تجديد الاشتراك
+    // 🔹 1. التأكد من أن الدفع مسجل مسبقًا
+    const existingPayment = await client.query(
+      `SELECT * FROM payments WHERE payment_id = $1`,
+      [payment_id]
+    )
+
+    if (existingPayment.rows.length > 0) {
+      console.warn(`⚠️ الدفع مسجل مسبقًا للمستخدم ${telegram_id}, payment_id: ${payment_id}`)
+      await client.query('ROLLBACK')
+      return res.status(400).json({ error: 'Payment already processed' })
+    }
+
+    // 🔹 2. تسجيل الدفع في جدول payments
+    await client.query(
+      `INSERT INTO payments (payment_id, user_id, plan_id, amount, payment_date)
+       VALUES ($1, $2, $3, (SELECT price FROM subscription_plans WHERE id = $3), NOW())`,
+      [payment_id, telegram_id, plan_id]
+    )
+
+    // 🔹 3. تجديد الاشتراك
     const subscriptionResult = await client.query(
       `INSERT INTO subscriptions (user_id, plan_id, expiry_date)
        VALUES ($1, $2, NOW() + INTERVAL '1 month')
@@ -31,11 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       [telegram_id, plan_id]
     )
 
-    // 2. تسجيل الإشعار
+    // 🔹 4. تسجيل إشعار للمستخدم
     await client.query(
       `INSERT INTO notifications (user_id, message)
        VALUES ($1, $2)`,
-      [telegram_id, 'تم تجديد اشتراكك بنجاح 🎉']
+      [telegram_id, '✅ تم تجديد اشتراكك بنجاح!']
     )
 
     await client.query('COMMIT')
@@ -46,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   } catch (error) {
     await client.query('ROLLBACK')
-    console.error('Subscription error:', error)
+    console.error('❌ خطأ أثناء معالجة الاشتراك:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
   } finally {
     client.release()

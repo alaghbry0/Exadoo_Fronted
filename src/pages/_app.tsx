@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { AppProps } from 'next/app'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
@@ -10,15 +10,21 @@ import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 function AppContent({ Component, pageProps, router }: AppProps) {
   const { telegramId } = useTelegram()
   const [isLoading, setIsLoading] = useState(true)
+  const [errorState, setErrorState] = useState<string | null>(null)
 
-    useEffect(() => {
-  if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
-  }
-}, []);
+  const initializeTelegram = useCallback(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready()
+      window.Telegram.WebApp.expand()
+    } else {
+      console.warn("⚠️ Telegram WebApp غير متوفر")
+      setErrorState("Telegram WebApp غير متوفر، يرجى فتح التطبيق داخل تليجرام.")
+    }
+  }, [])
 
   useEffect(() => {
+    initializeTelegram()
+
     const checkData = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -27,52 +33,40 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         setIsLoading(false)
       } else {
         console.warn("⚠️ لا يوجد telegram_id، التطبيق ينتظر البيانات...")
-        const timeout = setTimeout(() => {
-          setIsLoading(false)
-        }, 3000)
-
-        return () => clearTimeout(timeout)
+        setTimeout(() => setIsLoading(false), 3000)
       }
     }
 
     checkData()
-  }, [telegramId])
+  }, [telegramId, initializeTelegram])
 
-  return (
-    isLoading ? (
-      <SplashScreen />
-    ) : (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 1 }}
-      >
-        <Component {...pageProps} router={router} />
-        <FooterNav />
-      </motion.div>
-    )
+  return isLoading ? (
+    <SplashScreen />
+  ) : (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1 }}
+    >
+      {errorState ? (
+        <div className="flex justify-center items-center h-screen text-red-500">
+          <p>{errorState}</p>
+        </div>
+      ) : (
+        <>
+          <Component {...pageProps} router={router} />
+          <FooterNav />
+        </>
+      )}
+    </motion.div>
   )
 }
 
 function MyApp({ Component, pageProps, router }: AppProps) {
-  const [isTelegramReady, setIsTelegramReady] = useState(false)
-
-  useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready()
-      window.Telegram.WebApp.expand()
-      setIsTelegramReady(true)
-    }
-  }, [])
-
   return (
     <TelegramProvider>
-      {isTelegramReady ? (
-        <AppContent Component={Component} pageProps={pageProps} router={router} />
-      ) : (
-        <SplashScreen />
-      )}
+      <AppContent Component={Component} pageProps={pageProps} router={router} />
     </TelegramProvider>
   )
 }
