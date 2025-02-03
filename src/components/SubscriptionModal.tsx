@@ -21,7 +21,6 @@ type SubscriptionPlan = {
 }
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
-  const { handleTelegramStarsPayment, paymentState } = useTelegramPayment()
   const { telegramId } = useTelegram()
   const [loading, setLoading] = useState(false) // تم إضافة loading
 
