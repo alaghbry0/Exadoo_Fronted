@@ -1,9 +1,6 @@
-// useTelegramPayment.ts
 'use client'
 import { useState } from "react";
 import { useTelegram } from "../context/TelegramContext";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://exadoo.onrender.com";
 
 export const useTelegramPayment = () => {
   const { telegramId } = useTelegram();
@@ -11,12 +8,12 @@ export const useTelegramPayment = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleTelegramStarsPayment = async (
-    subscriptionId: number,
+    planId: number,
     price: number,
     onSuccess: () => void
   ) => {
     if (!telegramId || !window.Telegram?.WebApp) {
-      alert("❌ يُرجى فتح التطبيق داخل Telegram");
+      alert("❗ يرجى فتح التطبيق داخل تليجرام");
       return;
     }
 
@@ -24,40 +21,48 @@ export const useTelegramPayment = () => {
       setLoading(true);
       setError(null);
 
-      // 1. إنشاء فاتورة دفع عبر الخادم
-      const invoiceResponse = await fetch(`${BACKEND_URL}/api/payments/create-invoice`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          telegram_id: telegramId,
-          subscription_id: subscriptionId,
-          amount: price,
-        }),
+      // إنشاء payload يحتوي على بيانات الاشتراك
+      const payload = JSON.stringify({
+        planId,
+        userId: telegramId
       });
 
-      if (!invoiceResponse.ok) {
-        throw new Error("فشل في إنشاء الفاتورة");
-      }
-
-      const invoiceData = await invoiceResponse.json();
-
-      // 2. عرض واجهة الدفع الخاصة بتليجرام
-      window.Telegram.WebApp.openInvoice(invoiceData.invoice_link, (status) => {
-        if (status === 'paid') {
-          console.log("✅ الدفع ناجح!");
-          onSuccess();
-        } else {
-          console.warn("❌ تم إلغاء الدفع");
+      // إرسال الفاتورة مباشرة عبر Telegram WebApp
+      window.Telegram.WebApp.openInvoice(
+        {
+          chat_id: telegramId,
+          title: "اشتراك VIP",
+          description: "اشتراك شهري في الخدمة المميزة",
+          currency: "XTR",
+          prices: [{ label: "الاشتراك", amount: price * 100 }], // 100 نجمة = 1 دولار
+          payload: payload,
+          provider_token: "" // لا حاجة لـ provider_token مع نجوم تليجرام
+        },
+        (status) => {
+          if (status === 'paid') {
+            console.log("✅ تم الدفع بنجاح");
+            onSuccess();
+          } else {
+            console.warn(`❌ حالة الدفع: ${status}`);
+          }
         }
-      });
+      );
 
     } catch (error) {
       console.error("❌ خطأ في الدفع:", error);
-      setError(error instanceof Error ? error.message : "خطأ غير معروف");
+      setError(error instanceof Error ? error.message : "خطأ غير متوقع");
+      alert("فشلت عملية الدفع، يرجى المحاولة لاحقًا");
     } finally {
       setLoading(false);
     }
   };
 
-  return { handleTelegramStarsPayment, loading, error };
+  return {
+    handleTelegramStarsPayment,
+    paymentState: {
+      loading,
+      error,
+      resetError: () => setError(null)
+    }
+  };
 };
