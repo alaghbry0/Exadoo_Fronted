@@ -6,7 +6,7 @@ import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
-import { useState } from 'react' // تم إزالة التعليق
+import { useState } from 'react'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -23,13 +23,13 @@ type SubscriptionPlan = {
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment, paymentState } = useTelegramPayment()
   const { telegramId } = useTelegram()
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle') // تم إزالة التعليق
+  const [loading, setLoading] = useState(false) // تم إضافة loading
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
 
     try {
-      setPaymentStatus('processing')
+      setLoading(true)
 
       await handleTelegramStarsPayment(
         plan.id,
@@ -45,7 +45,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           })
 
           if (response.ok) {
-            setPaymentStatus('success')
             window.Telegram.WebApp.showAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
               onClose()
               window.location.reload()
@@ -56,16 +55,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         }
       )
     } catch (error) {
-      setPaymentStatus('error')
       window.Telegram.WebApp.showAlert(
         '❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'),
         () => window.Telegram.WebApp.close()
       )
     } finally {
-      setPaymentStatus('idle')
+      setLoading(false)
     }
   }
-
 
   return (
     <AnimatePresence>
