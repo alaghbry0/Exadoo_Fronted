@@ -21,29 +21,27 @@ export const useTelegramPayment = () => {
       setLoading(true);
       setError(null);
 
-      // إنشاء payload يحتوي على بيانات الاشتراك
       const payload = JSON.stringify({
         planId,
         userId: telegramId
       });
 
-      // إرسال الفاتورة مباشرة عبر Telegram WebApp
       window.Telegram.WebApp.openInvoice(
         {
           chat_id: telegramId,
           title: "اشتراك VIP",
           description: "اشتراك شهري في الخدمة المميزة",
           currency: "XTR",
-          prices: [{ label: "الاشتراك", amount: price * 100 }], // 100 نجمة = 1 دولار
+          prices: [{ label: "الاشتراك", amount: price * 100 }],
           payload: payload,
-          provider_token: "" // لا حاجة لـ provider_token مع نجوم تليجرام
+          provider_token: ""
         },
         (status) => {
           if (status === 'paid') {
             console.log("✅ تم الدفع بنجاح");
             onSuccess();
           } else {
-            console.warn(`❌ حالة الدفع: ${status}`);
+            console.warn(`❌ حالة الدفع: ${status}`); // تم التصحيح
           }
         }
       );
