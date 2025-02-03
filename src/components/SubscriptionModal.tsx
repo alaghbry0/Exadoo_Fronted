@@ -6,7 +6,7 @@ import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
-import { useState } from 'react'
+//import { useState } from 'react'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
