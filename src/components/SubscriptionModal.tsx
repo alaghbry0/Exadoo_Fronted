@@ -23,7 +23,7 @@ type SubscriptionPlan = {
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment, paymentState } = useTelegramPayment()
   const { telegramId } = useTelegram()
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
+  //const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
