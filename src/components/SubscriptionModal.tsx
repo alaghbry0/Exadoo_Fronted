@@ -148,7 +148,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handlePayment}
-                  disabled={paymentState.loading || !telegramId}
+                  disabled={loading || !telegramId}
                   className={`w-full flex items-center justify-between px-4 py-2.5
                     bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
                     ${paymentState.loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
