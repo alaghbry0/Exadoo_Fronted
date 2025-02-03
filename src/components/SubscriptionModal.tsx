@@ -6,7 +6,7 @@ import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
-//import { useState } from 'react'
+import { useState } from 'react'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -23,7 +23,7 @@ type SubscriptionPlan = {
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment, paymentState } = useTelegramPayment()
   const { telegramId } = useTelegram()
-  //const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
@@ -151,11 +151,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                   disabled={loading || !telegramId}
                   className={`w-full flex items-center justify-between px-4 py-2.5
                     bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
-                    ${paymentState.loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
+                    ${loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />
                   <span className="font-medium ml-2">
-                    {paymentState.loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
+                    {loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
                     {!telegramId && " (يتطلب فتح التطبيق داخل تليجرام)"}
                   </span>
                 </motion.button>
