@@ -6,7 +6,7 @@ import starsAnimation from '../animations/stars.json'
 import dynamic from 'next/dynamic'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
-import { useState } from 'react'
+import { useState } from 'react' // تم إزالة التعليق
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -23,7 +23,7 @@ type SubscriptionPlan = {
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment, paymentState } = useTelegramPayment()
   const { telegramId } = useTelegram()
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle') // تم إزالة التعليق
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
@@ -65,6 +65,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       setPaymentStatus('idle')
     }
   }
+
 
   return (
     <AnimatePresence>
