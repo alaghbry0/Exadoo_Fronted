@@ -21,9 +21,9 @@ type SubscriptionPlan = {
 }
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
-  const { handleTelegramStarsPayment, paymentState } = useTelegramPayment()
+  const { handleTelegramStarsPayment } = useTelegramPayment()
   const { telegramId } = useTelegram()
-  const [loading, setLoading] = useState(false) // تم إضافة loading
+  const [loading, setLoading] = useState(false)
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
@@ -143,23 +143,20 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
                 {/* ✅ زر الدفع بـ Telegram Stars */}
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handlePayment}
-                  disabled={loading || !telegramId}
-                  className={`w-full flex items-center justify-between px-4 py-2.5
-                    bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
-                    ${loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />
-                  <span className="font-medium ml-2">
-                    {loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
-                    {!telegramId && " (يتطلب فتح التطبيق داخل تليجرام)"}
-                  </span>
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handlePayment}
+            disabled={loading || !telegramId}
+            className={`w-full flex items-center justify-between px-4 py-2.5
+              bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
+              ${loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />
+            <span className="font-medium ml-2">
+              {loading ? "جاري المعالجة..." : "الدفع بـ Telegram Stars"}
+              {!telegramId && " (يتطلب فتح التطبيق داخل تليجرام)"}
+            </span>
+          </motion.button>
         </motion.div>
       )}
     </AnimatePresence>
