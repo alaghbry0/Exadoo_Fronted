@@ -42,7 +42,7 @@ export const useTelegramPayment = () => {
     price: number,
     onSuccess: () => void
   ) => {
-    if (!telegramId || !window.Telegram?.WebApp) {
+    if (typeof window === "undefined" || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
       return;
     }
@@ -67,26 +67,32 @@ export const useTelegramPayment = () => {
 
       console.log(`🔗 فتح الفاتورة: ${invoice_url}`);
 
-      // ✅ فتح الفاتورة باستخدام `openInvoice`
-      window.Telegram.WebApp.openInvoice?.(invoice_url, async (status) => {
-        console.log(`🔄 حالة الدفع: ${status}`);
+      // ✅ التحقق من وجود `window.Telegram` قبل استدعاء `openInvoice`
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.openInvoice) {
+        window.Telegram.WebApp.openInvoice(invoice_url, async (status) => {
+          console.log(`🔄 حالة الدفع: ${status}`);
 
-        if (status === "paid") {
-          console.log("✅ تم الدفع بنجاح");
-          setPaymentStatus("paid");
-          onSuccess();
-        } else {
-          console.warn(`❌ الدفع غير ناجح (${status})`);
-          setError(`فشلت عملية الدفع (${status})`);
-          setPaymentStatus("failed");
+          if (status === "paid") {
+            console.log("✅ تم الدفع بنجاح");
+            setPaymentStatus("paid");
+            onSuccess();
+          } else {
+            console.warn(`❌ الدفع غير ناجح (${status})`);
+            setError(`فشلت عملية الدفع (${status})`);
+            setPaymentStatus("failed");
 
-          // إعادة المحاولة بعد 5 ثوانٍ إذا كان الدفع "pending"
-          if (status === "pending") {
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            window.Telegram.WebApp.openInvoice?.(invoice_url);
+            // إعادة المحاولة بعد 5 ثوانٍ إذا كان الدفع "pending"
+            if (status === "pending") {
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+              if (window.Telegram?.WebApp?.openInvoice) {
+                window.Telegram.WebApp.openInvoice(invoice_url);
+              }
+            }
           }
-        }
-      });
+        });
+      } else {
+        throw new Error("❌ لا يمكن فتح الفاتورة، Telegram WebApp غير مدعوم على هذا الجهاز!");
+      }
 
     } catch (error) {
       console.error("❌ خطأ في الدفع:", error);
