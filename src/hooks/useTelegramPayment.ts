@@ -48,6 +48,14 @@ export const useTelegramPayment = () => {
       return;
     }
 
+    // ✅ التحقق من أن `openInvoice` متاح قبل استدعائه
+    if (!window.Telegram.WebApp.openInvoice) {
+      console.error("❌ openInvoice غير متاح في Telegram WebApp!");
+      setError("خدمة الدفع غير مدعومة في هذا الجهاز أو المتصفح.");
+      setPaymentStatus('failed');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -62,7 +70,7 @@ export const useTelegramPayment = () => {
       console.log(`🔗 فتح الفاتورة: ${invoiceUrl}`);
 
       // ✅ تمرير الرابط الصحيح إلى `openInvoice`
-      window.Telegram.WebApp.openInvoice(invoiceUrl, (status) => {
+      window.Telegram.WebApp.openInvoice?.(invoiceUrl, (status) => {
         if (status === "paid") {
           console.log("✅ تم الدفع بنجاح");
           onSuccess();
