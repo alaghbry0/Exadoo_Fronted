@@ -17,14 +17,13 @@ export const useTelegramPayment = () => {
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
     const handleInvoiceClosed = () => {
       setLoading(false);
-
       console.log("🔄 نافذة الفاتورة أُغلقت، التحقق من الدفع...");
 
       if (onSuccessCallback) {
         console.log("✅ استدعاء onSuccess بعد إغلاق الفاتورة");
         onSuccessCallback();
-        setOnSuccessCallback(null); // ✅ تنظيف المرجع بعد التنفيذ
-        setPaymentStatus('paid'); // ✅ تحديد حالة الدفع على أنها ناجحة
+        setOnSuccessCallback(null);
+        setPaymentStatus('paid');
       } else {
         console.warn("❌ لم يتم تأكيد الدفع، قد يكون المستخدم ألغى العملية.");
         setPaymentStatus('failed');
@@ -48,29 +47,33 @@ export const useTelegramPayment = () => {
       return;
     }
 
-    // ✅ التحقق من أن `openInvoice` متاح قبل استدعائه
-    if (!window.Telegram.WebApp.openInvoice) {
-      console.error("❌ openInvoice غير متاح في Telegram WebApp!");
-      setError("خدمة الدفع غير مدعومة في هذا الجهاز أو المتصفح.");
-      setPaymentStatus('failed');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
       setPaymentStatus('pending');
-      setOnSuccessCallback(() => onSuccess); // ✅ حفظ `onSuccess` للاستخدام لاحقًا
+      setOnSuccessCallback(() => onSuccess);
 
-      const payload = encodeURIComponent(JSON.stringify({ planId, userId: telegramId }));
+      // ✅ طلب إنشاء الفاتورة عبر API البوت الخاص بنا باستخدام createInvoiceLink
+      const response = await fetch("/api/create-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegram_id: telegramId, plan_id: planId, amount: price }),
+      });
 
-      // ✅ إنشاء رابط الفاتورة الصحيح لاستخدامه مع `openInvoice`
-      const invoiceUrl = `tg://openinvoice?amount=${price * 100}&payload=${payload}`;
+      if (!response.ok) {
+        throw new Error(`❌ فشل في إنشاء الفاتورة: ${await response.text()}`);
+      }
 
-      console.log(`🔗 فتح الفاتورة: ${invoiceUrl}`);
+      const { invoice_url } = await response.json(); // ✅ الحصول على رابط الفاتورة
 
-      // ✅ تمرير الرابط الصحيح إلى `openInvoice`
-      window.Telegram.WebApp.openInvoice?.(invoiceUrl, (status) => {
+      if (!invoice_url.startsWith("https://t.me/invoice/")) {
+        throw new Error("❌ رابط الفاتورة غير صالح، تحقق من إعدادات البوت.");
+      }
+
+      console.log(`🔗 فتح الفاتورة: ${invoice_url}`);
+
+      // ✅ تمرير رابط الفاتورة الصحيح إلى `openInvoice`
+      window.Telegram.WebApp.openInvoice?.(invoice_url, (status) => {
         if (status === "paid") {
           console.log("✅ تم الدفع بنجاح");
           onSuccess();
