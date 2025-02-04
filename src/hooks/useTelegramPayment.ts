@@ -48,36 +48,28 @@ export const useTelegramPayment = () => {
       return;
     }
 
-    // ✅ التحقق من أن openInvoice متاح قبل استدعائه
-    if (!window.Telegram.WebApp.openInvoice) {
-      console.error("❌ openInvoice غير متاح في Telegram WebApp!");
-      setError("خدمة الدفع غير مدعومة في هذا الجهاز أو المتصفح.");
-      setPaymentStatus('failed');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
       setPaymentStatus('pending');
       setOnSuccessCallback(() => onSuccess); // ✅ حفظ `onSuccess` للاستخدام لاحقًا
 
-      const payload = JSON.stringify({
-        planId,
-        userId: telegramId
-      });
+      const payload = encodeURIComponent(JSON.stringify({ planId, userId: telegramId }));
 
-      // ✅ استدعاء `openInvoice` فقط إذا كان معرفًا
-      window.Telegram.WebApp.openInvoice({
-        chat_id: telegramId,
-        title: "اشتراك VIP",
-        description: "اشتراك شهري في الخدمة المميزة",
-        currency: "XTR",
-        prices: [{ label: "الاشتراك", amount: price * 100 }],
-        payload: payload,
-        provider_token: process.env.NEXT_PUBLIC_TELEGRAM_PROVIDER_TOKEN || ""
-      }, () => {
-        console.log("✅ تم إرسال الفاتورة، بانتظار الدفع...");
+      // ✅ إنشاء رابط الفاتورة الصحيح لاستخدامه مع `openInvoice`
+      const invoiceUrl = `tg://openinvoice?amount=${price * 100}&payload=${payload}`;
+
+      console.log(`🔗 فتح الفاتورة: ${invoiceUrl}`);
+
+      // ✅ تمرير الرابط الصحيح إلى `openInvoice`
+      window.Telegram.WebApp.openInvoice(invoiceUrl, (status) => {
+        if (status === "paid") {
+          console.log("✅ تم الدفع بنجاح");
+          onSuccess();
+        } else {
+          console.warn(`❌ حالة الدفع: ${status}`);
+          setError(`فشلت عملية الدفع (${status})`);
+        }
       });
 
     } catch (error) {
