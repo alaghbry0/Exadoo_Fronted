@@ -40,33 +40,32 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   const initializeTelegram = useCallback(() => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      if (!tg) {
-        console.warn("⚠️ Telegram WebApp غير متوفر");
-        setIsLoading(false);
-        return false;
-      }
-
-      tg.expand();
-      tg.ready();
-
-      const userId = tg.initDataUnsafe?.user?.id?.toString();
-      if (userId) {
-        setTelegramId(userId);
-        setIsTelegramReady(true);
-        console.log("✅ Telegram User ID:", userId);
-        setIsLoading(false);
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error);
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (!tg) {
+      console.warn("⚠️ Telegram WebApp غير متوفر");
       setIsLoading(false);
       return false;
     }
-  }, []);
+
+    tg.expand();
+    tg.ready();
+
+    const userId = tg.initDataUnsafe?.user?.id?.toString() || null;
+    if (userId && !telegramId) { // ✅ فقط قم بتحديثه إذا لم يكن موجودًا مسبقًا
+      setTelegramId(userId);
+      setIsTelegramReady(true);
+      console.log("✅ Telegram User ID:", userId);
+    }
+
+    setIsLoading(false);
+    return true;
+  } catch (error) {
+    console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error);
+    setIsLoading(false);
+    return false;
+  }
+}, [telegramId]);
 
   useEffect(() => {
     let retryInterval: NodeJS.Timeout | null = null;
