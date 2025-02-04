@@ -59,11 +59,14 @@ export const useTelegramPayment = () => {
 
       const { invoice_url } = await response.json(); // ✅ الحصول على رابط الدفع
 
+      // ✅ تعريف نوع الحالة بشكل صحيح
+      const validStatuses = ['paid', 'cancelled', 'failed'] as const;
+      type PaymentStatus = typeof validStatuses[number];
+
       // ✅ تمرير رابط الفاتورة إلى `openInvoice`
-      window.Telegram.WebApp.openInvoice?.(invoice_url, (status) => {
-        const validStatuses = ['paid', 'cancelled', 'failed'] as const;
-        if (validStatuses.includes(status as any)) {
-          setPaymentStatus(status as 'paid' | 'cancelled' | 'failed');
+      window.Telegram.WebApp.openInvoice?.(invoice_url, (status: string) => {
+        if (validStatuses.includes(status as PaymentStatus)) {
+          setPaymentStatus(status as PaymentStatus);
         } else {
           setPaymentStatus('failed');
         }
