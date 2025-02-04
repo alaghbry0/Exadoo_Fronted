@@ -69,7 +69,7 @@ export const useTelegramPayment = () => {
 
       // ✅ التحقق من وجود `window.Telegram` قبل استدعاء `openInvoice`
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.openInvoice) {
-        window.Telegram.WebApp.openInvoice(invoice_url, async (status) => {
+        window.Telegram.WebApp.openInvoice(invoice_url, (status: string) => {
           console.log(`🔄 حالة الدفع: ${status}`);
 
           if (status === "paid") {
@@ -83,10 +83,19 @@ export const useTelegramPayment = () => {
 
             // إعادة المحاولة بعد 5 ثوانٍ إذا كان الدفع "pending"
             if (status === "pending") {
-              await new Promise((resolve) => setTimeout(resolve, 5000));
-              if (window.Telegram?.WebApp?.openInvoice) {
-                window.Telegram.WebApp.openInvoice(invoice_url);
-              }
+              setTimeout(() => {
+                if (window.Telegram?.WebApp?.openInvoice) {
+                  console.log("🔄 إعادة محاولة فتح الفاتورة...");
+                  window.Telegram.WebApp.openInvoice(invoice_url, (retryStatus: string) => {
+                    console.log(`🔄 حالة الدفع بعد إعادة المحاولة: ${retryStatus}`);
+                    if (retryStatus === "paid") {
+                      console.log("✅ تم الدفع بنجاح بعد إعادة المحاولة!");
+                      setPaymentStatus("paid");
+                      onSuccess();
+                    }
+                  });
+                }
+              }, 5000);
             }
           }
         });
