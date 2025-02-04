@@ -14,19 +14,20 @@ export const useTelegramPayment = () => {
 
     const tgWebApp = window.Telegram.WebApp;
 
-    const handleInvoiceClosed = () => {
+    const handleInvoiceClosed = async () => {
       setLoading(false);
       console.log("🔄 نافذة الفاتورة أُغلقت، التحقق من الدفع...");
 
-      if (onSuccessCallback) {
-        console.log("✅ استدعاء onSuccess بعد إغلاق الفاتورة");
-        onSuccessCallback();
-        setOnSuccessCallback(null);
-        setPaymentStatus('paid');
-      } else {
-        console.warn("❌ لم يتم تأكيد الدفع، قد يكون المستخدم ألغى العملية.");
-        setPaymentStatus('failed');
-        setError("عملية الدفع لم تكتمل، يرجى المحاولة مرة أخرى.");
+      if (paymentStatus === "pending") {
+        console.warn("❌ الدفع فشل أو تم إلغاؤه.");
+        setError("فشلت عملية الدفع أو تم إلغاؤها.");
+        setPaymentStatus("failed");
+      } else if (paymentStatus === "paid") {
+        console.log("✅ تم تأكيد الدفع!");
+        if (onSuccessCallback) {
+          onSuccessCallback();
+          setOnSuccessCallback(null);
+        }
       }
     };
 
@@ -34,7 +35,7 @@ export const useTelegramPayment = () => {
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
-  }, [onSuccessCallback]);
+  }, [onSuccessCallback, paymentStatus]);
 
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
@@ -52,30 +53,38 @@ export const useTelegramPayment = () => {
       setPaymentStatus('pending');
       setOnSuccessCallback(() => onSuccess);
 
-      const response = await fetch("/api/create-invoice", {
+      console.log("🔹 إرسال طلب لإنشاء الفاتورة...");
+      const invoice_url = await fetchWithRetry("/api/create-invoice", {
         method: "POST",
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_SECRET}`
-  },
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_SECRET}`
+        },
         body: JSON.stringify({ telegram_id: telegramId, plan_id: planId, amount: price }),
       });
 
-      if (!response.ok) {
-        throw new Error(`❌ فشل في إنشاء الفاتورة: ${await response.text()}`);
-      }
-
-      const { invoice_url } = await response.json();
+      if (!invoice_url) throw new Error("❌ فشل في جلب رابط الفاتورة!");
 
       console.log(`🔗 فتح الفاتورة: ${invoice_url}`);
 
       // ✅ فتح الفاتورة باستخدام `openInvoice`
-      window.Telegram.WebApp.openInvoice?.(invoice_url, (status) => {
+      window.Telegram.WebApp.openInvoice?.(invoice_url, async (status) => {
+        console.log(`🔄 حالة الدفع: ${status}`);
+
         if (status === "paid") {
           console.log("✅ تم الدفع بنجاح");
+          setPaymentStatus("paid");
           onSuccess();
         } else {
-          console.warn(`❌ حالة الدفع: ${status}`);
+          console.warn(`❌ الدفع غير ناجح (${status})`);
           setError(`فشلت عملية الدفع (${status})`);
+          setPaymentStatus("failed");
+
+          // إعادة المحاولة بعد 5 ثوانٍ إذا كان الدفع "pending"
+          if (status === "pending") {
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            window.Telegram.WebApp.openInvoice?.(invoice_url);
+          }
         }
       });
 
@@ -100,3 +109,29 @@ export const useTelegramPayment = () => {
     }
   };
 };
+
+/**
+ * 🔁 دالة `fetchWithRetry` لإعادة المحاولة عند فشل الاتصال.
+ */
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3, delay = 2000): Promise<string | null> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        console.warn(`⚠️ محاولة ${attempt}/${retries} فشلت: ${response.statusText}`);
+      } else {
+        const { invoice_url } = await response.json();
+        if (invoice_url) return invoice_url;
+      }
+    } catch (error) {
+      console.error(`❌ خطأ أثناء المحاولة ${attempt}/${retries}:`, error);
+    }
+
+    if (attempt < retries) {
+      await new Promise((resolve) => setTimeout(resolve, delay * attempt));
+    }
+  }
+
+  console.error("🚨 جميع محاولات إنشاء الفاتورة فشلت!");
+  return null;
+}

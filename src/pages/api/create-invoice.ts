@@ -20,33 +20,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.log(`🔹 إنشاء فاتورة لـ ${telegram_id} - الخطة ${plan_id} - المبلغ ${amount}`);
 
+    const payload = JSON.stringify({ planId: plan_id, userId: telegram_id });
+
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: "اشتراك VIP",
         description: "اشتراك شهري في الخدمة المميزة",
-        payload: JSON.stringify({ planId: plan_id, userId: telegram_id }),
+        payload: payload,
         currency: "XTR",
         prices: [{ label: "الاشتراك", amount: 1 }],
       }),
     });
 
     const data = await response.json();
-
     console.log("🔹 استجابة API:", data);
 
     if (!data.ok) {
       throw new Error(`❌ فشل في إنشاء الفاتورة: ${data.description}`);
     }
 
-    // ✅ قبول الروابط التي تبدأ بـ "https://t.me/$" وأيضًا "https://t.me/invoice/"
-    if (!data.result.startsWith("https://t.me/invoice/") && !data.result.startsWith("https://t.me/$")) {
+    const invoiceUrl = data.result;
+
+    // ✅ الآن نقبل كلا النوعين من الروابط
+    if (!invoiceUrl.startsWith("https://t.me/invoice/") && !invoiceUrl.startsWith("https://t.me/$")) {
+      console.error(`❌ رابط الفاتورة غير مدعوم: ${invoiceUrl}`);
       throw new Error("❌ رابط الفاتورة غير صالح، تحقق من إعدادات البوت.");
     }
 
-    console.log(`✅ تم إنشاء الفاتورة بنجاح: ${data.result}`);
-    return res.status(200).json({ invoice_url: data.result });
+    console.log(`✅ تم إنشاء الفاتورة بنجاح: ${invoiceUrl}`);
+    return res.status(200).json({ invoice_url: invoiceUrl });
 
   } catch (error) {
     console.error("❌ خطأ أثناء إنشاء الفاتورة:", error);
