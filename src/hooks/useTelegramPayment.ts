@@ -15,17 +15,23 @@ export const useTelegramPayment = () => {
     const tgWebApp = window.Telegram.WebApp;
 
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
-    const handleInvoiceClosed = (status: "paid" | "cancelled" | "failed") => {
+    const handleInvoiceClosed = () => {
       setLoading(false);
-      setPaymentStatus(status);
 
-      if (status === 'paid' && onSuccessCallback) {
-        console.log("✅ استدعاء onSuccess بعد الدفع الناجح");
-        onSuccessCallback();
-        setOnSuccessCallback(null); // ✅ إزالة المرجع بعد التنفيذ
-      } else {
-        console.warn(`❌ الدفع لم يكتمل: ${status}`);
-        setError(`فشلت عملية الدفع (${status})`);
+      // ✅ جلب حالة الدفع من Telegram WebApp
+      const status = window.Telegram?.WebApp?.LastInvoiceStatus as "paid" | "cancelled" | "failed" | undefined;
+
+      if (status) {
+        setPaymentStatus(status);
+
+        if (status === 'paid' && onSuccessCallback) {
+          console.log("✅ استدعاء onSuccess بعد الدفع الناجح");
+          onSuccessCallback();
+          setOnSuccessCallback(null); // ✅ إزالة المرجع بعد التنفيذ
+        } else {
+          console.warn(`❌ الدفع لم يكتمل: ${status}`);
+          setError(`فشلت عملية الدفع (${status})`);
+        }
       }
     };
 
