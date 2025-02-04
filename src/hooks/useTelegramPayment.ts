@@ -48,6 +48,14 @@ export const useTelegramPayment = () => {
       return;
     }
 
+    // ✅ التحقق من أن openInvoice متاح قبل استدعائه
+    if (!window.Telegram.WebApp.openInvoice) {
+      console.error("❌ openInvoice غير متاح في Telegram WebApp!");
+      setError("خدمة الدفع غير مدعومة في هذا الجهاز أو المتصفح.");
+      setPaymentStatus('failed');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -59,7 +67,7 @@ export const useTelegramPayment = () => {
         userId: telegramId
       });
 
-      // ✅ استدعاء `openInvoice` مباشرة بدون الحاجة إلى `invoice_url`
+      // ✅ استدعاء `openInvoice` فقط إذا كان معرفًا
       window.Telegram.WebApp.openInvoice({
         chat_id: telegramId,
         title: "اشتراك VIP",
