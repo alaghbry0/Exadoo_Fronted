@@ -14,7 +14,6 @@ export const useTelegramPayment = () => {
 
     const tgWebApp = window.Telegram.WebApp;
 
-    // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
     const handleInvoiceClosed = () => {
       setLoading(false);
       console.log("🔄 نافذة الفاتورة أُغلقت، التحقق من الدفع...");
@@ -53,7 +52,6 @@ export const useTelegramPayment = () => {
       setPaymentStatus('pending');
       setOnSuccessCallback(() => onSuccess);
 
-      // ✅ طلب إنشاء الفاتورة عبر API البوت الخاص بنا باستخدام createInvoiceLink
       const response = await fetch("/api/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,15 +62,11 @@ export const useTelegramPayment = () => {
         throw new Error(`❌ فشل في إنشاء الفاتورة: ${await response.text()}`);
       }
 
-      const { invoice_url } = await response.json(); // ✅ الحصول على رابط الفاتورة
-
-      if (!invoice_url.startsWith("https://t.me/invoice/")) {
-        throw new Error("❌ رابط الفاتورة غير صالح، تحقق من إعدادات البوت.");
-      }
+      const { invoice_url } = await response.json();
 
       console.log(`🔗 فتح الفاتورة: ${invoice_url}`);
 
-      // ✅ تمرير رابط الفاتورة الصحيح إلى `openInvoice`
+      // ✅ فتح الفاتورة باستخدام `openInvoice`
       window.Telegram.WebApp.openInvoice?.(invoice_url, (status) => {
         if (status === "paid") {
           console.log("✅ تم الدفع بنجاح");

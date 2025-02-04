@@ -40,7 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`❌ فشل في إنشاء الفاتورة: ${data.description}`);
     }
 
-    if (!data.result.startsWith("https://t.me/invoice/")) {
+    // ✅ قبول الروابط التي تبدأ بـ "https://t.me/$" وأيضًا "https://t.me/invoice/"
+    if (!data.result.startsWith("https://t.me/invoice/") && !data.result.startsWith("https://t.me/$")) {
       throw new Error("❌ رابط الفاتورة غير صالح، تحقق من إعدادات البوت.");
     }
 
