@@ -14,13 +14,14 @@ export const useTelegramPayment = () => {
     const tgWebApp = window.Telegram.WebApp;
 
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
-    const handleInvoiceClosed = (status: 'paid' | 'cancelled' | 'failed') => {
+    const handleInvoiceClosed = () => {
       setLoading(false);
-      setPaymentStatus(status);
 
-      if (status !== 'paid') {
-        console.warn(`❌ الدفع فشل أو تم إلغاؤه: ${status}`);
-        setError(`فشلت عملية الدفع (${status})`);
+      // ✅ يتم تعيين الحالة بناءً على `paymentStatus` الحالي
+      if (paymentStatus === 'pending') {
+        console.warn("❌ الدفع فشل أو تم إلغاؤه.");
+        setError("فشلت عملية الدفع أو تم إلغاؤها.");
+        setPaymentStatus('failed');
       }
     };
 
@@ -28,7 +29,7 @@ export const useTelegramPayment = () => {
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
-  }, []);
+  }, [paymentStatus]);
 
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
@@ -56,15 +57,9 @@ export const useTelegramPayment = () => {
       console.log(`✅ فتح نافذة الدفع: ${invoiceUrl}`);
 
       // ✅ استدعاء الدفع مباشرة بدون API خارجي
-      window.Telegram.WebApp.openInvoice?.(invoiceUrl, (status: string) => {
-        if (status === 'paid') {
-          console.log("✅ تم الدفع بنجاح");
-          onSuccess();
-        } else {
-          console.warn(`❌ حالة الدفع: ${status}`);
-          setPaymentStatus(status as 'failed' | 'cancelled');
-          setError(`فشلت عملية الدفع (${status})`);
-        }
+      window.Telegram.WebApp.openInvoice?.(invoiceUrl, () => {
+        console.log("✅ تمت معالجة الدفع، في انتظار رد تليجرام...");
+        // ✅ لا نحدد الحالة هنا لأن `invoiceClosed` سيتم استدعاؤه تلقائيًا
       });
 
     } catch (error) {
