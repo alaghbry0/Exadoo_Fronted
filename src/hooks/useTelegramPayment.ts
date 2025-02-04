@@ -54,6 +54,8 @@ export const useTelegramPayment = () => {
 
       const response = await fetch("/api/create-invoice", {
         method: "POST",
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_SECRET}`
+  },
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegram_id: telegramId, plan_id: planId, amount: price }),
       });
