@@ -46,11 +46,6 @@ export const useTelegramPayment = () => {
       setError(null);
       setPaymentStatus('pending');
 
-      const payload = JSON.stringify({
-        planId,
-        userId: telegramId
-      });
-
       // ✅ إرسال طلب إلى API لإنشاء رابط الدفع
       const response = await fetch("/api/create-invoice", {
         method: "POST",
