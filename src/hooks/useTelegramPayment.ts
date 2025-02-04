@@ -14,16 +14,14 @@ export const useTelegramPayment = () => {
     const tgWebApp = window.Telegram.WebApp;
 
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
-    const handleInvoiceClosed = (event: { status: 'paid' | 'cancelled' | 'failed' }) => {
+    const handleInvoiceClosed = () => {
       setLoading(false);
 
-      if (event.status === 'paid') {
-        console.log("✅ الدفع تم بنجاح!");
-        setPaymentStatus('paid');
-      } else {
-        console.warn(`❌ الدفع فشل: ${event.status}`);
-        setError(`فشلت عملية الدفع (${event.status})`);
-        setPaymentStatus(event.status);
+      // ✅ التحقق من الدفع عبر `paymentStatus`
+      if (paymentStatus === 'pending') {
+        console.warn("❌ الدفع فشل أو تم إلغاؤه.");
+        setError("فشلت عملية الدفع أو تم إلغاؤها.");
+        setPaymentStatus('failed');
       }
     };
 
@@ -33,7 +31,7 @@ export const useTelegramPayment = () => {
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
-  }, []);
+  }, [paymentStatus]);
 
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
