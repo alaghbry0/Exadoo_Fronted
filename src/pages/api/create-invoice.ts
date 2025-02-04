@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: "اشتراك شهري في الخدمة المميزة",
         payload: JSON.stringify({ planId: plan_id, userId: telegram_id }),
         currency: "XTR",
-        prices: [{ label: "الاشتراك", amount: amount * 100 }],
+        prices: [{ label: "الاشتراك", amount: 1 }],
       }),
     });
 
