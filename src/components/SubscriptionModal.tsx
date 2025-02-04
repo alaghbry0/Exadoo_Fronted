@@ -28,6 +28,15 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
   }, [])
 
+  const showTelegramAlert = (message: string, callback?: () => void) => {
+    if (isTelegramAvailable) {
+      (window.Telegram?.WebApp as any)?.showAlert?.(message, callback)
+    } else {
+      alert(message)
+      callback?.()
+    }
+  }
+
   const handlePayment = async () => {
     if (!plan || !telegramId) return
 
@@ -44,40 +53,21 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
           if (response.ok) {
             console.log("✅ تم تفعيل الاشتراك بنجاح")
-
-            if (isTelegramAvailable) {
-              window.Telegram?.WebApp?.showAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
-                onClose()
-                window.location.reload()
-              })
-            } else {
-              alert("✅ تم تفعيل الاشتراك بنجاح!")
+            showTelegramAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
               onClose()
               window.location.reload()
-            }
+            })
           } else {
             throw new Error(`❌ فشل في تفعيل الاشتراك: ${await response.text()}`)
           }
         } catch (error) {
           console.error("❌ خطأ أثناء طلب الاشتراك:", error)
-
-          if (isTelegramAvailable) {
-            window.Telegram?.WebApp?.showAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
-          } else {
-            alert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
-          }
+          showTelegramAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
         }
       })
     } catch (error) {
       console.error("❌ خطأ أثناء عملية الدفع:", error)
-
-      if (isTelegramAvailable) {
-        window.Telegram?.WebApp?.showAlert(
-          '❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف')
-        )
-      } else {
-        alert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
-      }
+      showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
     } finally {
       setLoading(false)
     }

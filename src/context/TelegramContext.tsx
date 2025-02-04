@@ -22,6 +22,7 @@ declare global {
           callback: () => void
         ) => void;
         openInvoice: (url: string, callback: (status: string) => void) => void;
+        **showAlert: (message: string, callback?: () => void) => void;** // ✅ إضافة showAlert
       };
     };
   }
