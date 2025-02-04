@@ -13,16 +13,10 @@ declare global {
         };
         ready: () => void;
         expand: () => void;
-        onEvent: (
-          eventType: 'invoiceClosed' | 'themeChanged',
-          callback: () => void
-        ) => void;
-        offEvent: (
-          eventType: 'invoiceClosed' | 'themeChanged',
-          callback: () => void
-        ) => void;
-        openInvoice: (url: string, callback: (status: string) => void) => void;
-        showAlert?: (message: string, callback?: () => void) => void; // ✅ إصلاح التعريف
+        onEvent?: (eventType: 'invoiceClosed' | 'themeChanged', callback: () => void) => void;
+        offEvent?: (eventType: 'invoiceClosed' | 'themeChanged', callback: () => void) => void;
+        openInvoice?: (url: string, callback: (status: string) => void) => void;
+        showAlert?: (message: string, callback?: () => void) => void;
       };
     };
   }
@@ -94,7 +88,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   }, [initializeTelegram]);
 
   useEffect(() => {
-    if (!window.Telegram?.WebApp) return;
+    if (!window.Telegram?.WebApp?.onEvent || !window.Telegram?.WebApp?.offEvent) return;
 
     const handleThemeChange = () => {
       console.log("🎨 تم تغيير الثيم، إعادة تحميل بيانات تيليجرام...");
@@ -102,7 +96,9 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     window.Telegram.WebApp.onEvent("themeChanged", handleThemeChange);
-    return () => window.Telegram.WebApp.offEvent("themeChanged", handleThemeChange);
+    return () => {
+      window.Telegram?.WebApp?.offEvent?.("themeChanged", handleThemeChange);
+    };
   }, [initializeTelegram]);
 
   return (
