@@ -1,7 +1,7 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX } from 'react-icons/fi'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
 import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
@@ -20,6 +20,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const { handleTelegramStarsPayment } = useTelegramPayment()
   const { telegramId } = useTelegram()
   const [loading, setLoading] = useState(false)
+  const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      setIsTelegramAvailable(true)
+    }
+  }, [])
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
@@ -37,23 +44,40 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
           if (response.ok) {
             console.log("✅ تم تفعيل الاشتراك بنجاح")
-            window.Telegram.WebApp.showAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
+
+            if (isTelegramAvailable) {
+              window.Telegram?.WebApp?.showAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
+                onClose()
+                window.location.reload()
+              })
+            } else {
+              alert("✅ تم تفعيل الاشتراك بنجاح!")
               onClose()
               window.location.reload()
-            })
+            }
           } else {
             throw new Error(`❌ فشل في تفعيل الاشتراك: ${await response.text()}`)
           }
         } catch (error) {
           console.error("❌ خطأ أثناء طلب الاشتراك:", error)
-          window.Telegram.WebApp.showAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
+
+          if (isTelegramAvailable) {
+            window.Telegram?.WebApp?.showAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
+          } else {
+            alert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
+          }
         }
       })
     } catch (error) {
       console.error("❌ خطأ أثناء عملية الدفع:", error)
-      window.Telegram.WebApp.showAlert(
-        '❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف')
-      )
+
+      if (isTelegramAvailable) {
+        window.Telegram?.WebApp?.showAlert(
+          '❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف')
+        )
+      } else {
+        alert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
+      }
     } finally {
       setLoading(false)
     }
