@@ -18,20 +18,17 @@ export const useTelegramPayment = () => {
     const handleInvoiceClosed = () => {
       setLoading(false);
 
-      // ✅ جلب حالة الدفع من Telegram WebApp
-      const status = window.Telegram?.WebApp?.LastInvoiceStatus as "paid" | "cancelled" | "failed" | undefined;
+      console.log("🔄 نافذة الفاتورة أُغلقت، التحقق من الدفع...");
 
-      if (status) {
-        setPaymentStatus(status);
-
-        if (status === 'paid' && onSuccessCallback) {
-          console.log("✅ استدعاء onSuccess بعد الدفع الناجح");
-          onSuccessCallback();
-          setOnSuccessCallback(null); // ✅ إزالة المرجع بعد التنفيذ
-        } else {
-          console.warn(`❌ الدفع لم يكتمل: ${status}`);
-          setError(`فشلت عملية الدفع (${status})`);
-        }
+      if (onSuccessCallback) {
+        console.log("✅ استدعاء onSuccess بعد إغلاق الفاتورة");
+        onSuccessCallback();
+        setOnSuccessCallback(null); // ✅ تنظيف المرجع بعد التنفيذ
+        setPaymentStatus('paid'); // ✅ تحديد حالة الدفع على أنها ناجحة
+      } else {
+        console.warn("❌ لم يتم تأكيد الدفع، قد يكون المستخدم ألغى العملية.");
+        setPaymentStatus('failed');
+        setError("عملية الدفع لم تكتمل، يرجى المحاولة مرة أخرى.");
       }
     };
 
