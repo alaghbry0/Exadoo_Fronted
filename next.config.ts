@@ -29,4 +29,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export
+export default nextConfig; // ✅ تأكد من أن هذا السطر موجود
