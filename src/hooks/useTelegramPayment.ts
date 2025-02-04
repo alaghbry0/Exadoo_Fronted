@@ -9,9 +9,11 @@ export const useTelegramPayment = () => {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | 'cancelled' | null>(null);
 
   useEffect(() => {
-    // ✅ التأكد من أن Telegram WebApp متاح قبل استدعاء الأحداث
     if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
 
+    const tgWebApp = window.Telegram.WebApp;
+
+    // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
     const handleInvoiceClosed = (event: { status: 'paid' | 'cancelled' | 'failed' }) => {
       setLoading(false);
 
@@ -25,16 +27,11 @@ export const useTelegramPayment = () => {
       }
     };
 
-    // ✅ تسجيل الأحداث فقط إذا كان WebApp معرفًا
-    const tgWebApp = window.Telegram?.WebApp;
-    if (tgWebApp) {
-      tgWebApp.onEvent("invoiceClosed", handleInvoiceClosed);
-    }
+    // ✅ التأكد من أن `onEvent` موجود قبل استخدامه
+    tgWebApp?.onEvent?.("invoiceClosed", handleInvoiceClosed);
 
     return () => {
-      if (tgWebApp) {
-        tgWebApp.offEvent("invoiceClosed", handleInvoiceClosed);
-      }
+      tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
   }, []);
 
@@ -43,7 +40,7 @@ export const useTelegramPayment = () => {
     price: number,
     onSuccess: () => void
   ) => {
-    if (!telegramId || typeof window === "undefined" || !window.Telegram?.WebApp) {
+    if (!telegramId || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
       return;
     }
@@ -64,7 +61,7 @@ export const useTelegramPayment = () => {
         throw new Error("❌ Telegram Provider Token غير مضبوط!");
       }
 
-      window.Telegram.WebApp.openInvoice(
+      window.Telegram.WebApp.openInvoice?.(
         {
           chat_id: telegramId,
           title: "اشتراك VIP",
