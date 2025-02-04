@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import pool from '../context/lib/db';
+import { Pool } from 'pg';
 
 // ✅ تحميل `WEBHOOK_SECRET`
 const webhookSecret = process.env.WEBHOOK_SECRET;
@@ -8,6 +8,11 @@ const webhookSecret = process.env.WEBHOOK_SECRET;
 if (!webhookSecret) {
   throw new Error("❌ Missing required environment variable: WEBHOOK_SECRET");
 }
+
+// ✅ إنشاء الاتصال بقاعدة البيانات
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -42,6 +47,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn(`⚠️ الدفع مسجل مسبقًا للمستخدم ${telegram_id}, payment_id: ${payment_id}`);
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Payment already processed' });
+    }
+
+    // ✅ التحقق من وجود الخطة قبل إدخالها
+    const planExists = await client.query(
+      `SELECT 1 FROM subscription_plans WHERE id = $1`,
+      [plan_id]
+    );
+
+    if (planExists.rows.length === 0) {
+      console.error(`❌ الخطة ${plan_id} غير موجودة في قاعدة البيانات!`);
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invalid subscription plan' });
     }
 
     // ✅ تسجيل الدفع في قاعدة البيانات

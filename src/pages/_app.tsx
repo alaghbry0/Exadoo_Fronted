@@ -12,13 +12,20 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [errorState, setErrorState] = useState<string | null>(null)
 
+  // ✅ تحسين التحقق من Telegram WebApp وإضافة try-catch لمنع الأعطال
   const initializeTelegram = useCallback(() => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready()
-      window.Telegram.WebApp.expand()
-    } else {
-      console.warn("⚠️ Telegram WebApp غير متوفر")
-      setErrorState("Telegram WebApp غير متوفر، يرجى فتح التطبيق داخل تليجرام.")
+    try {
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.ready()
+        window.Telegram.WebApp.expand()
+        console.log("✅ تم تهيئة Telegram WebApp بنجاح")
+      } else {
+        console.warn("⚠️ Telegram WebApp غير متوفر")
+        setErrorState("⚠️ يرجى فتح التطبيق داخل تليجرام.")
+      }
+    } catch (error) {
+      console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error)
+      setErrorState("❌ حدث خطأ أثناء تحميل Telegram WebApp.")
     }
   }, [])
 
@@ -50,7 +57,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
       transition={{ duration: 1 }}
     >
       {errorState ? (
-        <div className="flex justify-center items-center h-screen text-red-500">
+        <div className="flex justify-center items-center h-screen text-red-500 text-center px-4">
           <p>{errorState}</p>
         </div>
       ) : (

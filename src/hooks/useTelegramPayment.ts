@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTelegram } from "../context/TelegramContext";
 
 export const useTelegramPayment = () => {
@@ -11,7 +11,7 @@ export const useTelegramPayment = () => {
   useEffect(() => {
     if (!window.Telegram?.WebApp) return;
 
-    // متابعة الدفع بعد إغلاق النافذة
+    // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
     const handleInvoiceClosed = (event: { status: 'paid' | 'cancelled' | 'failed' }) => {
       setLoading(false);
 
@@ -29,7 +29,7 @@ export const useTelegramPayment = () => {
     return () => window.Telegram.WebApp.offEvent("invoiceClosed", handleInvoiceClosed);
   }, []);
 
-  const handleTelegramStarsPayment = async (
+  const handleTelegramStarsPayment = useCallback(async (
     planId: number,
     price: number,
     onSuccess: () => void
@@ -49,6 +49,12 @@ export const useTelegramPayment = () => {
         userId: telegramId
       });
 
+      const providerToken = process.env.NEXT_PUBLIC_TELEGRAM_PROVIDER_TOKEN; // ✅ استخدام المتغير البيئي
+
+      if (!providerToken) {
+        throw new Error("❌ Telegram Provider Token غير مضبوط!");
+      }
+
       window.Telegram.WebApp.openInvoice(
         {
           chat_id: telegramId,
@@ -57,7 +63,7 @@ export const useTelegramPayment = () => {
           currency: "XTR",
           prices: [{ label: "الاشتراك", amount: price * 100 }],
           payload: payload,
-          provider_token: ""
+          provider_token: providerToken // ✅ حماية المفتاح
         },
         (status) => {
           if (status === 'paid') {
@@ -80,7 +86,7 @@ export const useTelegramPayment = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [telegramId]);
 
   return {
     handleTelegramStarsPayment,
@@ -88,7 +94,8 @@ export const useTelegramPayment = () => {
       loading,
       error,
       paymentStatus,
-      resetError: () => setError(null)
+      resetError: () => setError(null),
+      resetPaymentStatus: () => setPaymentStatus(null) // ✅ إعادة ضبط حالة الدفع
     }
   };
 };

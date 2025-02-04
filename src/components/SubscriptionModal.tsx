@@ -4,8 +4,8 @@ import { FiX } from 'react-icons/fi'
 import { useState } from 'react'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
-import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard';
-import PaymentButtons from '../components/SubscriptionModal/PaymentButtons';
+import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
+import PaymentButtons from '../components/SubscriptionModal/PaymentButtons'
 
 type SubscriptionPlan = {
   id: number
@@ -20,37 +20,39 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const { handleTelegramStarsPayment } = useTelegramPayment()
   const { telegramId } = useTelegram()
   const [loading, setLoading] = useState(false)
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'pending' | 'active' | 'failed' | null>(null)
 
   const handlePayment = async () => {
     if (!plan || !telegramId) return
 
     try {
       setLoading(true)
-      setSubscriptionStatus('pending')
 
       await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')), async () => {
-        const response = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ telegram_id: telegramId, plan_id: plan.id }),
-        })
-
-        if (response.ok) {
-          setSubscriptionStatus('active')
-          window.Telegram.WebApp.showAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
-            onClose()
-            window.location.reload()
+        try {
+          const response = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegram_id: telegramId, plan_id: plan.id }),
           })
-        } else {
-          throw new Error('فشل في تفعيل الاشتراك')
+
+          if (response.ok) {
+            console.log("✅ تم تفعيل الاشتراك بنجاح")
+            window.Telegram.WebApp.showAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
+              onClose()
+              window.location.reload()
+            })
+          } else {
+            throw new Error(`❌ فشل في تفعيل الاشتراك: ${await response.text()}`)
+          }
+        } catch (error) {
+          console.error("❌ خطأ أثناء طلب الاشتراك:", error)
+          window.Telegram.WebApp.showAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
         }
       })
     } catch (error) {
-      setSubscriptionStatus('failed')
+      console.error("❌ خطأ أثناء عملية الدفع:", error)
       window.Telegram.WebApp.showAlert(
-        '❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'),
-        () => window.Telegram.WebApp.close()
+        '❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف')
       )
     } finally {
       setLoading(false)

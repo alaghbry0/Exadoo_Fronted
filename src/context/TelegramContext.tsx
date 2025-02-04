@@ -30,60 +30,73 @@ declare global {
 const TelegramContext = createContext<{
   telegramId: string | null;
   isTelegramReady: boolean;
+  isLoading: boolean;
   setTelegramId: (id: string | null) => void;
 }>({
   telegramId: null,
   isTelegramReady: false,
+  isLoading: true,
   setTelegramId: () => {},
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const [telegramId, setTelegramId] = useState<string | null>(null);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const initializeTelegram = useCallback(() => {
-    const tg = window.Telegram?.WebApp;
-    if (!tg) {
-      console.warn("⚠️ Telegram WebApp not available");
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (!tg) {
+        console.warn("⚠️ Telegram WebApp غير متوفر");
+        setIsLoading(false);
+        return false;
+      }
+
+      tg.expand();
+      tg.ready();
+
+      const userId = tg.initDataUnsafe?.user?.id?.toString();
+      if (userId) {
+        setTelegramId(userId);
+        setIsTelegramReady(true);
+        console.log("✅ Telegram User ID:", userId);
+        setIsLoading(false);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error);
+      setIsLoading(false);
       return false;
     }
-
-    tg.expand();
-    tg.ready();
-
-    const userId = tg.initDataUnsafe?.user?.id?.toString();
-    if (userId) {
-      setTelegramId(userId);
-      setIsTelegramReady(true);
-      console.log("✅ Telegram User ID:", userId);
-      return true;
-    }
-
-    return false;
   }, []);
 
   useEffect(() => {
+    let retryInterval: NodeJS.Timeout | null = null;
+
     const checkTelegram = () => {
       if (initializeTelegram()) return;
-
-      const retryInterval = setInterval(() => {
+      retryInterval = setInterval(() => {
         if (initializeTelegram()) {
-          clearInterval(retryInterval);
+          if (retryInterval) clearInterval(retryInterval);
         }
       }, 500);
-
-      return () => clearInterval(retryInterval);
     };
 
-    const timeout = setTimeout(checkTelegram, 1000);
-    return () => clearTimeout(timeout);
+    checkTelegram();
+
+    return () => {
+      if (retryInterval) clearInterval(retryInterval);
+    };
   }, [initializeTelegram]);
 
   useEffect(() => {
     if (!window.Telegram?.WebApp) return;
 
     const handleThemeChange = () => {
-      console.log("🎨 Theme changed, reloading Telegram data...");
+      console.log("🎨 تم تغيير الثيم، إعادة تحميل بيانات تيليجرام...");
       initializeTelegram();
     };
 
@@ -92,7 +105,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   }, [initializeTelegram]);
 
   return (
-    <TelegramContext.Provider value={{ telegramId, isTelegramReady, setTelegramId }}>
+    <TelegramContext.Provider value={{ telegramId, isTelegramReady, isLoading, setTelegramId }}>
       {children}
     </TelegramContext.Provider>
   );
