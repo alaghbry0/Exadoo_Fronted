@@ -7,6 +7,7 @@ export const useTelegramPayment = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | 'cancelled' | null>(null);
+  const [onSuccessCallback, setOnSuccessCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
@@ -17,11 +18,14 @@ export const useTelegramPayment = () => {
     const handleInvoiceClosed = () => {
       setLoading(false);
 
-      // ✅ يتم تعيين الحالة بناءً على `paymentStatus` الحالي
       if (paymentStatus === 'pending') {
         console.warn("❌ الدفع فشل أو تم إلغاؤه.");
         setError("فشلت عملية الدفع أو تم إلغاؤها.");
         setPaymentStatus('failed');
+      } else if (paymentStatus === 'paid' && onSuccessCallback) {
+        console.log("✅ استدعاء onSuccess بعد الدفع الناجح");
+        onSuccessCallback();
+        setOnSuccessCallback(null); // ✅ إزالة المرجع بعد التنفيذ
       }
     };
 
@@ -29,7 +33,7 @@ export const useTelegramPayment = () => {
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
-  }, [paymentStatus]);
+  }, [paymentStatus, onSuccessCallback]);
 
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
@@ -45,6 +49,7 @@ export const useTelegramPayment = () => {
       setLoading(true);
       setError(null);
       setPaymentStatus('pending');
+      setOnSuccessCallback(() => onSuccess); // ✅ حفظ الـ `callback` للاستخدام بعد نجاح الدفع
 
       // ✅ إنشاء بيانات الدفع مباشرة
       const payload = JSON.stringify({
@@ -59,7 +64,6 @@ export const useTelegramPayment = () => {
       // ✅ استدعاء الدفع مباشرة بدون API خارجي
       window.Telegram.WebApp.openInvoice?.(invoiceUrl, () => {
         console.log("✅ تمت معالجة الدفع، في انتظار رد تليجرام...");
-        // ✅ لا نحدد الحالة هنا لأن `invoiceClosed` سيتم استدعاؤه تلقائيًا
       });
 
     } catch (error) {
