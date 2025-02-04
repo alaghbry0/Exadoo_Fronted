@@ -15,17 +15,17 @@ export const useTelegramPayment = () => {
     const tgWebApp = window.Telegram.WebApp;
 
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
-    const handleInvoiceClosed = () => {
+    const handleInvoiceClosed = (status: "paid" | "cancelled" | "failed") => {
       setLoading(false);
 
-      if (paymentStatus === 'pending') {
-        console.warn("❌ الدفع فشل أو تم إلغاؤه.");
-        setError("فشلت عملية الدفع أو تم إلغاؤها.");
-        setPaymentStatus('failed');
-      } else if (paymentStatus === 'paid' && onSuccessCallback) {
+      if (status === 'paid' && onSuccessCallback) {
         console.log("✅ استدعاء onSuccess بعد الدفع الناجح");
         onSuccessCallback();
         setOnSuccessCallback(null); // ✅ إزالة المرجع بعد التنفيذ
+      } else {
+        console.warn(`❌ الدفع لم يكتمل: ${status}`);
+        setError(`فشلت عملية الدفع (${status})`);
+        setPaymentStatus(status);
       }
     };
 
@@ -33,7 +33,7 @@ export const useTelegramPayment = () => {
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
-  }, [paymentStatus, onSuccessCallback]);
+  }, [onSuccessCallback]);
 
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
@@ -49,21 +49,25 @@ export const useTelegramPayment = () => {
       setLoading(true);
       setError(null);
       setPaymentStatus('pending');
-      setOnSuccessCallback(() => onSuccess); // ✅ حفظ الـ `callback` للاستخدام بعد نجاح الدفع
+      setOnSuccessCallback(() => onSuccess); // ✅ حفظ `onSuccess` للاستخدام لاحقًا
 
-      // ✅ إنشاء بيانات الدفع مباشرة
       const payload = JSON.stringify({
-        planId: planId,
+        planId,
         userId: telegramId
       });
 
-      const invoiceUrl = `tg://openinvoice?amount=${price * 100}&payload=${encodeURIComponent(payload)}`;
-
-      console.log(`✅ فتح نافذة الدفع: ${invoiceUrl}`);
-
-      // ✅ استدعاء الدفع مباشرة بدون API خارجي
-      window.Telegram.WebApp.openInvoice?.(invoiceUrl, () => {
-        console.log("✅ تمت معالجة الدفع، في انتظار رد تليجرام...");
+      // ✅ استدعاء `openInvoice` مباشرة دون الحاجة إلى API خارجي
+      window.Telegram.WebApp.openInvoice({
+        chat_id: telegramId,
+        title: "اشتراك VIP",
+        description: "اشتراك شهري في الخدمة المميزة",
+        currency: "XTR",
+        prices: [{ label: "الاشتراك", amount: price * 100 }],
+        payload: payload,
+        provider_token: process.env.NEXT_PUBLIC_TELEGRAM_PROVIDER_TOKEN || ""
+      }, (status: string) => {
+        console.log("✅ حالة الدفع:", status);
+        setPaymentStatus(status as "paid" | "cancelled" | "failed");
       });
 
     } catch (error) {
