@@ -1,4 +1,6 @@
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -7,7 +9,7 @@ const nextConfig = {
         hostname: "api.telegram.org",
       },
     ],
-    unoptimized: true, 
+    unoptimized: true, // ✅ تعطيل تحسين الصور لجميع الصور
   },
   async headers() {
     return [
@@ -21,10 +23,10 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config: any, { isServer }: { isServer: boolean }) => {
     if (isServer) config.resolve.fallback = { fs: false };
     return config;
   },
 };
 
-export default nextConfig;
+export
