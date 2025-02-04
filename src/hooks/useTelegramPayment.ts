@@ -15,8 +15,11 @@ export const useTelegramPayment = () => {
     const tgWebApp = window.Telegram.WebApp;
 
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
-    const handleInvoiceClosed = (status: "paid" | "cancelled" | "failed") => {
+    const handleInvoiceClosed = () => {
       setLoading(false);
+
+      // ✅ جلب حالة الدفع من Telegram WebApp
+      const status = window.Telegram?.WebApp?.LastInvoiceStatus as "paid" | "cancelled" | "failed";
 
       if (status === 'paid' && onSuccessCallback) {
         console.log("✅ استدعاء onSuccess بعد الدفع الناجح");
@@ -29,6 +32,7 @@ export const useTelegramPayment = () => {
       }
     };
 
+    // ✅ تمرير دالة بدون معاملات
     tgWebApp?.onEvent?.("invoiceClosed", handleInvoiceClosed);
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
@@ -56,7 +60,7 @@ export const useTelegramPayment = () => {
         userId: telegramId
       });
 
-      // ✅ استدعاء `openInvoice` مباشرة دون الحاجة إلى API خارجي
+      // ✅ استدعاء `openInvoice` مباشرة بدون الحاجة إلى API خارجي
       window.Telegram.WebApp.openInvoice({
         chat_id: telegramId,
         title: "اشتراك VIP",
@@ -65,9 +69,8 @@ export const useTelegramPayment = () => {
         prices: [{ label: "الاشتراك", amount: price * 100 }],
         payload: payload,
         provider_token: process.env.NEXT_PUBLIC_TELEGRAM_PROVIDER_TOKEN || ""
-      }, (status: string) => {
-        console.log("✅ حالة الدفع:", status);
-        setPaymentStatus(status as "paid" | "cancelled" | "failed");
+      }, () => {
+        console.log("✅ تم إرسال الفاتورة، بانتظار الدفع...");
       });
 
     } catch (error) {
