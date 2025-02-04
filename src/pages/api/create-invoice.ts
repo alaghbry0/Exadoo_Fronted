@@ -18,6 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    console.log(`🔹 إنشاء فاتورة لـ ${telegram_id} - الخطة ${plan_id} - المبلغ ${amount}`);
+
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -32,8 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await response.json();
 
-    if (!data.ok || !data.result.startsWith("https://t.me/invoice/")) {
-      throw new Error(`❌ فشل في إنشاء الفاتورة: ${data.description || "رابط غير صالح"}`);
+    console.log("🔹 استجابة API:", data);
+
+    if (!data.ok) {
+      throw new Error(`❌ فشل في إنشاء الفاتورة: ${data.description}`);
+    }
+
+    if (!data.result.startsWith("https://t.me/invoice/")) {
+      throw new Error("❌ رابط الفاتورة غير صالح، تحقق من إعدادات البوت.");
     }
 
     console.log(`✅ تم إنشاء الفاتورة بنجاح: ${data.result}`);
@@ -41,6 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error) {
     console.error("❌ خطأ أثناء إنشاء الفاتورة:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
   }
 }
