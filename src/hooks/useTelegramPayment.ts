@@ -14,22 +14,21 @@ export const useTelegramPayment = () => {
     const tgWebApp = window.Telegram.WebApp;
 
     // ✅ متابعة الدفع بعد إغلاق نافذة الفاتورة
-    const handleInvoiceClosed = () => {
+    const handleInvoiceClosed = (status: 'paid' | 'cancelled' | 'failed') => {
       setLoading(false);
+      setPaymentStatus(status);
 
-      if (paymentStatus === 'pending') {
-        console.warn("❌ الدفع فشل أو تم إلغاؤه.");
-        setError("فشلت عملية الدفع أو تم إلغاؤها.");
-        setPaymentStatus('failed');
+      if (status !== 'paid') {
+        console.warn(`❌ الدفع فشل أو تم إلغاؤه: ${status}`);
+        setError(`فشلت عملية الدفع (${status})`);
       }
     };
 
     tgWebApp?.onEvent?.("invoiceClosed", handleInvoiceClosed);
-
     return () => {
       tgWebApp?.offEvent?.("invoiceClosed", handleInvoiceClosed);
     };
-  }, [paymentStatus]);
+  }, []);
 
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
@@ -46,36 +45,24 @@ export const useTelegramPayment = () => {
       setError(null);
       setPaymentStatus('pending');
 
-      // ✅ إرسال طلب إلى API لإنشاء رابط الدفع
-      const response = await fetch("/api/create-invoice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegram_id: telegramId, plan_id: planId, amount: price }),
+      // ✅ إنشاء بيانات الدفع مباشرة
+      const payload = JSON.stringify({
+        planId: planId,
+        userId: telegramId
       });
 
-      if (!response.ok) {
-        throw new Error(`❌ فشل في إنشاء الفاتورة: ${await response.text()}`);
-      }
+      const invoiceUrl = `tg://openinvoice?amount=${price * 100}&payload=${encodeURIComponent(payload)}`;
 
-      const { invoice_url } = await response.json(); // ✅ الحصول على رابط الدفع
+      console.log(`✅ فتح نافذة الدفع: ${invoiceUrl}`);
 
-      // ✅ تعريف نوع الحالة بشكل صحيح
-      const validStatuses = ['paid', 'cancelled', 'failed'] as const;
-      type PaymentStatus = typeof validStatuses[number];
-
-      // ✅ تمرير رابط الفاتورة إلى `openInvoice`
-      window.Telegram.WebApp.openInvoice?.(invoice_url, (status: string) => {
-        if (validStatuses.includes(status as PaymentStatus)) {
-          setPaymentStatus(status as PaymentStatus);
-        } else {
-          setPaymentStatus('failed');
-        }
-
+      // ✅ استدعاء الدفع مباشرة بدون API خارجي
+      window.Telegram.WebApp.openInvoice?.(invoiceUrl, (status: string) => {
         if (status === 'paid') {
           console.log("✅ تم الدفع بنجاح");
           onSuccess();
         } else {
           console.warn(`❌ حالة الدفع: ${status}`);
+          setPaymentStatus(status as 'failed' | 'cancelled');
           setError(`فشلت عملية الدفع (${status})`);
         }
       });
