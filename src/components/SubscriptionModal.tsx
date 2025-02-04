@@ -29,8 +29,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   }, [])
 
   const showTelegramAlert = (message: string, callback?: () => void) => {
-    if (isTelegramAvailable) {
-      (window.Telegram?.WebApp as any)?.showAlert?.(message, callback)
+    if (isTelegramAvailable && window.Telegram?.WebApp?.showAlert) {
+      window.Telegram.WebApp.showAlert(message, callback)
     } else {
       alert(message)
       callback?.()
