@@ -30,7 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: "اشتراك شهري في الخدمة المميزة",
         payload: payload,
         currency: "XTR",
-        prices: [{ label: "الاشتراك", amount: 1 }],
+        prices: [{ label: "الاشتراك", amount: amount * 100 }], // تحويل إلى سنتات
+        provider_data: JSON.stringify({ max_tip_amount: 0 }),
       }),
     });
 
@@ -43,8 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const invoiceUrl = data.result;
 
-    // ✅ الآن نقبل كلا النوعين من الروابط
-    if (!invoiceUrl.startsWith("https://t.me/invoice/") && !invoiceUrl.startsWith("https://t.me/$")) {
+    if (!invoiceUrl.startsWith("https://t.me/invoice/")) {
       console.error(`❌ رابط الفاتورة غير مدعوم: ${invoiceUrl}`);
       throw new Error("❌ رابط الفاتورة غير صالح، تحقق من إعدادات البوت.");
     }
