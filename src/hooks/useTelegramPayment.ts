@@ -29,7 +29,6 @@ export const useTelegramPayment = () => {
           setOnSuccessCallback(null);
         }
       } else {
-        // 🔄 إذا كان الدفع غير واضح، تحقق يدوياً
         console.log("🔍 إعادة التحقق من حالة الدفع...");
         await checkPaymentStatus();
       }
@@ -42,12 +41,18 @@ export const useTelegramPayment = () => {
   }, [onSuccessCallback, paymentStatus]);
 
   const handleTelegramStarsPayment = useCallback(async (
-    planId: number,
+    planId: number | null,
     price: number,
     onSuccess: () => void
   ) => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
+      return;
+    }
+
+    if (!telegramId || !planId) {
+      console.error("❌ بيانات المستخدم أو الخطة غير صحيحة!", { telegramId, planId });
+      setError("حدث خطأ في بيانات المستخدم أو الخطة.");
       return;
     }
 
@@ -71,7 +76,6 @@ export const useTelegramPayment = () => {
 
       console.log(`🔗 فتح الفاتورة: ${invoice_url}`);
 
-      // ✅ فتح الفاتورة عبر Telegram
       if (window.Telegram?.WebApp?.openInvoice) {
         window.Telegram.WebApp.openInvoice(invoice_url, async (status: string) => {
           console.log(`🔄 حالة الدفع: ${status}`);
@@ -80,8 +84,12 @@ export const useTelegramPayment = () => {
             console.log("✅ تم الدفع بنجاح");
             setPaymentStatus("paid");
 
-            // 🔹 إرسال تأكيد الدفع إلى السيرفر
-            await sendPaymentToServer(telegramId, planId, invoice_url);
+            // ✅ التأكد من إرسال بيانات صحيحة
+            if (telegramId && planId) {
+              await sendPaymentToServer(telegramId, planId, invoice_url);
+            } else {
+              console.error("❌ بيانات الدفع غير كاملة!", { telegramId, planId });
+            }
 
             if (onSuccessCallback) {
               onSuccessCallback();
@@ -92,7 +100,6 @@ export const useTelegramPayment = () => {
             setError(`فشلت عملية الدفع (${status})`);
             setPaymentStatus("failed");
 
-            // 🔄 إعادة المحاولة إذا كان الدفع معلقًا
             if (status === "pending") {
               setTimeout(async () => {
                 console.log("🔄 إعادة محاولة التحقق من الدفع...");
@@ -142,13 +149,21 @@ export const useTelegramPayment = () => {
   // ✅ التحقق من الدفع يدويًا بعد إغلاق الفاتورة
   async function checkPaymentStatus() {
     try {
+      if (!telegramId) {
+        console.error("❌ لا يمكن التحقق من حالة الدفع لأن `telegramId` غير معرف.");
+        return;
+      }
+
       const response = await fetch(`/api/check-payment-status?telegram_id=${telegramId}`);
       const data = await response.json();
 
       if (data.status === "paid") {
         console.log("✅ تم تأكيد الدفع بعد إعادة التحقق!");
         setPaymentStatus("paid");
-        await sendPaymentToServer(telegramId, data.plan_id, data.invoice_url);
+
+        if (telegramId && data.plan_id) {
+          await sendPaymentToServer(telegramId, data.plan_id, data.invoice_url);
+        }
       } else {
         console.warn("❌ لا يزال الدفع معلقًا بعد إعادة التحقق.");
         setPaymentStatus("failed");
