@@ -45,8 +45,8 @@ export const useTelegramPayment = () => {
           setError(`فشلت عملية الدفع (${status})`);
         }
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "❌ خطأ غير متوقع");
+    } catch (error: any) {
+      setError(error.message || "❌ خطأ غير متوقع");
       setPaymentStatus('failed');
     } finally {
       setLoading(false);
@@ -68,8 +68,8 @@ export const useTelegramPayment = () => {
       if (!response.ok) {
         throw new Error("❌ فشل إرسال تأكيد الدفع!");
       }
-    } catch (err) {
-      setError("❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
+    } catch (error: any) {
+      setError(error.message || "❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
     }
   }
 
