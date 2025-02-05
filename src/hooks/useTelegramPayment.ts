@@ -36,15 +36,6 @@ export const useTelegramPayment = () => {
         throw new Error("❌ فشل في إنشاء الفاتورة!");
       }
 
-      window.Telegram.WebApp.openInvoice(data.invoice_url, async (status: string) => {
-        if (status === "paid") {
-          setPaymentStatus("paid");
-          await sendPaymentToServer(telegramId, planId, data.invoice_url);
-        } else {
-          setPaymentStatus("failed");
-          setError(`فشلت عملية الدفع (${status})`);
-        }
-      });
     } catch (error: any) {
       setError(error.message || "❌ خطأ غير متوقع");
       setPaymentStatus('failed');
@@ -53,11 +44,14 @@ export const useTelegramPayment = () => {
     }
   }, [telegramId]);
 
-  async function sendPaymentToServer(telegramId: number, planId: number, invoiceUrl: string) {
+  async function sendPaymentToWebhook(telegramId: number, planId: number, invoiceUrl: string) {
     try {
-      const response = await fetch("/api/payment-confirm", {
+      const response = await fetch("/webhook", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Telegram-Bot-Api-Secret-Token": process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ""
+        },
         body: JSON.stringify({
           telegram_id: telegramId,
           subscription_type_id: planId,
