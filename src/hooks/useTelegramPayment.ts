@@ -42,8 +42,8 @@ export const useTelegramPayment = () => {
           if (status === "paid") {
             setPaymentStatus("paid");
 
-            // ✅ إرسال تأكيد الدفع بعد نجاح الدفع
-            await sendPaymentToWebhook(telegramId, planId, data.invoice_url);
+            // ✅ تأكد من تحويل `telegramId` إلى رقم قبل تمريره
+            await sendPaymentToWebhook(Number(telegramId), planId, data.invoice_url);
           } else {
             setPaymentStatus("failed");
             setError(`فشلت عملية الدفع (${status})`);
