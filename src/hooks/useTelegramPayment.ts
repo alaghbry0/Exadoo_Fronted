@@ -36,8 +36,25 @@ export const useTelegramPayment = () => {
         throw new Error("❌ فشل في إنشاء الفاتورة!");
       }
 
-    } catch (error: any) {
-      setError(error.message || "❌ خطأ غير متوقع");
+      // ✅ فتح الفاتورة داخل WebApp
+      window.Telegram.WebApp.openInvoice(data.invoice_url, async (status: string) => {
+        if (status === "paid") {
+          setPaymentStatus("paid");
+
+          // ✅ إرسال تأكيد الدفع بعد نجاح الدفع
+          await sendPaymentToWebhook(telegramId, planId, data.invoice_url);
+        } else {
+          setPaymentStatus("failed");
+          setError(`فشلت عملية الدفع (${status})`);
+        }
+      });
+
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || "❌ خطأ غير متوقع");
+      } else {
+        setError("❌ حدث خطأ غير معروف");
+      }
       setPaymentStatus('failed');
     } finally {
       setLoading(false);
@@ -62,8 +79,12 @@ export const useTelegramPayment = () => {
       if (!response.ok) {
         throw new Error("❌ فشل إرسال تأكيد الدفع!");
       }
-    } catch (error: any) {
-      setError(error.message || "❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || "❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
+      } else {
+        setError("❌ حدث خطأ غير معروف أثناء إرسال تأكيد الدفع.");
+      }
     }
   }
 
