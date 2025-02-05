@@ -38,40 +38,43 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   }
 
   const handlePayment = async () => {
-    if (!plan || !telegramId) return
+  if (!plan || !telegramId) return;
 
+  try {
+    setLoading(true);
+
+    // ✅ استدعاء `handleTelegramStarsPayment` بدون تمرير معامل ثالث
+    await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')));
+
+    // ✅ بعد نجاح الدفع، إرسال الطلب إلى `/api/subscribe`
     try {
-      setLoading(true)
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram_id: telegramId, plan_id: plan.id }),
+      });
 
-      await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')), async () => {
-        try {
-          const response = await fetch('/api/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ telegram_id: telegramId, plan_id: plan.id }),
-          })
-
-          if (response.ok) {
-            console.log("✅ تم تفعيل الاشتراك بنجاح")
-            showTelegramAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
-              onClose()
-              window.location.reload()
-            })
-          } else {
-            throw new Error(`❌ فشل في تفعيل الاشتراك: ${await response.text()}`)
-          }
-        } catch (error) {
-          console.error("❌ خطأ أثناء طلب الاشتراك:", error)
-          showTelegramAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.')
-        }
-      })
+      if (response.ok) {
+        console.log("✅ تم تفعيل الاشتراك بنجاح");
+        showTelegramAlert('✅ تم تفعيل الاشتراك بنجاح!', () => {
+          onClose();
+          window.location.reload();
+        });
+      } else {
+        throw new Error(`❌ فشل في تفعيل الاشتراك: ${await response.text()}`);
+      }
     } catch (error) {
-      console.error("❌ خطأ أثناء عملية الدفع:", error)
-      showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
-    } finally {
-      setLoading(false)
+      console.error("❌ خطأ أثناء طلب الاشتراك:", error);
+      showTelegramAlert('❌ فشل تفعيل الاشتراك، يرجى المحاولة لاحقًا.');
     }
+  } catch (error) {
+    console.error("❌ خطأ أثناء عملية الدفع:", error);
+    showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'));
+  } finally {
+    setLoading(false);
   }
+};
+
 
   return (
     <AnimatePresence>
