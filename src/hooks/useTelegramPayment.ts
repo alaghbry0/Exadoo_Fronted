@@ -1,6 +1,6 @@
 // useTelegramPayment.ts
 'use client';
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useTelegram } from "../context/TelegramContext";
 
 export const useTelegramPayment = () => {
@@ -45,8 +45,8 @@ export const useTelegramPayment = () => {
           setError(`فشلت عملية الدفع (${status})`);
         }
       });
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "❌ خطأ غير متوقع");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "❌ خطأ غير متوقع");
       setPaymentStatus('failed');
     } finally {
       setLoading(false);
@@ -61,14 +61,14 @@ export const useTelegramPayment = () => {
         body: JSON.stringify({
           telegram_id: telegramId,
           subscription_type_id: planId,
-          payment_id: invoiceUrl // استخدام invoiceUrl كمعرف دفع
+          payment_id: invoiceUrl
         })
       });
 
       if (!response.ok) {
         throw new Error("❌ فشل إرسال تأكيد الدفع!");
       }
-    } catch (error) {
+    } catch (err) {
       setError("❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
     }
   }
