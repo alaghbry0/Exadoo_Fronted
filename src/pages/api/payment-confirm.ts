@@ -14,12 +14,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         console.log(`🔹 تأكيد الدفع لـ ${telegram_id} - الخطة ${subscription_type_id}`);
 
-        // 🔹 إرسال الدفع إلى `telegram_payments.py`
+        // 🔹 التحقق من وجود `WEBHOOK_SECRET`
+        const webhookSecret = process.env.NEXT_PUBLIC_WEBHOOK_SECRET || "";
+
+        if (!webhookSecret) {
+            console.error("❌ خطأ: `NEXT_PUBLIC_WEBHOOK_SECRET` غير معرف في بيئة التشغيل!");
+            return res.status(500).json({ error: "Server misconfiguration: missing webhook secret" });
+        }
+
+        // 🔹 إرسال الدفع إلى `telegram_webhook.py`
         const response = await fetch("http://127.0.0.1:5000/webhook", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-Telegram-Bot-Api-Secret-Token": process.env.NEXT_PUBLIC_WEBHOOK_SECRET
+                "X-Telegram-Bot-Api-Secret-Token": webhookSecret
             },
             body: JSON.stringify({
                 telegram_id,
