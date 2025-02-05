@@ -7,6 +7,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  // ✅ طباعة `TELEGRAM_BOT_TOKEN` للتحقق من أنه مضبوط بشكل صحيح
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.error("❌ خطأ: `TELEGRAM_BOT_TOKEN` غير مضبوط أو غير متاح.");
+    return res.status(500).json({ error: "Missing TELEGRAM_BOT_TOKEN environment variable" });
+  }
+
+  console.log("✅ `TELEGRAM_BOT_TOKEN` متاح:", TELEGRAM_BOT_TOKEN ? "Yes" : "No");
+
   // ✅ طباعة بيانات الطلب لمساعدتنا في اكتشاف الأخطاء
   console.log("📥 استلام طلب لإنشاء الفاتورة:", req.body);
 
@@ -18,12 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Missing or invalid required fields" });
   }
 
-  // ✅ تحقق من أن `TELEGRAM_BOT_TOKEN` مضبوط
-  if (!TELEGRAM_BOT_TOKEN) {
-    console.error("❌ خطأ: `TELEGRAM_BOT_TOKEN` غير مضبوط في البيئة.");
-    return res.status(500).json({ error: "Missing TELEGRAM_BOT_TOKEN environment variable" });
-  }
-
   try {
     console.log(`🔹 إنشاء فاتورة لـ ${telegram_id} - الخطة ${plan_id} - المبلغ ${amount}`);
 
@@ -31,6 +33,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ التأكد من أن `amount` يتم تحويله بشكل صحيح إلى سنتات
     const invoiceAmount = parseInt((amount * 100).toFixed(0));
+
+    // ✅ طباعة البيانات المرسلة إلى تليجرام
+    console.log("📤 إرسال البيانات إلى تليجرام:", {
+      title: "اشتراك VIP",
+      description: "اشتراك شهري في الخدمة المميزة",
+      payload: payload,
+      currency: "XTR",
+      prices: [{ label: "الاشتراك", amount: invoiceAmount }],
+      provider_data: JSON.stringify({ max_tip_amount: 0 }),
+    });
 
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
@@ -44,6 +56,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         provider_data: JSON.stringify({ max_tip_amount: 0 }),
       }),
     });
+
+    // ✅ التحقق مما إذا كان `fetch()` فشل قبل تحليل `JSON`
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ خطأ في الاتصال بـ API تليجرام:", errorText);
+      return res.status(500).json({ error: "Failed to connect to Telegram API", details: errorText });
+    }
 
     const data = await response.json();
 
