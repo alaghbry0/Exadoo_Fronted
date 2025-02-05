@@ -50,7 +50,9 @@ export const useTelegramPayment = () => {
       return;
     }
 
-    if (!telegramId || !planId) {
+    const numericTelegramId = telegramId ? Number(telegramId) : null;
+
+    if (!numericTelegramId || !planId) {
       console.error("❌ بيانات المستخدم أو الخطة غير صحيحة!", { telegramId, planId });
       setError("حدث خطأ في بيانات المستخدم أو الخطة.");
       return;
@@ -69,7 +71,7 @@ export const useTelegramPayment = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${process.env.NEXT_PUBLIC_WEBHOOK_SECRET}`
         },
-        body: JSON.stringify({ telegram_id: telegramId, plan_id: planId, amount: price }),
+        body: JSON.stringify({ telegram_id: numericTelegramId, plan_id: planId, amount: price }),
       });
 
       if (!invoice_url) throw new Error("❌ فشل في جلب رابط الفاتورة!");
@@ -85,11 +87,7 @@ export const useTelegramPayment = () => {
             setPaymentStatus("paid");
 
             // ✅ التأكد من إرسال بيانات صحيحة
-            if (telegramId && planId) {
-              await sendPaymentToServer(telegramId, planId, invoice_url);
-            } else {
-              console.error("❌ بيانات الدفع غير كاملة!", { telegramId, planId });
-            }
+            await sendPaymentToServer(numericTelegramId, planId, invoice_url);
 
             if (onSuccessCallback) {
               onSuccessCallback();
@@ -154,15 +152,16 @@ export const useTelegramPayment = () => {
         return;
       }
 
-      const response = await fetch(`/api/check-payment-status?telegram_id=${telegramId}`);
+      const numericTelegramId = Number(telegramId);
+      const response = await fetch(`/api/check-payment-status?telegram_id=${numericTelegramId}`);
       const data = await response.json();
 
       if (data.status === "paid") {
         console.log("✅ تم تأكيد الدفع بعد إعادة التحقق!");
         setPaymentStatus("paid");
 
-        if (telegramId && data.plan_id) {
-          await sendPaymentToServer(telegramId, data.plan_id, data.invoice_url);
+        if (numericTelegramId && data.plan_id) {
+          await sendPaymentToServer(numericTelegramId, data.plan_id, data.invoice_url);
         }
       } else {
         console.warn("❌ لا يزال الدفع معلقًا بعد إعادة التحقق.");
