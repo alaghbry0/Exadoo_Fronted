@@ -36,18 +36,22 @@ export const useTelegramPayment = () => {
         throw new Error("❌ فشل في إنشاء الفاتورة!");
       }
 
-      // ✅ فتح الفاتورة داخل WebApp
-      window.Telegram.WebApp.openInvoice(data.invoice_url, async (status: string) => {
-        if (status === "paid") {
-          setPaymentStatus("paid");
+      // ✅ التحقق مما إذا كانت `openInvoice` موجودة قبل استدعائها
+      if (window.Telegram?.WebApp?.openInvoice) {
+        window.Telegram.WebApp.openInvoice(data.invoice_url, async (status: string) => {
+          if (status === "paid") {
+            setPaymentStatus("paid");
 
-          // ✅ إرسال تأكيد الدفع بعد نجاح الدفع
-          await sendPaymentToWebhook(telegramId, planId, data.invoice_url);
-        } else {
-          setPaymentStatus("failed");
-          setError(`فشلت عملية الدفع (${status})`);
-        }
-      });
+            // ✅ إرسال تأكيد الدفع بعد نجاح الدفع
+            await sendPaymentToWebhook(telegramId, planId, data.invoice_url);
+          } else {
+            setPaymentStatus("failed");
+            setError(`فشلت عملية الدفع (${status})`);
+          }
+        });
+      } else {
+        throw new Error("❌ `openInvoice` غير مدعومة على هذا الجهاز!");
+      }
 
     } catch (error: unknown) {
       if (error instanceof Error) {
