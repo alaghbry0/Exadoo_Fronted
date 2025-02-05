@@ -28,6 +28,10 @@ export const useTelegramPayment = () => {
           onSuccessCallback();
           setOnSuccessCallback(null);
         }
+      } else {
+        // 🔄 إذا كان الدفع غير واضح، تحقق يدوياً
+        console.log("🔍 إعادة التحقق من حالة الدفع...");
+        await checkPaymentStatus();
       }
     };
 
@@ -67,34 +71,32 @@ export const useTelegramPayment = () => {
 
       console.log(`🔗 فتح الفاتورة: ${invoice_url}`);
 
-      // ✅ التحقق من وجود `window.Telegram` قبل استدعاء `openInvoice`
-      if (typeof window !== "undefined" && window.Telegram?.WebApp?.openInvoice) {
-        window.Telegram.WebApp.openInvoice(invoice_url, (status: string) => {
+      // ✅ فتح الفاتورة عبر Telegram
+      if (window.Telegram?.WebApp?.openInvoice) {
+        window.Telegram.WebApp.openInvoice(invoice_url, async (status: string) => {
           console.log(`🔄 حالة الدفع: ${status}`);
 
           if (status === "paid") {
             console.log("✅ تم الدفع بنجاح");
             setPaymentStatus("paid");
-            onSuccess();
+
+            // 🔹 إرسال تأكيد الدفع إلى السيرفر
+            await sendPaymentToServer(telegramId, planId, invoice_url);
+
+            if (onSuccessCallback) {
+              onSuccessCallback();
+              setOnSuccessCallback(null);
+            }
           } else {
             console.warn(`❌ الدفع غير ناجح (${status})`);
             setError(`فشلت عملية الدفع (${status})`);
             setPaymentStatus("failed");
 
-            // إعادة المحاولة بعد 5 ثوانٍ إذا كان الدفع "pending"
+            // 🔄 إعادة المحاولة إذا كان الدفع معلقًا
             if (status === "pending") {
-              setTimeout(() => {
-                if (window.Telegram?.WebApp?.openInvoice) {
-                  console.log("🔄 إعادة محاولة فتح الفاتورة...");
-                  window.Telegram.WebApp.openInvoice(invoice_url, (retryStatus: string) => {
-                    console.log(`🔄 حالة الدفع بعد إعادة المحاولة: ${retryStatus}`);
-                    if (retryStatus === "paid") {
-                      console.log("✅ تم الدفع بنجاح بعد إعادة المحاولة!");
-                      setPaymentStatus("paid");
-                      onSuccess();
-                    }
-                  });
-                }
+              setTimeout(async () => {
+                console.log("🔄 إعادة محاولة التحقق من الدفع...");
+                await checkPaymentStatus();
               }, 5000);
             }
           }
@@ -112,6 +114,49 @@ export const useTelegramPayment = () => {
       setLoading(false);
     }
   }, [telegramId]);
+
+  // ✅ إرسال تأكيد الدفع إلى `/api/payment-confirm`
+  async function sendPaymentToServer(telegramId: number, planId: number, invoiceUrl: string) {
+    try {
+      const response = await fetch("/api/payment-confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          telegram_id: telegramId,
+          subscription_type_id: planId,
+          invoice_url: invoiceUrl
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log("✅ تم إرسال تأكيد الدفع إلى السيرفر بنجاح:", data);
+      } else {
+        console.error("❌ فشل إرسال تأكيد الدفع:", data);
+      }
+    } catch (error) {
+      console.error("❌ خطأ أثناء إرسال تأكيد الدفع:", error);
+    }
+  }
+
+  // ✅ التحقق من الدفع يدويًا بعد إغلاق الفاتورة
+  async function checkPaymentStatus() {
+    try {
+      const response = await fetch(`/api/check-payment-status?telegram_id=${telegramId}`);
+      const data = await response.json();
+
+      if (data.status === "paid") {
+        console.log("✅ تم تأكيد الدفع بعد إعادة التحقق!");
+        setPaymentStatus("paid");
+        await sendPaymentToServer(telegramId, data.plan_id, data.invoice_url);
+      } else {
+        console.warn("❌ لا يزال الدفع معلقًا بعد إعادة التحقق.");
+        setPaymentStatus("failed");
+      }
+    } catch (error) {
+      console.error("❌ خطأ أثناء التحقق من الدفع:", error);
+    }
+  }
 
   return {
     handleTelegramStarsPayment,
