@@ -65,7 +65,7 @@ export const useTelegramPayment = () => {
     }
   }, [telegramId]);
 
-  async function sendPaymentToWebhook(telegramId: number, planId: number, invoiceUrl: string) {
+  async function sendPaymentToWebhook(telegramId: number, planId: number, paymentId: string) {
     try {
       const response = await fetch("/webhook", {
         method: "POST",
@@ -76,7 +76,7 @@ export const useTelegramPayment = () => {
         body: JSON.stringify({
           telegram_id: telegramId,
           subscription_type_id: planId,
-          payment_id: invoiceUrl
+          payment_id: paymentId
         })
       });
 
