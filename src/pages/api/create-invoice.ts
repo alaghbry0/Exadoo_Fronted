@@ -13,14 +13,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { telegram_id, plan_id, amount } = req.body;
 
   // ✅ تحقق من صحة البيانات قبل إرسالها
-  if (!telegram_id || !plan_id || !amount) {
-    console.error("❌ بيانات غير مكتملة:", { telegram_id, plan_id, amount });
-    return res.status(400).json({ error: "Missing required fields" });
+  if (!telegram_id || !plan_id || amount === undefined || amount === null || isNaN(amount)) {
+    console.error("❌ بيانات غير مكتملة أو `amount` غير صالح:", { telegram_id, plan_id, amount });
+    return res.status(400).json({ error: "Missing or invalid required fields" });
   }
 
   // ✅ تحقق من أن `TELEGRAM_BOT_TOKEN` مضبوط
   if (!TELEGRAM_BOT_TOKEN) {
-    console.error("❌ خطأ: TELEGRAM_BOT_TOKEN غير مضبوط في البيئة.");
+    console.error("❌ خطأ: `TELEGRAM_BOT_TOKEN` غير مضبوط في البيئة.");
     return res.status(500).json({ error: "Missing TELEGRAM_BOT_TOKEN environment variable" });
   }
 
@@ -46,6 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const data = await response.json();
+
+    // ✅ طباعة الاستجابة من API تليجرام لمساعدتنا في معرفة المشكلة
     console.log("🔹 استجابة API من تليجرام:", JSON.stringify(data, null, 2));
 
     // ✅ تحقق مما إذا كان API تليجرام أعاد خطأ
@@ -58,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ تأكد من أن رابط الفاتورة صحيح
     if (!invoiceUrl || !invoiceUrl.startsWith("https://t.me/invoice/")) {
-      console.error(`❌ رابط الفاتورة غير مدعوم: ${invoiceUrl}`);
+      console.error(`❌ رابط الفاتورة غير مدعوم أو غير موجود: ${invoiceUrl}`);
       return res.status(500).json({ error: "Invalid invoice URL from Telegram API" });
     }
 
@@ -67,6 +69,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error) {
     console.error("❌ خطأ أثناء إنشاء الفاتورة:", error);
+
+    if (error instanceof SyntaxError) {
+      return res.status(400).json({ error: "Invalid JSON received" });
+    }
+
     return res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
   }
 }
