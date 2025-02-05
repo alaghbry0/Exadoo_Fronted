@@ -7,23 +7,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  // ✅ طباعة `TELEGRAM_BOT_TOKEN` للتحقق من أنه مضبوط بشكل صحيح
-  if (!TELEGRAM_BOT_TOKEN) {
-    console.error("❌ خطأ: `TELEGRAM_BOT_TOKEN` غير مضبوط أو غير متاح.");
-    return res.status(500).json({ error: "Missing TELEGRAM_BOT_TOKEN environment variable" });
-  }
-
-  console.log("✅ `TELEGRAM_BOT_TOKEN` متاح:", TELEGRAM_BOT_TOKEN ? "Yes" : "No");
-
-  // ✅ طباعة بيانات الطلب لمساعدتنا في اكتشاف الأخطاء
-  console.log("📥 استلام طلب لإنشاء الفاتورة:", req.body);
+  console.log("✅ استلام طلب لإنشاء الفاتورة:", req.body);
 
   const { telegram_id, plan_id, amount } = req.body;
 
-  // ✅ تحقق من صحة البيانات قبل إرسالها
-  if (!telegram_id || !plan_id || amount === undefined || amount === null || isNaN(amount)) {
-    console.error("❌ بيانات غير مكتملة أو `amount` غير صالح:", { telegram_id, plan_id, amount });
-    return res.status(400).json({ error: "Missing or invalid required fields" });
+  if (!telegram_id || !plan_id || !amount) {
+    console.error("❌ بيانات غير مكتملة:", { telegram_id, plan_id, amount });
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.error("❌ `TELEGRAM_BOT_TOKEN` غير مضبوط.");
+    return res.status(500).json({ error: "Missing TELEGRAM_BOT_TOKEN environment variable" });
   }
 
   try {
@@ -31,17 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const payload = JSON.stringify({ planId: plan_id, userId: telegram_id });
 
-    // ✅ التأكد من أن `amount` يتم تحويله بشكل صحيح إلى سنتات
-    const invoiceAmount = parseInt((amount * 100).toFixed(0));
+    // ✅ جرب استخدام `1` لاختبار ما إذا كانت المشكلة بسبب `amount * 100`
+    const invoiceAmount = 1;
 
-    // ✅ طباعة البيانات المرسلة إلى تليجرام
-    console.log("📤 إرسال البيانات إلى تليجرام:", {
+    console.log("📤 البيانات المرسلة إلى Telegram API:", {
       title: "اشتراك VIP",
       description: "اشتراك شهري في الخدمة المميزة",
       payload: payload,
       currency: "XTR",
       prices: [{ label: "الاشتراك", amount: invoiceAmount }],
-      provider_data: JSON.stringify({ max_tip_amount: 0 }),
     });
 
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`, {
@@ -52,24 +45,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: "اشتراك شهري في الخدمة المميزة",
         payload: payload,
         currency: "XTR",
-        prices: [{ label: "الاشتراك", amount: invoiceAmount }], // تحويل إلى سنتات
-        provider_data: JSON.stringify({ max_tip_amount: 0 }),
+        prices: [{ label: "الاشتراك", amount: invoiceAmount }],
       }),
     });
 
-    // ✅ التحقق مما إذا كان `fetch()` فشل قبل تحليل `JSON`
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ خطأ في الاتصال بـ API تليجرام:", errorText);
+      console.error("❌ خطأ في الاتصال بـ Telegram API:", errorText);
       return res.status(500).json({ error: "Failed to connect to Telegram API", details: errorText });
     }
 
     const data = await response.json();
-
-    // ✅ طباعة الاستجابة من API تليجرام لمساعدتنا في معرفة المشكلة
     console.log("🔹 استجابة API من تليجرام:", JSON.stringify(data, null, 2));
 
-    // ✅ تحقق مما إذا كان API تليجرام أعاد خطأ
     if (!data.ok) {
       console.error(`❌ فشل في إنشاء الفاتورة: ${data.description}`);
       return res.status(500).json({ error: `Telegram API error: ${data.description}` });
@@ -77,9 +65,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const invoiceUrl = data.result;
 
-    // ✅ تأكد من أن رابط الفاتورة صحيح
-    if (!invoiceUrl || !invoiceUrl.startsWith("https://t.me/invoice/")) {
-      console.error(`❌ رابط الفاتورة غير مدعوم أو غير موجود: ${invoiceUrl}`);
+    // ✅ قبول أي نوع من روابط الفواتير القادمة من Telegram API
+    if (!invoiceUrl.startsWith("https://t.me/invoice/") && !invoiceUrl.startsWith("https://t.me/$")) {
+      console.error(`❌ رابط الفاتورة غير مدعوم: ${invoiceUrl}`);
       return res.status(500).json({ error: "Invalid invoice URL from Telegram API" });
     }
 
