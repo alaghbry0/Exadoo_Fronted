@@ -1,4 +1,3 @@
-// useTelegramPayment.ts
 'use client';
 import { useState, useCallback } from "react";
 import { useTelegram } from "../context/TelegramContext";
@@ -28,7 +27,7 @@ export const useTelegramPayment = () => {
       const response = await fetch("/api/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegram_id: telegramId, plan_id: planId, amount: price })
+        body: JSON.stringify({ telegram_id: Number(telegramId), plan_id: planId, amount: price })
       });
 
       const data = await response.json();
@@ -36,13 +35,12 @@ export const useTelegramPayment = () => {
         throw new Error("❌ فشل في إنشاء الفاتورة!");
       }
 
-      // ✅ التحقق مما إذا كانت `openInvoice` موجودة قبل استدعائها
       if (window.Telegram?.WebApp?.openInvoice) {
         window.Telegram.WebApp.openInvoice(data.invoice_url, async (status: string) => {
           if (status === "paid") {
             setPaymentStatus("paid");
 
-            // ✅ تأكد من تحويل `telegramId` إلى رقم قبل تمريره
+            // ✅ تأكيد الدفع وإرساله إلى الـ Webhook
             await sendPaymentToWebhook(Number(telegramId), planId, data.invoice_url);
           } else {
             setPaymentStatus("failed");
@@ -65,6 +63,7 @@ export const useTelegramPayment = () => {
     }
   }, [telegramId]);
 
+  // ✅ تصحيح `sendPaymentToWebhook` وإرسال البيانات بشكل صحيح إلى Webhook
   async function sendPaymentToWebhook(telegramId: number, planId: number, paymentId: string) {
     try {
       const response = await fetch("/webhook", {
@@ -74,9 +73,13 @@ export const useTelegramPayment = () => {
           "X-Telegram-Bot-Api-Secret-Token": process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ""
         },
         body: JSON.stringify({
-          telegram_id: Number(telegramId),  // ✅ تحويل `telegram_id` إلى رقم
-          plan_id: planId,
-          amount: price
+          message: {
+            successful_payment: {
+              telegram_payment_charge_id: paymentId, // ✅ استخدام `paymentId` بدلاً من `amount`
+              total_amount: planId * 100, // تحويل السعر إلى سنتات
+              invoice_payload: JSON.stringify({ userId: telegramId, planId: planId }) // ✅ تحويل البيانات إلى JSON كما هو متوقع
+            }
+          }
         })
       });
 
