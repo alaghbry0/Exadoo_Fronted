@@ -74,9 +74,9 @@ export const useTelegramPayment = () => {
           "X-Telegram-Bot-Api-Secret-Token": process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ""
         },
         body: JSON.stringify({
-          telegram_id: telegramId,
-          subscription_type_id: planId,
-          payment_id: paymentId
+          telegram_id: Number(telegramId),  // ✅ تحويل `telegram_id` إلى رقم
+          plan_id: planId,
+          amount: price
         })
       });
 
