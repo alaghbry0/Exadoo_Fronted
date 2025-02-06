@@ -22,7 +22,7 @@ const SubscriptionPlanCard = ({
   handlePayment: () => void
 }) => {
   return (
-    <div className="p-4 h-[calc(75vh-56px)] flex flex-col overflow-y-auto pb-12">
+    <div className="p-4 h-[calc(74vh-56px)] flex flex-col overflow-y-auto pb-12">
       <div className="space-y-4 flex-1">
         {/* 🔹 السعر والمدة */}
         <div className="flex items-baseline gap-2 justify-end mb-4">
