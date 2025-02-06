@@ -9,138 +9,89 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId, setTelegramId } = useTelegram()
+  const { telegramId, setTelegramId, isTelegramReady } = useTelegram()
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
-  const [cachedPages, setCachedPages] = useState<Record<string, string>>({})
+  const [pagesLoaded, setPagesLoaded] = useState(false)
   const nextRouter = useRouter()
 
-  const isTelegramApp = typeof window !== 'undefined' && window.Telegram?.WebApp !== undefined
+  const isTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp
 
-  const initializeTelegram = useCallback(() => {
+  // ✅ تحميل جميع الصفحات مسبقًا عند فتح التطبيق
+  const prefetchPages = useCallback(async () => {
     try {
-      if (!isTelegramApp) {
-        console.log("✅ التطبيق يعمل خارج Telegram WebApp")
-        setErrorState(null)
+      await Promise.all([
+        nextRouter.prefetch('/'),
+        nextRouter.prefetch('/plans'),
+        nextRouter.prefetch('/profile')
+      ])
+      console.log("✅ جميع الصفحات تم تحميلها مسبقًا.")
+      setPagesLoaded(true)
+    } catch (error) {
+      console.error("⚠️ خطأ أثناء تحميل الصفحات:", error)
+    }
+  }, [nextRouter])
+
+  // ✅ تهيئة التطبيق وتحميل بيانات المستخدم
+  const initializeApp = useCallback(async () => {
+    try {
+      await prefetchPages() // تحميل الصفحات مسبقًا
+
+      if (isTelegramReady && telegramId) {
+        console.log("✅ التطبيق جاهز داخل تليجرام")
         setIsAppLoaded(true)
         return
       }
 
-      if (!window.Telegram?.WebApp) {
-        console.warn("⚠️ Telegram WebApp غير متاح")
-        setErrorState("⚠️ يرجى فتح التطبيق داخل تليجرام.")
+      if (!isTelegramReady) {
+        console.log("✅ التطبيق يعمل خارج تليجرام")
         setIsAppLoaded(true)
-        return
-      }
-
-      window.Telegram.WebApp.ready()
-      window.Telegram.WebApp.expand()
-      console.log("✅ تم تهيئة Telegram WebApp بنجاح")
-
-      const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id?.toString() || null
-      if (userId) {
-        console.log("✅ telegram_id متاح:", userId)
-        setTelegramId(userId)
-        localStorage.setItem("telegramId", userId) // حفظه لتسريع الدخول في المرات القادمة
-        setErrorState(null)
-      } else {
-        console.warn("⚠️ لم يتم العثور على معرف Telegram.")
-        setErrorState("⚠️ لم يتم العثور على معرف Telegram. يرجى المحاولة مرة أخرى.")
       }
     } catch (error) {
-      console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error)
-      setErrorState("❌ حدث خطأ أثناء تحميل Telegram WebApp.")
+      console.error('❌ خطأ أثناء تهيئة التطبيق:', error)
+      setErrorState('❌ حدث خطأ أثناء تحميل التطبيق.')
+      setIsAppLoaded(true)
     }
-  }, [setTelegramId, isTelegramApp])
+  }, [isTelegramReady, telegramId, prefetchPages])
 
   useEffect(() => {
-    const storedTelegramId = localStorage.getItem("telegramId")
-    if (storedTelegramId) {
-      setTelegramId(storedTelegramId)
-      setIsAppLoaded(true)
-      console.log("✅ تم استرجاع telegram_id من التخزين المحلي:", storedTelegramId)
-      return
-    }
+    const init = async () => {
+      await initializeApp()
 
-    if (!isTelegramApp) {
-      setIsAppLoaded(true)
-      return
-    }
-
-    let attempts = 0
-    const maxAttempts = 5
-    let retryTimeout: NodeJS.Timeout | null = null
-
-    const retryFetch = () => {
-      if (telegramId) {
-        console.log("✅ تم العثور على telegram_id، إيقاف المحاولات.")
-        if (retryTimeout) clearTimeout(retryTimeout)
-        setIsAppLoaded(true)
-        return
-      }
-
-      if (attempts >= maxAttempts) {
-        console.error("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
-        setErrorState("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
-        setIsAppLoaded(true)
-        return
-      }
-
-      console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`)
-      initializeTelegram()
-      attempts++
-      retryTimeout = setTimeout(retryFetch, 2000)
-    }
-
-    retryFetch()
-
-    return () => {
-      if (retryTimeout) clearTimeout(retryTimeout)
-    }
-  }, [telegramId, initializeTelegram, isTelegramApp])
-
-  // ✅ تحميل جميع الصفحات مسبقًا لتسريع التنقل
-  useEffect(() => {
-    const prefetchPages = async () => {
-      const pages = ['/', '/plans', '/profile']
-      for (const page of pages) {
-        if (!cachedPages[page]) {
-          try {
-            await nextRouter.prefetch(page) // استخدام prefetch الخاص بـ Next.js
-            console.log(`✅ تم تحميل الصفحة مسبقًا: ${page}`)
-            setCachedPages(prev => ({ ...prev, [page]: "cached" })) // وضع علامة بأن الصفحة مخزنة
-          } catch (error) {
-            console.warn(`⚠️ خطأ أثناء تحميل الصفحة: ${page}`, error)
-          }
+      // ✅ تأخير إخفاء شاشة التحميل حتى يتم تحميل كل شيء أو بعد 5 ثوانٍ كحد أقصى
+      setTimeout(() => {
+        if (pagesLoaded) {
+          setIsAppLoaded(true)
         }
-      }
+      }, 5000)
     }
+    init()
+  }, [initializeApp, pagesLoaded])
 
-    if (isAppLoaded) {
-      prefetchPages()
-    }
-  }, [isAppLoaded, cachedPages, nextRouter])
+  return (
+    <>
+      {!isAppLoaded && <SplashScreen isAppLoaded={isAppLoaded} />}
 
-  return !isAppLoaded ? (
-    <SplashScreen isAppLoaded={isAppLoaded} />
-  ) : (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 1 }}
-    >
-      {errorState ? (
-        <div className="flex justify-center items-center h-screen text-red-500 text-center px-4">
-          <p>{errorState}</p>
-        </div>
-      ) : (
-        <>
-          <Component {...pageProps} router={router} />
-          <FooterNav />
-        </>
+      {isAppLoaded && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {errorState ? (
+            <div className="flex justify-center items-center h-screen text-red-500 text-center px-4">
+              <p>{errorState}</p>
+            </div>
+          ) : (
+            <>
+              <Component {...pageProps} router={router} />
+              <FooterNav />
+            </>
+          )}
+        </motion.div>
       )}
-    </motion.div>
+    </>
   )
 }
 

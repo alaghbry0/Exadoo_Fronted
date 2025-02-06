@@ -4,8 +4,11 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import loadingAnimation from '../animations/loading.json';
 
-// ✅ استيراد Lottie بدون SSR لتجنب أخطاء التقديم من جانب الخادم
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
+// ✅ استيراد Lottie بدون SSR مع مكون تحميل احتياطي
+const Lottie = dynamic(() => import('lottie-react'), {
+  ssr: false,
+  loading: () => <div className="w-24 h-24 bg-white/10 rounded-lg" />
+});
 
 const SplashScreen = ({ isAppLoaded }: { isAppLoaded?: boolean }) => {
   const [progress, setProgress] = useState(0);
@@ -13,7 +16,7 @@ const SplashScreen = ({ isAppLoaded }: { isAppLoaded?: boolean }) => {
 
   useEffect(() => {
     if (isAppLoaded) {
-      setTimeout(() => setShouldHide(true), 800);
+      setTimeout(() => setShouldHide(true), 5000); // عدم الإخفاء قبل 5 ثواني
     }
   }, [isAppLoaded]);
 

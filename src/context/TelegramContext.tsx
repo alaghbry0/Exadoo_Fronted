@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 
+// ✅ تعريف `Telegram` في `window` لمنع أخطاء TypeScript
 declare global {
   interface Window {
     Telegram?: {
@@ -41,6 +42,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   const [isTelegramReady, setIsTelegramReady] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  // ✅ التحقق مما إذا كان التطبيق يعمل داخل تليجرام
   const isTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp
 
   const initializeTelegram = useCallback(() => {
@@ -67,6 +69,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         console.log("✅ Telegram User ID:", userId)
         setTelegramId(userId)
         sessionStorage.setItem("telegramId", userId) // ✅ حفظه في `sessionStorage` لتجنب فقدانه عند تحديث الصفحة
+        localStorage.setItem("telegramId", userId) // ✅ حفظه في `localStorage` كنسخة احتياطية
         setIsTelegramReady(true)
       } else {
         console.warn("⚠️ لم يتم العثور على معرف Telegram.")
@@ -81,6 +84,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // ✅ محاولة استرجاع `telegramId` من `sessionStorage` أو `localStorage`
       const storedTelegramId = sessionStorage.getItem("telegramId") || localStorage.getItem("telegramId")
       if (storedTelegramId) {
         setTelegramId(storedTelegramId)
@@ -91,10 +95,10 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       }
     }
 
-    // ✅ إذا لم يكن `telegramId` محفوظًا محليًا، قم بتحميله من تليجرام
+    // ✅ إذا لم يكن `telegramId` محفوظًا، قم بتحميله من تليجرام بعد تأخير بسيط
     setTimeout(() => {
       initializeTelegram()
-    }, 500) // تأخير بسيط لتحسين تجربة المستخدم
+    }, 500) // تحسين تجربة المستخدم بتأخير بسيط
   }, [initializeTelegram])
 
   return (

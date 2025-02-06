@@ -18,33 +18,41 @@ export default function Profile() {
   const { telegramId, setTelegramId } = useTelegram();
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
 
+  // ✅ تحميل بيانات المستخدم
   const { data, error, isLoading } = useSWR<UserProfile>(
     telegramId ? `${BACKEND_URL}/api/user?telegram_id=${telegramId}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
+      dedupingInterval: 60000, // تحديث البيانات كل 60 ثانية
       shouldRetryOnError: false,
-      dedupingInterval: 10000,
     }
   );
 
-  // معالجة تغيير عنوان URL
-    useEffect(() => {
-    const handleURLChange = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const newTelegramId = urlParams.get('telegram_id');
+  // ✅ تحميل بيانات الاشتراكات والخطط مسبقًا عند توفر `telegramId`
+  useEffect(() => {
+    if (telegramId) {
+      fetch(`${BACKEND_URL}/api/subscriptions?telegram_id=${telegramId}`).catch(console.warn);
+      fetch(`${BACKEND_URL}/api/plans`).catch(console.warn);
+    }
+  }, [telegramId]);
 
-        // ✅ تحقق من القيمة قبل التحديث
-        if (newTelegramId && newTelegramId !== telegramId) {
+  // ✅ معالجة تغيير `telegramId` عند التنقل بين الصفحات
+  useEffect(() => {
+    const handleURLChange = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const newTelegramId = urlParams.get('telegram_id');
+
+      if (newTelegramId && newTelegramId !== telegramId) {
         setTelegramId(newTelegramId);
-        }
+      }
     };
 
     window.addEventListener('popstate', handleURLChange);
     handleURLChange();
 
     return () => window.removeEventListener('popstate', handleURLChange);
-    }, [telegramId, setTelegramId]);
+  }, [telegramId, setTelegramId]);
 
   const handleRenew = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
@@ -104,6 +112,7 @@ export default function Profile() {
   );
 }
 
+// ✅ Skeleton أثناء تحميل البيانات
 const ProfileHeaderSkeleton = () => (
   <SkeletonTheme baseColor="#e3e3e3" highlightColor="#f0f0f0">
     <div className="w-full bg-gradient-to-b from-[#2390f1] to-[#1a75c4] pt-4 pb-8">
