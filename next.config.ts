@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
     if (isServer) config.resolve.fallback = { fs: false };
     return config;
   },
+  env: {
+    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "", // ✅ استيراد من `.env`
+  },
 };
 
 export default nextConfig; // ✅ تأكد من أن هذا السطر موجود

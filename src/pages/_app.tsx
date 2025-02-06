@@ -42,22 +42,32 @@ function AppContent({ Component, pageProps, router }: AppProps) {
 
     let attempts = 0;
     const maxAttempts = 5;
-    let retryTimeout: NodeJS.Timeout;
+    let retryTimeout: NodeJS.Timeout | null = null;
 
     const retryFetch = () => {
-      if (telegramId || attempts >= maxAttempts) {
-        setErrorState(telegramId ? null : "❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.");
-        return; // ✅ التوقف عند نجاح الحصول على `telegramId` أو استنفاد المحاولات
+      if (telegramId) {
+        console.log("✅ تم العثور على telegram_id، إيقاف المحاولات.");
+        if (retryTimeout) clearTimeout(retryTimeout);
+        return;
       }
+
+      if (attempts >= maxAttempts) {
+        console.error("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.");
+        setErrorState("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.");
+        return;
+      }
+
       console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`);
       initializeTelegram();
       attempts++;
       retryTimeout = setTimeout(retryFetch, 2000);
     };
 
-    retryTimeout = setTimeout(retryFetch, 2000);
+    retryFetch();
 
-    return () => clearTimeout(retryTimeout); // ✅ تنظيف `setTimeout` عند إلغاء التثبيت
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
   }, [telegramId, initializeTelegram]);
 
   return isLoading ? (

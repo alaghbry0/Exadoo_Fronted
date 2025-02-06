@@ -8,6 +8,10 @@ export const useTelegramPayment = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | null>(null);
 
+  // ✅ تحميل `WEBHOOK_SECRET` من متغيرات البيئة
+  const webhookSecret = process.env.NEXT_PUBLIC_WEBHOOK_SECRET || "";
+  console.log("🔹 تحميل WEBHOOK_SECRET:", webhookSecret); // ✅ للتحقق من تحميله بشكل صحيح
+
   const handleTelegramStarsPayment = useCallback(async (planId: number, price: number) => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
@@ -66,11 +70,18 @@ export const useTelegramPayment = () => {
   // ✅ تصحيح `sendPaymentToWebhook` وإرسال البيانات بشكل صحيح إلى Webhook
   async function sendPaymentToWebhook(telegramId: number, planId: number, paymentId: string) {
     try {
+      console.log("📤 إرسال تأكيد الدفع إلى /webhook...", {
+        telegramId,
+        planId,
+        paymentId,
+        webhookSecret
+      });
+
       const response = await fetch("/webhook", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Telegram-Bot-Api-Secret-Token": process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ""
+          "X-Telegram-Bot-Api-Secret-Token": webhookSecret
         },
         body: JSON.stringify({
           message: {
@@ -84,8 +95,12 @@ export const useTelegramPayment = () => {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ خطأ في إرسال تأكيد الدفع:", errorText);
         throw new Error("❌ فشل إرسال تأكيد الدفع!");
       }
+
+      console.log("✅ تم إرسال تأكيد الدفع بنجاح!");
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message || "❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
