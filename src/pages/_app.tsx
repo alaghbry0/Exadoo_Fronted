@@ -40,22 +40,27 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   useEffect(() => {
     initializeTelegram()
 
+    if (telegramId) return // ✅ إذا كان `telegramId` متاحًا، لا داعي لإعادة المحاولة
+
     let attempts = 0
     const maxAttempts = 5
+    let retryTimeout: NodeJS.Timeout
 
     const retryFetch = () => {
       if (!telegramId && attempts < maxAttempts) {
         console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`)
         initializeTelegram()
         attempts++
-        setTimeout(retryFetch, 2000)
+        retryTimeout = setTimeout(retryFetch, 2000)
       } else if (!telegramId) {
         console.error("❌ فشل الحصول على معرف Telegram بعد عدة محاولات.")
         setErrorState("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
       }
     }
 
-    retryFetch()
+    retryTimeout = setTimeout(retryFetch, 2000)
+
+    return () => clearTimeout(retryTimeout) // ✅ تنظيف `setTimeout` عند إلغاء التثبيت
   }, [telegramId, initializeTelegram])
 
   return isLoading ? (
