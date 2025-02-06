@@ -27,7 +27,7 @@ const TelegramContext = createContext<{
   isTelegramReady: boolean
   isLoading: boolean
   setTelegramId: (id: string | null) => void
-}>({
+}>( {
   telegramId: null,
   isTelegramReady: false,
   isLoading: true,
@@ -46,6 +46,13 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     try {
       if (!isTelegramApp) {
         console.log("✅ التطبيق يعمل خارج Telegram WebApp")
+        setIsLoading(false)
+        return
+      }
+
+      // ✅ التحقق من وجود `Telegram` قبل الوصول إليه
+      if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+        console.warn("⚠️ Telegram WebApp غير متاح")
         setIsLoading(false)
         return
       }
@@ -74,13 +81,15 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     // ✅ التحقق مما إذا كان `telegramId` محفوظًا محليًا
-    const storedTelegramId = localStorage.getItem("telegramId")
-    if (storedTelegramId) {
-      setTelegramId(storedTelegramId)
-      setIsTelegramReady(true)
-      setIsLoading(false)
-      console.log("✅ تم استرجاع telegram_id من التخزين المحلي:", storedTelegramId)
-      return
+    if (typeof window !== 'undefined') {
+      const storedTelegramId = localStorage.getItem("telegramId")
+      if (storedTelegramId) {
+        setTelegramId(storedTelegramId)
+        setIsTelegramReady(true)
+        setIsLoading(false)
+        console.log("✅ تم استرجاع telegram_id من التخزين المحلي:", storedTelegramId)
+        return
+      }
     }
 
     // ✅ إذا لم يكن `telegramId` محفوظًا محليًا، قم بتحميله من تليجرام
