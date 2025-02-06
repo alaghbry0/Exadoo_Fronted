@@ -25,11 +25,19 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         return
       }
 
-      window.Telegram.WebApp.ready()
-      window.Telegram.WebApp.expand()
+      // ✅ التحقق من وجود `window.Telegram` قبل استخدامه
+      if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+        console.warn("⚠️ Telegram WebApp غير متاح")
+        setErrorState("⚠️ يرجى فتح التطبيق داخل تليجرام.")
+        setIsAppLoaded(true)
+        return
+      }
+
+      window.Telegram.WebApp?.ready()
+      window.Telegram.WebApp?.expand()
       console.log("✅ تم تهيئة Telegram WebApp بنجاح")
 
-      const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id?.toString() || null
+      const userId = window.Telegram.WebApp?.initDataUnsafe?.user?.id?.toString() || null
       if (userId) {
         console.log("✅ telegram_id متاح:", userId)
         setTelegramId(userId)
