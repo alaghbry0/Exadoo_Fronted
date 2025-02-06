@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const payload = JSON.stringify({ planId: plan_id, userId: numericTelegramId });
 
-    const invoiceAmount = amount * 100; // ✅ تحويل العملة
+    const invoiceAmount = 1; // ✅ تحويل العملة
 
     console.log("📤 البيانات المرسلة إلى Telegram API:", {
       title: "اشتراك VIP",
