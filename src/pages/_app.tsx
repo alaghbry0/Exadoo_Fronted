@@ -8,8 +8,7 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId } = useTelegram()
-  const [isLoading, setIsLoading] = useState(true)
+  const { telegramId, isLoading, setTelegramId } = useTelegram()
   const [errorState, setErrorState] = useState<string | null>(null)
 
   // ✅ تحسين التحقق من Telegram WebApp وإضافة try-catch لمنع الأعطال
@@ -19,6 +18,15 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         window.Telegram.WebApp.ready()
         window.Telegram.WebApp.expand()
         console.log("✅ تم تهيئة Telegram WebApp بنجاح")
+
+        const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id?.toString() || null
+        if (userId) {
+          console.log("✅ telegram_id متاح:", userId)
+          setTelegramId(userId)
+        } else {
+          console.warn("⚠️ لم يتم العثور على معرف Telegram.")
+          setErrorState("⚠️ لم يتم العثور على معرف Telegram. يرجى المحاولة مرة أخرى.")
+        }
       } else {
         console.warn("⚠️ Telegram WebApp غير متوفر")
         setErrorState("⚠️ يرجى فتح التطبيق داخل تليجرام.")
@@ -27,24 +35,27 @@ function AppContent({ Component, pageProps, router }: AppProps) {
       console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error)
       setErrorState("❌ حدث خطأ أثناء تحميل Telegram WebApp.")
     }
-  }, [])
+  }, [setTelegramId])
 
   useEffect(() => {
     initializeTelegram()
 
-    const checkData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    let attempts = 0
+    const maxAttempts = 5
 
-      if (telegramId) {
-        console.log("✅ telegram_id متاح:", telegramId)
-        setIsLoading(false)
-      } else {
-        console.warn("⚠️ لا يوجد telegram_id، التطبيق ينتظر البيانات...")
-        setTimeout(() => setIsLoading(false), 3000)
+    const retryFetch = () => {
+      if (!telegramId && attempts < maxAttempts) {
+        console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`)
+        initializeTelegram()
+        attempts++
+        setTimeout(retryFetch, 2000)
+      } else if (!telegramId) {
+        console.error("❌ فشل الحصول على معرف Telegram بعد عدة محاولات.")
+        setErrorState("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
       }
     }
 
-    checkData()
+    retryFetch()
   }, [telegramId, initializeTelegram])
 
   return isLoading ? (

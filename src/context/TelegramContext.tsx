@@ -54,43 +54,37 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       const userId = tg.initDataUnsafe?.user?.id?.toString() || null;
 
       if (userId) {
-        if (userId !== telegramId) {
-          setTelegramId(userId);
-          setIsTelegramReady(true);
-          console.log("✅ Telegram User ID:", userId);
-        }
+        console.log("✅ Telegram User ID:", userId);
+        setTelegramId(userId);
+        setIsTelegramReady(true);
+        setTimeout(() => setIsLoading(false), 500); // تأخير بسيط لضمان تحميل البيانات
       } else {
         console.warn("⚠️ لم يتم العثور على معرف Telegram.");
+        setTimeout(() => initializeTelegram(), 2000); // إعادة المحاولة بعد ثانيتين
       }
-
-      setIsLoading(false);
     } catch (error) {
       console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error);
-      setIsLoading(false);
+      setTimeout(() => initializeTelegram(), 3000); // إعادة المحاولة بعد 3 ثوانٍ عند الخطأ
     }
-  }, [telegramId]);
+  }, []);
 
   useEffect(() => {
-    let retryInterval: NodeJS.Timeout | null = null;
+    let attempts = 0;
+    const maxAttempts = 5;
 
-    const checkTelegram = () => {
-      if (!telegramId) {
+    const retryFetch = () => {
+      if (!telegramId && attempts < maxAttempts) {
+        console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`);
         initializeTelegram();
-        retryInterval = setInterval(() => {
-          if (telegramId) {
-            if (retryInterval) clearInterval(retryInterval);
-          } else {
-            initializeTelegram();
-          }
-        }, 1000);
+        attempts++;
+        setTimeout(retryFetch, 2000);
+      } else if (!telegramId) {
+        console.error("❌ فشل الحصول على معرف Telegram بعد عدة محاولات.");
+        setIsLoading(false);
       }
     };
 
-    checkTelegram();
-
-    return () => {
-      if (retryInterval) clearInterval(retryInterval);
-    };
+    retryFetch();
   }, [initializeTelegram, telegramId]);
 
   useEffect(() => {
