@@ -26,11 +26,13 @@ const TelegramContext = createContext<{
   telegramId: string | null
   isTelegramReady: boolean
   isLoading: boolean
+  isTelegramApp: boolean
   setTelegramId: (id: string | null) => void
-}>( {
+}>({
   telegramId: null,
   isTelegramReady: false,
   isLoading: true,
+  isTelegramApp: false,
   setTelegramId: () => {},
 })
 
@@ -39,8 +41,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   const [isTelegramReady, setIsTelegramReady] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // ✅ التحقق مما إذا كان التطبيق يعمل داخل تليجرام
-  const isTelegramApp = typeof window !== 'undefined' && window.Telegram?.WebApp !== undefined
+  const isTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp
 
   const initializeTelegram = useCallback(() => {
     try {
@@ -50,8 +51,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         return
       }
 
-      // ✅ التحقق من وجود `Telegram` قبل الوصول إليه
-      if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+      if (!window.Telegram?.WebApp) {
         console.warn("⚠️ Telegram WebApp غير متاح")
         setIsLoading(false)
         return
@@ -66,7 +66,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       if (userId) {
         console.log("✅ Telegram User ID:", userId)
         setTelegramId(userId)
-        localStorage.setItem("telegramId", userId) // ✅ حفظ المعرف محليًا
+        sessionStorage.setItem("telegramId", userId) // ✅ حفظه في `sessionStorage` لتجنب فقدانه عند تحديث الصفحة
         setIsTelegramReady(true)
       } else {
         console.warn("⚠️ لم يتم العثور على معرف Telegram.")
@@ -80,24 +80,25 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   }, [isTelegramApp])
 
   useEffect(() => {
-    // ✅ التحقق مما إذا كان `telegramId` محفوظًا محليًا
     if (typeof window !== 'undefined') {
-      const storedTelegramId = localStorage.getItem("telegramId")
+      const storedTelegramId = sessionStorage.getItem("telegramId") || localStorage.getItem("telegramId")
       if (storedTelegramId) {
         setTelegramId(storedTelegramId)
         setIsTelegramReady(true)
         setIsLoading(false)
-        console.log("✅ تم استرجاع telegram_id من التخزين المحلي:", storedTelegramId)
+        console.log("✅ تم استرجاع telegram_id من التخزين:", storedTelegramId)
         return
       }
     }
 
     // ✅ إذا لم يكن `telegramId` محفوظًا محليًا، قم بتحميله من تليجرام
-    initializeTelegram()
+    setTimeout(() => {
+      initializeTelegram()
+    }, 500) // تأخير بسيط لتحسين تجربة المستخدم
   }, [initializeTelegram])
 
   return (
-    <TelegramContext.Provider value={{ telegramId, isTelegramReady, isLoading, setTelegramId }}>
+    <TelegramContext.Provider value={{ telegramId, isTelegramReady, isLoading, isTelegramApp, setTelegramId }}>
       {children}
     </TelegramContext.Provider>
   )
