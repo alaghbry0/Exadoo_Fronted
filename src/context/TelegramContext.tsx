@@ -27,7 +27,7 @@ const TelegramContext = createContext<{
   isTelegramReady: boolean;
   isLoading: boolean;
   setTelegramId: (id: string | null) => void;
-}>( {
+}>({
   telegramId: null,
   isTelegramReady: false,
   isLoading: true,
@@ -57,31 +57,30 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         console.log("✅ Telegram User ID:", userId);
         setTelegramId(userId);
         setIsTelegramReady(true);
-        setTimeout(() => setIsLoading(false), 500); // تأخير بسيط لضمان تحميل البيانات
+        setIsLoading(false); // ✅ إنهاء حالة التحميل عند نجاح جلب البيانات
       } else {
         console.warn("⚠️ لم يتم العثور على معرف Telegram.");
-        setTimeout(() => initializeTelegram(), 2000); // إعادة المحاولة بعد ثانيتين
       }
     } catch (error) {
       console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error);
-      setTimeout(() => initializeTelegram(), 3000); // إعادة المحاولة بعد 3 ثوانٍ عند الخطأ
     }
   }, []);
 
   useEffect(() => {
+    if (telegramId) return; // ✅ إذا كان `telegramId` متاحًا، لا تقم بإعادة المحاولة
+
     let attempts = 0;
     const maxAttempts = 5;
 
     const retryFetch = () => {
-      if (!telegramId && attempts < maxAttempts) {
-        console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`);
-        initializeTelegram();
-        attempts++;
-        setTimeout(retryFetch, 2000);
-      } else if (!telegramId) {
-        console.error("❌ فشل الحصول على معرف Telegram بعد عدة محاولات.");
+      if (telegramId || attempts >= maxAttempts) {
         setIsLoading(false);
+        return; // ✅ التوقف عن إعادة المحاولة عند توفر `telegramId` أو انتهاء المحاولات
       }
+      console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`);
+      initializeTelegram();
+      attempts++;
+      setTimeout(retryFetch, 2000);
     };
 
     retryFetch();

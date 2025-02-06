@@ -38,30 +38,27 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   }, [setTelegramId])
 
   useEffect(() => {
-    initializeTelegram()
+    if (telegramId) return; // ✅ إيقاف إعادة المحاولة عند توفر `telegramId`
 
-    if (telegramId) return // ✅ إذا كان `telegramId` متاحًا، لا داعي لإعادة المحاولة
-
-    let attempts = 0
-    const maxAttempts = 5
-    let retryTimeout: NodeJS.Timeout
+    let attempts = 0;
+    const maxAttempts = 5;
+    let retryTimeout: NodeJS.Timeout;
 
     const retryFetch = () => {
-      if (!telegramId && attempts < maxAttempts) {
-        console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`)
-        initializeTelegram()
-        attempts++
-        retryTimeout = setTimeout(retryFetch, 2000)
-      } else if (!telegramId) {
-        console.error("❌ فشل الحصول على معرف Telegram بعد عدة محاولات.")
-        setErrorState("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
+      if (telegramId || attempts >= maxAttempts) {
+        setErrorState(telegramId ? null : "❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.");
+        return; // ✅ التوقف عند نجاح الحصول على `telegramId` أو استنفاد المحاولات
       }
-    }
+      console.warn(`⚠️ المحاولة رقم ${attempts + 1} للحصول على telegram_id...`);
+      initializeTelegram();
+      attempts++;
+      retryTimeout = setTimeout(retryFetch, 2000);
+    };
 
-    retryTimeout = setTimeout(retryFetch, 2000)
+    retryTimeout = setTimeout(retryFetch, 2000);
 
-    return () => clearTimeout(retryTimeout) // ✅ تنظيف `setTimeout` عند إلغاء التثبيت
-  }, [telegramId, initializeTelegram])
+    return () => clearTimeout(retryTimeout); // ✅ تنظيف `setTimeout` عند إلغاء التثبيت
+  }, [telegramId, initializeTelegram]);
 
   return isLoading ? (
     <SplashScreen />
