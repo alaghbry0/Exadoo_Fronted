@@ -9,7 +9,7 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId, isTelegramReady } = useTelegram() // ✅ إزالة `setTelegramId` لأنه غير مستخدم
+  const { telegramId, isTelegramReady } = useTelegram()
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
   const [pagesLoaded, setPagesLoaded] = useState(false)
@@ -30,27 +30,35 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     }
   }, [nextRouter])
 
-  // ✅ تهيئة التطبيق وتحميل بيانات المستخدم
+  // ✅ تحميل بيانات المستخدم أثناء شاشة التحميل
+  const prefetchUserData = useCallback(async () => {
+    if (telegramId) {
+      try {
+        const res = await fetch(`/api/user?telegram_id=${telegramId}`)
+        if (res.ok) {
+          console.log("✅ تم تحميل بيانات المستخدم مسبقًا.")
+          return await res.json()
+        } else {
+          console.warn("⚠️ لم يتم العثور على بيانات المستخدم.")
+        }
+      } catch (error) {
+        console.error("❌ خطأ أثناء تحميل بيانات المستخدم:", error)
+      }
+    }
+  }, [telegramId])
+
+  // ✅ تهيئة التطبيق وتحميل البيانات
   const initializeApp = useCallback(async () => {
     try {
-      await prefetchPages() // تحميل الصفحات مسبقًا
-
-      if (isTelegramReady && telegramId) {
-        console.log("✅ التطبيق جاهز داخل تليجرام")
-        setIsAppLoaded(true)
-        return
-      }
-
-      if (!isTelegramReady) {
-        console.log("✅ التطبيق يعمل خارج تليجرام")
-        setIsAppLoaded(true)
-      }
+      await Promise.all([prefetchPages(), prefetchUserData()])
+      console.log("✅ تم تحميل جميع البيانات الأساسية.")
+      setIsAppLoaded(true)
     } catch (error) {
-      console.error('❌ خطأ أثناء تهيئة التطبيق:', error)
-      setErrorState('❌ حدث خطأ أثناء تحميل التطبيق.')
+      console.error("❌ خطأ أثناء تهيئة التطبيق:", error)
+      setErrorState("❌ حدث خطأ أثناء تحميل التطبيق.")
       setIsAppLoaded(true)
     }
-  }, [isTelegramReady, telegramId, prefetchPages])
+  }, [prefetchPages, prefetchUserData])
 
   useEffect(() => {
     const init = async () => {
@@ -68,7 +76,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
 
   return (
     <>
-      {!isAppLoaded && <SplashScreen isAppLoaded={isAppLoaded} />}
+      {!isAppLoaded && <SplashScreen />}
 
       {isAppLoaded && (
         <motion.div

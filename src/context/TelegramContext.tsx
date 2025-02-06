@@ -68,8 +68,8 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       if (userId) {
         console.log("✅ Telegram User ID:", userId)
         setTelegramId(userId)
-        sessionStorage.setItem("telegramId", userId) // ✅ حفظه في `sessionStorage` لتجنب فقدانه عند تحديث الصفحة
-        localStorage.setItem("telegramId", userId) // ✅ حفظه في `localStorage` كنسخة احتياطية
+        sessionStorage.setItem("telegramId", userId) // ✅ استخدام `sessionStorage` لتجنب إعادة الجلب من API
+        localStorage.setItem("telegramId", userId) // ✅ حفظ نسخة احتياطية في `localStorage`
         setIsTelegramReady(true)
       } else {
         console.warn("⚠️ لم يتم العثور على معرف Telegram.")
