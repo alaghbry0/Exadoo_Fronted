@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const WEBHOOK_SECRET = process.env.NEXT_PUBLIC_WEBHOOK_SECRET || "";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -29,7 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const payload = JSON.stringify({ planId: plan_id, userId: numericTelegramId });
 
-    const invoiceAmount = 1; // ✅ تحويل العملة
+    // ✅ التأكد من أن `amount` صحيح وتحويله إلى سنتات
+    const invoiceAmount = Math.round(amount * 100); // تحويل `amount` إلى سنتات
 
     console.log("📤 البيانات المرسلة إلى Telegram API:", {
       title: "اشتراك VIP",
@@ -39,11 +39,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       prices: [{ label: "الاشتراك", amount: invoiceAmount }],
     });
 
+    // ✅ طلب إنشاء الفاتورة من Telegram API
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "X-Telegram-Bot-Api-Secret-Token": WEBHOOK_SECRET // ✅ تمرير التوكن السري مباشرة
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         title: "اشتراك VIP",

@@ -8,10 +8,6 @@ export const useTelegramPayment = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | null>(null);
 
-  // ✅ تحميل `WEBHOOK_SECRET` من متغيرات البيئة
-  const webhookSecret = process.env.NEXT_PUBLIC_WEBHOOK_SECRET || "";
-  console.log("🔹 تحميل WEBHOOK_SECRET:", webhookSecret); // ✅ للتحقق من تحميله بشكل صحيح
-
   const handleTelegramStarsPayment = useCallback(async (planId: number, price: number) => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
@@ -43,9 +39,7 @@ export const useTelegramPayment = () => {
         window.Telegram.WebApp.openInvoice(data.invoice_url, async (status: string) => {
           if (status === "paid") {
             setPaymentStatus("paid");
-
-            // ✅ تأكيد الدفع وإرساله إلى الـ Webhook
-            await sendPaymentToWebhook(Number(telegramId), planId, data.invoice_url);
+            console.log("✅ تم الدفع بنجاح! سيتم معالجة الدفع تلقائيًا بواسطة البوت.");
           } else {
             setPaymentStatus("failed");
             setError(`فشلت عملية الدفع (${status})`);
@@ -66,55 +60,6 @@ export const useTelegramPayment = () => {
       setLoading(false);
     }
   }, [telegramId]);
-
-  // ✅ تصحيح `sendPaymentToWebhook` وإرسال البيانات بشكل صحيح إلى Webhook
-  async function sendPaymentToWebhook(telegramId: number, planId: number, paymentId: string) {
-  try {
-    const webhookSecret = process.env.NEXT_PUBLIC_WEBHOOK_SECRET; // ✅ تأكد من تحميل `WEBHOOK_SECRET`
-
-    if (!webhookSecret) {
-      console.error("❌ `WEBHOOK_SECRET` غير مضبوط في البيئة!");
-      return;
-    }
-
-    console.log("📤 إرسال تأكيد الدفع إلى /webhook...", {
-      telegramId,
-      planId,
-      paymentId,
-      webhookSecret
-    });
-
-    const response = await fetch("/webhook", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Telegram-Bot-Api-Secret-Token": webhookSecret // ✅ التأكد من تمرير التوكن السري
-      },
-      body: JSON.stringify({
-        message: {
-          successful_payment: {
-            telegram_payment_charge_id: paymentId,
-            total_amount: planId * 100, // تحويل السعر إلى سنتات
-            invoice_payload: JSON.stringify({ userId: telegramId, planId: planId })
-          }
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ خطأ في إرسال تأكيد الدفع:", errorText);
-      throw new Error("❌ فشل إرسال تأكيد الدفع!");
-    }
-
-    console.log("✅ تم إرسال تأكيد الدفع بنجاح!");
-  } catch (error: unknown) {
-    console.error("❌ خطأ أثناء إرسال تأكيد الدفع:", error);
-  }
-}
-
-
-
 
   return {
     handleTelegramStarsPayment,
