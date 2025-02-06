@@ -118,7 +118,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   }, [isAppLoaded, cachedPages])
 
   return !isAppLoaded ? (
-    <SplashScreen />
+    <SplashScreen isAppLoaded={isAppLoaded} />
   ) : (
     <motion.div
       initial={{ opacity: 0 }}
