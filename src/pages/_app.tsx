@@ -9,10 +9,11 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId } = useTelegram() // ✅ إزالة `isTelegramReady` لأنه غير مستخدم
+  const { telegramId } = useTelegram()
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
   const [pagesLoaded, setPagesLoaded] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false) // ✅ إضافة متغير جديد للتحقق من تحميل البيانات
   const nextRouter = useRouter()
 
   // ✅ تحميل جميع الصفحات مسبقًا عند فتح التطبيق
@@ -34,10 +35,20 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   const prefetchUserData = useCallback(async () => {
     if (telegramId) {
       try {
+        const cachedUserData = sessionStorage.getItem("userData")
+        if (cachedUserData) {
+          console.log("✅ استعادة بيانات المستخدم من `sessionStorage`")
+          setDataLoaded(true)
+          return JSON.parse(cachedUserData)
+        }
+
         const res = await fetch(`/api/user?telegram_id=${telegramId}`)
         if (res.ok) {
+          const data = await res.json()
+          sessionStorage.setItem("userData", JSON.stringify(data)) // ✅ تخزين البيانات في `sessionStorage`
           console.log("✅ تم تحميل بيانات المستخدم مسبقًا.")
-          return await res.json()
+          setDataLoaded(true)
+          return data
         } else {
           console.warn("⚠️ لم يتم العثور على بيانات المستخدم.")
         }
@@ -45,6 +56,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         console.error("❌ خطأ أثناء تحميل بيانات المستخدم:", error)
       }
     }
+    setDataLoaded(true) // ✅ حتى لا تنتظر الصفحة إلى ما لا نهاية
   }, [telegramId])
 
   // ✅ تهيئة التطبيق وتحميل البيانات الأساسية
@@ -52,11 +64,9 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     try {
       await Promise.all([prefetchPages(), prefetchUserData()])
       console.log("✅ تم تحميل جميع البيانات الأساسية.")
-      setIsAppLoaded(true)
     } catch (error) {
       console.error("❌ خطأ أثناء تهيئة التطبيق:", error)
       setErrorState("❌ حدث خطأ أثناء تحميل التطبيق.")
-      setIsAppLoaded(true)
     }
   }, [prefetchPages, prefetchUserData])
 
@@ -64,15 +74,15 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     const init = async () => {
       await initializeApp()
 
-      // ✅ تأخير إخفاء شاشة التحميل حتى يتم تحميل كل شيء أو بعد 5 ثوانٍ كحد أقصى
+      // ✅ تأخير إخفاء شاشة التحميل حتى يتم تحميل كل شيء أو بعد 10 ثوانٍ كحد أقصى
       setTimeout(() => {
-        if (pagesLoaded) {
+        if (pagesLoaded && dataLoaded) {
           setIsAppLoaded(true)
         }
-      }, 10000)
+      }, 6000)
     }
     init()
-  }, [initializeApp, pagesLoaded])
+  }, [initializeApp, pagesLoaded, dataLoaded]) // ✅ ضمان تحميل البيانات قبل إخفاء شاشة التحميل
 
   return (
     <>
