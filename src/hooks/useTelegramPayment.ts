@@ -69,46 +69,44 @@ export const useTelegramPayment = () => {
 
   // ✅ تصحيح `sendPaymentToWebhook` وإرسال البيانات بشكل صحيح إلى Webhook
   async function sendPaymentToWebhook(telegramId: number, planId: number, paymentId: string) {
-    try {
-      console.log("📤 إرسال تأكيد الدفع إلى /webhook...", {
-        telegramId,
-        planId,
-        paymentId,
-        webhookSecret
-      });
+  try {
+    console.log("📤 إرسال تأكيد الدفع إلى /webhook...", {
+      telegramId,
+      planId,
+      paymentId,
+      webhookSecret
+    });
 
-      const response = await fetch("/webhook", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Telegram-Bot-Api-Secret-Token": webhookSecret
-        },
-        body: JSON.stringify({
-          message: {
-            successful_payment: {
-              telegram_payment_charge_id: paymentId, // ✅ استخدام `paymentId` بدلاً من `amount`
-              total_amount: planId * 100, // تحويل السعر إلى سنتات
-              invoice_payload: JSON.stringify({ userId: telegramId, planId: planId }) // ✅ تحويل البيانات إلى JSON كما هو متوقع
-            }
+    const response = await fetch("/webhook", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Telegram-Bot-Api-Secret-Token": webhookSecret // ✅ التأكد من تمرير التوكن السري
+      },
+      body: JSON.stringify({
+        message: {
+          successful_payment: {
+            telegram_payment_charge_id: paymentId,
+            total_amount: planId * 100, // تحويل السعر إلى سنتات
+            invoice_payload: JSON.stringify({ userId: telegramId, planId: planId })
           }
-        })
-      });
+        }
+      })
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ خطأ في إرسال تأكيد الدفع:", errorText);
-        throw new Error("❌ فشل إرسال تأكيد الدفع!");
-      }
-
-      console.log("✅ تم إرسال تأكيد الدفع بنجاح!");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message || "❌ حدث خطأ أثناء إرسال تأكيد الدفع.");
-      } else {
-        setError("❌ حدث خطأ غير معروف أثناء إرسال تأكيد الدفع.");
-      }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ خطأ في إرسال تأكيد الدفع:", errorText);
+      throw new Error("❌ فشل إرسال تأكيد الدفع!");
     }
+
+    console.log("✅ تم إرسال تأكيد الدفع بنجاح!");
+  } catch (error: unknown) {
+    console.error("❌ خطأ أثناء إرسال تأكيد الدفع:", error);
   }
+}
+
+
 
   return {
     handleTelegramStarsPayment,

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const WEBHOOK_SECRET = process.env.NEXT_PUBLIC_WEBHOOK_SECRET || "";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -8,18 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   console.log("📥 استلام طلب لإنشاء الفاتورة:", req.body);
-  console.log("ℹ️ نوع البيانات المستلمة:", {
-    telegram_id: typeof req.body.telegram_id,
-    plan_id: typeof req.body.plan_id,
-    amount: typeof req.body.amount,
-  });
 
   const { telegram_id, plan_id, amount } = req.body;
 
-  // ✅ تحويل `telegram_id` إلى رقم لتجنب الأخطاء
   const numericTelegramId = Number(telegram_id);
 
-  // ✅ التحقق من البيانات قبل تنفيذ أي طلب
   if (!numericTelegramId || !plan_id || amount === undefined || amount === null || isNaN(amount)) {
     console.error("❌ بيانات غير مكتملة أو `amount` غير صالح:", { numericTelegramId, plan_id, amount });
     return res.status(400).json({ error: "Missing or invalid required fields" });
@@ -35,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const payload = JSON.stringify({ planId: plan_id, userId: numericTelegramId });
 
-    const invoiceAmount = 1; // ❗️ جرب `1` أولاً لاختبار ما إذا كانت `amount * 100` هي السبب
+    const invoiceAmount = amount * 100; // ✅ تحويل العملة
 
     console.log("📤 البيانات المرسلة إلى Telegram API:", {
       title: "اشتراك VIP",
@@ -47,7 +41,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Telegram-Bot-Api-Secret-Token": WEBHOOK_SECRET // ✅ تمرير التوكن السري مباشرة
+      },
       body: JSON.stringify({
         title: "اشتراك VIP",
         description: "اشتراك شهري في الخدمة المميزة",
@@ -72,22 +69,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const invoiceUrl = data.result;
-
-    if (!invoiceUrl.startsWith("https://t.me/invoice/") && !invoiceUrl.startsWith("https://t.me/$")) {
-      console.error(`❌ رابط الفاتورة غير مدعوم: ${invoiceUrl}`);
-      return res.status(500).json({ error: "Invalid invoice URL from Telegram API" });
-    }
-
     console.log(`✅ تم إنشاء الفاتورة بنجاح: ${invoiceUrl}`);
     return res.status(200).json({ invoice_url: invoiceUrl });
 
   } catch (error) {
     console.error("❌ خطأ أثناء إنشاء الفاتورة:", error);
-
-    if (error instanceof SyntaxError) {
-      return res.status(400).json({ error: "Invalid JSON received" });
-    }
-
     return res.status(500).json({ error: error instanceof Error ? error.message : "Internal Server Error" });
   }
 }
