@@ -9,13 +9,11 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId, setTelegramId, isTelegramReady } = useTelegram()
+  const { telegramId, isTelegramReady } = useTelegram() // ✅ إزالة `setTelegramId` لأنه غير مستخدم
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
   const [pagesLoaded, setPagesLoaded] = useState(false)
   const nextRouter = useRouter()
-
-  const isTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp
 
   // ✅ تحميل جميع الصفحات مسبقًا عند فتح التطبيق
   const prefetchPages = useCallback(async () => {
