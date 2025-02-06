@@ -3,7 +3,6 @@ import dynamic from 'next/dynamic'
 import starsAnimation from '@/animations/stars.json'
 import usdtAnimation from '@/animations/usdt.json'
 
-// استيراد Lottie بدون SSR
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
 const PaymentButtons = ({
@@ -16,18 +15,18 @@ const PaymentButtons = ({
   handlePayment: () => void
 }) => {
   return (
-    <div className="sticky bottom-20 bg-white pt-4 pb-8 space-y-2">
-      {/* ✅ زر الدفع عبر USDT */}
+    <div className="sticky bottom-0 bg-white pt-4 pb-8 space-y-2 border-t">
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.95 }}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-gradient-to-l from-[#2390f1] to-[#1a75c4] text-white rounded-lg text-sm"
+        className="w-full flex items-center justify-between px-4 py-2.5
+          bg-gradient-to-l from-[#2390f1] to-[#1a75c4] text-white rounded-lg text-sm
+          shadow-md hover:shadow-lg transition-shadow"
       >
         <Lottie animationData={usdtAnimation} className="w-8 h-8" loop={true} />
         <span className="font-medium ml-2">الدفع عبر USDT</span>
       </motion.button>
 
-      {/* ✅ زر الدفع بـ Telegram Stars */}
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.95 }}
@@ -35,6 +34,7 @@ const PaymentButtons = ({
         disabled={loading || !telegramId}
         className={`w-full flex items-center justify-between px-4 py-2.5
           bg-gradient-to-l from-[#FFD700] to-[#FFC800] text-[#1a202c] rounded-lg text-sm
+          shadow-md hover:shadow-lg transition-shadow
           ${loading || !telegramId ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <Lottie animationData={starsAnimation} className="w-8 h-8" loop={true} />

@@ -1,4 +1,5 @@
 import { FiCheckCircle } from 'react-icons/fi'
+import PaymentButtons from './PaymentButtons'
 
 type SubscriptionPlan = {
   id: number
@@ -9,7 +10,17 @@ type SubscriptionPlan = {
   color: string
 }
 
-const SubscriptionPlanCard = ({ plan }: { plan: SubscriptionPlan }) => {
+const SubscriptionPlanCard = ({
+  plan,
+  loading,
+  telegramId,
+  handlePayment
+}: {
+  plan: SubscriptionPlan
+  loading: boolean
+  telegramId: string | null
+  handlePayment: () => void
+}) => {
   return (
     <div className="p-4 h-[calc(80.4vh-56px)] flex flex-col overflow-y-auto pb-4">
       <div className="space-y-4 flex-1">
@@ -36,6 +47,9 @@ const SubscriptionPlanCard = ({ plan }: { plan: SubscriptionPlan }) => {
           </ul>
         </div>
       </div>
+
+      {/* 🔹 خيارات الدفع */}
+      <PaymentButtons loading={loading} telegramId={telegramId} handlePayment={handlePayment} />
     </div>
   )
 }

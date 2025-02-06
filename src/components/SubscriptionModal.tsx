@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
 import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
-import PaymentButtons from '../components/SubscriptionModal/PaymentButtons'
 
 type SubscriptionPlan = {
   id: number
@@ -42,12 +41,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
     try {
       setLoading(true)
-
-      // ✅ استدعاء `handleTelegramStarsPayment` لفتح نافذة تأكيد الدفع داخل تليجرام
       await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')))
-
-      // ❌ لا ترسل الطلب إلى `/api/subscribe` هنا، تليجرام سيرسل الدفع تلقائيًا إلى `/webhook`
-
     } catch (error) {
       console.error("❌ خطأ أثناء عملية الدفع:", error)
       showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
@@ -75,7 +69,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             transition={{ type: "spring", stiffness: 150, damping: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 🔹 رأس النافذة */}
             <div className="bg-[#f8fbff] px-4 py-3 flex justify-between items-center border-b sticky top-0">
               <button onClick={onClose} className="text-gray-500 hover:text-[#2390f1] transition-colors">
                 <FiX className="w-6 h-6" />
@@ -83,11 +76,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               <h2 className="text-base font-semibold text-[#1a202c] text-right flex-1 pr-2">{plan.name}</h2>
             </div>
 
-            {/* 🔹 محتوى النافذة */}
-            <SubscriptionPlanCard plan={plan} />
-
-            {/* 🔹 خيارات الدفع */}
-            <PaymentButtons loading={loading} telegramId={telegramId} handlePayment={handlePayment} />
+            <SubscriptionPlanCard
+              plan={plan}
+              loading={loading}
+              telegramId={telegramId}
+              handlePayment={handlePayment}
+            />
           </motion.div>
         </motion.div>
       )}
