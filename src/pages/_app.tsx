@@ -6,16 +6,24 @@ import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
 import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
+import { useRouter } from 'next/router'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
   const { telegramId, isLoading, setTelegramId } = useTelegram()
   const [errorState, setErrorState] = useState<string | null>(null)
+  const [isAppLoaded, setIsAppLoaded] = useState(false)
+  const [cachedPages, setCachedPages] = useState<Record<string, any>>({})
+  const nextRouter = useRouter()
+
+  // ✅ تحديد إذا كان التطبيق يعمل داخل أو خارج تليجرام
+  const isTelegramApp = typeof window !== 'undefined' && window.Telegram?.WebApp !== undefined
 
   const initializeTelegram = useCallback(() => {
     try {
-      if (!window.Telegram?.WebApp) {
-        console.warn("⚠️ Telegram WebApp غير متوفر")
-        setErrorState("⚠️ يرجى فتح التطبيق داخل تليجرام.")
+      if (!isTelegramApp) {
+        console.log("✅ التطبيق يعمل خارج Telegram WebApp")
+        setErrorState(null) // لا تعرض أي رسالة خطأ
+        setIsAppLoaded(true)
         return
       }
 
@@ -36,10 +44,13 @@ function AppContent({ Component, pageProps, router }: AppProps) {
       console.error("❌ خطأ أثناء تهيئة Telegram WebApp:", error)
       setErrorState("❌ حدث خطأ أثناء تحميل Telegram WebApp.")
     }
-  }, [setTelegramId])
+  }, [setTelegramId, isTelegramApp])
 
   useEffect(() => {
-    if (telegramId) return // ✅ إيقاف إعادة المحاولة عند توفر `telegramId`
+    if (telegramId || !isTelegramApp) {
+      setIsAppLoaded(true)
+      return // ✅ لا تحاول مرة أخرى إذا كان `telegramId` متاحًا أو التطبيق خارج تليجرام
+    }
 
     let attempts = 0
     const maxAttempts = 5
@@ -49,12 +60,14 @@ function AppContent({ Component, pageProps, router }: AppProps) {
       if (telegramId) {
         console.log("✅ تم العثور على telegram_id، إيقاف المحاولات.")
         if (retryTimeout) clearTimeout(retryTimeout)
+        setIsAppLoaded(true)
         return
       }
 
       if (attempts >= maxAttempts) {
         console.error("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
         setErrorState("❌ تعذر استرداد بيانات تيليجرام بعد عدة محاولات.")
+        setIsAppLoaded(true)
         return
       }
 
@@ -69,9 +82,32 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout)
     }
-  }, [telegramId, initializeTelegram])
+  }, [telegramId, initializeTelegram, isTelegramApp])
 
-  return isLoading ? (
+  // ✅ تحميل جميع الصفحات مسبقًا وتخزينها في الذاكرة المؤقتة
+  useEffect(() => {
+    const prefetchPages = async () => {
+      const pages = ['/', '/plans', '/profile']
+      for (const page of pages) {
+        if (!cachedPages[page]) {
+          try {
+            const res = await fetch(page)
+            const data = await res.text()
+            setCachedPages(prev => ({ ...prev, [page]: data }))
+            console.log(`✅ تم تحميل الصفحة مسبقًا: ${page}`)
+          } catch (error) {
+            console.warn(`⚠️ فشل تحميل الصفحة: ${page}`, error)
+          }
+        }
+      }
+    }
+
+    if (isAppLoaded) {
+      prefetchPages()
+    }
+  }, [isAppLoaded, cachedPages])
+
+  return !isAppLoaded ? (
     <SplashScreen />
   ) : (
     <motion.div
