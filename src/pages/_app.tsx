@@ -69,7 +69,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
         if (pagesLoaded) {
           setIsAppLoaded(true)
         }
-      }, 5000)
+      }, 10000)
     }
     init()
   }, [initializeApp, pagesLoaded])

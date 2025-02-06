@@ -26,8 +26,8 @@ type SubscriptionPlan = {
 const subscriptionPlans: readonly SubscriptionPlan[] = [
   {
     id: 1,
-    name: 'قناة الفوركس المميزة',
-    price: '5 دولار/شهر',
+    name: 'Forex VIP Channel',
+    price: '20$',
     description: 'تحليلات حصرية وإشارات تداول فورية',
     features: [
       'إشارات تداول يومية مباشرة',
@@ -40,8 +40,8 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
   },
   {
     id: 2,
-    name: 'قناة العملات الرقمية VIP',
-    price: '10 دولار/شهر',
+    name: 'Crypto VIP Channel',
+    price: '20$',
     description: 'توصيات متقدمة لسوق الكريبتو',
     features: [
       'توصيات تداول يومية',
