@@ -70,6 +70,13 @@ export const useTelegramPayment = () => {
   // ✅ تصحيح `sendPaymentToWebhook` وإرسال البيانات بشكل صحيح إلى Webhook
   async function sendPaymentToWebhook(telegramId: number, planId: number, paymentId: string) {
   try {
+    const webhookSecret = process.env.NEXT_PUBLIC_WEBHOOK_SECRET; // ✅ تأكد من تحميل `WEBHOOK_SECRET`
+
+    if (!webhookSecret) {
+      console.error("❌ `WEBHOOK_SECRET` غير مضبوط في البيئة!");
+      return;
+    }
+
     console.log("📤 إرسال تأكيد الدفع إلى /webhook...", {
       telegramId,
       planId,
@@ -105,6 +112,7 @@ export const useTelegramPayment = () => {
     console.error("❌ خطأ أثناء إرسال تأكيد الدفع:", error);
   }
 }
+
 
 
 
