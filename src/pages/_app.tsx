@@ -9,7 +9,7 @@ import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
 function AppContent({ Component, pageProps, router }: AppProps) {
-  const { telegramId, isTelegramReady } = useTelegram()
+  const { telegramId } = useTelegram() // ✅ إزالة `isTelegramReady` لأنه غير مستخدم
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
   const [pagesLoaded, setPagesLoaded] = useState(false)
@@ -47,7 +47,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     }
   }, [telegramId])
 
-  // ✅ تهيئة التطبيق وتحميل البيانات
+  // ✅ تهيئة التطبيق وتحميل البيانات الأساسية
   const initializeApp = useCallback(async () => {
     try {
       await Promise.all([prefetchPages(), prefetchUserData()])
@@ -76,7 +76,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
 
   return (
     <>
-      {!isAppLoaded && <SplashScreen />}
+      {!isAppLoaded && <SplashScreen />} {/* ✅ ضمان ظهور شاشة التحميل عند فتح التطبيق */}
 
       {isAppLoaded && (
         <motion.div
