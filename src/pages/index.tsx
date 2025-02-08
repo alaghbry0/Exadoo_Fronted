@@ -6,7 +6,7 @@ import supportAnimation from '../animations/support.json'
 import securePaymentAnimation from '../animations/secure-payment.json'
 import subscriptionAnimation from '../animations/subscription.json'
 import React, { useState } from 'react';
-import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'; // استيراد TonConnectUIProvider
+import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
@@ -33,13 +33,12 @@ const Home: React.FC = () => {
 
     const currentFeature = featuresData[selectedFeatureIndex];
 
-    // تم إضافة تحديد نوع المعامل index على أنه number
     const handleFeatureChange = (index: number) => {
-    setSelectedFeatureIndex(index);
-};
+        setSelectedFeatureIndex(index);
+    };
 
     return (
-        <TonConnectUIProvider manifestUrl="/manifest.json"> {/* تمرير manifestUrl إلى TonConnectUIProvider */}
+        <TonConnectUIProvider manifestUrl="/manifest.json">
             <div className="min-h-screen bg-[#f8fafc] safe-area-padding pb-16 font-cairo">
                 {/* شريط التنقل العلوي المبسط والمخصص للهاتف */}
                 <nav className="w-full py-4 bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm sticky top-0 z-20">
@@ -69,18 +68,16 @@ const Home: React.FC = () => {
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 120, damping: 15 }}
                         >
-                            <TonConnectButton
-                                manifestUrl="/manifest.json"
-                                className={`px-8 py-3 bg-white text-[#2d3748] shadow-md
-                                rounded-full text-lg sm:text-xl font-bold flex items-center gap-2 hover:shadow-lg
-                                transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`} // تمت إزالة border و border-gray-200
-                            >
-                                <svg className="w-5 h-5 text-[#2390f1] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h120a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
+                            {/*  تم فصل TonConnectButton عن العناصر الداخلية */}
+                            <TonConnectButton manifestUrl="/manifest.json" className={`px-8 py-3 bg-white text-[#2d3748] shadow-md rounded-full text-lg sm:text-xl font-bold flex items-center gap-2 hover:shadow-lg transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`}>
                                 <span className="text-base">ربط محفظة Ton</span>
                             </TonConnectButton>
-                        </motion.div>
+                            <svg className="w-5 h-5 text-[#2390f1] mr-2 absolute top-[50%] right-[calc(50%-70px)] translate-y-[-50%]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h120a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                         </motion.div>
+
+
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#2d3748] mb-6 leading-tight">
                             جيل جديد من <span className="text-[#2390f1]">الاستثمار</span> <br className="hidden sm:block" />
                             بين يديك
@@ -198,7 +195,7 @@ const Home: React.FC = () => {
                     </motion.div>
                 </div>
             </div>
-        </TonConnectUIProvider> // نهاية تغليف TonConnectUIProvider
+        </TonConnectUIProvider>
     )
 }
 
