@@ -35,8 +35,8 @@ const Home: React.FC = () => {
 
     // تم إضافة تحديد نوع المعامل index على أنه number
     const handleFeatureChange = (index: number) => {
-        setSelectedFeatureIndex(index);
-    };
+    setSelectedFeatureIndex(index);
+};
 
     return (
         <TonConnectUIProvider manifestUrl="/manifest.json"> {/* تمرير manifestUrl إلى TonConnectUIProvider */}
