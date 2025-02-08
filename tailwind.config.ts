@@ -1,19 +1,25 @@
-import type { Config } from "tailwindcss"
-
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx}",
-    "./src/components/**/*.{js,ts,jsx,tsx}",
-    "./src/**/*.{js,ts,jsx,tsx}", // يشمل جميع الملفات داخل src
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
+      fontFamily: {
+        cairo: ['Cairo', 'sans-serif'],
+      },
       backgroundImage: {
-        'custom-hero-gradient': 'linear-gradient(90deg, rgba(145,144,152,1) 0%, rgba(122,122,192,1) 28%, rgba(100,196,215,0.9473039215686274) 100%)',
+        'pattern-modern-lines': "url('/pattern-modern-lines.svg')",
+        'pattern-modern-dots': "url('/pattern-modern-dots.svg')",
+      },
+      colors: {
+        'exaado-green': '#2E7D32', // لون أخضر Exaado الرئيسي
+        'exaado-blue': '#0D47A1',  // لون أزرق Exaado الرئيسي
       },
     },
   },
-  plugins: [],
+  plugins: [], // Removed tailwindcss-directional plugin here
 }
-
-export default config;

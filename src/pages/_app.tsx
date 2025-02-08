@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
+import Shop from './shop';
 import { motion } from 'framer-motion'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 
