@@ -33,7 +33,8 @@ const Home: React.FC = () => {
 
     const currentFeature = featuresData[selectedFeatureIndex];
 
-    const handleFeatureChange = (index) => {
+    // تم إضافة تحديد نوع المعامل index على أنه number
+    const handleFeatureChange = (index: number) => {
         setSelectedFeatureIndex(index);
     };
 
