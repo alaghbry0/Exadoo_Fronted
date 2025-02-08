@@ -3,11 +3,11 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../components/SubscriptionModal'
 import { FiZap } from 'react-icons/fi'
-import { FaChartLine, FaLock, FaCheckCircle, FaStar } from 'react-icons/fa'
+import { FaChartLine, FaLock, FaStar } from 'react-icons/fa'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+//const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
 type SubscriptionPlan = {
     id: number
