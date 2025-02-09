@@ -1,18 +1,17 @@
 'use client'
-import { useState, useEffect } from 'react' // ✅ استيراد useEffect
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../components/SubscriptionModal'
 import { FiZap } from 'react-icons/fi'
 import { FaChartLine, FaLock, FaStar } from 'react-icons/fa'
 import Link from 'next/link'
-import { TonConnectUIProvider } from '@tonconnect/ui-react'; // استيراد TonConnectUIProvider
-import TelegramWebApp from '@twa-dev/sdk'; // استيراد TelegramWebApp
+import { TonConnectUIProvider } from '@tonconnect/ui-react';
 
-// ✅ استيراد Zustand Stores (تأكد من تعديل المسارات والأسماء لتطابق مشروعك الفعلي)
-// تصحيح مسارات الاستيراد بناءً على مسار الملفات الذي قدمته
-import { useTariffStore } from '../stores/zustand'; // ✅ مسار store тариф - تم تحديثه بناءً على المسار الذي قدمته
-import { useProfileStore } from '../stores/profileStore'; // ✅ مسار store الملف الشخصي - يبدو صحيحًا
-import { useSessionStore } from '../stores/sessionStore'; // ✅ مسار store الجلسة - يبدو صحيحًا
+// ✅ استيراد Zustand Stores
+import { useTariffStore } from '../stores/zustand';
+import { useProfileStore } from '../stores/profileStore';
+import { useSessionStore } from '../stores/sessionStore';
 
 type SubscriptionPlan = {
     id: number
@@ -23,10 +22,10 @@ type SubscriptionPlan = {
     features: string[]
     primaryColor: string
     accentColor: string
-    icon: React.FC // ✅ Changed type to React.FC
+    icon: React.FC
     backgroundPattern: string
     usp: string
-    color: string; // ✅ Added color property
+    color: string;
 }
 
 const subscriptionPlans: readonly SubscriptionPlan[] = [
@@ -43,13 +42,12 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'جلسات تحليل مباشر أسبوعية مع محللين كبار',
             'دعم VIP مخصص على مدار الساعة'
         ] ,
-        // animation: dynamic(() => import('../animations/forex.json'), { ssr: false }), // ✅ تم حذف هذا السطر
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaChartLine,
         backgroundPattern: 'bg-none',
         usp: 'دقة إشارات لا مثيل لها',
-        color: '#2390f1' // ✅ Added color property value
+        color: '#2390f1'
     },
     {
         id: 2,
@@ -64,32 +62,39 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'تقارير وأبحاث سوق الكريبتو لكبار المستثمرين',
             'مجتمع VIP حصري لمستثمري الكريبتو'
         ],
-        // animation: dynamic(() => import('../animations/crypto.json'), { ssr: false }), // ✅ تم حذف هذا السطر
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaLock,
         backgroundPattern: 'bg-none',
         usp: 'أمان استثمارات الكريبتو',
-        color: '#2390f1'  // ✅ Added color property value
+        color: '#2390f1'
     }
 ]   as const
 
-const Shop: React.FC = () => {
+const ShopComponent: React.FC = () => {
     const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
     const [hoveredPlan, setHoveredPlan] = useState<SubscriptionPlan | null>(null)
 
     useEffect(() => {
-        if (TelegramWebApp) {
-            console.log("Telegram.WebApp.initData:", TelegramWebApp.initData); // ✅ تسجيل initData
-            const telegramId = TelegramWebApp.initDataUnsafe?.user?.id;
-            if (telegramId) {
-                console.log("Telegram User ID:", telegramId); // ✅ تسجيل telegramId إذا تم العثور عليه
+        // ✅ تحميل TelegramWebApp ديناميكيًا داخل useEffect
+        import('@twa-dev/sdk').then((module) => {
+            const TelegramWebApp = module.default; // الوصول إلى التصدير الافتراضي
+
+            if (TelegramWebApp) {
+                console.log("Telegram.WebApp.initData:", TelegramWebApp.initData);
+                const telegramId = TelegramWebApp.initDataUnsafe?.user?.id;
+                if (telegramId) {
+                    console.log("Telegram User ID:", telegramId);
+                } else {
+                    console.log("⚠️ Telegram ID not found in Telegram.WebApp.initData");
+                }
             } else {
-                console.log("⚠️ Telegram ID not found in Telegram.WebApp.initData"); // ✅ تنبيه إذا لم يتم العثور على telegramId
+                console.log("⚠️ Telegram.WebApp is not defined (not in Telegram Web App)");
             }
-        } else {
-            console.log("⚠️ Telegram.WebApp is not defined (not in Telegram Web App)"); // ✅ تنبيه إذا لم يتم تعريف Telegram.WebApp
-        }
+        }).catch(error => {
+            console.error("Error loading TelegramWebApp:", error); // ✅ معالجة أخطاء التحميل
+        });
+
 
         // ✅ تعديل console.log لعرض حالة Zustand Store كـ JSON stringified
         console.log("Tariff Store:", JSON.stringify(useTariffStore.getState()));
@@ -99,7 +104,7 @@ const Shop: React.FC = () => {
 
 
     return (
-        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">{/* تغليف هنا */}
+        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
             <div dir="rtl" className="min-h-screen bg-[#f8fafc] safe-area-padding pb-32 font-cairo">
                 {/* شريط التنقل العلوي المتناسق مع الصفحة الرئيسية */}
                 <nav className="w-full py-4 bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm sticky top-0 z-20">
@@ -238,4 +243,6 @@ const Shop: React.FC = () => {
     )
 }
 
-export default Shop
+// تصدير المكون ديناميكيًا مع خاصية ssr: false
+const Shop = dynamic(() => Promise.resolve(ShopComponent), { ssr: false });
+export default Shop;
