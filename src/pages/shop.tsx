@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../components/SubscriptionModal'
 import { FiZap } from 'react-icons/fi'
 import { FaChartLine, FaLock, FaStar } from 'react-icons/fa'
-import React, { useState } from 'react';
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'; // استيراد TonConnectUIProvider
 
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+//const Lottie = dynamic(() => import('lottie-react'), { ssr: false }) // ✅ تم التعليق على استيراد Lottie
 
 type SubscriptionPlan = {
     id: number
@@ -17,7 +17,7 @@ type SubscriptionPlan = {
     price: string
     description: string
     features: string[]
-    animation: any // ✅ تم تغيير نوع animation إلى any
+    animation: unknown // ✅ تم تغيير نوع animation إلى any
     primaryColor: string
     accentColor: string
     icon: React.ComponentType
