@@ -15,6 +15,9 @@ interface AppContentProps extends AppProps {
 }
 
 export function AppContent({ Component, pageProps, router }: AppContentProps) {
+  console.log("AppContent: Checking window.Telegram (at start):", window.Telegram);
+  console.log("AppContent: Checking window.Telegram.WebApp (at start):", window.Telegram.WebApp);
+
   const { telegramId } = useTelegram() // ✅ Keep useTelegram here
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
@@ -108,6 +111,9 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
 }
 
 function MyApp({ Component, pageProps, router }: AppProps) {
+  console.log("MyApp: Checking window.Telegram (before TelegramProvider):", window.Telegram);
+  console.log("MyApp: Checking window.Telegram.WebApp (before TelegramProvider):", window.Telegram.WebApp);
+
   return ( // ✅ Always render TelegramProvider
     <TelegramProvider>
       {/* Conditionally render children of TelegramProvider based on window */}
