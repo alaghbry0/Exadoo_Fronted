@@ -140,7 +140,7 @@ const Shop: React.FC = () => {
                                         {/* اسم الخطة والأيقونة */}
                                         <div className="flex items-center justify-between mb-3">
                                             <h2 className="text-xl font-semibold text-[#2d3748]">{plan.name}</h2>
-                                            <plan.icon class="w-7 h-7 text-[#4a5568]" />
+                                            <plan.icon className="w-7 h-7 text-[#4a5568]" />
                                         </div>
                                         <h3 className="text-lg text-gray-500 italic mb-2">{plan.tagline}</h3>
                                         <p className="text-gray-700 text-sm leading-relaxed mb-4">{plan.description}</p>
