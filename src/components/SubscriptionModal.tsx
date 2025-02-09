@@ -1,7 +1,7 @@
 'use client'
-import { motion } from 'framer-motion' // ✅ Remove AnimatePresence import
+import { motion } from 'framer-motion'
 import { FiX } from 'react-icons/fi'
-import { useState, useEffect } from 'react' // ✅ Remove useContext import
+import { useState, useEffect } from 'react'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
 import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
@@ -42,8 +42,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
     // استخدام Zustand Stores
     const { setTariffId } = useTariffStore();
-    const [, , ] = useProfileStore();
-    const [, , ] = useSessionStore();
+    useProfileStore();
+    useSessionStore();
 
     useEffect(() => {
         // ✅ تعديل console.log لعرض حالة Zustand Store كـ JSON stringified
