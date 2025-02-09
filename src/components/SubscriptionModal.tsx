@@ -6,7 +6,7 @@ import { useTelegramPayment } from '../hooks/useTelegramPayment'
 import { useTelegram } from '../context/TelegramContext'
 import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
 import PaymentButtons from '../components/SubscriptionModal/PaymentButtons'
-import { useTonConnectUI, TonConnectUIProvider as TCUIProvider } from '@tonconnect/ui-react';
+import { useTonConnectUI } from '@tonconnect/ui-react'; // ✅ استيراد useTonConnectUI فقط
 
 // استيراد Zustand Stores التي قمنا بإنشائها
 import { useTariffStore } from '../stores/zustand';
@@ -23,21 +23,13 @@ type SubscriptionPlan = {
     color: string
 }
 
-export const SubscriptionModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return (
-        <TCUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
-            {children}
-        </TCUIProvider>
-    );
-};
-
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
     const { handleTelegramStarsPayment } = useTelegramPayment()
     const { telegramId } = useTelegram()
     const [loading, setLoading] = useState(false)
     const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
-   const [tonConnectUI] = useTonConnectUI();
+   const [tonConnectUI] = useTonConnectUI(); // ✅ استخدام useTonConnectUI مباشرة
     const [, setPaymentStatus] = useState('idle');
 
     // استخدام Zustand Stores
