@@ -15,10 +15,10 @@ interface AppContentProps extends AppProps {
 }
 
 export function AppContent({ Component, pageProps, router }: AppContentProps) {
-  // ✅ فحص window.Telegram في بداية AppContent (جانب العميل فقط)
-  const isClient = useRef(false); // مرجع لتتبع ما إذا كنا في جانب العميل
+  // ✅ فحص window.Telegram و webApp من السياق في بداية AppContent (جانب العميل فقط)
+  const isClient = useRef(false);
   useEffect(() => {
-    isClient.current = true; // الآن نحن في جانب العميل
+    isClient.current = true;
     if (typeof window !== 'undefined') {
       console.log("AppContent (Client-side): Checking window.Telegram (at start):", window.Telegram);
       console.log("AppContent (Client-side): Checking window.Telegram.WebApp (at start):", window.Telegram?.WebApp);
@@ -26,18 +26,18 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
   }, []);
 
 
-  const { telegramId } = useTelegram()
-  const [errorState, setErrorState] = useState<string | null>(null)
-  const [isAppLoaded, setIsAppLoaded] = useState(false)
-  const [pagesLoaded, setPagesLoaded] = useState(false)
-  const [dataLoaded, setDataLoaded] = useState(false)
-  const nextRouter = useRouter()
+  const { telegramId } = useTelegram();
+  const [errorState, setErrorState] = useState<string | null>(null);
+  const [isAppLoaded, setIsAppLoaded] = useState(false);
+  const [pagesLoaded, setPagesLoaded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const nextRouter = useRouter();
 
   // ✅ مسح sessionStorage عند تغيير telegramId
   useEffect(() => {
-    sessionStorage.clear()
-    console.log('✅ sessionStorage تم مسحه بسبب تغيير telegramId')
-  }, [telegramId])
+    sessionStorage.clear();
+    console.log('✅ sessionStorage تم مسحه بسبب تغيير telegramId');
+  }, [telegramId]);
 
   // ✅ تحميل جميع الصفحات مسبقًا عند فتح التطبيق
   const prefetchPages = useCallback(async () => {
@@ -46,49 +46,49 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
         nextRouter.prefetch('/'),
         nextRouter.prefetch('/plans'),
         nextRouter.prefetch('/profile'),
-      ])
-      console.log('✅ جميع الصفحات تم تحميلها مسبقًا.')
-      setPagesLoaded(true)
+      ]);
+      console.log('✅ جميع الصفحات تم تحميلها مسبقًا.');
+      setPagesLoaded(true);
     } catch (error) {
-      console.error('⚠️ خطأ أثناء تحميل الصفحات:', error)
+      console.error('⚠️ خطأ أثناء تحميل الصفحات:', error);
     }
-  }, [nextRouter])
+  }, [nextRouter]);
 
   // ✅ تحميل بيانات المستخدم أثناء شاشة التحميل (تم تعديله ليناسب التغييرات في profile.tsx)
   const prefetchUserData = useCallback(async () => {
-    setDataLoaded(true)
+    setDataLoaded(true);
     console.log(
       '✅ تم تخطي تحميل بيانات المستخدم مسبقًا في _app.tsx. يتم جلبه مباشرة في صفحة الملف الشخصي.'
-    )
-  }, [])
+    );
+  }, []);
 
   // ✅ تهيئة التطبيق وتحميل البيانات الأساسية
   const initializeApp = useCallback(async () => {
     try {
-      await Promise.all([prefetchPages(), prefetchUserData()])
-      console.log('✅ تم تحميل جميع البيانات الأساسية.')
+      await Promise.all([prefetchPages(), prefetchUserData()]);
+      console.log('✅ تم تحميل جميع البيانات الأساسية.');
     } catch (error) {
-      console.error('❌ خطأ أثناء تهيئة التطبيق:', error)
-      setErrorState('❌ حدث خطأ أثناء تحميل التطبيق.')
+      console.error('❌ خطأ أثناء تهيئة التطبيق:', error);
+      setErrorState('❌ حدث خطأ أثناء تحميل التطبيق.');
     }
-  }, [prefetchPages, prefetchUserData])
+  }, [prefetchPages, prefetchUserData]);
 
   useEffect(() => {
     const init = async () => {
-      await initializeApp()
+      await initializeApp();
 
       setTimeout(() => {
         if (pagesLoaded && dataLoaded) {
-          setIsAppLoaded(true)
+          setIsAppLoaded(true);
         }
-      }, 6000)
+      }, 6000);
     }
-    init()
-  }, [initializeApp, pagesLoaded, dataLoaded])
+    init();
+  }, [initializeApp, pagesLoaded, dataLoaded]);
 
-  let content
+  let content;
   if (!isAppLoaded) {
-    content = <SplashScreen />
+    content = <SplashScreen />;
   } else {
     content = (
       <motion.div
@@ -108,18 +108,18 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
           </>
         )}
       </motion.div>
-    )
+    );
   }
 
   return (
     <React.Fragment>
       {content}
     </React.Fragment>
-  )
+  );
 }
 
 function MyApp({ Component, pageProps, router }: AppProps) {
-  // ✅ فحص window.Telegram في بداية MyApp (جانب العميل فقط)
+  // ✅ فحص window.Telegram و webApp من السياق في بداية MyApp (جانب العميل فقط)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       console.log("MyApp (Client-side): Checking window.Telegram (before TelegramProvider):", window.Telegram);
@@ -130,7 +130,6 @@ function MyApp({ Component, pageProps, router }: AppProps) {
 
   return (
     <TelegramProvider>
-      {/* لا تقم بالعرض الشرطي لمحتوى TelegramProvider بناءً على window هنا */}
       <AppContent Component={Component} pageProps={pageProps} router={router} />
     </TelegramProvider>
   );

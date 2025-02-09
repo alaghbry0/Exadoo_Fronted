@@ -7,6 +7,7 @@ import React, {
   useCallback,
   Dispatch,
   SetStateAction,
+  useRef, // ✅ استيراد useRef
 } from "react";
 
 interface TelegramContextType {
@@ -15,6 +16,7 @@ interface TelegramContextType {
   isLoading: boolean;
   isTelegramApp: boolean;
   setTelegramId: Dispatch<SetStateAction<string | null>>;
+  webApp: TelegramWebApp | null; // ✅ إضافة webApp إلى السياق
 }
 
 const TelegramContext = createContext<TelegramContextType>({
@@ -23,6 +25,7 @@ const TelegramContext = createContext<TelegramContextType>({
   isLoading: true,
   isTelegramApp: false,
   setTelegramId: () => {},
+  webApp: null, // ✅ قيمة افتراضية لـ webApp
 });
 
 
@@ -30,17 +33,20 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   const [telegramId, setTelegramId] = useState<string | null>(null);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isTelegramApp, setIsTelegramApp] = useState(false); // ✅ إضافة state لـ isTelegramApp
+  const [isTelegramApp, setIsTelegramApp] = useState(false);
+  const [webApp, setWebApp] = useState<TelegramWebApp | null>(null); // ✅ إضافة state لـ webApp
+  const isTelegramAppRef = useRef(false); // ✅ useRef لـ isTelegramApp
 
 
   useEffect(() => {
-    // ✅ تحديد isTelegramApp داخل useEffect لضمان جانب العميل
-    setIsTelegramApp(typeof window !== 'undefined' && !!window.Telegram?.WebApp);
-  }, []); // ✅ تشغيل هذا التأثير مرة واحدة فقط عند التحميل الأولي
+    const isClientSideTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
+    setIsTelegramApp(isClientSideTelegramApp);
+    isTelegramAppRef.current = isClientSideTelegramApp; // تحديث المرجع
+  }, []);
 
 
   const initializeTelegram = useCallback(() => {
-    if (!isTelegramApp) {
+    if (!isTelegramAppRef.current) { // ✅ استخدام المرجع هنا
       console.log("✅ التطبيق يعمل خارج Telegram WebApp");
       setIsLoading(false);
       return;
@@ -54,6 +60,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     }
 
+    setWebApp(tg); // ✅ تعيين webApp state هنا
     tg.ready();
     tg.expand();
     console.log("✅ تم تهيئة Telegram WebApp بنجاح");
@@ -70,11 +77,11 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     setIsLoading(false);
-  }, [isTelegramApp]); // ✅ الاعتماد على isTelegramApp state
+  }, []); // ✅ تم إزالة isTelegramApp من هنا
 
 
   useEffect(() => {
-    if (!isTelegramApp) {
+    if (!isTelegramAppRef.current) { // ✅ استخدام المرجع هنا
       setIsLoading(false);
       return;
     }
@@ -89,7 +96,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     initializeTelegram();
-  }, [initializeTelegram, isTelegramApp]);
+  }, [initializeTelegram]); // ✅ تم إزالة isTelegramApp من هنا
 
 
   const value: TelegramContextType = {
@@ -98,6 +105,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     isLoading,
     isTelegramApp,
     setTelegramId,
+    webApp, // ✅ تضمين webApp في القيمة
   };
 
 

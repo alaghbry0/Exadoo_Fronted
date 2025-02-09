@@ -7,25 +7,32 @@ import { UserProfile } from '@/types';
 
 const DEFAULT_PROFILE = '/default-profile.png';
 
-// ✅ تم حذف كتلة declare global من هنا - أصبحت الآن في telegram-web-app.d.ts
-
 const TelegramProfileLoader = () => {
     const { /*telegramId,*/ setTelegramId } = useTelegram(); // ✅ Remove unused telegramId
     const [userDataFromWebApp, setUserDataFromWebApp] = useState<UserProfile | null>(null);
     useEffect(() => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-            const TelegramWebApp = window.Telegram.WebApp;
-            const user = TelegramWebApp.initDataUnsafe?.user;
-            if (user) {
-                setUserDataFromWebApp({
-                    telegram_id: user.id,
-                    full_name: user.first_name + (user.last_name ? ` ${user.last_name}` : ''),
-                    username: user.username || '',
-                    profile_photo: DEFAULT_PROFILE,
-                    subscriptions: [],
-                });
-                setTelegramId(String(user.id));
+            const TelegramWebApp = window.Telegram.WebApp; // No need for 'as unknown' now
+            if (TelegramWebApp) {
+                const user = TelegramWebApp.initDataUnsafe?.user; // Access directly, no 'as any' needed
+                if (user) {
+                    setUserDataFromWebApp({
+                        telegram_id: user.id,
+                        full_name: user.first_name + (user.last_name ? ` ${user.last_name}` : ''),
+                        username: user.username || '',
+                        profile_photo: DEFAULT_PROFILE,
+                        subscriptions: [],
+                    });
+                    setTelegramId(String(user.id));
+                    console.log("✅ تم استخراج بيانات المستخدم من Telegram WebApp:", user);
+                } else {
+                    console.warn("⚠️ لم يتم العثور على بيانات المستخدم في Telegram WebApp.");
+                }
+            } else {
+                console.warn("⚠️ TelegramWebApp غير معرف.");
             }
+        } else {
+            console.log("ℹ️ ليس في بيئة Telegram WebApp.");
         }
     }, [setTelegramId]);
 
