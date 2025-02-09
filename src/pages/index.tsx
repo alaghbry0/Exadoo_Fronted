@@ -132,7 +132,7 @@ const Home: React.FC = () => {
                             />
                         </div>
                         <div className="relative z-10">
-                            <AnimatePresence exitBeforeEnter>
+                            <AnimatePresence > {/* ✅ تم حذف exitBeforeEnter */}
                                 <motion.div
                                     key={selectedFeatureIndex}
                                     initial={{ opacity: 0, y: 30, scale: 0.9 }}
