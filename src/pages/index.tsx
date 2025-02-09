@@ -38,7 +38,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
+        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
             <div className="min-h-screen bg-[#f8fafc] safe-area-padding pb-16 font-cairo">
                 {/* شريط التنقل العلوي المبسط والمخصص للهاتف */}
                 <nav className="w-full py-4 bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm sticky top-0 z-20">
@@ -70,7 +70,7 @@ const Home: React.FC = () => {
                         >
                             {/*  تم فصل TonConnectButton عن العناصر الداخلية - استخدم prop `buttonText` */}
                             <TonConnectButton
-                                manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json"
+
                                 className={`px-5 py-1.5 bg-white text-[#2d3748] shadow-md rounded-full text-lg sm:text-xl font-bold flex items-center gap-1 hover:shadow-lg transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`}
                                 buttonText="ربط محفظة Ton" // استخدم prop buttonText بدلاً من children
                             />
