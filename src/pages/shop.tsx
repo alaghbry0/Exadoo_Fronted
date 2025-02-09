@@ -39,7 +39,6 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'جلسات تحليل مباشر أسبوعية مع محللين كبار',
             'دعم VIP مخصص على مدار الساعة'
         ],
-        animation: dynamic(() => import('../animations/forex.json'), { ssr: false }), // ✅ تم إضافة ssr: false هنا
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaChartLine,
@@ -59,7 +58,6 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'تقارير وأبحاث سوق الكريبتو لكبار المستثمرين',
             'مجتمع VIP حصري لمستثمري الكريبتو'
         ],
-        animation: dynamic(() => import('../animations/crypto.json'), { ssr: false }), // ✅ تم إضافة ssr: false هنا
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaLock,
