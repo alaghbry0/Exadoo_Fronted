@@ -37,7 +37,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     const { telegramId } = useTelegram()
     const [loading, setLoading] = useState(false)
     const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
-    const [tonConnectUI] = useTonConnectUI() as [TonConnectUI, any];
+   const [tonConnectUI] = useTonConnectUI();
     const [, setPaymentStatus] = useState('idle');
 
     // استخدام Zustand Stores
