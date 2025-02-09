@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'; // استيراد TonConnectUIProvider
 
-//const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+//const Lottie = dynamic(() => import('lottie-react'), { ssr: false }) // ✅ تم التعليق على استيراد Lottie
 
 type SubscriptionPlan = {
     id: number
@@ -17,7 +17,7 @@ type SubscriptionPlan = {
     price: string
     description: string
     features: string[]
-    animation: object
+    animation: any // ✅ تم تغيير نوع animation إلى any
     primaryColor: string
     accentColor: string
     icon: React.ComponentType
@@ -39,7 +39,7 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'جلسات تحليل مباشر أسبوعية مع محللين كبار',
             'دعم VIP مخصص على مدار الساعة'
         ],
-        animation: dynamic(() => import('../animations/forex.json')) as object,
+        animation: dynamic(() => import('../animations/forex.json'), { ssr: false }), // ✅ تم إضافة ssr: false هنا
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaChartLine,
@@ -59,7 +59,7 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'تقارير وأبحاث سوق الكريبتو لكبار المستثمرين',
             'مجتمع VIP حصري لمستثمري الكريبتو'
         ],
-        animation: dynamic(() => import('../animations/crypto.json')) as object,
+        animation: dynamic(() => import('../animations/crypto.json'), { ssr: false }), // ✅ تم إضافة ssr: false هنا
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaLock,
