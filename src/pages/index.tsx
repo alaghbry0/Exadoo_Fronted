@@ -71,12 +71,10 @@ const Home: React.FC = () => {
                             {/*  تم فصل TonConnectButton عن العناصر الداخلية - استخدم prop `buttonText` */}
                             <TonConnectButton
                                 manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json"
-                                className={`px-8 py-3 bg-white text-[#2d3748] shadow-md rounded-full text-lg sm:text-xl font-bold flex items-center gap-2 hover:shadow-lg transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`}
+                                className={`px-5 py-1.5 bg-white text-[#2d3748] shadow-md rounded-full text-lg sm:text-xl font-bold flex items-center gap-1 hover:shadow-lg transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`}
                                 buttonText="ربط محفظة Ton" // استخدم prop buttonText بدلاً من children
                             />
-                            <svg className="w-5 h-5 text-[#2390f1] mr-2 absolute top-[50%] right-[calc(50%-70px)] translate-y-[-50%]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h120a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
+
                          </motion.div>
 
 
