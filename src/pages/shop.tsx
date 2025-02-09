@@ -18,9 +18,10 @@ type SubscriptionPlan = {
     features: string[]
     primaryColor: string
     accentColor: string
-    icon: React.ComponentType
+    icon: React.FC // ✅ Changed type to React.FC
     backgroundPattern: string
     usp: string
+    color: string; // ✅ Added color property
 }
 
 const subscriptionPlans: readonly SubscriptionPlan[] = [
@@ -42,7 +43,8 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
         accentColor: '#eab308',
         icon: FaChartLine,
         backgroundPattern: 'bg-none',
-        usp: 'دقة إشارات لا مثيل لها'
+        usp: 'دقة إشارات لا مثيل لها',
+        color: '#2390f1' // ✅ Added color property value
     },
     {
         id: 2,
@@ -62,7 +64,8 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
         accentColor: '#eab308',
         icon: FaLock,
         backgroundPattern: 'bg-none',
-        usp: 'أمان استثمارات الكريبتو'
+        usp: 'أمان استثمارات الكريبتو',
+        color: '#2390f1'  // ✅ Added color property value
     }
 ]   as const
 
@@ -140,7 +143,9 @@ const Shop: React.FC = () => {
                                         {/* اسم الخطة والأيقونة */}
                                         <div className="flex items-center justify-between mb-3">
                                             <h2 className="text-xl font-semibold text-[#2d3748]">{plan.name}</h2>
-                                            <plan.icon style={{ width: '1.75rem', height: '1.75rem', color: '#4a5568' }} /> {/* ✅ تم إضافة style هنا */}
+                                            <span style={{ width: '1.75rem', height: '1.75rem', color: '#4a5568', display: 'inline-flex' }}> {/* ✅ تم تغليف الأيقونة بـ <span> و إضافة style هنا */}
+                                                <plan.icon  />
+                                            </span>
                                         </div>
                                         <h3 className="text-lg text-gray-500 italic mb-2">{plan.tagline}</h3>
                                         <p className="text-gray-700 text-sm leading-relaxed mb-4">{plan.description}</p>
