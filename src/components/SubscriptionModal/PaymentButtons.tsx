@@ -2,30 +2,29 @@ import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import starsAnimation from '@/animations/stars.json'
 import usdtAnimation from '@/animations/usdt.json'
-import { useState } from 'react'
-import ComingSoonModal from './ComingSoonModal'
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
 const PaymentButtons = ({
   loading,
   telegramId,
-  handlePayment
+  handlePayment, // دالة الدفع بـ Telegram Stars
+  handleTonPayment // دالة الدفع بـ TON - نضيفها هنا
 }: {
   loading: boolean
   telegramId: string | null
-  handlePayment: () => void
+  handlePayment: () => void // دالة الدفع بـ Telegram Stars
+  handleTonPayment: () => void // دالة الدفع بـ TON - نضيفها هنا
 }) => {
-  const [showUSDTModal, setShowUSDTModal] = useState(false)
 
   return (
     <div className="sticky bottom-0 bg-white pt-4 pb-8 space-y-2 border-t">
-      <ComingSoonModal show={showUSDTModal} onClose={() => setShowUSDTModal(false)} />
+      {/* تمت إزالة ComingSoonModal */}
 
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setShowUSDTModal(true)}
+        onClick={handleTonPayment} // استبدال setShowUSDTModal بـ handleTonPayment
         className="w-full flex items-center justify-between px-4 py-2.5
           bg-gradient-to-l from-[#2390f1] to-[#1a75c4] text-white rounded-lg text-sm
           shadow-md hover:shadow-lg transition-shadow"
