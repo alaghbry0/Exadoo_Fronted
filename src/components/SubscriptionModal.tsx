@@ -32,7 +32,7 @@ export const SubscriptionModalProvider: React.FC<{ children: React.ReactNode }> 
 };
 
 
-cconst SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
+const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
     const { handleTelegramStarsPayment } = useTelegramPayment()
     const { telegramId } = useTelegram()
     const [loading, setLoading] = useState(false)
