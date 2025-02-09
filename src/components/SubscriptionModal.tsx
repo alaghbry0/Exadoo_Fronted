@@ -87,47 +87,47 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
 
     const handleTonPayment = async () => {
-        setPaymentStatus('pending'); // ✅ Keep setPaymentStatus as it's used in handleTonPayment
-        try {
-            const transaction = {
-                validUntil: 1739029805,
-                messages: [
-                    {
-                        address: "UQAWb4x9KVxA51hf0rq5iRSOJRG13g_UeMTEuUELub_iy6cp",
-                        amount: "5000000",
-                        payload: "te6ccsEBAQEADAAMABQAAAAASGVsbG8hCaTc/g=="
-                    }
-                ]
-            };
-
-
-            tonConnectUI.sendTransaction({
-                messages: transaction.messages,
-                validUntil: transaction.validUntil,
-                onSuccess: () => {
-                    setPaymentStatus('success'); // ✅ Keep setPaymentStatus as it's used in handleTonPayment
-                    showTelegramAlert('✅ تم الدفع بنجاح مبدئيًا!');
-                    // ✅ هنا، عند نجاح الدفع بـ TON، قم بتعيين tariffId أيضًا
-                    setTariffId(plan.id?.toString()  ?? null); // Use optional chaining and nullish coalescing
-                    // ✅ تعديل console.log لعرض tariffId بعد الدفع (TON)
-                    console.log("Tariff Store بعد الدفع (TON): Tariff ID =", useTariffStore.getState().tariffId);
-                },
-                onError: (error) => {
-                    setPaymentStatus('failed'); // ✅ Keep setPaymentStatus as it's used in handleTonPayment
-                    showTelegramAlert(`❌ فشل الدفع: ${error.message}`);
-                },
-                onCancel: () => {
-                    setPaymentStatus('idle'); // ✅ Keep setPaymentStatus as it's used in handleTonPayment
-                    showTelegramAlert('⚠️ تم إلغاء الدفع.');
+    setPaymentStatus('pending');
+    try {
+        const transaction = {
+            validUntil: 1739029805,
+            messages: [
+                {
+                    address: "UQAWb4x9KVxA51hf0rq5iRSOJRG13g_UeMTEuUELub_iy6cp",
+                    amount: "5000000",
+                    payload: "te6ccsEBAQEADAAMABQAAAAASGVsbG8hCaTc/g=="
                 }
-            });
+            ]
+        };
 
-        } catch (error) {
-            console.error("❌ خطأ أثناء بدء دفع TON:", error);
-            setPaymentStatus('failed'); // ✅ Keep setPaymentStatus as it's used in handleTonPayment
-            showTelegramAlert("❌ فشل بدء دفع TON. يرجى المحاولة مرة أخرى.");
-        }
-    };
+        // ✅ تعديل: استخدام Promises للتعامل مع نتيجة sendTransaction
+        await tonConnectUI.sendTransaction({
+            messages: transaction.messages,
+            validUntil: transaction.validUntil,
+        })
+        .then(() => { // ✅ استخدام .then() للنجاح
+            setPaymentStatus('success');
+            showTelegramAlert('✅ تم الدفع بنجاح مبدئيًا!');
+            // ✅ هنا، عند نجاح الدفع بـ TON، قم بتعيين tariffId أيضًا
+            setTariffId(plan.id?.toString()  ?? null);
+            // ✅ تعديل console.log لعرض tariffId بعد الدفع (TON)
+            console.log("Tariff Store بعد الدفع (TON): Tariff ID =", useTariffStore.getState().tariffId);
+        })
+        .catch((error: any) => { // ✅ استخدام .catch() للفشل
+            setPaymentStatus('failed');
+            showTelegramAlert(`❌ فشل الدفع: ${error.message}`);
+        })
+        .finally(() => { // ✅ استخدام .finally() للقيام بأي شيء بعد انتهاء العملية (اختياري هنا)
+            setPaymentStatus('idle'); // يمكنك إزالة هذا السطر إذا لم تكن بحاجة إليه في finally
+        });
+
+
+    } catch (error) {
+        console.error("❌ خطأ أثناء بدء دفع TON:", error);
+        setPaymentStatus('failed');
+        showTelegramAlert("❌ فشل بدء دفع TON. يرجى المحاولة مرة أخرى.");
+    }
+};
 
 
     return (
