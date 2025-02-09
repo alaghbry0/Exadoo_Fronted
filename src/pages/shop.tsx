@@ -16,7 +16,6 @@ type SubscriptionPlan = {
     price: string
     description: string
     features: string[]
-    animation: unknown // ✅ تم تغيير نوع animation إلى any
     primaryColor: string
     accentColor: string
     icon: React.ComponentType
@@ -38,13 +37,13 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'جلسات تحليل مباشر أسبوعية مع محللين كبار',
             'دعم VIP مخصص على مدار الساعة'
         ] ,
-        animation: dynamic(() => import('../animations/forex.json'), { ssr: false }), // ✅ تم إضافة animation هنا
+        // animation: dynamic(() => import('../animations/forex.json'), { ssr: false }), // ✅ تم حذف هذا السطر
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaChartLine,
         backgroundPattern: 'bg-none',
         usp: 'دقة إشارات لا مثيل لها'
-},
+    },
     {
         id: 2,
         name: 'قناة الكريبتو VIP',
@@ -58,14 +57,14 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'تقارير وأبحاث سوق الكريبتو لكبار المستثمرين',
             'مجتمع VIP حصري لمستثمري الكريبتو'
         ],
-        animation: dynamic(() => import('../animations/crypto.json'), { ssr: false }), // ✅ تم إضافة animation هنا
+        // animation: dynamic(() => import('../animations/crypto.json'), { ssr: false }), // ✅ تم حذف هذا السطر
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaLock,
         backgroundPattern: 'bg-none',
         usp: 'أمان استثمارات الكريبتو'
     }
-   ]   as const
+]   as const
 
 const Shop: React.FC = () => {
     const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
