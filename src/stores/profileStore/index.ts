@@ -1,9 +1,16 @@
 import { create } from 'zustand';
 
+// ✅ تعريف واجهة (interface) لنوع بيانات ملف تعريف المستخدم
+interface UserProfile {
+  username: string;
+  subscriptionStatus: string; // أو يمكنك استخدام نوع enum إذا كانت الحالة محددة بقيم معينة
+  // يمكنك إضافة المزيد من الخصائص هنا حسب الحاجة (مثل: email, avatarUrl, الخ)
+}
+
 interface ProfileState {
-  profileData: any | null; // يمكنك استبدال `any` بنوع بيانات ملف تعريف المستخدم الفعلي لاحقًا
-  fetchProfileData: () => Promise<void>; // دالة لجلب بيانات ملف التعريف (سنقوم بتنفيذها لاحقًا)
-  clearProfileData: () => void; // دالة لمسح بيانات ملف التعريف
+  profileData: UserProfile | null; // ✅ استبدال `any` بـ `UserProfile` interface
+  fetchProfileData: () => Promise<void>;
+  clearProfileData: () => void;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({

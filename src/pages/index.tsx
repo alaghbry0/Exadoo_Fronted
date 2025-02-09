@@ -7,7 +7,6 @@ import securePaymentAnimation from '../animations/secure-payment.json'
 import subscriptionAnimation from '../animations/subscription.json'
 import React, { useState } from 'react';
 import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react';
-import SubscriptionModal from './components/SubscriptionModal';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
 
