@@ -113,7 +113,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             // ✅ تعديل console.log لعرض tariffId بعد الدفع (TON)
             console.log("Tariff Store بعد الدفع (TON): Tariff ID =", useTariffStore.getState().tariffId);
         })
-        .catch((error: any) => { // ✅ استخدام .catch() للفشل
+        .catch((error: Error) => { // ✅ استخدام .catch() للفشل, تحديد نوع Error
             setPaymentStatus('failed');
             showTelegramAlert(`❌ فشل الدفع: ${error.message}`);
         })
