@@ -32,19 +32,18 @@ export const SubscriptionModalProvider: React.FC<{ children: React.ReactNode }> 
 };
 
 
-const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
+cconst SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
     const { handleTelegramStarsPayment } = useTelegramPayment()
     const { telegramId } = useTelegram()
     const [loading, setLoading] = useState(false)
     const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
-    const [tonConnectUI] = useTonConnectUI() as [any]; // Corrected type for useTonConnectUI
-    const [, setPaymentStatus] = useState('idle'); // ✅ Remove paymentStatus from useState and use '_' to indicate it's intentionally unused
+    const [tonConnectUI] = useTonConnectUI() as [TonConnectUI];
+    const [, setPaymentStatus] = useState('idle');
 
     // استخدام Zustand Stores
-    const { setTariffId } = useTariffStore(); // استخراج دالة setTariffId من useTariffStore
-    const [, , ] = useProfileStore(); // ✅ استخراج Zustand Store ولكن تجاهل المتغيرات الغير مستخدمة
-    const [, , ] = useSessionStore(); // ✅ استخراج Zustand Store ولكن تجاهل المتغيرات الغير مستخدمة
-
+    const { setTariffId } = useTariffStore();
+    const [, , ] = useProfileStore();
+    const [, , ] = useSessionStore();
 
     useEffect(() => {
         // ✅ تعديل console.log لعرض حالة Zustand Store كـ JSON stringified
