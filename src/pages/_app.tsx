@@ -8,7 +8,7 @@ import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
 import { motion } from 'framer-motion'
 import { TelegramProvider } from '../context/TelegramContext'
-import { useTelegram } from '../context/TelegramContext'
+// REMOVED UNUSED IMPORT: import { useTelegram } from '../context/TelegramContext'
 import React from 'react'
 
 interface AppContentProps extends AppProps {
@@ -26,24 +26,11 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
         }
     }, []);
 
-
-    const { telegramId } = useTelegram();
     const [errorState, setErrorState] = useState<string | null>(null);
     const [isAppLoaded, setIsAppLoaded] = useState(false);
     const [pagesLoaded, setPagesLoaded] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const nextRouter = useRouter();
-
-    // ✅ مسح sessionStorage فقط عند تغيير telegramId إلى قيمة مختلفة
-    const previousTelegramId = useRef<string | null>(telegramId); // useRef لتتبع القيمة السابقة
-    useEffect(() => {
-        if (telegramId !== previousTelegramId.current) { // ✅ تحقق من تغيير القيمة
-            sessionStorage.clear();
-            console.log('✅ sessionStorage تم مسحه بسبب تغيير telegramId');
-            previousTelegramId.current = telegramId; // تحديث القيمة السابقة
-        }
-    }, [telegramId]);
-
 
     // ✅ تحميل جميع الصفحات مسبقًا عند فتح التطبيق
     const prefetchPages = useCallback(async () => {
@@ -81,16 +68,16 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
 
     useEffect(() => {
         const init = async () => {
-            await initializeApp();
-
+            initializeApp(); // ✅ استدعاء initializeApp مباشرة
             setTimeout(() => {
                 if (pagesLoaded && dataLoaded) {
                     setIsAppLoaded(true);
                 }
-            }, 6000);
-        }
+            }, 3000); // تقليل التأخير إلى 3 ثوانٍ
+        };
         init();
     }, [initializeApp, pagesLoaded, dataLoaded]);
+
 
     let content;
     if (!isAppLoaded) {
@@ -132,7 +119,6 @@ function MyApp({ Component, pageProps, router }: AppProps) {
             console.log("MyApp (Client-side): Checking window.Telegram.WebApp (before TelegramProvider):", window.Telegram?.WebApp);
         }
     }, []);
-
 
     return (
         <TelegramProvider>
