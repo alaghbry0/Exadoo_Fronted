@@ -70,10 +70,10 @@ const Home: React.FC = () => {
                         >
                             {/*  تم فصل TonConnectButton عن العناصر الداخلية - استخدم prop `buttonText` */}
                             <TonConnectButton
-
                                 className={`px-5 py-1.5 bg-white text-[#2d3748] shadow-md rounded-full text-lg sm:text-xl font-bold flex items-center gap-1 hover:shadow-lg transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`}
-                                buttonText="ربط محفظة Ton" // استخدم prop buttonText بدلاً من children
-                            />
+                            >
+                                ربط محفظة Ton {/* ✅  تم استخدام children بدلاً من buttonText */}
+                            </TonConnectButton>
 
                          </motion.div>
 
