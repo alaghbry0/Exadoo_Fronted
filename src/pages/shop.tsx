@@ -31,19 +31,20 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
         tagline: 'إشارات نخبة الفوركس لتحقيق أقصى قدر من الأرباح',
         price: '20$',
         description: 'انضم إلى قناة الفوركس VIP واحصل على تحليلات حصرية وإشارات تداول فورية من خبراء السوق.',
-        features: [
+        features:[
             'إشارات فوركس فائقة الدقة (معدل نجاح 90%+)',
             'تحليل فني متقدم لأزواج العملات الرئيسية',
             'تنبيهات صفقات فورية عبر Telegram',
             'جلسات تحليل مباشر أسبوعية مع محللين كبار',
             'دعم VIP مخصص على مدار الساعة'
-        ],
+        ] ,
+        animation: dynamic(() => import('../animations/forex.json'), { ssr: false }), // ✅ تم إضافة animation هنا
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaChartLine,
         backgroundPattern: 'bg-none',
         usp: 'دقة إشارات لا مثيل لها'
-    },
+},
     {
         id: 2,
         name: 'قناة الكريبتو VIP',
@@ -57,13 +58,14 @@ const subscriptionPlans: readonly SubscriptionPlan[] = [
             'تقارير وأبحاث سوق الكريبتو لكبار المستثمرين',
             'مجتمع VIP حصري لمستثمري الكريبتو'
         ],
+        animation: dynamic(() => import('../animations/crypto.json'), { ssr: false }), // ✅ تم إضافة animation هنا
         primaryColor: '#2390f1',
         accentColor: '#eab308',
         icon: FaLock,
         backgroundPattern: 'bg-none',
         usp: 'أمان استثمارات الكريبتو'
     }
-] as const
+   ]   as const
 
 const Shop: React.FC = () => {
     const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
