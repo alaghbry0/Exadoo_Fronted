@@ -1,12 +1,15 @@
 'use client'
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 
-// ✅ تعريف `Telegram` في `window` لمنع أخطاء TypeScript
 declare global {
   interface Window {
     Telegram?: {
       WebApp?: {
-        initData?: string
+        initData?: { // ✅ تم تصحيح النوع إلى كائن
+          user?: {
+            id?: number
+          }
+        }
         initDataUnsafe?: {
           user?: {
             id?: number
