@@ -25,7 +25,7 @@ type SubscriptionPlan = {
 
 export const SubscriptionModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
-        <TCUIProvider manifestUrl="https://exadooo-git-main-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
+        <TCUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
             {children}
         </TCUIProvider>
     );

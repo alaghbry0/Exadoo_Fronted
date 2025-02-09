@@ -38,7 +38,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <TonConnectUIProvider manifestUrl="https://exadooo-fjr86y5b6-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
+        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
             <div className="min-h-screen bg-[#f8fafc] safe-area-padding pb-16 font-cairo">
                 {/* شريط التنقل العلوي المبسط والمخصص للهاتف */}
                 <nav className="w-full py-4 bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm sticky top-0 z-20">

@@ -74,7 +74,7 @@ const Shop: React.FC = () => {
     const [hoveredPlan, setHoveredPlan] = useState<SubscriptionPlan | null>(null)
 
     return (
-        <TonConnectUIProvider manifestUrl="https://exadooo-fjr86y5b6-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">{/* تغليف هنا */}
+        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">{/* تغليف هنا */}
             <div dir="rtl" className="min-h-screen bg-[#f8fafc] safe-area-padding pb-32 font-cairo">
                 {/* شريط التنقل العلوي المتناسق مع الصفحة الرئيسية */}
                 <nav className="w-full py-4 bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm sticky top-0 z-20">
