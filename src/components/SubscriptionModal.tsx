@@ -109,9 +109,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             setPaymentStatus('success');
             showTelegramAlert('✅ تم الدفع بنجاح مبدئيًا!');
             // ✅ هنا، عند نجاح الدفع بـ TON، قم بتعيين tariffId أيضًا
-            setTariffId(plan.id?.toString()  ?? null);
-            // ✅ تعديل console.log لعرض tariffId بعد الدفع (TON)
-            console.log("Tariff Store بعد الدفع (TON): Tariff ID =", useTariffStore.getState().tariffId);
+            if (plan) { // ✅ Check if plan is not null before accessing plan.id
+                setTariffId(plan.id?.toString()  ?? null);
+                // ✅ تعديل console.log لعرض tariffId بعد الدفع (TON)
+                console.log("Tariff Store بعد الدفع (TON): Tariff ID =", useTariffStore.getState().tariffId);
+            } else {
+                console.error("Plan is null after successful TON payment, cannot set tariffId."); // Log an error if plan is null
+            }
         })
         .catch((error: Error) => { // ✅ استخدام .catch() للفشل, تحديد نوع Error
             setPaymentStatus('failed');
