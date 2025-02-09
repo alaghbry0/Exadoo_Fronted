@@ -1,17 +1,17 @@
-'use client'
-import { motion, AnimatePresence } from 'framer-motion'
-import { FiX } from 'react-icons/fi'
-import { useState, useEffect, useContext } from 'react'
-import { useTelegramPayment } from '../hooks/useTelegramPayment'
-import { useTelegram } from '../context/TelegramContext'
-import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
-import PaymentButtons from '../components/SubscriptionModal/PaymentButtons'
-import { useTonConnectUI, TonConnectUIProvider as TCUIProvider } from '@tonconnect/ui-react';
+ai_response = '''\'use client\'
+import { motion } from \'framer-motion\'
+import { FiX } from \'react-icons/fi\'
+import { useState, useEffect } from \'react\'
+import { useTelegramPayment } from \'../hooks/useTelegramPayment\'
+import { useTelegram } from \'../context/TelegramContext\'
+import SubscriptionPlanCard from \'../components/SubscriptionModal/SubscriptionPlanCard\'
+import PaymentButtons from \'../components/SubscriptionModal/PaymentButtons\'
+import { useTonConnectUI, TonConnectUIProvider as TCUIProvider } from \'@tonconnect/ui-react\';
 
 // استيراد Zustand Stores التي قمنا بإنشائها
-import { useTariffStore } from '../stores/zustand';
-import { useProfileStore } from '../stores/profileStore';
-import { useSessionStore } from '../stores/sessionStore';
+import { useTariffStore } from \'../stores/zustand\';
+import { useProfileStore } from \'../stores/profileStore\';
+import { useSessionStore } from \'../stores/sessionStore\';
 
 
 type SubscriptionPlan = {
@@ -37,13 +37,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     const { telegramId } = useTelegram()
     const [loading, setLoading] = useState(false)
     const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
-    const [tonConnectUI] = useTonConnectUI() as [TonConnectUI];
-    const [paymentStatus, setPaymentStatus] = useState('idle');
+    const [tonConnectUI] = useTonConnectUI() as [any]; // Corrected type for useTonConnectUI
+    const [, setPaymentStatus] = useState(\'idle\'); // Removed unused paymentStatus
 
     // استخدام Zustand Stores
-    const { setTariffId } = useTariffStore(); // استخراج دالة setTariffId من useTariffStore
-    const { profileData, fetchProfileData, clearProfileData } = useProfileStore(); // استخراج profileData, fetchProfileData, clearProfileData من useProfileStore
-    const { session, setSession, removeSession } = useSessionStore(); // استخراج session, setSession, removeSession من useSessionStore
+    const { setTariffId } = useTariffStore();
+    const [, , ] = useProfileStore(); // Removed unused profileData, fetchProfileData, clearProfileData
+    const [, , ] = useSessionStore(); // Removed unused session, setSession, removeSession
 
     useEffect(() => {
         // ✅ تعديل console.log لعرض حالة Zustand Store كـ JSON stringified
@@ -54,7 +54,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        if (typeof window !== \'undefined\' && window.Telegram?.WebApp) {
             setIsTelegramAvailable(true)
         }
     }, [])
@@ -74,11 +74,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         try {
             setLoading(true)
             // ✅ هنا، قبل استدعاء handleTelegramStarsPayment، قم بتعيين tariffId في Zustand Store
-            setTariffId(plan.id.toString()); // نفترض أن plan.id هو رقم، قم بتحويله إلى سلسلة نصية إذا لزم الأمر
-            await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')))
+            setTariffId(plan.id?.toString() ?? null); // Use optional chaining and nullish coalescing
+            await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, \'\'')))
         } catch (error) {
             console.error("❌ خطأ أثناء عملية الدفع:", error)
-            showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
+            showTelegramAlert(\'❌ فشلت عملية الدفع: \' + (error instanceof Error ? error.message : \'خطأ غير معروف\'))
         } finally {
             setLoading(false)
             // ✅ تعديل console.log لعرض tariffId بعد الدفع (Telegram Stars)
@@ -87,7 +87,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
 
     const handleTonPayment = async () => {
-        setPaymentStatus('pending');
+        setPaymentStatus(\'pending\');
         try {
             const transaction = {
                 validUntil: 1739029805,
@@ -105,26 +105,26 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 messages: transaction.messages,
                 validUntil: transaction.validUntil,
                 onSuccess: () => {
-                    setPaymentStatus('success');
-                    showTelegramAlert('✅ تم الدفع بنجاح مبدئيًا!');
+                    setPaymentStatus(\'success\');
+                    showTelegramAlert(\'✅ تم الدفع بنجاح مبدئيًا!\');
                     // ✅ هنا، عند نجاح الدفع بـ TON، قم بتعيين tariffId أيضًا
-                    setTariffId(plan.id.toString()); // نفترض أن plan.id هو رقم، قم بتحويله إلى سلسلة نصية إذا لزم الأمر
+                    setTariffId(plan.id?.toString()  ?? null); // Use optional chaining and nullish coalescing
                     // ✅ تعديل console.log لعرض tariffId بعد الدفع (TON)
                     console.log("Tariff Store بعد الدفع (TON): Tariff ID =", useTariffStore.getState().tariffId);
                 },
                 onError: (error) => {
-                    setPaymentStatus('failed');
+                    setPaymentStatus(\'failed\');
                     showTelegramAlert(`❌ فشل الدفع: ${error.message}`);
                 },
                 onCancel: () => {
-                    setPaymentStatus('idle');
-                    showTelegramAlert('⚠️ تم إلغاء الدفع.');
+                    setPaymentStatus(\'idle\');
+                    showTelegramAlert(\'⚠️ تم إلغاء الدفع.\');
                 }
             });
 
         } catch (error) {
             console.error("❌ خطأ أثناء بدء دفع TON:", error);
-            setPaymentStatus('failed');
+            setPaymentStatus(\'failed\');
             showTelegramAlert("❌ فشل بدء دفع TON. يرجى المحاولة مرة أخرى.");
         }
     };
@@ -142,7 +142,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 >
                     <motion.div
                         className="bg-white rounded-t-2xl shadow-xl w-full max-w-lg mx-auto overflow-hidden"
-                        style={{ height: '65vh', maxHeight: 'calc(180vh - 70px)', marginBottom: '59px' }}
+                        style={{ height: \'65vh\', maxHeight: \'calc(180vh - 70px)\', marginBottom: \'59px\' }}
                         initial={{ y: "100%" }}
                         animate={{ y: "0%" }}
                         exit={{ y: "100%" }}
