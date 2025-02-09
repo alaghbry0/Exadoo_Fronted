@@ -9,9 +9,6 @@ import React, {
   SetStateAction,
 } from "react";
 
-// ✅ تم حذف كتلة declare global من هنا
-
-// ✅ تعريف نوع السياق بشكل صحيح ليشمل Dispatch<SetStateAction<string | null>>
 interface TelegramContextType {
   telegramId: string | null;
   isTelegramReady: boolean;
@@ -20,13 +17,12 @@ interface TelegramContextType {
   setTelegramId: Dispatch<SetStateAction<string | null>>;
 }
 
-// ✅ تهيئة السياق بقيمة افتراضية مبسطة لـ setTelegramId (وظيفة فارغة بسيطة)
 const TelegramContext = createContext<TelegramContextType>({
   telegramId: null,
   isTelegramReady: false,
   isLoading: true,
   isTelegramApp: false,
-  setTelegramId: () => {}, // ✅ وظيفة فارغة بسيطة كقيمة افتراضية لـ setTelegramId
+  setTelegramId: () => {},
 });
 
 
@@ -34,9 +30,13 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   const [telegramId, setTelegramId] = useState<string | null>(null);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTelegramApp, setIsTelegramApp] = useState(false); // ✅ إضافة state لـ isTelegramApp
 
-  // ✅ تحديد isTelegramApp مرة واحدة فقط خارج useEffect
-  const isTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
+
+  useEffect(() => {
+    // ✅ تحديد isTelegramApp داخل useEffect لضمان جانب العميل
+    setIsTelegramApp(typeof window !== 'undefined' && !!window.Telegram?.WebApp);
+  }, []); // ✅ تشغيل هذا التأثير مرة واحدة فقط عند التحميل الأولي
 
 
   const initializeTelegram = useCallback(() => {
@@ -46,7 +46,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     }
 
-    const tg = window.Telegram?.WebApp; // ✅ الوصول إلى window.Telegram?.WebApp هنا فقط
+    const tg = window.Telegram?.WebApp;
 
     if (!tg) {
       console.warn("⚠️ Telegram WebApp غير متاح");
@@ -70,17 +70,15 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     setIsLoading(false);
-  }, [isTelegramApp]); // ✅ إزالة التحقق من window من هنا
+  }, [isTelegramApp]); // ✅ الاعتماد على isTelegramApp state
 
 
   useEffect(() => {
-    if (!isTelegramApp) { // ✅ استخدام isTelegramApp التي تم تحديدها مسبقًا
-      setIsLoading(false); // ✅ يجب تحديث isLoading حتى لو لم يكن Telegram App
+    if (!isTelegramApp) {
+      setIsLoading(false);
       return;
     }
 
-
-    // ✅ محاولة استرجاع `telegramId` من `sessionStorage` أو `localStorage`
     const storedTelegramId = sessionStorage.getItem("telegramId") || localStorage.getItem("telegramId");
     if (storedTelegramId) {
       setTelegramId(storedTelegramId);
@@ -90,11 +88,11 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     }
 
-    initializeTelegram(); // ✅ استدعاء initializeTelegram مباشرة بدون تأخير
-  }, [initializeTelegram, isTelegramApp]); // ✅ إضافة isTelegramApp هنا
+    initializeTelegram();
+  }, [initializeTelegram, isTelegramApp]);
 
 
-  const value: TelegramContextType = { // ✅ إنشاء كائن القيمة بشكل صحيح
+  const value: TelegramContextType = {
     telegramId,
     isTelegramReady,
     isLoading,

@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { AppProps } from 'next/app'
-import { useRouter, Router } from 'next/router' // ✅ استيراد Router بدلاً من NextRouter
+import { useRouter, Router } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
@@ -11,14 +11,22 @@ import { useTelegram } from '../context/TelegramContext'
 import React from 'react'
 
 interface AppContentProps extends AppProps {
-    router: Router; // ✅ استخدام النوع Router بدلاً من NextRouter
+    router: Router;
 }
 
 export function AppContent({ Component, pageProps, router }: AppContentProps) {
-  console.log("AppContent: Checking window.Telegram (at start):", window.Telegram);
-  console.log("AppContent: Checking window.Telegram.WebApp (at start):", window.Telegram?.WebApp);
+  // ✅ فحص window.Telegram في بداية AppContent (جانب العميل فقط)
+  const isClient = useRef(false); // مرجع لتتبع ما إذا كنا في جانب العميل
+  useEffect(() => {
+    isClient.current = true; // الآن نحن في جانب العميل
+    if (typeof window !== 'undefined') {
+      console.log("AppContent (Client-side): Checking window.Telegram (at start):", window.Telegram);
+      console.log("AppContent (Client-side): Checking window.Telegram.WebApp (at start):", window.Telegram?.WebApp);
+    }
+  }, []);
 
-  const { telegramId } = useTelegram() // ✅ Keep useTelegram here
+
+  const { telegramId } = useTelegram()
   const [errorState, setErrorState] = useState<string | null>(null)
   const [isAppLoaded, setIsAppLoaded] = useState(false)
   const [pagesLoaded, setPagesLoaded] = useState(false)
@@ -111,22 +119,19 @@ export function AppContent({ Component, pageProps, router }: AppContentProps) {
 }
 
 function MyApp({ Component, pageProps, router }: AppProps) {
-  console.log("MyApp: Checking window.Telegram (before TelegramProvider):", typeof window !== 'undefined' ? window.Telegram : 'window غير مُعرّف');
-  console.log("MyApp: Checking window.Telegram.WebApp (before TelegramProvider):", typeof window !== 'undefined' && window.Telegram ? window.Telegram.WebApp : 'window.Telegram غير مُعرّف');
+  // ✅ فحص window.Telegram في بداية MyApp (جانب العميل فقط)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log("MyApp (Client-side): Checking window.Telegram (before TelegramProvider):", window.Telegram);
+      console.log("MyApp (Client-side): Checking window.Telegram.WebApp (before TelegramProvider):", window.Telegram?.WebApp);
+    }
+  }, []);
 
-  return ( // ✅ Always render TelegramProvider
+
+  return (
     <TelegramProvider>
-      {/* Conditionally render children of TelegramProvider based on window */}
-      {typeof window !== 'undefined' ? (
-        <>
-          {/* Temporarily remove TonConnectUIProvider for debugging */}
-          {/* <TonConnectUIProvider manifestUrl="..."></TonConnectUIProvider> */}
-            <AppContent Component={Component} pageProps={pageProps} router={router} />
-          {/* </TonConnectUIProvider> */}
-        </>
-      ) : (
-        <AppContent Component={Component} pageProps={pageProps} router={router} /> // Render AppContent even on server (without TonConnectUIProvider for now)
-      )}
+      {/* لا تقم بالعرض الشرطي لمحتوى TelegramProvider بناءً على window هنا */}
+      <AppContent Component={Component} pageProps={pageProps} router={router} />
     </TelegramProvider>
   );
 }
