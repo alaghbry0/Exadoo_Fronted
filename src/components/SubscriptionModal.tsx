@@ -165,6 +165,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                             loading={loading}
                             telegramId={telegramId}
                             handlePayment={handlePayment}
+                            handleTonPayment={handleTonPayment} // ✅ تمرير handleTonPayment هنا
                         />
                         <PaymentButtons
                             loading={loading}

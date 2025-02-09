@@ -10,17 +10,22 @@ type SubscriptionPlan = {
   color: string
 }
 
-const SubscriptionPlanCard = ({
-  plan,
-  loading,
-  telegramId,
-  handlePayment
-}: {
+// ✅ تعديل: إضافة handleTonPayment إلى أنواع props لـ SubscriptionPlanCard
+type SubscriptionPlanCardProps = {
   plan: SubscriptionPlan
   loading: boolean
   telegramId: string | null
   handlePayment: () => void
-}) => {
+  handleTonPayment: () => void; // ✅ إضافة handleTonPayment هنا
+}
+
+const SubscriptionPlanCard = ({
+  plan,
+  loading,
+  telegramId,
+  handlePayment,
+  handleTonPayment // ✅ إضافة handleTonPayment هنا في props
+}: SubscriptionPlanCardProps) => {
   return (
     <div className="p-4 h-[calc(74vh-56px)] flex flex-col overflow-y-auto pb-12">
       <div className="space-y-4 flex-1">
@@ -49,7 +54,13 @@ const SubscriptionPlanCard = ({
       </div>
 
       {/* 🔹 خيارات الدفع */}
-      <PaymentButtons loading={loading} telegramId={telegramId} handlePayment={handlePayment} />
+      {/* ✅ تعديل: تمرير handleTonPayment إلى PaymentButtons */}
+      <PaymentButtons
+          loading={loading}
+          telegramId={telegramId}
+          handlePayment={handlePayment}
+          handleTonPayment={handleTonPayment} // ✅ تمرير handleTonPayment هنا
+      />
     </div>
   )
 }
