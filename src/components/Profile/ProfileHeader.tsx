@@ -15,14 +15,14 @@ interface ProfileHeaderProps {
 
 
 export default function ProfileHeader({ fullName, username, profile_photo, joinDate }: ProfileHeaderProps) {  // ✅ Use the new prop type
-    const defaultProfile = '/default-profile.png'
-    const [imageSrc, setImageSrc] = useState(defaultProfile)
+    // const defaultProfile = '/default-profile.png' // ✅ قم بتعليق أو حذف هذا السطر
+    const [imageSrc, setImageSrc] = useState(profile_photo || ''); // ✅ استخدم profile_photo كقيمة أولية و '' كقيمة افتراضية
 
     useEffect(() => {
         if (profile_photo?.startsWith('https://api.telegram.org')) { // ✅ Use profile_photo prop
             setImageSrc(profile_photo) // ✅ Use profile_photo prop
         } else {
-            setImageSrc(defaultProfile)
+            setImageSrc(profile_photo || ''); // ✅ استخدم profile_photo أو سلسلة فارغة إذا لم يكن هناك صورة
         }
     }, [profile_photo]) // ✅ Use profile_photo prop
 
@@ -38,14 +38,14 @@ export default function ProfileHeader({ fullName, username, profile_photo, joinD
                     whileHover={{ scale: 1.05 }}
                 >
                     <Image
-                        src={imageSrc}
+                        src={imageSrc || '/logo-288.png'} // ✅ استخدم imageSrc أو شعار افتراضي بدلاً من defaultProfile
                         alt="Profile"
                         width={80}
                         height={80}
                         className="object-cover rounded-full"
                         priority
                         unoptimized // ✅ إضافة هذه الخاصية
-                        onError={() => setImageSrc(defaultProfile)}
+                        onError={() => setImageSrc('/logo-288.png')} // ✅ في حالة الخطأ، استخدم الشعار الافتراضي
                     />
                     <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700]/20 to-[#2390f1]/20 backdrop-blur-[2px]" />
                 </motion.div>

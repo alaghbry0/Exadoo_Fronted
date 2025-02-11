@@ -1,9 +1,10 @@
+// src/types.ts
 export type UserProfile = {
   telegram_id?: number;
   full_name?: string;
   username?: string | null;
   profile_photo?: string;
-  join_date?: string;
+  join_date?: string | null; // ✅ تم التعديل هنا ليصبح string | null
   subscriptions?: Subscription[];
 };
 

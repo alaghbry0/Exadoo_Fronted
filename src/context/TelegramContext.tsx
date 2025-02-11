@@ -1,3 +1,4 @@
+//-TelegramContext.tsx
 'use client';
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useUserStore } from "../stores/zustand/userStore";
@@ -34,9 +35,15 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, []);
 
+    // ✅ Retry mechanism with useCallback and useRef - **بعد تعريف clearRetryTimeout**
+    const retryInitDataFetch: () => void = useCallback<() => void>(() => { // ✅ إضافة تعليق نوع صريح "(): void"
+        console.log("TelegramContext: retryInitDataFetch - Attempting to fetch initDataUnsafe again in 1 seconds...");
+        retryTimeoutRef.current = window.setTimeout(fetchTelegramUserData, 1000);
+      }, []); // ❌ تم إزالة fetchTelegramUserData من قائمة التبعيات
 
-    // ✅ تعريف fetchTelegramUserData - **بعد تعريف clearRetryTimeout**
-    const fetchTelegramUserData = useCallback<() => void>((): void => {
+
+    // ✅ تعريف fetchTelegramUserData - **بعد تعريف clearRetryTimeout و retryInitDataFetch**
+    const fetchTelegramUserData: () => void = useCallback<() => void>((): void => { // ✅ إضافة تعليق نوع صريح "(): void"
         console.log("TelegramContext: fetchTelegramUserData - Function called");
         console.log("TelegramContext: fetchTelegramUserData - isTelegramAppRef.current:", isTelegramAppRef.current);
 
@@ -82,14 +89,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         }
 
         retryInitDataFetch();
-     }, [setUserData, clearRetryTimeout/*, retryInitDataFetch - REMOVED FROM DEPENDENCIES */]); // ✅ تم إزالة retryInitDataFetch من قائمة التبعيات
-
-
-    // ✅ Retry mechanism with useCallback and useRef - **بعد تعريف fetchTelegramUserData و clearRetryTimeout**
-    const retryInitDataFetch = useCallback<() => void>(() => {
-        console.log("TelegramContext: retryInitDataFetch - Attempting to fetch initDataUnsafe again in 1 seconds...");
-        retryTimeoutRef.current = window.setTimeout(fetchTelegramUserData, 1000);
-    }, [fetchTelegramUserData]); // ✅ إضافة fetchTelegramUserData كـ dependency
+     }, [setUserData, clearRetryTimeout]); // ✅ تم إزالة retryInitDataFetch من قائمة التبعيات
 
 
     useEffect(() => {
