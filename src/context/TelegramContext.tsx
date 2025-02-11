@@ -101,21 +101,18 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       setIsTelegramApp(isClientSideTelegramApp);
       isTelegramAppRef.current = isClientSideTelegramApp;
       console.log("TelegramContext: useEffect 1 - isTelegramApp set to:", isClientSideTelegramApp);
-      console.log("TelegramContext: useEffect 1 - window.Telegram:", window.Telegram); // ✅ إضافة هذا السطر
-      console.log("TelegramContext: useEffect 1 - window.Telegram?.WebApp:", window.Telegram?.WebApp); // ✅ إضافة هذا السطر
+      console.log("TelegramContext: useEffect 1 - window.Telegram:", window.Telegram);
+      console.log("TelegramContext: useEffect 1 - window.Telegram?.WebApp:", window.Telegram?.WebApp);
+
+      // ✅ استدعاء fetchTelegramUserData هنا **بعد** التأكد من Telegram WebApp
+      console.log("TelegramContext: useEffect 1 - Calling fetchTelegramUserData after setting isTelegramAppRef");
+      fetchTelegramUserData();
     }, 200); // Delay of 200 milliseconds
-  }, []);
-
-
-  useEffect(() => {
-    console.log("TelegramContext: useEffect 2 - Calling fetchTelegramUserData on component mount");
-    fetchTelegramUserData();
     return () => {
-      console.log("TelegramContext: useEffect 2 - Component unmounted, clearing retry timeout");
+      console.log("TelegramContext: useEffect 1 - Component unmounted, clearing retry timeout");
       clearRetryTimeout();
     };
   }, [fetchTelegramUserData, clearRetryTimeout]);
-
 
   const value: TelegramContextType = {
     isTelegramReady,
