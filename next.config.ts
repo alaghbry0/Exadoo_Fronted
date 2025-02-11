@@ -32,6 +32,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*', // ✅ توجيه أي طلب يبدأ بـ /api/ إلى TonAPI
+        destination: 'https://tonapi.io/v1/:path*', // نطاق TonAPI المستهدف
+      },
+    ];
+  },
   webpack: (config: any, { isServer }: { isServer: boolean }) => {
     if (isServer) {
       config.resolve.fallback = { fs: false }; // ✅ تعطيل `fs` لمنع أخطاء الخادم
