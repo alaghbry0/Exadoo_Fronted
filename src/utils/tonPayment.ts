@@ -1,6 +1,5 @@
 import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
-import { useUserStore } from '../stores/zustand/userStore'; // ✅ استيراد userStore لاستخدام بيانات المستخدم
 
 // ✅ تعريف واجهة JettonBalance (مثال - قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
 interface JettonBalance {
@@ -20,9 +19,8 @@ interface JettonApiResponse {
 }
 
 
-// ✅ تحديث getUserJettonWallet لاستخدام v2 من TonAPI (بدون تغيير)
+// ✅ تحديث getUserJettonWallet لاستخدام v2 من TonAPI
 export const getUserJettonWallet = async (userTonAddress: string) => {
-    // ... (نفس الكود السابق لـ getUserJettonWallet) ...
     try {
         const response = await fetch(`https://tonapi.io/v2/accounts/${userTonAddress}/jettons`);
         if (!response.ok) {
@@ -48,9 +46,8 @@ export const getUserJettonWallet = async (userTonAddress: string) => {
     }
 };
 
-// ✅ تحديث getBotJettonWallet لاستخدام v2 من TonAPI (بدون تغيير)
+// ✅ تحديث getBotJettonWallet لاستخدام v2 من TonAPI
 export const getBotJettonWallet = async (botTonAddress: string) => {
-    // ... (نفس الكود السابق لـ getBotJettonWallet) ...
     try {
         const response = await fetch(`https://tonapi.io/v2/accounts/${botTonAddress}/jettons`);
         if (!response.ok) {
@@ -76,48 +73,16 @@ export const getBotJettonWallet = async (botTonAddress: string) => {
     }
 };
 
-// ✅ تحديث createJettonTransferPayload لتضمين بيانات المستخدم في payload
-export const createJettonTransferPayload = (
-    recipientAddress: string | null,
-    amount: bigint,
-    planId: string, // ✅ إضافة planId كمعامل
-    telegramId: string | null, // ✅ إضافة telegramId كمعامل
-    telegramUsername: string | null, // ✅ إضافة telegramUsername كمعامل
-    fullName: string | null, // ✅ إضافة fullName كمعامل
-    userWallet: string | null, // ✅ إضافة userWallet كمعامل
-    paymentId: string // ✅ إضافة paymentId كمعامل
-) => {
+// ✅ تحديث createJettonTransferPayload - تم تصحيح OP Code لتحويل خارجي!
+export const createJettonTransferPayload = (recipientAddress: string | null, amount: bigint) => {
     if (!recipientAddress) {
         throw new Error("❌ recipientAddress مفقود أو غير صالح");
     }
-
-    if (!planId) {
-        throw new Error("❌ planId مفقود"); // ✅ التحقق من وجود planId
-    }
-
-    if (!telegramId) {
-        throw new Error("❌ telegramId مفقود"); // ✅ التحقق من وجود telegramId
-    }
-
 
     try {
         console.log(`✅ إنشاء حمولة تحويل Jetton للمستلم: ${recipientAddress}`);
 
         const recipientTonAddress = Address.parse(recipientAddress);
-
-        // ✅ إنشاء Payment ID فريد
-        const uniquePaymentId = paymentId;
-
-        // ✅ تخزين البيانات الإضافية في Cell
-        const additionalDataCell = beginCell()
-            .storeStringTail(planId)         // ✅ نوع الخطة
-            .storeStringTail(telegramId || "")     // ✅ معرف تيليجرام (التعامل مع null)
-            .storeStringTail(telegramUsername || "") // ✅ اسم المستخدم على تيليجرام (التعامل مع null)
-            .storeStringTail(fullName || "")       // ✅ الاسم الكامل للمستخدم (التعامل مع null)
-            .storeStringTail(userWallet || "")     // ✅ عنوان محفظة المستخدم (التعامل مع null)
-            .storeStringTail(uniquePaymentId)     // ✅ Payment ID فريد
-            .storeUint(Math.floor(Date.now() / 1000), 32) // ✅ الطابع الزمني للمعاملة
-            .endCell();
 
 
         return beginCell()
@@ -126,8 +91,9 @@ export const createJettonTransferPayload = (
             .storeCoins(amount) // المبلغ بوحدات nanoJettons
             .storeAddress(recipientTonAddress) // عنوان المستلم
             .storeAddress(null) // عدم تحديد response_destination
-            .storeBit(1) // تحديد أن هناك custom_payload
-            .storeRef(additionalDataCell) // تضمين البيانات الإضافية
+            .storeBit(0) // عدم استخدام custom_payload
+            .storeCoins(0) // forward_ton_amount يجب أن يكون 0
+            .storeBit(0) // عدم استخدام forward_payload
             .endCell()
             .toBoc()
             .toString("base64");
@@ -137,12 +103,10 @@ export const createJettonTransferPayload = (
     }
 };
 
-// ✅ تصحيح تعريف handleTonPayment ليتوافق مع نوع setTariffId من Zustand
 export const handleTonPayment = async (
     tonConnectUI: TonConnectUI,
     setPaymentStatus: React.Dispatch<React.SetStateAction<string | null>>,
-    setTariffId: (tariffId: string | null) => void, // ✅ تم التصحيح:  (tariffId: string | null) => void
-    planId: number
+    setTariffId: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
     if (typeof setPaymentStatus !== "function" || typeof setTariffId !== "function") {
         console.error("❌ دوال الحالة غير صالحة!");
@@ -202,30 +166,7 @@ export const handleTonPayment = async (
 
         try {
             console.log(`✅ إنشاء حمولة تحويل Jetton للمستلم: ${recipientJettonWalletAddress}`);
-
-            // ✅ استرجاع بيانات المستخدم من Zustand Store
-            const userStore = useUserStore.getState();
-            const telegramId = userStore.telegramId;
-            const telegramUsername = userStore.telegramUsername;
-            const fullName = userStore.fullName;
-            const userWallet = userTonAddress; // ✅ استخدام userTonAddress هنا
-
-            // ✅ إنشاء Payment ID فريد
-            const paymentId = `USDT_PAYMENT_${Date.now()}`;
-
-
-            // ✅ استدعاء createJettonTransferPayload مع جميع البيانات
-            const payloadBase64 = createJettonTransferPayload(
-                recipientJettonWalletAddress,
-                amountInNanoJettons,
-                planId.toString(), // ✅ تمرير planId
-                telegramId,         // ✅ تمرير telegramId
-                telegramUsername,     // ✅ تمرير telegramUsername
-                fullName,           // ✅ تمرير fullName
-                userWallet,         // ✅ تمرير userWallet
-                paymentId           // ✅ تمرير paymentId
-            );
-
+            const payloadBase64 = createJettonTransferPayload(botTonAddress, amountInNanoJettons);
 
             console.log("🔹 Payload Base64:", payloadBase64);
 
@@ -247,9 +188,9 @@ export const handleTonPayment = async (
             setPaymentStatus("success");
             console.log("✅ تم الدفع بنجاح باستخدام USDT!");
 
-            setTariffId(planId.toString()); // ✅ استخدام planId.toString() للتناسق
-            console.log("✅ معرف التعريفة بعد الدفع:", planId);
-        } catch (error: unknown) { // ✅ تعديل نوع الخطأ هنا إلى any أو unknown أو Error
+            setTariffId("test_tariff_id");
+            console.log("✅ معرف التعريفة بعد الدفع: test_tariff_id");
+        } catch (error:  unknown) { // ✅  تعديل نوع الخطأ هنا إلى any أو unknown أو Error
             console.error("❌ فشل الدفع:", error);
             setPaymentStatus("failed");
         }
