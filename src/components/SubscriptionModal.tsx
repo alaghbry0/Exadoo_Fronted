@@ -9,6 +9,9 @@ import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPl
 import PaymentButtons from '../components/SubscriptionModal/PaymentButtons'
 import { useTonConnectUI } from '@tonconnect/ui-react';
 
+// حذف الأسطر غير المستخدمة
+// import { Cell, Address } from '@ton/core';
+
 // استيراد الدوال من الملف الجديد
 import { handleTonPayment } from '../utils/tonPayment'; // ✅ استيراد handleTonPayment من الملف الجديد
 
@@ -34,6 +37,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     const [loading, setLoading] = useState(false)
     const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
    const [tonConnectUI] = useTonConnectUI();
+    // const [, setPaymentStatus] = useState<string | null>('idle'); // ✅ إزالة paymentStatus من التعريف (متغير غير مستخدم) - تم التعليق مؤقتًا
     const [, setPaymentStatus] = useState<string | null>('idle'); // ✅ إزالة paymentStatus من التعريف (متغير غير مستخدم)
 
 
