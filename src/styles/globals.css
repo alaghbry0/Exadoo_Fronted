@@ -53,3 +53,18 @@ body {
 .animate-progress-pulse {
   animation: progress-pulse 1.5s ease-in-out infinite;
 }
+
+[dir='rtl'] .bg-[#f8fbff] { /* مثال: تعديل تنسيق خلفية العنصر في وضع RTL */
+  text-align: right; /* محاذاة النص إلى اليمين */
+}
+
+[dir='rtl'] .text-right { /* مثال: تعديل فئة `text-right` لتصبح `text-left` في وضع RTL */
+  text-align: left !important; /* عكس المحاذاة إلى اليسار في وضع RTL */
+}
+
+[dir='rtl'] .pr-2 { /* مثال: عكس الهوامش اليمنى إلى هوامش يسرى في وضع RTL */
+  padding-right: 0 !important;
+  padding-left: 2 !important; /* استخدام هامش يسار بدلاً من هامش يمين في وضع RTL */
+}
+
+/* ... يمكنك إضافة المزيد من القواعد لتعديل التنسيق والموضع في وضع RTL حسب الحاجة ... */
