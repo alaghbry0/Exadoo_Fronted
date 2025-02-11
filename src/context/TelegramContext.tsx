@@ -86,6 +86,8 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     } else {
       console.log("TelegramContext: fetchTelegramUserData - tg.initDataUnsafe or tg.initDataUnsafe.user is missing");
+      console.log("TelegramContext: fetchTelegramUserData - tg.initDataUnsafe:", tg.initDataUnsafe);
+      console.log("TelegramContext: fetchTelegramUserData - tg.initDataUnsafe?.user:", tg.initDataUnsafe?.user);
     }
 
     retryInitDataFetch();
@@ -93,13 +95,15 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
 
   useEffect(() => {
-    const isClientSideTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
-    setIsTelegramApp(isClientSideTelegramApp);
-    isTelegramAppRef.current = isClientSideTelegramApp;
-    console.log("TelegramContext: useEffect 1 - isTelegramApp set to:", isClientSideTelegramApp);
-    console.log("TelegramContext: useEffect 1 - window.Telegram:", window.Telegram); // ✅ إضافة هذا السطر
-    console.log("TelegramContext: useEffect 1 - window.Telegram?.WebApp:", window.Telegram?.WebApp); // ✅ إضافة هذا السطر
-
+    // Introduce a delay before checking for Telegram WebApp
+    setTimeout(() => {
+      const isClientSideTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
+      setIsTelegramApp(isClientSideTelegramApp);
+      isTelegramAppRef.current = isClientSideTelegramApp;
+      console.log("TelegramContext: useEffect 1 - isTelegramApp set to:", isClientSideTelegramApp);
+      console.log("TelegramContext: useEffect 1 - window.Telegram:", window.Telegram); // ✅ إضافة هذا السطر
+      console.log("TelegramContext: useEffect 1 - window.Telegram?.WebApp:", window.Telegram?.WebApp); // ✅ إضافة هذا السطر
+    }, 200); // Delay of 200 milliseconds
   }, []);
 
 
