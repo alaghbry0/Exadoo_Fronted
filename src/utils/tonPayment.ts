@@ -103,10 +103,15 @@ export const createJettonTransferPayload = (recipientAddress: string | null, amo
     }
 };
 
+// ✅ تعديل handleTonPayment لاستدعاء /api/confirm_payment المدمجة
 export const handleTonPayment = async (
     tonConnectUI: TonConnectUI,
     setPaymentStatus: React.Dispatch<React.SetStateAction<string | null>>,
-    setTariffId: React.Dispatch<React.SetStateAction<string | null>>
+    setTariffId: React.Dispatch<React.SetStateAction<string | null>>,
+    tariffId: string, // ✅ إضافة tariffId كوسيط
+    telegramId: string, // ✅ إضافة telegramId كوسيط
+    telegramUsername: string, // ✅ إضافة telegramUsername كوسيط
+    fullName: string // ✅ إضافة fullName كوسيط
 ) => {
     if (typeof setPaymentStatus !== "function" || typeof setTariffId !== "function") {
         console.error("❌ دوال الحالة غير صالحة!");
@@ -190,7 +195,33 @@ export const handleTonPayment = async (
 
             setTariffId("test_tariff_id");
             console.log("✅ معرف التعريفة بعد الدفع: test_tariff_id");
-        } catch (error:  unknown) { // ✅  تعديل نوع الخطأ هنا إلى any أو unknown أو Error
+
+            // ✅ استدعاء /api/confirm_payment المدمجة بعد نجاح الدفع
+            console.log("📞 استدعاء /api/confirm_payment لتحديث معلومات الاشتراك وبيانات المستخدم...");
+            const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, { // ✅ استدعاء /api/confirm_payment المدمجة
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tariffId: tariffId, // ✅ تمرير tariffId
+                    telegramId: telegramId, // ✅ تمرير telegramId
+                    telegramUsername: telegramUsername, // ✅ تمرير telegramUsername
+                    fullName: fullName // ✅ تمرير fullName
+                }),
+            });
+
+            if (!confirmPaymentResponse.ok) {
+                console.error("❌ فشل استدعاء /api/confirm_payment:", confirmPaymentResponse.status, confirmPaymentResponse.statusText);
+                // ✅ هنا يمكنك اختيار معالجة الخطأ، مثل عرض رسالة للمستخدم أو إعادة محاولة الاستدعاء
+            } else {
+                const confirmPaymentData = await confirmPaymentResponse.json();
+                console.log("✅ استجابة /api/confirm_payment:", confirmPaymentData);
+                // ✅ يمكنك معالجة استجابة ناجحة من /api/confirm_payment هنا إذا لزم الأمر
+            }
+
+
+        } catch (error: unknown) { // ✅  تعديل نوع الخطأ هنا إلى any أو unknown أو Error
             console.error("❌ فشل الدفع:", error);
             setPaymentStatus("failed");
         }
