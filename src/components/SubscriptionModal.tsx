@@ -8,39 +8,33 @@ import { useTelegram } from '../context/TelegramContext'
 import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
 import PaymentButtons from '../components/SubscriptionModal/PaymentButtons'
 import { useTonConnectUI } from '@tonconnect/ui-react';
+import { useUserStore } from '../stores/zustand/userStore';
 
-// حذف الأسطر غير المستخدمة
-// import { Cell, Address } from '@ton/core';
+// استيراد الدوال من utils
+import { handleTonPayment } from '../utils/tonPayment';
 
-// استيراد الدوال من الملف الجديد
-import { handleTonPayment } from '../utils/tonPayment'; // ✅ استيراد handleTonPayment من الملف الجديد
-
-// استيراد Zustand Stores التي قمنا بإنشائها
+// استيراد Zustand Stores
 import { useTariffStore } from '../stores/zustand';
 import { useProfileStore } from '../stores/profileStore';
 import { useSessionStore } from '../stores/sessionStore';
 
-
 type SubscriptionPlan = {
-    id: number
-    name: string
-    price: string
-    description: string
-    features: string[]
-    color: string
+    id: number;
+    name: string;
+    price: string;
+    description: string;
+    features: string[];
+    color: string;
 }
 
-
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
-    const { handleTelegramStarsPayment } = useTelegramPayment()
-    const { telegramId } = useTelegram()
-    const [loading, setLoading] = useState(false)
-    const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
-   const [tonConnectUI] = useTonConnectUI();
-    // const [, setPaymentStatus] = useState<string | null>('idle'); // ✅ إزالة paymentStatus من التعريف (متغير غير مستخدم) - تم التعليق مؤقتًا
-    const [, setPaymentStatus] = useState<string | null>('idle'); // ✅ إزالة paymentStatus من التعريف (متغير غير مستخدم)
-
-
+    const { handleTelegramStarsPayment } = useTelegramPayment();
+    const { telegramId } = useTelegram();
+    const { telegramUsername, fullName } = useUserStore();
+    const [loading, setLoading] = useState(false);
+    const [isTelegramAvailable, setIsTelegramAvailable] = useState(false);
+    const [tonConnectUI] = useTonConnectUI();
+    const [paymentStatus, setPaymentStatus] = useState<string | null>('idle');
 
     // استخدام Zustand Stores
     const { setTariffId } = useTariffStore();
@@ -48,57 +42,74 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     useSessionStore();
 
     useEffect(() => {
-        // ✅ تعديل console.log لعرض حالة Zustand Store كـ JSON stringified
-        console.log("Tariff Store:", JSON.stringify(useTariffStore.getState()));
-        console.log("Profile Store:", JSON.stringify(useProfileStore.getState()));
-        console.log("Session Store:", JSON.stringify(useSessionStore.getState()));
+        console.log("🔍 Zustand Stores:", {
+            TariffStore: useTariffStore.getState(),
+            ProfileStore: useProfileStore.getState(),
+            SessionStore: useSessionStore.getState()
+        });
     }, []);
-
 
     useEffect(() => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-            setIsTelegramAvailable(true)
+            setIsTelegramAvailable(true);
         }
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        console.log("🔍 Checking Telegram ID:", telegramId);
+    }, [telegramId]);
 
     const showTelegramAlert = (message: string, callback?: () => void) => {
         if (isTelegramAvailable && window.Telegram?.WebApp?.showAlert) {
-            window.Telegram.WebApp.showAlert(message, callback)
+            window.Telegram.WebApp.showAlert(message, callback);
         } else {
-            alert(message)
-            callback?.()
+            alert(message);
+            callback?.();
         }
-    }
+    };
 
     const handlePayment = async () => {
-        if (!plan || !telegramId) return
+        if (!plan) return;
 
         try {
-            setLoading(true)
-            // ✅ هنا، قبل استدعاء handleTelegramStarsPayment، قم بتعيين tariffId في Zustand Store
-            setTariffId(plan.id?.toString() ?? null); // Use optional chaining and nullish coalescing
-            await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')))
+            setLoading(true);
+            setTariffId(plan.id?.toString() ?? null);
+            await handleTelegramStarsPayment(plan.id, parseFloat(plan.price.replace(/[^0-9.]/g, '')));
         } catch (error) {
-            console.error("❌ خطأ أثناء عملية الدفع:", error)
-            showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'))
+            console.error("❌ خطأ أثناء عملية الدفع:", error);
+            showTelegramAlert('❌ فشلت عملية الدفع: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'));
         } finally {
-            setLoading(false)
-            // ✅ تعديل console.log لعرض tariffId بعد الدفع (Telegram Stars)
-            console.log("Tariff Store بعد الدفع (Telegram Stars): Tariff ID =", useTariffStore.getState().tariffId);
+            setLoading(false);
+            console.log("📢 Tariff Store بعد الدفع (Telegram Stars):", useTariffStore.getState().tariffId);
         }
-    }
+    };
 
-
-    // ✅ استبدال استدعاء handleTonPayment بالدالة المستوردة من utils/tonPayment.ts
+    // ✅ استدعاء `handleTonPayment` مع تمرير البيانات، مع جعل `telegramId` والبيانات الأخرى اختيارية
     const handleTonPaymentWrapper = async () => {
-    if (!plan) return;
-    await handleTonPayment(
-        tonConnectUI,
-        setPaymentStatus,  // ✅ تمرير دالة تحديث الحالة الصحيحة
-        () => {} // ✅ تمرير دالة فارغة كعنصر نائب للوسيط الثالث
-    );
-};
+        if (!plan) {
+            console.error("❌ فشل استدعاء handleTonPaymentWrapper: الخطة غير متاحة!");
+            showTelegramAlert("⚠️ يرجى تحديد خطة اشتراك قبل المتابعة.");
+            return;
+        }
 
+        console.log("🟢 استدعاء handleTonPaymentWrapper...");
+        console.log("🟢 البيانات المرسلة إلى handleTonPayment:", {
+            tariffId: plan.id.toString(),
+            telegramId: telegramId || "غير متوفر",
+            telegramUsername: telegramUsername || "غير متوفر",
+            fullName: fullName || "غير متوفر"
+        });
+
+        await handleTonPayment(
+            tonConnectUI,
+            setPaymentStatus,
+            setTariffId,
+            plan.id.toString(),
+            telegramId || "unknown_user",  // ✅ تعيين معرف افتراضي في حالة عدم توفر `telegramId`
+            telegramUsername || "unknown_username",  // ✅ تعيين اسم مستخدم افتراضي
+            fullName || "Unknown User"  // ✅ تعيين اسم كامل افتراضي
+        );
+    };
 
     return (
         <>
@@ -109,23 +120,23 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    dir="rtl" // ✅ إضافة dir="rtl" هنا لتوجيه التنسيق من اليمين إلى اليسار
-                    style={{ direction: 'rtl', textAlign: 'right' }} // ✅ تطبيق اتجاه RTL ومحاذاة النص على النافذة بأكملها
+                    dir="rtl"
+                    style={{ direction: 'rtl', textAlign: 'right' }}
                 >
                     <motion.div
                         className="bg-white rounded-t-2xl shadow-xl w-full max-w-lg mx-auto overflow-hidden"
-                        style={{ height: '65vh', maxHeight: 'calc(180vh - 70px)', marginBottom: '59px', direction: 'rtl', textAlign: 'right' }} // ✅  تطبيق اتجاه RTL ومحاذاة النص على الحاوية الداخلية أيضًا
+                        style={{ height: '65vh', maxHeight: 'calc(180vh - 70px)', marginBottom: '59px', direction: 'rtl', textAlign: 'right' }}
                         initial={{ y: "100%" }}
                         animate={{ y: "0%" }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", stiffness: 150, damping: 20 }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="bg-[#f8fbff] px-4 py-3 flex justify-between items-center border-b sticky top-0" style={{ direction: 'rtl' }}> {/* ✅  تعديل تنسيق div العنوان لـ RTL */}
-                            <button onClick={onClose} className="text-gray-500 hover:text-[#2390f1] transition-colors" style={{ marginLeft: 'auto', marginRight: '0' }}> {/* ✅ تعديل موضع زر الإغلاق لـ RTL */}
+                        <div className="bg-[#f8fbff] px-4 py-3 flex justify-between items-center border-b sticky top-0" style={{ direction: 'rtl' }}>
+                            <button onClick={onClose} className="text-gray-500 hover:text-[#2390f1] transition-colors" style={{ marginLeft: 'auto', marginRight: '0' }}>
                                 <FiX className="w-6 h-6" />
                             </button>
-                            <h2 className="text-base font-semibold text-[#1a202c] text-right flex-1 pr-2" style={{ textAlign: 'right', direction: 'rtl' }}>{plan.name}</h2> {/* ✅  تأكيد محاذاة العنوان لليمين وتطبيق اتجاه RTL عليه */}
+                            <h2 className="text-base font-semibold text-[#1a202c] text-right flex-1 pr-2" style={{ textAlign: 'right', direction: 'rtl' }}>{plan.name}</h2>
                         </div>
 
                         <SubscriptionPlanCard
@@ -133,15 +144,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                             loading={loading}
                             telegramId={telegramId}
                             handlePayment={handlePayment}
-                            handleTonPayment={handleTonPaymentWrapper} // ✅ استدعاء الدالة wrapper هنا
-                            // style={{ direction: 'rtl', textAlign: 'right' }} // ✅ تم حذف خاصية style هنا
+                            handleTonPayment={handleTonPaymentWrapper}
                         />
                         <PaymentButtons
                             loading={loading}
                             telegramId={telegramId}
                             handlePayment={handlePayment}
-                            handleTonPayment={handleTonPaymentWrapper} // ✅ استدعاء الدالة wrapper هنا
-                            // style={{ direction: 'rtl', textAlign: 'right' }} // ✅ تم حذف خاصية style هنا
+                            handleTonPayment={handleTonPaymentWrapper}
                         />
                     </motion.div>
                 </motion.div>
@@ -150,4 +159,4 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     )
 }
 
-export default SubscriptionModal
+export default SubscriptionModal;
