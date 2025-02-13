@@ -160,7 +160,7 @@ export const handleTonPayment = async (
 
         console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم: ${userJettonWallet}`);
 
-        const botTonAddress = "UQA5RdmmK3KM7nR9YyVc4gsAYnw-rN_bM9x2IIpwKONMByoa";
+        const botTonAddress = "UQAWb4x9KVxA51hf0rq5iRSOJRG13g_UeMTEuUELub_iy6cp";
         const recipientJettonWalletAddress = await getBotJettonWallet(botTonAddress);
         if (!recipientJettonWalletAddress) {
             console.error("❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.");
