@@ -103,12 +103,15 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         await handleTonPayment(
             tonConnectUI,
             setPaymentStatus,
-            setTariffId,
+            // ❌ Remove setTariffId from arguments in function call:
+            // setTariffId, // ✅ Add setTariffId here as the third argument - REMOVE THIS LINE
             plan.id.toString(),
             telegramId || "unknown_user",  // ✅ تعيين معرف افتراضي في حالة عدم توفر `telegramId`
             telegramUsername || "unknown_username",  // ✅ تعيين اسم مستخدم افتراضي
             fullName || "Unknown User"  // ✅ تعيين اسم كامل افتراضي
         );
+
+        setTariffId(plan.id?.toString() ?? null); // ✅ Example: Set tariffId here after Ton payment call
     };
 
     return (
@@ -152,6 +155,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                             handlePayment={handlePayment}
                             handleTonPayment={handleTonPaymentWrapper}
                         />
+
+                        {/* ✅ Display Payment Status Messages Conditionally */}
+                        <div className="mt-4 text-center">
+                            {paymentStatus === "pending" && <p>جاري معالجة الدفع...</p>}
+                            {paymentStatus === "success" && <p className="text-green-500">✅ تمت عملية الدفع بنجاح!</p>}
+                            {paymentStatus === "failed" && <p className="text-red-500">❌ فشل الدفع، يرجى المحاولة مجددًا.</p>}
+                        </div>
+
                     </motion.div>
                 </motion.div>
             )}
