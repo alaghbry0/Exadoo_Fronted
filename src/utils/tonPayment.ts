@@ -1,6 +1,5 @@
 import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
-import { v4 as uuidv4 } from 'uuid';
 
 // ✅ تعريف واجهة JettonBalance (مثال - قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
 interface JettonBalance {
@@ -77,7 +76,7 @@ export const getBotJettonWallet = async (botTonAddress: string) => {
 export const createJettonTransferPayload = (
     recipientAddress: string | null,
     amount: bigint,
-    customPayload?: string // حمولة مخصصة اختيارية
+    customPayload?: string // حمولة مخصصة اختيارية - **سيتم إزالته لاحقًا إذا لم نعد بحاجة إليه**
 ) => {
     if (!recipientAddress) {
         throw new Error("❌ recipientAddress مفقود أو غير صالح");
@@ -149,7 +148,7 @@ export const handleTonPayment = async (
             return;
         }
 
-        console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`);
+        console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`); // ✅ تسجيل عنوان محفظة المستخدم هنا
 
         const userJettonWallet = await getUserJettonWallet(userTonAddress);
         if (!userJettonWallet) {
@@ -188,12 +187,13 @@ export const handleTonPayment = async (
             recipientJettonWalletAddress
         });
 
-        // توليد معرف الدفع الفريد (UUID)
-        const paymentId = uuidv4();
-        console.log("✅ معرف الدفع الفريد:", paymentId);
 
-        // تمرير paymentId كـ customPayload للحمولة
-        const payloadBase64 = createJettonTransferPayload(botTonAddress, amountInNanoJettons, paymentId);
+        // إزالة توليد paymentId - لم نعد نستخدم UUID
+        // const paymentId = uuidv4();
+        // console.log("✅ معرف الدفع الفريد:", paymentId);
+
+        // تمرير عنوان محفظة المستخدم كـ customPayload للحمولة - **تعديل: لن نستخدم customPayload الآن**
+        const payloadBase64 = createJettonTransferPayload(botTonAddress, amountInNanoJettons/*, userTonAddress*/); // ✅ تم إزالة paymentId من هنا
         console.log("🔹 Payload Base64:", payloadBase64);
 
         const transaction = {
@@ -225,7 +225,7 @@ export const handleTonPayment = async (
         }
         console.log("✅ تم استخراج txHash (result):", txHash); // ✅ تحديث رسالة الكونسول
 
-        // إرسال بيانات الدفع إلى الخادم مع تضمين paymentId بدلاً من txHash
+        // إرسال بيانات الدفع إلى الخادم مع تضمين userTonAddress بدلاً من paymentId
         console.log("📞 استدعاء /api/confirm_payment لتحديث معلومات الاشتراك وبيانات المستخدم...");
         const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
             method: 'POST',
@@ -233,7 +233,7 @@ export const handleTonPayment = async (
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                paymentId: paymentId, // إرسال paymentId الفريد
+                userWalletAddress: userTonAddress, // ✅ إرسال userWalletAddress بدلاً من paymentId
                 planId: tariffId,
                 telegramId: telegramId,
                 telegramUsername: telegramUsername,
