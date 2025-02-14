@@ -227,19 +227,20 @@ export const handleTonPayment = async (
 
         // إرسال بيانات الدفع إلى الخادم مع تضمين userTonAddress بدلاً من paymentId
         console.log("📞 استدعاء /api/confirm_payment لتحديث معلومات الاشتراك وبيانات المستخدم...");
-        const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userWalletAddress: userTonAddress, // ✅ إرسال userWalletAddress بدلاً من paymentId
-                planId: tariffId,
-                telegramId: telegramId,
-                telegramUsername: telegramUsername,
-                fullName: fullName
-            }),
-        });
+    const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            userWalletAddress: userTonAddress,
+            planId: tariffId,
+            telegramId: telegramId,
+            telegramUsername: telegramUsername,
+            fullName: fullName,
+            webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET, // ✅ تضمين WEBHOOK_SECRET هنا
+        }),
+    });
 
         if (!confirmPaymentResponse.ok) {
             console.error("❌ فشل استدعاء /api/confirm_payment:", confirmPaymentResponse.status, confirmPaymentResponse.statusText);
