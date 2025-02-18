@@ -1,7 +1,8 @@
 import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
+import { v4 as uuidv4 } from 'uuid'; // استيراد مكتبة UUID لإنشاء orderId فريد
 
-// ✅ تعريف واجهة JettonBalance (مثال - قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
+// واجهة تعريف JettonBalance (مثال - قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
 interface JettonBalance {
     balance: string;
     wallet_address: {
@@ -18,18 +19,18 @@ interface JettonApiResponse {
     balances: JettonBalance[];
 }
 
-// ✅ تحديث getUserJettonWallet لاستخدام v2 من TonAPI
+// دالة جلب محفظة المستخدم (Jetton) باستخدام v2 من TonAPI
 export const getUserJettonWallet = async (userTonAddress: string) => {
     try {
         const response = await fetch(`https://tonapi.io/v2/accounts/${userTonAddress}/jettons`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data: JettonApiResponse = await response.json(); // ✅ تحديد نوع البيانات هنا
+        const data: JettonApiResponse = await response.json(); // تحديد نوع البيانات هنا
 
-        // ✅ البحث عن محفظة USDT باستخدام `symbol: "USD₮"`
+        // البحث عن محفظة USDT باستخدام `symbol: "USD₮"`
         const usdtJetton = data.balances.find(
-            (jetton: JettonBalance) => jetton.jetton.symbol === "USD₮" // ✅ تحديد نوع jetton هنا
+            (jetton: JettonBalance) => jetton.jetton.symbol === "USD₮"
         );
 
         if (!usdtJetton) {
@@ -45,18 +46,18 @@ export const getUserJettonWallet = async (userTonAddress: string) => {
     }
 };
 
-// ✅ تحديث getBotJettonWallet لاستخدام v2 من TonAPI
+// دالة جلب محفظة البوت (Jetton) باستخدام v2 من TonAPI
 export const getBotJettonWallet = async (botTonAddress: string) => {
     try {
         const response = await fetch(`https://tonapi.io/v2/accounts/${botTonAddress}/jettons`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data: JettonApiResponse = await response.json(); // ✅ تحديد نوع البيانات هنا
+        const data: JettonApiResponse = await response.json(); // تحديد نوع البيانات هنا
 
-        // ✅ البحث عن محفظة USDT باستخدام `symbol: "USD₮"`
+        // البحث عن محفظة USDT باستخدام `symbol: "USD₮"`
         const usdtJetton = data.balances.find(
-            (jetton: JettonBalance) => jetton.jetton.symbol === "USD₮" // ✅ تحديد نوع jetton هنا
+            (jetton: JettonBalance) => jetton.jetton.symbol === "USD₮"
         );
 
         if (!usdtJetton) {
@@ -72,11 +73,11 @@ export const getBotJettonWallet = async (botTonAddress: string) => {
     }
 };
 
-// ✅ تحديث createJettonTransferPayload - تم تصحيح OP Code لتحويل خارجي!
+// دالة إنشاء حمولة تحويل Jetton مع تضمين forward TON amount و forward payload يحتوي على التعليق (orderId)
 export const createJettonTransferPayload = (
     recipientAddress: string | null,
     amount: bigint,
-    customPayload?: string // حمولة مخصصة اختيارية - **سيتم إزالته لاحقًا إذا لم نعد بحاجة إليه**
+    orderId: string // إضافة orderId كمعامل
 ) => {
     if (!recipientAddress) {
         throw new Error("❌ recipientAddress مفقود أو غير صالح");
@@ -86,43 +87,44 @@ export const createJettonTransferPayload = (
         console.log(`✅ إنشاء حمولة تحويل Jetton للمستلم: ${recipientAddress}`);
 
         const recipientTonAddress = Address.parse(recipientAddress);
+        // بناء الخلية الأساسية لتحويل Jetton وفق معيار TEP‑74
         const cellBuilder = beginCell()
             .storeUint(0xf8a7ea5, 32) // OP Code لتحويل Jetton
-            .storeUint(0, 64) // Query ID
-            .storeCoins(amount) // المبلغ بوحدات nanoJettons
+            .storeUint(0, 64)         // Query ID
+            .storeCoins(amount)       // المبلغ بوحدات nanoJettons
             .storeAddress(recipientTonAddress) // عنوان المستلم
-            .storeAddress(null); // عدم تحديد response_destination
+            .storeAddress(null);      // response_destination (يمكن تعديله حسب الحاجة)
 
-        if (customPayload) {
-            const payloadBuffer = Buffer.from(customPayload, "utf-8");
-            const payloadCell = beginCell(); // خلية جديدة للحمولة المرجعية
-            payloadCell.storeBuffer(payloadBuffer); // تخزين الحمولة في الخلية الجديدة
-            const payloadRef = payloadCell.endCell(); // إنهاء الخلية للحمولة
+        // لا نستخدم custom_payload هنا؛ لذا نضع علمه على false
+        cellBuilder.storeBit(false);
 
-            cellBuilder.storeBit(true); // تفعيل custom_payload
-            cellBuilder.storeRef(payloadRef); // ✅ تخزين الحمولة كـ مرجع (storeRef)
-        } else {
-            cellBuilder.storeBit(false); // عدم وجود custom_payload
-        }
+        // ضبط forward_ton_amount على قيمة غير صفرية (مثلاً 0.01 TON)
+        cellBuilder.storeCoins(toNano("0.01"));
+
+        // استخدام forward payload لنقل التعليق:
+        cellBuilder.storeBit(true);
+        cellBuilder.storeRef(
+            beginCell()
+                .storeUint(0x00000000, 32) // OP Code للتعليق النصي (0)
+                .storeStringTail(`orderId:${orderId}`) // تخزين orderId كسلسلة نصية
+                .endCell()
+        );
 
         return cellBuilder
-            .storeCoins(0) // forward_ton_amount يجب أن يكون 0
-            .storeBit(0) // عدم استخدام forward_payload
             .endCell()
             .toBoc()
             .toString("base64");
-
-    } catch (error: unknown) { // ✅ تحديد نوع الخطأ كـ unknown
+    } catch (error: unknown) {
         console.error("❌ خطأ أثناء إنشاء حمولة تحويل Jetton:", error);
-        let errorMessage = "❌ فشل إنشاء حمولة تحويل Jetton: حدث خطأ غير معروف"; // رسالة خطأ افتراضية
-        if (error instanceof Error) { // ✅ التحقق مما إذا كان الخطأ نسخة من Error
-            errorMessage = `❌ فشل إنشاء حمولة تحويل Jetton: ${error.message}`; // ✅ الآن الوصول إلى error.message آمن
+        let errorMessage = "❌ فشل إنشاء حمولة تحويل Jetton: حدث خطأ غير معروف";
+        if (error instanceof Error) {
+            errorMessage = `❌ فشل إنشاء حمولة تحويل Jetton: ${error.message}`;
         }
         throw new Error(errorMessage);
     }
 };
 
-// ✅ تعديل handleTonPayment لاستدعاء /api/confirm_payment المدمجة
+// دالة handleTonPayment التي تتضمن إنشاء orderId وإرسال المعاملة وتأكيدها مع إرسال بيانات الدفع إلى الخادم
 export const handleTonPayment = async (
     tonConnectUI: TonConnectUI,
     setPaymentStatus: React.Dispatch<React.SetStateAction<string | null>>,
@@ -134,7 +136,7 @@ export const handleTonPayment = async (
     if (typeof setPaymentStatus !== "function") {
         console.error("❌ دالة الحالة setPaymentStatus غير صالحة!");
         return;
-    }
+    };
 
     setPaymentStatus("pending");
 
@@ -146,111 +148,101 @@ export const handleTonPayment = async (
             console.error("❌ لم يتم العثور على محفظة TON متصلة!");
             setPaymentStatus("failed");
             return;
-        }
+        };
 
-        console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`); // ✅ تسجيل عنوان محفظة المستخدم هنا
+        console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`);
 
         const userJettonWallet = await getUserJettonWallet(userTonAddress);
         if (!userJettonWallet) {
             console.warn("🚨 المستخدم لا يملك محفظة USDT على TON.");
             setPaymentStatus("failed");
             return;
-        }
-
+        };
         console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم: ${userJettonWallet}`);
 
-        const botTonAddress = "UQCYOYEPtRhdKdR84obKyHZ7KdmVRZGQsLgaxxjI8AlPemHG";
+        const botTonAddress = "UQCYOYEPtRhdKdR84obKyHZ7KdmVRZGQsLgaxxjI8AlPemHG"; // يجب استبدال هذا بعنوان محفظة البوت الحقيقي
         const recipientJettonWalletAddress = await getBotJettonWallet(botTonAddress);
         if (!recipientJettonWalletAddress) {
             console.error("❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.");
             setPaymentStatus("failed");
             return;
-        }
-
+        };
         console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
 
         // تحويل المبلغ إلى nanoJettons (1 USDT = 1,000,000 NanoJettons)
         const USDT_AMOUNT = 0.01; // القيمة الحالية 0.01 USDT
         const amountInNanoJettons = BigInt(USDT_AMOUNT * 10 ** 6);
-        const gasFee = toNano('0.01').toString();
+        const gasFee = toNano("0.02").toString(); // رسوم الغاز 0.02 TON
 
         if (amountInNanoJettons <= 0) {
             console.error(`❌ مبلغ غير صالح بالـ nanoJettons: ${amountInNanoJettons}`);
             setPaymentStatus("failed");
             return;
-        }
+        };
 
         console.log("🔍 بيانات الدفع:", {
             USDT_AMOUNT,
             amountInNanoJettons,
             userJettonWallet,
-            recipientJettonWalletAddress
+            recipientJettonWalletAddress,
         });
 
+        // إنشاء orderId فريد باستخدام UUID
+        const orderId = uuidv4();
+        console.log(`✅ تم إنشاء orderId: ${orderId}`);
 
-        // إزالة توليد paymentId - لم نعد نستخدم UUID
-        // const paymentId = uuidv4();
-        // console.log("✅ معرف الدفع الفريد:", paymentId);
-
-        // تمرير عنوان محفظة المستخدم كـ customPayload للحمولة - **تعديل: لن نستخدم customPayload الآن**
-        const payloadBase64 = createJettonTransferPayload(botTonAddress, amountInNanoJettons/*, userTonAddress*/); // ✅ تم إزالة paymentId من هنا
+        // إنشاء payload باستخدام الدالة المعدلة
+        const payloadBase64 = createJettonTransferPayload(botTonAddress, amountInNanoJettons, orderId);
         console.log("🔹 Payload Base64:", payloadBase64);
 
+        // بناء المعاملة مع تضمين الـ payload
         const transaction = {
             validUntil: Math.floor(Date.now() / 1000) + 600, // صلاحية 10 دقائق
             messages: [
                 {
-                    address: userJettonWallet,
+                    address: userJettonWallet, // يجب أن يكون عنوان محفظة Jetton للمستخدم وليس عنوانه الرئيسي
                     amount: gasFee,
-                    payload: payloadBase64
-                }
-            ]
+                    payload: payloadBase64,
+                },
+            ],
         };
 
         console.log("🔹 بيانات المعاملة:", JSON.stringify(transaction, null, 2));
         console.log("🚀 إرسال المعاملة...");
 
         const transactionResponse = await tonConnectUI.sendTransaction(transaction);
-        setPaymentStatus("success");
         console.log("✅ تم الدفع بنجاح باستخدام USDT!");
         console.log("✅ استجابة المعاملة:", transactionResponse);
 
-        // استخراج txHash من استجابة المعاملة (إن وجد) - تم التعديل: نستخدم result بدلاً من hash (قد لا يكون txHash بشكل مباشر)
-        const txHash = transactionResponse;
-
-        if (!txHash) {
-            console.error("❌ لم يتم العثور على txHash (result) في استجابة المعاملة!"); // ✅ تحديث رسالة الخطأ
-            setPaymentStatus("failed");
-            return;
-        }
-        console.log("✅ تم استخراج txHash (result):", txHash); // ✅ تحديث رسالة الكونسول
-
-        // إرسال بيانات الدفع إلى الخادم مع تضمين userTonAddress بدلاً من paymentId
-        console.log("📞 استدعاء /api/confirm_payment لتحديث معلومات الاشتراك وبيانات المستخدم...");
-    const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            userWalletAddress: userTonAddress,
-            planId: tariffId,
-            telegramId: telegramId,
-            telegramUsername: telegramUsername,
-            fullName: fullName,
-            webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET, // ✅ تضمين WEBHOOK_SECRET هنا
-        }),
-    });
+        // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع عبر TON API
+        console.log("📞 استدعاء /api/confirm_payment لتأكيد الدفع...");
+        const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET, // تأكد من ضبط هذا المتغير بالسر الصحيح
+                userWalletAddress: userTonAddress, // عنوان محفظة TON للمستخدم
+                planId: tariffId,                // رقم الخطة كـ string (مثلاً "1")
+                amount: "0.01",                  // المبلغ الذي تم دفعه (مثلاً "0.01")
+                telegramId: telegramId,          // معرف Telegram للمستخدم
+                telegramUsername: telegramUsername, // اسم مستخدم Telegram
+                fullName: fullName,              // الاسم الكامل للمستخدم
+                orderId: orderId                 // orderId الفريد الذي تم إنشاؤه
+            }),
+        });
 
         if (!confirmPaymentResponse.ok) {
             console.error("❌ فشل استدعاء /api/confirm_payment:", confirmPaymentResponse.status, confirmPaymentResponse.statusText);
+            setPaymentStatus("failed");
+            return;
         } else {
             const confirmPaymentData = await confirmPaymentResponse.json();
             console.log("✅ استجابة /api/confirm_payment:", confirmPaymentData);
-        }
-
+        }; // Explicit semicolon here
     } catch (error: unknown) {
         console.error("❌ فشل الدفع:", error);
         setPaymentStatus("failed");
-    }
+    }; // Explicit semicolon here and closing brace for the whole function
 };
