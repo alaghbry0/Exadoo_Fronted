@@ -225,7 +225,7 @@ export const handleTonPayment = async (
                 webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET, // تأكد من ضبط هذا المتغير بالسر الصحيح
                 userWalletAddress: userTonAddress, // عنوان محفظة TON للمستخدم
                 planId: tariffId,                // رقم الخطة كـ string (مثلاً "1")
-                amount: "0.01",                  // المبلغ الذي تم دفعه (مثلاً "0.01")
+                amount: "1e-05",                  // المبلغ الذي تم دفعه (مثلاً "0.01")
                 telegramId: telegramId,          // معرف Telegram للمستخدم
                 telegramUsername: telegramUsername, // اسم مستخدم Telegram
                 fullName: fullName,              // الاسم الكامل للمستخدم
