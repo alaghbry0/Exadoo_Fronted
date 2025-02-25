@@ -4,9 +4,10 @@ import { FiZap, FiRefreshCw, FiStar } from 'react-icons/fi'
 import { Subscription } from '@/types';
 
 type SubscriptionsSectionProps = {
-  subscriptions: Subscription[]
-  handleRenew: (sub: Subscription) => void
-}
+  subscriptions: Subscription[];
+  handleRenew?: (sub: Subscription) => void;
+};
+
 
 export default function SubscriptionsSection({ subscriptions, handleRenew }: SubscriptionsSectionProps) {
   return (
@@ -27,8 +28,9 @@ export default function SubscriptionsSection({ subscriptions, handleRenew }: Sub
         {subscriptions.length > 0 ? (
           <div className="space-y-2">
             {subscriptions.map((sub) => (
-              <SubscriptionItem key={sub.id} sub={sub} handleRenew={handleRenew} />
-            ))}
+  <SubscriptionItem key={sub.id} sub={sub} handleRenew={handleRenew ?? (() => {})} />
+))}
+
           </div>
         ) : (
           <NoSubscriptionsMessage />
@@ -62,12 +64,14 @@ const SubscriptionItem = ({ sub, handleRenew }: SubscriptionItemProps) => (
           {sub.status}
         </span>
         <button
-          onClick={() => handleRenew(sub)}
-          className="p-1 bg-[#2390f1] text-white rounded-md hover:bg-[#1a75c4] transition-colors"
-          aria-label="تجديد الاشتراك"
-        >
-          <FiRefreshCw className="text-xs" />
-        </button>
+  onClick={() => handleRenew && handleRenew(sub)}
+  className="p-1 bg-[#2390f1] text-white rounded-md hover:bg-[#1a75c4] transition-colors"
+  aria-label="تجديد الاشتراك"
+>
+  <FiRefreshCw className="text-xs" />
+</button>
+
+
       </div>
     </div>
 

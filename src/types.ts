@@ -11,12 +11,15 @@ export type UserProfile = {
 export type Subscription = {
   id: number;
   name: string;
-  price: string;
-  description: string;
-  features: string[];
-  animation: object;
-  color: string;
-  expiry: string;
-  progress: number;
-  status: "نشط" | "منتهي"; // ✅ جعلها أكثر أمانًا
+  price: string | number;
+  selectedOption?: string | null;
+  description?: string;
+  features?: string[];
+  animation?: object;
+  subscriptionOptions?: string[];
+  color?: string;
+  expiry?: string;
+  progress?: number;
+  status?: "نشط" | "منتهي";
 };
+
