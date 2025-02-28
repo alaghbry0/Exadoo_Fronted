@@ -1,3 +1,4 @@
+
 // _app.tsx
 'use client'
 import React, { useEffect, useRef } from 'react'
@@ -6,7 +7,7 @@ import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
-import { motion } from 'framer-motion'
+
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useProfileStore } from '../stores/profileStore'
 import { useTariffStore } from '../stores/zustand'

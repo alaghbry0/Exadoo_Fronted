@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p $PORT",
+    "start": "next start",
     "lint": "next lint --fix",
-    "postinstall": "next build"
+    "postinstall": "next build",
+    "prepare": "next build"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.1.6",
@@ -19,6 +20,7 @@
     "@twa-dev/sdk": "^8.0.2",
     "axios": "^1.7.9",
     "flowbite": "^3.1.2",
+    "flowbite-react": "^0.10.2",
     "framer-motion": "^12.0.8",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.474.0",
@@ -32,26 +34,28 @@
     "react-loading-skeleton": "^3.5.0",
     "react-query": "^3.39.3",
     "swr": "^2.3.0",
+    "tailwindcss": "^3.4.17",
     "ton": "^13.9.0",
     "uuid": "^11.0.5",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.0.9",
     "@types/node": "^20",
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
-    "postcss": "^8.5.1",
-    "tailwindcss": "^3.4.1",
+    "postcss": "^8.5.3",
     "typescript": "^5"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
+  "packageManager": "npm@9.0.0"
 }
