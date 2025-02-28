@@ -1,11 +1,15 @@
 import { create } from 'zustand';
 
 interface TariffState {
-  tariffId: string | null; // ✅ هنا تعريف tariffId كخاصية في حالة المتجر
+  tariffId: string | null;
   setTariffId: (tariffId: string | null) => void;
+  walletAddress: string | null; // إضافة خاصية walletAddress
+  setWalletAddress: (walletAddress: string | null) => void; // دالة لتحديث العنوان
 }
 
 export const useTariffStore = create<TariffState>((set) => ({
-  tariffId: null, // ✅ القيمة الأولية لـ tariffId هي null
-  setTariffId: (tariffId) => set({ tariffId }), // ✅ دالة لتحديث قيمة tariffId في المتجر
+  tariffId: null,
+  setTariffId: (tariffId) => set({ tariffId }),
+  walletAddress: null,
+  setWalletAddress: (walletAddress) => set({ walletAddress }),
 }));

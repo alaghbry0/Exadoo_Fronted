@@ -55,3 +55,19 @@ export const getUserData = async (telegramId: string) => { // تم إضافة te
     }
     return res.json();
 };
+
+export const fetchBotWalletAddress = async () => {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/wallet`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.wallet_address;
+    } else {
+      console.error("❌ Failed to fetch wallet address");
+      return null;
+    }
+  } catch (error) {
+    console.error("❌ Error fetching wallet address:", error);
+    return null;
+  }
+};
