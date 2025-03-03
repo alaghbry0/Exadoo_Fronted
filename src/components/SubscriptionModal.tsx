@@ -1,198 +1,181 @@
-// src/components/SubscriptionModal.tsx
 'use client'
-
 import { motion } from 'framer-motion'
-import { FiX } from 'react-icons/fi'
-import { useState, useEffect } from 'react'
+import { FiX, FiCheckCircle } from 'react-icons/fi'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
-import { useTelegram } from '../context/TelegramContext'
-import SubscriptionPlanCard from '../components/SubscriptionModal/SubscriptionPlanCard'
 import { useTonConnectUI } from '@tonconnect/ui-react'
+import dynamic from 'next/dynamic'
 import { useUserStore } from '../stores/zustand/userStore'
 import { handleTonPayment } from '../utils/tonPayment'
-import { useTariffStore } from '../stores/zustand'
-import { useProfileStore } from '../stores/profileStore'
-import { useSessionStore } from '../stores/sessionStore'
+import type { SubscriptionPlan } from '@/typesPlan'
+import { useTelegram } from '../context/TelegramContext'
+import { useState } from 'react'
+import usdtAnimationData from '@/animations/usdt.json'
+import starsAnimationData from '@/animations/stars.json'
 
-type SubscriptionOption = {
-  id: number
-  duration: string
-  price: string
-}
+const Lottie = dynamic(() => import('lottie-react'), {
+  ssr: false,
+  loading: () => <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+})
 
-type SubscriptionPlan = {
-  id: number
-  name: string
-  description: string
-  features: string[]
-  color: string
-  subscriptionOptions: SubscriptionOption[]
-  selectedOption: SubscriptionOption
-}
-
-const SubscriptionModal = ({
-  plan,
-  onClose
-}: {
-  plan: SubscriptionPlan | null
-  onClose: () => void
-}) => {
+const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment } = useTelegramPayment()
   const { telegramId } = useTelegram()
   const { telegramUsername, fullName } = useUserStore()
-  const [loading, setLoading] = useState(false)
-  const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
   const [tonConnectUI] = useTonConnectUI()
   const [paymentStatus, setPaymentStatus] = useState<string | null>('idle')
-
-  const { setTariffId } = useTariffStore()
-  useProfileStore()
-  useSessionStore()
-
-  useEffect(() => {
-    console.log('🔍 Zustand Stores:', {
-      TariffStore: useTariffStore.getState(),
-      ProfileStore: useProfileStore.getState(),
-      SessionStore: useSessionStore.getState()
-    })
-  }, [])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      setIsTelegramAvailable(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    console.log('🔍 Checking Telegram ID:', telegramId)
-  }, [telegramId])
-
-  const showTelegramAlert = (message: string, callback?: () => void) => {
-    if (isTelegramAvailable && window.Telegram?.WebApp?.showAlert) {
-      window.Telegram.WebApp.showAlert(message, callback)
-    } else {
-      alert(message)
-      callback?.()
-    }
-  }
+  const [loading, setLoading] = useState(false)
 
   const handlePayment = async () => {
     if (!plan) return
-
     try {
       setLoading(true)
-      setTariffId(plan.id.toString())
       await handleTelegramStarsPayment(
         plan.id,
         parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, ''))
       )
-    } catch (error) {
-      console.error('❌ خطأ أثناء عملية الدفع:', error)
-      showTelegramAlert(
-        '❌ فشلت عملية الدفع: ' +
-          (error instanceof Error ? error.message : 'خطأ غير معروف')
-      )
+      setPaymentStatus('success')
+    } catch {
+      setPaymentStatus('failed')
     } finally {
       setLoading(false)
-      console.log(
-        '📢 Tariff Store بعد الدفع (Telegram Stars):',
-        useTariffStore.getState().tariffId
-      )
     }
   }
 
   const handleTonPaymentWrapper = async () => {
-    if (!plan) {
-      console.error('❌ فشل استدعاء handleTonPaymentWrapper: الخطة غير متاحة!')
-      showTelegramAlert('⚠️ يرجى تحديد خطة اشتراك قبل المتابعة.')
-      return
+    if (!plan) return
+    try {
+      setLoading(true)
+      await handleTonPayment(
+        tonConnectUI,
+        setPaymentStatus,
+        plan.id.toString(),
+        telegramId || 'unknown',
+        telegramUsername || 'unknown',
+        fullName || 'Unknown'
+      )
+    } finally {
+      setLoading(false)
     }
-
-    console.log('🟢 استدعاء handleTonPaymentWrapper...')
-    console.log('🟢 البيانات المرسلة إلى handleTonPayment:', {
-      tariffId: plan.id.toString(),
-      telegramId: telegramId || 'غير متوفر',
-      telegramUsername: telegramUsername || 'غير متوفر',
-      fullName: fullName || 'غير متوفر'
-    })
-
-    await handleTonPayment(
-      tonConnectUI,
-      setPaymentStatus,
-      plan.id.toString(),
-      telegramId || 'unknown_user',
-      telegramUsername || 'unknown_username',
-      fullName || 'Unknown User'
-    )
-
-    setTariffId(plan.id.toString())
   }
 
   return (
-    <>
-      {plan && (
-        <motion.div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          dir="LTR"
-        >
-          <motion.div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
-            initial={{ y: '100%' }}
-            animate={{ y: '0%' }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* رأس النافذة بخلفية متدرجة */}
-            <div
-              className="bg-gradient-to-l from-[#1a75c4] to-[#2390f1] px-6 py-4 flex items-center justify-between"
-              dir="LTR"
+    <motion.div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-2 sm:p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
+        initial={{ y: '100%', scale: 0.95 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: '100%', scale: 0.95 }}
+        transition={{
+          type: 'spring',
+          stiffness: 260,
+          damping: 25,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col max-h-[90vh]">
+          {/* Header with Sticky Close Button */}
+          <div className="sticky top-0 bg-gradient-to-r from-[#0084FF] to-[#0066CC] px-4 py-3 flex justify-between items-center z-10">
+            <h2 className="text-lg font-semibold text-white truncate">{plan?.name}</h2>
+            <button
+              onClick={onClose}
+              className="text-white/90 hover:text-white transition-colors p-1"
+              aria-label="إغلاق النافذة"
             >
-              <h2 className="text-lg font-bold text-white text-right">
-                {plan.name}
-              </h2>
-              <button
-                onClick={onClose}
-                className="text-white hover:text-gray-200 transition-colors"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
+              <FiX className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
+            {/* Price & Duration */}
+            <div className="flex items-baseline justify-between bg-blue-50 rounded-lg p-4">
+              <div className="space-y-1">
+                <span className="text-sm text-gray-600">
+                  {plan?.selectedOption.price} :سعر الخطه
+                </span>
+                <h3 className="text-2xl font-bold text-[#0084FF]"></h3>
+              </div>
+              <span className="text-sm text-gray-600">
+                الخطه: {plan?.selectedOption.duration}
+              </span>
             </div>
 
-            <div className="p-6" dir="LTR">
-              <SubscriptionPlanCard
-                plan={plan}
-                loading={loading}
-                telegramId={telegramId}
-                handlePayment={handlePayment}
-                handleTonPayment={handleTonPaymentWrapper}
-              />
+            {/* Features Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+                الميزات المتضمنة:
+              </h3>
+              <ul className="space-y-3">
+                {plan?.features?.map((feature, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    <FiCheckCircle className="text-[#0084FF] mt-1 flex-shrink-0" />
+                    <span className="text-gray-700 leading-relaxed text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
 
-              {/* تمت إزالة PaymentButtons هنا لتجنب التكرار */}
-              <div className="mt-4 text-center">
-                {paymentStatus === 'pending' && (
-                  <p className="text-blue-600 font-medium">جاري معالجة الدفع...</p>
-                )}
+          {/* Sticky Payment Section */}
+          <div className="sticky bottom-12 bg-white border-t p-5 sm:p-6 space-y-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleTonPaymentWrapper}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0084FF] to-[#0066CC] text-white rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all"
+              aria-label="الدفع باستخدام USDT"
+            >
+              <Lottie
+                animationData={usdtAnimationData}
+                className="w-6 h-6"
+              />
+              <span>الدفع عبر USDT</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handlePayment}
+              disabled={loading || !telegramId}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFC800] text-gray-900 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all ${
+                loading || !telegramId ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              aria-label="الدفع باستخدام Telegram Stars"
+            >
+              <Lottie
+                animationData={starsAnimationData}
+                className="w-6 h-6"
+              />
+              <span>
+                {loading ? 'جاري المعالجة...' : 'Telegram Stars'}
+                {!telegramId && ' (يتطلب تليجرام)'}
+              </span>
+            </motion.button>
+
+            {/* Payment Status */}
+            {paymentStatus !== 'idle' && (
+              <div className="mt-3 text-center text-sm">
                 {paymentStatus === 'success' && (
-                  <p className="text-green-600 font-bold">
-                    ✅ تمت عملية الدفع بنجاح!
-                  </p>
+                  <p className="text-green-600 font-medium">✅ تمت العملية بنجاح</p>
                 )}
                 {paymentStatus === 'failed' && (
-                  <p className="text-red-600 font-bold">
-                    ❌ فشل الدفع، يرجى المحاولة مجددًا.
-                  </p>
+                  <p className="text-red-600 font-medium">❌ فشلت عملية الدفع</p>
                 )}
               </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 

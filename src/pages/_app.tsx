@@ -1,7 +1,6 @@
-
 // _app.tsx
 'use client'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
@@ -16,7 +15,7 @@ import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
 
 const queryClient = new QueryClient()
 
-// إنشاء hook لجلب عنوان المحفظة باستخدام React Query
+// Hook لجلب عنوان المحفظة باستخدام React Query
 const useWalletAddress = () => {
   return useQuery('walletAddress', fetchBotWalletAddress, {
     retry: 3, // إعادة المحاولة ثلاث مرات في حالة الفشل
@@ -24,7 +23,7 @@ const useWalletAddress = () => {
   })
 }
 
-// إنشاء hook لجلب بيانات المستخدم من تليجرام باستخدام React Query
+// Hook لجلب بيانات المستخدم من تليجرام باستخدام React Query
 const useTelegramUserData = (telegramId: string) => {
   return useQuery(['userData', telegramId], () => getUserData(telegramId), {
     enabled: !!telegramId, // تشغيل الكويري فقط إذا كان telegramId موجودًا
@@ -35,11 +34,16 @@ const useTelegramUserData = (telegramId: string) => {
 
 function AppContent({ Component, pageProps, router }: AppProps) {
   const isClient = useRef(false)
+  const [minDelayCompleted, setMinDelayCompleted] = useState(false)
+
   useEffect(() => {
     isClient.current = true
     if (typeof window !== 'undefined') {
       console.log("AppContent (Client-side): Checking window.Telegram:", window.Telegram)
     }
+    // فرض تأخير دنيا لصفحة التحميل (مثلاً 1500 مللي ثانية)
+    const timer = setTimeout(() => setMinDelayCompleted(true), 1500)
+    return () => clearTimeout(timer)
   }, [])
 
   const nextRouter = useRouter()
@@ -95,8 +99,8 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     prefetchPages()
   }, [nextRouter])
 
-  // تحديد ما إذا كانت البيانات جاهزة
-  const isDataLoaded = !isWalletLoading && !isUserLoading
+  // تحديد جاهزية البيانات مع مرور التأخير الأدنى
+  const isDataLoaded = minDelayCompleted && !isWalletLoading && !isUserLoading
   const hasError = isWalletError || isUserError
   const errorState = walletError || userError
 

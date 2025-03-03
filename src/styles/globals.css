@@ -1,7 +1,42 @@
+/* استيراد Tailwind CSS الأساسي */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*@import "flowbite/dist/flowbite.css";
+
+/* استيراد خطوط Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;600;700&display=swap');
+
+/* تخصيص المتغيرات (Theme Customization) */
+:root {
+  /* لوحة الألوان */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #0077ff;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* إعداد الخطوط */
+  --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif';
+  --font-body: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif';
+
+  /* تخصيص المسافات */
+  --spacing-custom: 10px;
+}
+
+/* تحسين تجربة الوضع الداكن */
+.dark-mode {
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+}
+
+/* تحسين تصميم المكونات المخصصة */
 @layer components {
   .safe-area-padding {
     padding-top: env(safe-area-inset-top);
@@ -11,60 +46,76 @@
   .shadow-custom {
     box-shadow: 0 2px 15px rgba(35, 144, 241, 0.1);
   }
+
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
-
+/* تحسين تصميم جسم الصفحة */
 body {
-  font-family: 'Noto Sans Arabic', sans-serif;
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-
-/* تحسين التمرير للنوافذ المنبثقة */
-.modal-content::-webkit-scrollbar {
-  width: 4px;
+/* تحسين شريط التمرير */
+::-webkit-scrollbar {
+  width: 6px;
 }
-
-.modal-content::-webkit-scrollbar-thumb {
-  background-color: #2390f1;
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-500);
   border-radius: 4px;
 }
 
-/* تحسين safe-area للهواتف الحديثة */
-@supports (padding: max(0px)) {
-  .safe-area-padding {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+/* تحسين تجربة RTL */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+[dir="rtl"] .text-left {
+  text-align: right !important;
+}
+[dir="rtl"] .text-right {
+  text-align: left !important;
 }
 
-@layer base {
-  html {
-    font-family: 'Noto Sans Arabic', system-ui, sans-serif;
-  }
-}
-
+/* تحسين تأثيرات الحركة */
 @keyframes progress-pulse {
   0% { opacity: 1; }
   50% { opacity: 0.6; }
   100% { opacity: 1; }
 }
-
 .animate-progress-pulse {
   animation: progress-pulse 1.5s ease-in-out infinite;
 }
 
-[dir='rtl'] .bg-[#f8fbff] { /* مثال: تعديل تنسيق خلفية العنصر في وضع RTL */
-  text-align: right; /* محاذاة النص إلى اليمين */
+
+/* في ملف CSS عام */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
 }
 
-[dir='rtl'] .text-right { /* مثال: تعديل فئة `text-right` لتصبح `text-left` في وضع RTL */
-  text-align: left !important; /* عكس المحاذاة إلى اليسار في وضع RTL */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
 }
 
-[dir='rtl'] .pr-2 { /* مثال: عكس الهوامش اليمنى إلى هوامش يسرى في وضع RTL */
-  padding-right: 0 !important;
-  padding-left: 2 !important; /* استخدام هامش يسار بدلاً من هامش يمين في وضع RTL */
+@keyframes progress {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
 }
 
-/* ... يمكنك إضافة المزيد من القواعد لتعديل التنسيق والموضع في وضع RTL حسب الحاجة ... */
+/* في ملف CSS عام */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+}

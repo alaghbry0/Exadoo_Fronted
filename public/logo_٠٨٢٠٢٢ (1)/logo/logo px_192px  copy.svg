@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 192 192">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-1, .cls-2 {
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        fill: #024882;
+        filter: url(#drop-shadow-1);
+      }
+    </style>
+    <filter id="drop-shadow-1" filterUnits="userSpaceOnUse">
+      <feOffset dx="0" dy="0"/>
+      <feGaussianBlur result="blur" stdDeviation="10"/>
+      <feFlood flood-color="#000" flood-opacity=".56"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <circle class="cls-2" cx="96" cy="96" r="96"/>
+  <g>
+    <g>
+      <rect class="cls-1" x="42.5" y="54.87" width="61.52" height="19.19" rx="8.47" ry="8.47" transform="translate(-24.13 70.68) rotate(-45)"/>
+      <rect class="cls-1" x="69.64" y="82.01" width="61.52" height="19.19" rx="8.47" ry="8.47" transform="translate(-35.37 97.82) rotate(-45)"/>
+      <rect class="cls-1" x="96.78" y="109.15" width="61.52" height="19.19" rx="8.47" ry="8.47" transform="translate(-46.61 124.96) rotate(-45)"/>
+    </g>
+    <circle class="cls-1" cx="57.95" cy="107.38" r="9.93"/>
+    <circle class="cls-1" cx="84.85" cy="134.29" r="9.93"/>
+  </g>
+</svg>

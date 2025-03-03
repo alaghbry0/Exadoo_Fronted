@@ -1,200 +1,174 @@
 'use client'
-import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
-import dynamic from 'next/dynamic'
-import supportAnimation from '../animations/support.json'
-import securePaymentAnimation from '../animations/secure-payment.json'
-import subscriptionAnimation from '../animations/subscription.json'
-import React, { useState } from 'react';
-import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react';
 
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+import React from 'react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+
+import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
+import { Button, Footer } from 'flowbite-react'
+import { HiOutlineShieldCheck, HiOutlineChartBar, HiOutlineCurrencyDollar } from 'react-icons/hi'
+import Navbar from '../components/Navbar'  // استيراد مكون الـ Navbar الجديد
+
+
 
 const Home: React.FC = () => {
-    const featuresData = [
-        {
-            title: "إدارة الاشتراكات الذكية",
-            animation: subscriptionAnimation,
-            description: "تحكم كامل باشتراكاتك، تنبيهات ذكية، تحديثات فورية."
-        },
-        {
-            title: "مدفوعات آمنة",
-            animation: securePaymentAnimation,
-            description: "معاملات مشفرة عبر منصات دفع عالمية موثوقة."
-        },
-        {
-            title: "دعم فني 24/7",
-            animation: supportAnimation,
-            description: "فريق دعم متخصص متواجد لمساعدتك في أي وقت."
-        }
-    ];
+  const featuresData = [
+    {
+      icon: <HiOutlineChartBar className="w-12 h-12 text-[#0084ff]" />,
+      title: "تحليلات احترافية",
+      description: "تقارير مفصلة يومية وأسبوعية"
+    },
+    {
+      icon: <HiOutlineShieldCheck className="w-12 h-12 text-[#0084ff]" />,
+      title: "أمان مطلق",
+      description: "معاملات مشفرة بنظام TLS 1.3"
+    },
+    {
+      icon: <HiOutlineCurrencyDollar className="w-12 h-12 text-[#0084ff]" />,
+      title: "مدفوعات فورية",
+      description: "إشعارات فورية بكل المعاملات"
+    }
+  ]
 
-    const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(0);
+  return (
+    <TonConnectUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
+      <div className="min-h-screen bg-white safe-area-padding pb-16 font-inter">
+        {/* استخدام المكون المستقل للـ Navbar */}
+        <Navbar />
 
-    const currentFeature = featuresData[selectedFeatureIndex];
+        {/* Hero Section - تصميم مركّز مع عناصر محسّنة */}
+        <section className="w-full py-12 md:py-16 bg-gradient-to-br from-blue-50 to-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              {/* زر ربط المحفظة في موقع استراتيجي */}
+              <motion.div
+                className="mb-8 flex justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <TonConnectButton className="!px-6 !py-2 !text-sm !rounded-xl" />
+              </motion.div>
 
-    const handleFeatureChange = (index: number) => {
-        setSelectedFeatureIndex(index);
-    };
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight"
+              >
+                <span className="block text-blue-600 mt-2">استثمر بذكاء</span>
+                <br />
+                مع توصيات خبرائنا في إكسادوا
+              </motion.h1>
 
-    return (
-        <TonConnectUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
-            <div className="min-h-screen bg-[#f8fafc] safe-area-padding pb-16 font-cairo">
-                {/* شريط التنقل العلوي المبسط والمخصص للهاتف */}
-                <nav className="w-full py-4 bg-white/90 backdrop-blur-sm border-b border-gray-100 shadow-sm sticky top-0 z-20">
-                    <div className="container mx-auto px-4 flex justify-between items-center">
-                        <Link href="/" className="flex items-center">
-                            <svg className="w-7 h-7 mr-2 text-[#2390f1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                            <span className="text-lg font-bold text-[#2d3748]">Exaado</span>
-                        </Link>
-                        {/* روابط التنقل و زر تسجيل الدخول محذوف */}
-                    </div>
-                </nav>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-gray-600 mb-8 max-w-xl mx-auto text-base leading-relaxed"
+              >
+                وصول فوري إلى تحليلات دقيقه للأسواق وتوصيات استثمارية مدروسة
+              </motion.p>
 
-                {/* الشريط العلوي (Hero Section) المختصر والمحسن للهاتف - مع زر ربط المحفظة في الأعلى وبدون إطار */}
-                <motion.div
-                    className="w-full py-16 md:py-24 relative bg-gradient-to-b from-[#e0e7ed] to-white overflow-hidden"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                >
-                    <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url(/dot-pattern.svg)' }}></div>
-                    <div className="container mx-auto px-111 text-center relative z-10">
-                        {/* زر ربط محفظة Ton -  تم نقله إلى هنا وإزالة الإطار */}
-                        <motion.div
-                            className="flex justify-center mb-6"
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 120, damping: 15 }}
-                        >
-                            {/*  تم فصل TonConnectButton عن العناصر الداخلية - استخدم prop `buttonText` */}
-                            <TonConnectButton
-                                className={`px-5 py-1.5 bg-white text-[#2d3748] shadow-md rounded-full text-lg sm:text-xl font-bold flex items-center gap-1 hover:shadow-lg transition-all active:scale-95 motion-safe:hover:scale-103 motion-safe:active:scale-95`}
-                            />
-
-                         </motion.div>
-
-
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#2d3748] mb-6 leading-tight">
-                            جيل جديد من <span className="text-[#2390f1]">الاستثمار</span> <br className="hidden sm:block" />
-                            بين يديك
-                        </h1>
-                        <motion.p
-                            className="text-gray-700 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10"
-                            initial={{ y: 20 }}
-                            animate={{ opacity: 1 }}
-                        >
-                            توصيات دقيقة، تحليلات حصرية، وأدوات متطورة لنموك المالي.
-                        </motion.p>
-
-                        <motion.div
-                            className="flex justify-center"
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 120, damping: 15 }}
-                        >
-                            <Link href="/shop">
-                                <motion.button
-                                    className="px-8 py-3 bg-gradient-to-br from-[#facc15] to-[#eab308] text-white
-                                    rounded-full text-lg sm:text-xl font-bold flex items-center gap-2 shadow-xl hover:shadow-2xl
-                                    transition-all active:scale-95 border-2 border-white/20"
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <span className="text-base">ابدأ الآن</span>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 9l3 3V9m0 9l-3-3V15m-3-3v6m4-9H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2H9c-1 0-1.9.684-2 1.5M9 5l3 3m-3 12l3-3M15 5l3 3m-3 12l3-3" />
-                                    </svg>
-                                </motion.button>
-                            </Link>
-                        </motion.div>
-                    </div>
-                </motion.div>
-
-                {/* قسم الميزات التفاعلية - منصة عرض الميزات المحسنة للهاتف */}
-                <div className="py-16">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-[#2d3748] text-center mb-12">
-                        <span className="text-[#2390f1]">استكشف</span> ميزات Exaado
-                    </h2>
-
-                    {/* منطقة عرض الميزة المركزية المحسنة للهاتف */}
-                    <motion.div
-                        className="relative bg-white rounded-2xl p-6 md:p-10 border border-[#e6e9ed] shadow-md mx-auto max-w-md"
-                        style={{ boxShadow: '8px 8px 20px rgba(0,0,0,0.04), inset 2px 2px 4px #f0f0f0, inset -2px -2px 4px #fff' }}
-                    >
-                        {/* الرسوم المتحركة Lottie للميزة الحالية - حجم أصغر على الهاتف */}
-                        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center opacity-5 pointer-events-none">
-                            <Lottie
-                                animationData={currentFeature.animation}
-                                loop={true}
-                                className="w-full h-full max-w-[70%] max-h-[70%] object-contain"
-                            />
-                        </div>
-                        <div className="relative z-10">
-                            <AnimatePresence > {/* ✅ تم حذف exitBeforeEnter */}
-                                <motion.div
-                                    key={selectedFeatureIndex}
-                                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -30, scale: 0.9 }}
-                                    transition={{ duration: 0.3, type: "spring", stiffness: 70 }}
-                                    className="text-center"
-                                >
-                                    <h3 className="text-xl font-bold text-[#2d3748] mb-4">{currentFeature.title}</h3>
-                                    <p className="text-gray-700 text-sm leading-relaxed">{currentFeature.description}</p>
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-                    </motion.div>
-
-                    {/* عناصر تحكم التنقل بين الميزات - حجم أصغر على الهاتف */}
-                    <div className="flex justify-center mt-8 space-x-3">
-                        {featuresData.map((feature, index) => (
-                            <motion.button
-                                key={index}
-                                className={`rounded-full w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gray-300 hover:bg-gray-400 transition-colors ${selectedFeatureIndex === index ? 'bg-[#2390f1]' : ''}`}
-                                onClick={() => handleFeatureChange(index)}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* قسم دعوة إلى العمل (Call to Action) النهائي المختصر والمحسن للهاتف */}
-                <div className="container mx-auto px-4 py-24 bg-[#f0f4f8] rounded-2xl mt-16 shadow-lg text-center">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-[#2d3748] mb-8">
-                        ابدأ رحلتك نحو <span className="text-[#2390f1]">النجاح المالي</span> الآن!
-                    </h2>
-                    <p className="text-gray-700 text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-8">
-                         .انضم الى اكسادوا وابدأ استثماراتك بذكاء وفعالية
-                    </p>
-                    <motion.div
-                        className="flex justify-center"
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 120, damping: 15 }}
-                    >
-                        <Link href="/shop">
-                            <motion.button
-                                className="px-10 py-3.5 bg-gradient-to-br from-[#2390f1] to-[#1a75c4] text-white
-                                rounded-full text-lg sm:text-xl font-extrabold flex items-center gap-2 shadow-xl hover:shadow-2xl
-                                transition-all active:scale-95 border-2 border-white/20"
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <span className="text-base">ابدأ الآن</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                            </motion.button>
-                        </Link>
-                    </motion.div>
-                </div>
+              {/* زر CTA في المنتصف مع تأثيرات محسنة */}
+              <motion.div
+                className="flex justify-center"
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 120 }}
+              >
+                <Link href="/shop">
+                  <Button
+                    className="bg-gradient-to-r from-[#0084ff] to-[#0066cc] text-white px-7 py-2.5 rounded-xl
+                    hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                  >
+                    <span className="text-base font-semibold">ابدأ الآن</span>
+                  </Button>
+                </Link>
+              </motion.div>
             </div>
-        </TonConnectUIProvider>
-    )
+          </div>
+        </section>
+
+        {/* Features Section - تصميم متجاوب مع هوية محسنة */}
+        <section className="py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuresData.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -3 }}
+                  className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="mb-3 text-center">
+                    <div className="inline-flex items-center justify-center w-14 h-14 bg-[#0084ff]/10 rounded-lg">
+                      {feature.icon}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 text-center text-sm leading-relaxed">
+                    {feature.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section - تصميم مبسط بدون إشارات مجانية */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="bg-gradient-to-r from-[#0084ff] to-[#0066cc] rounded-xl p-6 text-center">
+              <h2 className="text-xl font-bold text-white mb-3">
+                انضم إلى قنواتنا المميزة
+              </h2>
+              <div className="flex justify-center gap-3">
+                <Link href="/shop">
+                  <Button color="light" className="px-5 py-2.5 rounded-lg text-sm">
+                    عرض جميع الخطط
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer - تصميم أنيق مع تفاصيل دقيقة */}
+        <Footer className="border-t border-gray-100 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col items-center justify-between py-1 md:flex-row">
+              <Footer.Copyright
+                href="/"
+                by="Exaado™"
+                year={2025}
+                className="text-gray-500 text-sm"
+              />
+              <div className="flex gap-5 mt-3 md:mt-0">
+
+              </div>
+            </div>
+          </div>
+        </Footer>
+      </div>
+
+      <style jsx global>{`
+        .ton-connect-button {
+          background: rgba(0, 132, 255, 0.1) !important;
+          color: #0084ff !important;
+          border: 1px solid rgba(0, 132, 255, 0.3) !important;
+          border-radius: 0.75rem !important;
+          padding: 0.5rem 1.25rem !important;
+          font-weight: 500 !important;
+          transition: all 0.2s ease !important;
+        }
+
+        .ton-connect-button:hover {
+          background: rgba(0, 132, 255, 0.15) !important;
+          border-color: #0084ff !important;
+        }
+      `}</style>
+    </TonConnectUIProvider>
+  )
 }
 
 export default Home

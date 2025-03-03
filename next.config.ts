@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import type { Configuration } from "webpack";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,  // ✅ تفعيل الوضع الصارم
-  compress: true,  // ✅ تمكين الضغط لتسريع التحميل
+  reactStrictMode: true, // ✅ تفعيل الوضع الصارم في React
+  compress: true, // ✅ تمكين الضغط لتسريع تحميل الصفحات
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "api.telegram.org" }, // ✅ دعم صور Telegram
@@ -11,6 +13,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 86400, // ✅ تخزين الصور في الكاش لمدة 24 ساعة
     unoptimized: true, // ✅ تعطيل تحسين الصور للسماح بتحميلها كما هي
   },
+
   async headers() {
     return [
       {
@@ -32,20 +35,24 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
   async rewrites() {
     return [
       {
-        source: '/api/:path*', // ✅ توجيه أي طلب يبدأ بـ /api/ إلى TonAPI
-        destination: 'https://tonapi.io/v1/:path*', // نطاق TonAPI المستهدف
+        source: "/api/:path*", // ✅ توجيه أي طلب يبدأ بـ /api/ إلى TonAPI
+        destination: "https://tonapi.io/v1/:path*", // ✅ نطاق TonAPI المستهدف
       },
     ];
   },
-  webpack: (config: any, { isServer }: { isServer: boolean }) => {
+
+  webpack: (config: Configuration, { isServer }: { isServer: boolean }) => {
     if (isServer) {
+      config.resolve = config.resolve || {};
       config.resolve.fallback = { fs: false }; // ✅ تعطيل `fs` لمنع أخطاء الخادم
     }
     return config;
   },
+
   env: {
     NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "", // ✅ تحميل المتغيرات البيئية من `.env`
   },

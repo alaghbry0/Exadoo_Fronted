@@ -2,7 +2,7 @@
 module.exports = {
   // تأكد من تضمين المسارات التي تحتوي على ملفات الصفحات والمكونات
   content: [
-    "./node_modules/flowbite-react/**/*.js", // Path to Flowbite React components - IMPORTANT
+    "./node_modules/flowbite/**/*.js",
      "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,46 +11,62 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
 
   ],
-  darkMode: 'class', // يمكنك استخدام 'media' أو 'class' حسب تفضيلك
   theme: {
     extend: {
-      // 1. تعريف الخطوط
-      fontFamily: {
-        // خط عربي (Cairo) مع خط لاتيني (Montserrat) أو Roboto
-        // سيستخدم المتصفح Cairo أولاً، وإن لم يكن متوفراً ينتقل إلى Montserrat وهكذا.
-        sans: ['Cairo', 'Montserrat', 'sans-serif'],
-        // يمكنك إضافة أسماء أخرى إذا أردت فصل الخطوط العربية والإنجليزية.
-        // example: heading: ['Montserrat', 'sans-serif'], body: ['Cairo', 'sans-serif']
-      },
-
-      // 2. تعريف الألوان الأساسية (الهوية البصرية)
+      // إضافة لوحة ألوان متكاملة:
       colors: {
-        // يمكنك الاكتفاء بأسماء Tailwind القياسية إن شئت، أو تعريف أسماء مخصصة.
-        // نعرّف الألوان الرئيسية للتطبيق (Primary, Secondary, Accent...)
-        primary: '#2390f1',      // اللون الأساسي (أزرق فاتح)
-        secondary: '#eab308',    // اللون الثانوي (أصفر ذهبي)
-        accent: '#facc15',       // لون مساعد (أصفر فاتح)
-        background: '#f8fafc',   // خلفية عامة
-        darkBg: '#1a202c',       // خلفية للأوضاع الداكنة
-        // أمثلة لألوان مخصصة قد تحتاجها
-        exaadoGreen: '#2E7D32',
-        exaadoBlue: '#0D47A1',
+        // اللون الأساسي: الأزرق الفاتح
+        primary: "#0077ff",
+        // يمكن إضافة ألوان تكميلية حسب الحاجة (مثال):
+        secondary: "#ff5722",
+        // مجموعة ألوان محايدة لتعزيز التباين:
+        neutral: {
+          100: "#f5f5f5",
+          200: "#eeeeee",
+          300: "#e0e0e0",
+          400: "#bdbdbd",
+          500: "#9e9e9e",
+          600: "#757575",
+          700: "#616161",
+          800: "#424242",
+          900: "#212121"
+        }
       },
-
-      // 3. تعريف خلفيات أو صور خلفية مخصصة (إن لزم الأمر)
-      backgroundImage: {
-        'pattern-modern-lines': "url('/pattern-modern-lines.svg')",
-        'pattern-modern-dots': "url('/pattern-modern-dots.svg')",
+      // تحديد الخطوط:
+      fontFamily: {
+        sans: ['"Inter"', 'sans-serif'],
+        serif: ['"Merriweather"', 'serif']
       },
-
-      // 4. تعريف مسافات مخصصة أو قيم أخرى
+      // تخصيص أحجام النصوص لتوفير تدرج هرمي واضح:
+      fontSize: {
+        xs: "0.75rem",      // 12px
+        sm: "0.875rem",     // 14px
+        base: "1rem",       // 16px
+        lg: "1.125rem",     // 18px
+        xl: "1.25rem",      // 20px
+        "2xl": "1.5rem",    // 24px
+        "3xl": "1.875rem",  // 30px
+        "4xl": "2.25rem",   // 36px
+        "5xl": "3rem"       // 48px
+      },
+      // تخصيص المسافات والهوامش:
       spacing: {
-        '111': '27.75rem', // مثال لإضافة مسافة مخصصة
-      },
-    },
+        1: "0.25rem",
+        2: "0.5rem",
+        3: "0.75rem",
+        4: "1rem",
+        5: "1.25rem",
+        6: "1.5rem",
+        8: "2rem",
+        10: "2.5rem",
+        12: "3rem",
+        16: "4rem",
+        20: "5rem"
+      }
+    }
   },
-  // 5. إضافة Plugin Flowbite
   plugins: [
-    require('flowbite/plugin'),
+    require('flowbite/plugin')
   ],
+  darkMode: 'class'
 }
