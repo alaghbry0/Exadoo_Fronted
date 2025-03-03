@@ -101,12 +101,12 @@ const LoadingPage = () => {
             className="text-center space-y-3"
           >
             <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
-              جاري تحليل الفرص الاستثمارية...
+              جاري معالجة البيانات...
             </h2>
             <div className="flex items-center justify-center gap-2">
               <span className="block w-2 h-2 bg-[#0077ff] rounded-full animate-pulse" />
               <p className="text-[#0077ff] text-sm font-medium">
-                جاري اختيار أفضل الصفقات
+                يرجى الانتظار قليلاً...
               </p>
             </div>
           </motion.div>
