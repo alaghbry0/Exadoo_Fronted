@@ -1,24 +1,25 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { HTMLAttributes } from 'react'
 
 interface CustomSpinnerProps {
   shouldReduceMotion: boolean
 }
 
 const CustomSpinner = ({ shouldReduceMotion }: CustomSpinnerProps) => {
+  // دمج الخصائص في كائن واحد مع Type assertion
+  const motionProps = {
+    animate: !shouldReduceMotion ? { rotate: 360 } : {},
+    transition: {
+      duration: 1.2,
+      repeat: Infinity,
+      ease: "linear" as const
+    },
+    className: "flex items-center justify-center"
+  }
+
   return (
-    <motion.div
-      animate={!shouldReduceMotion ? { rotate: 360 } : {}}
-      transition={{
-        duration: 1.2,
-        repeat: Infinity,
-        ease: "linear"
-      }}
-      // إصلاح خاصية className
-      {...({ className: "flex items-center justify-center" } as HTMLAttributes<HTMLElement>)}
-    >
+    <motion.div {...motionProps}>
       <div role="status">
         <svg
           aria-hidden="true"
