@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
 import { Button, Footer } from 'flowbite-react'
-import { HiOutlineShieldCheck, HiOutlineChartBar, HiOutlineCurrencyDollar } from 'react-icons/hi'
+import { HiOutlineCash, HiOutlineChartBar, HiOutlineCurrencyDollar } from 'react-icons/hi'
 import Navbar from '../components/Navbar'  // استيراد مكون الـ Navbar الجديد
 
 
@@ -19,9 +19,9 @@ const Home: React.FC = () => {
       description: "تقارير مفصلة يومية وأسبوعية"
     },
     {
-      icon: <HiOutlineShieldCheck className="w-12 h-12 text-[#0084ff]" />,
-      title: "أمان مطلق",
-      description: "معاملات مشفرة بنظام TLS 1.3"
+      icon: <HiOutlineCash className="w-12 h-12 text-[#0084ff]" />,
+      title: "سهولة الدفع",
+      description: "دفع سلس باستخدام USDT (TON)"
     },
     {
       icon: <HiOutlineCurrencyDollar className="w-12 h-12 text-[#0084ff]" />,
