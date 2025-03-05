@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
-
+import SubscriptionStatusListener from '../components/SubscriptionStatusListener';
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useProfileStore } from '../stores/profileStore'
 import { useTariffStore } from '../stores/zustand'
@@ -120,6 +120,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     <>
       <Component {...pageProps} router={router} />
       <FooterNav />
+      <SubscriptionStatusListener />
     </>
   )
 }
