@@ -34,25 +34,21 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // إعداد CSP لجميع الصفحات بحيث تسمح بالموارد المطلوبة
+        // إعداد CSP لجميع الصفحات بحيث تُسمح بالموارد المطلوبة
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
-            value:
-              "default-src 'self'; " +
-              // السماح بتحميل السكربتات من النطاق الحالي ومن telegram.org
-              "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval'; " +
-              // السماح بأنماط inline
-              "style-src 'self' 'unsafe-inline'; " +
-              // السماح باتصالات WebSocket و API إلى النطاقات المطلوبة
-              "connect-src 'self' wss://exadoo-rxr9.onrender.com https://exadoo-rxr9.onrender.com https://tonapi.io https://raw.githubusercontent.com https://bridge.tonapi.io; " +
-              // السماح بتحميل الصور من النطاق الحالي ومن api.telegram.org ومن النطاقات الأخرى المطلوبة
-              "img-src 'self' https://api.telegram.org https://wallet.tg https://bridge.tonapi.io https://public.bnbstatic.com https://static.okx.com data: https://raw.githubusercontent.com; " +
-              // السماح بتحميل الخطوط فقط من النطاق الحالي
-              "font-src 'self'; " +
-              // السماح بتضمين (iframe) من النطاقات المطلوبة، مثلاً telegram.org و wallet.tg
-              "frame-src 'self' https://telegram.org https://wallet.tg;",
+            value: [
+              "default-src 'self';",
+              "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval';",
+              "style-src 'self' 'unsafe-inline';",
+              "connect-src 'self' wss://exadoo-rxr9.onrender.com https://exadoo-rxr9.onrender.com https://tonapi.io https://raw.githubusercontent.com https://bridge.tonapi.io;",
+              // السماح بتحميل الصور من جميع المصادر باستخدام *
+              "img-src * data:;",
+              "font-src 'self';",
+              "frame-src 'self' https://telegram.org https://wallet.tg about:blank;",
+            ].join(" "),
           },
         ],
       },
