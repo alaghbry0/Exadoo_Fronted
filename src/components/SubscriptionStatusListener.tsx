@@ -1,12 +1,10 @@
 // components/SubscriptionStatusListener.tsx
 'use client';
-import React, { useEffect, useState } from 'react';
-import PaymentSuccessModal from '../components/PaymentSuccessModal';
+import React, { useEffect } from 'react';
 import { useTelegram } from '../context/TelegramContext';
 
 const SubscriptionStatusListener: React.FC = () => {
   const { telegramId } = useTelegram();
-  const [wsMessage, setWsMessage] = useState<{ invite_link?: string; message?: string } | null>(null);
 
   useEffect(() => {
     if (!telegramId) return;
@@ -23,16 +21,13 @@ const SubscriptionStatusListener: React.FC = () => {
         const data = JSON.parse(event.data);
         console.log("Received WebSocket data:", data);
         if (data.status === "active" && data.invite_link) {
-          setWsMessage({ invite_link: data.invite_link, message: data.message });
-          // تخزين البيانات في Local Storage مع توقيت الاستلام
-          localStorage.setItem(
-            'subscriptionData',
-            JSON.stringify({
-              invite_link: data.invite_link,
-              message: data.message,
-              timestamp: new Date().getTime()
-            })
-          );
+          // قم بتخزين البيانات في Local Storage مع توقيت الاستلام
+          const subscriptionData = {
+            invite_link: data.invite_link,
+            message: data.message,
+            timestamp: new Date().getTime(),
+          };
+          localStorage.setItem('subscriptionData', JSON.stringify(subscriptionData));
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -48,17 +43,7 @@ const SubscriptionStatusListener: React.FC = () => {
     };
   }, [telegramId]);
 
-  return (
-    <>
-      {wsMessage && wsMessage.invite_link && (
-        <PaymentSuccessModal
-          inviteLink={wsMessage.invite_link}
-          message={wsMessage.message || "يمكنك الآن الانضمام إلى القناة"}
-          onClose={() => setWsMessage(null)}
-        />
-      )}
-    </>
-  );
+  return null;
 };
 
 export default SubscriptionStatusListener;

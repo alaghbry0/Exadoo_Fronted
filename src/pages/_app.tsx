@@ -6,7 +6,8 @@ import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
-import SubscriptionStatusListener from '../components/SubscriptionStatusListener';
+import SubscriptionStatusListener from '../components/SubscriptionStatusListener'
+import InviteAlert from '../components/InviteAlert'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useProfileStore } from '../stores/profileStore'
 import { useTariffStore } from '../stores/zustand'
@@ -18,7 +19,7 @@ const queryClient = new QueryClient()
 // Hook لجلب عنوان المحفظة باستخدام React Query
 const useWalletAddress = () => {
   return useQuery('walletAddress', fetchBotWalletAddress, {
-    retry: 3, // إعادة المحاولة ثلاث مرات في حالة الفشل
+    retry: 3,
     refetchOnWindowFocus: false,
   })
 }
@@ -26,7 +27,7 @@ const useWalletAddress = () => {
 // Hook لجلب بيانات المستخدم من تليجرام باستخدام React Query
 const useTelegramUserData = (telegramId: string) => {
   return useQuery(['userData', telegramId], () => getUserData(telegramId), {
-    enabled: !!telegramId, // تشغيل الكويري فقط إذا كان telegramId موجودًا
+    enabled: !!telegramId,
     retry: 3,
     refetchOnWindowFocus: false,
   })
@@ -41,7 +42,6 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     if (typeof window !== 'undefined') {
       console.log("AppContent (Client-side): Checking window.Telegram:", window.Telegram)
     }
-    // فرض تأخير دنيا لصفحة التحميل (مثلاً 1500 مللي ثانية)
     const timer = setTimeout(() => setMinDelayCompleted(true), 1500)
     return () => clearTimeout(timer)
   }, [])
@@ -51,30 +51,17 @@ function AppContent({ Component, pageProps, router }: AppProps) {
   const { setUserProfile, setUserSubscriptions } = useProfileStore()
   const { setWalletAddress } = useTariffStore()
 
-  // استخدام React Query لجلب عنوان المحفظة
-  const {
-    data: walletAddress,
-    isLoading: isWalletLoading,
-    isError: isWalletError,
-    error: walletError,
-  } = useWalletAddress()
+  const { data: walletAddress, isLoading: isWalletLoading, isError: isWalletError, error: walletError } = useWalletAddress()
+  const { data: userData, isLoading: isUserLoading, isError: isUserError, error: userError } = useTelegramUserData(telegramId || '')
 
-  // استخدام React Query لجلب بيانات المستخدم
-  const {
-    data: userData,
-    isLoading: isUserLoading,
-    isError: isUserError,
-    error: userError,
-  } = useTelegramUserData(telegramId || '')
-
-  // تحديث Zustand بمجرد نجاح جلب عنوان المحفظة
+  // تحديث Zustand عند جلب عنوان المحفظة
   useEffect(() => {
     if (walletAddress) {
       setWalletAddress(walletAddress)
     }
   }, [walletAddress, setWalletAddress])
 
-  // تحديث Zustand بمجرد نجاح جلب بيانات المستخدم
+  // تحديث Zustand عند جلب بيانات المستخدم
   useEffect(() => {
     if (userData) {
       setUserProfile(userData)
@@ -82,7 +69,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     }
   }, [userData, setUserProfile, setUserSubscriptions])
 
-  // جلب الصفحات مسبقًا
+  // جلب الصفحات مسبقاً لتسريع التنقل
   useEffect(() => {
     const prefetchPages = async () => {
       try {
@@ -99,7 +86,6 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     prefetchPages()
   }, [nextRouter])
 
-  // تحديد جاهزية البيانات مع مرور التأخير الأدنى
   const isDataLoaded = minDelayCompleted && !isWalletLoading && !isUserLoading
   const hasError = isWalletError || isUserError
   const errorState = walletError || userError
@@ -120,7 +106,10 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     <>
       <Component {...pageProps} router={router} />
       <FooterNav />
+      {/* مكون WebSocket الذي يحدّث Local Storage عند وصول بيانات الاشتراك */}
       <SubscriptionStatusListener />
+      {/* مكون التنبيه (Alert) الذي يعرض إشعار الدفع ورابط الدعوة */}
+      <InviteAlert />
     </>
   )
 }
