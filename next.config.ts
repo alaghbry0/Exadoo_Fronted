@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 import type { Configuration } from "webpack";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true, // ✅ تفعيل الوضع الصارم في React
-  compress: true, // ✅ تمكين الضغط لتسريع تحميل الصفحات
+  reactStrictMode: true, // تفعيل الوضع الصارم في React
+  compress: true, // تمكين الضغط لتسريع تحميل الصفحات
 
   images: {
     remotePatterns: [
@@ -47,7 +47,8 @@ const nextConfig: NextConfig = {
               // السماح بتحميل الصور من جميع المصادر باستخدام *
               "img-src * data:;",
               "font-src 'self';",
-              "frame-src 'self' https://telegram.org https://wallet.tg about:blank;",
+              // إزالة about:blank لتجنب أخطاء CSP
+              "frame-src 'self' https://telegram.org https://wallet.tg;",
             ].join(" "),
           },
         ],
