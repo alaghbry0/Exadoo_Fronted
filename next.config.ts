@@ -34,17 +34,22 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // إضافة رأس CSP لجميع الصفحات بحيث يُسمح بتحميل السكربتات من telegram.org، وأنماط inline، واتصالات WebSocket ومنصات أخرى
+        // إعداد CSP لجميع الصفحات للسماح بالموارد المطلوبة
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
             value:
               "default-src 'self'; " +
-              "script-src 'self' https://telegram.org; " +
+              // السماح بتحميل السكربتات من نفس النطاق ومن telegram.org، مع السماح بـ unsafe-inline و unsafe-eval إن لزم الأمر
+              "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval'; " +
+              // السماح بالأنماط المضمنة
               "style-src 'self' 'unsafe-inline'; " +
-              "connect-src 'self' wss://exadoo-rxr9.onrender.com https://tonapi.io; " +
-              "img-src 'self' https://api.telegram.org data:; " +
+              // السماح باتصالات الـ API والـ WebSocket إلى الخادم الخاص بك وأيضاً TonAPI و raw.githubusercontent.com (إن احتجت)
+              "connect-src 'self' wss://exadoo-rxr9.onrender.com https://exadoo-rxr9.onrender.com https://tonapi.io https://raw.githubusercontent.com; " +
+              // السماح بتحميل الصور من نفس النطاق و api.telegram.org و raw.githubusercontent.com
+              "img-src 'self' https://api.telegram.org data: https://raw.githubusercontent.com; " +
+              // السماح بتحميل الخطوط من نفس النطاق
               "font-src 'self';",
           },
         ],
