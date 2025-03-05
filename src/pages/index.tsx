@@ -31,7 +31,7 @@ const Home: React.FC = () => {
   ]
 
   return (
-    <TonConnectUIProvider manifestUrl="https://exadooo-git-main-mohammeds-projects-3d2877c6.vercel.app/tonconnect-manifest.json">
+    <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <div className="min-h-screen bg-white safe-area-padding pb-16 font-inter">
         {/* استخدام المكون المستقل للـ Navbar */}
         <Navbar />
