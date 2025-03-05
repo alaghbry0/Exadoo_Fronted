@@ -33,6 +33,17 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // إضافة رأس CSP لجميع الصفحات للسماح باتصالات WebSocket من wss://exadoo-rxr9.onrender.com
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "default-src 'self'; connect-src 'self' wss://exadoo-rxr9.onrender.com;",
+          },
+        ],
+      },
     ];
   },
 
