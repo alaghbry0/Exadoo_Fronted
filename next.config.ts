@@ -34,13 +34,18 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // إضافة رأس CSP لجميع الصفحات للسماح باتصالات WebSocket من wss://exadoo-rxr9.onrender.com
+        // إضافة رأس CSP لجميع الصفحات بحيث يُسمح بتحميل السكربتات من telegram.org، وأنماط inline، واتصالات WebSocket ومنصات أخرى
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; connect-src 'self' wss://exadoo-rxr9.onrender.com;",
+              "default-src 'self'; " +
+              "script-src 'self' https://telegram.org; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "connect-src 'self' wss://exadoo-rxr9.onrender.com https://tonapi.io; " +
+              "img-src 'self' https://api.telegram.org data:; " +
+              "font-src 'self';",
           },
         ],
       },
@@ -59,13 +64,13 @@ const nextConfig: NextConfig = {
   webpack: (config: Configuration, { isServer }: { isServer: boolean }) => {
     if (isServer) {
       config.resolve = config.resolve || {};
-      config.resolve.fallback = { fs: false }; // ✅ تعطيل `fs` لمنع أخطاء الخادم
+      config.resolve.fallback = { fs: false }; // ✅ تعطيل fs لمنع أخطاء الخادم
     }
     return config;
   },
 
   env: {
-    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "", // ✅ تحميل المتغيرات البيئية من `.env`
+    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "", // ✅ تحميل المتغيرات البيئية من .env
   },
 };
 
