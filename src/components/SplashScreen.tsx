@@ -112,6 +112,8 @@ const LoadingPage = () => {
 </motion.h1>
           </motion.div>
 
+
+
           {/* مؤشر التحميل باستخدام CustomSpinner */}
           <div className="relative h-48 mb-8 w-full flex items-center justify-center">
             <CustomSpinner shouldReduceMotion={shouldReduceMotion} />
