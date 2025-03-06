@@ -2,22 +2,22 @@ import type { NextConfig } from "next";
 import type { Configuration } from "webpack";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true, // تفعيل الوضع الصارم في React
-  compress: true, // تمكين الضغط لتسريع تحميل الصفحات
+  reactStrictMode: true,
+  compress: true,
 
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "api.telegram.org" }, // دعم صور Telegram
-      { protocol: "https", hostname: "**" }, // السماح بأي صور خارجية
+      { protocol: "https", hostname: "api.telegram.org" },
+      { protocol: "https", hostname: "**" },
     ],
-    minimumCacheTTL: 86400, // تخزين الصور في الكاش لمدة 24 ساعة
-    unoptimized: true, // تعطيل تحسين الصور
+    minimumCacheTTL: 86400,
+    unoptimized: true,
   },
 
   async headers() {
     return [
       {
-        source: "/api/:path*", // تمكين CORS على جميع الـ API
+        source: "/api/:path*",
         headers: [
           { key: "Access-Control-Allow-Origin", value: "*" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/_next/static/(.*)", // تحسين التخزين المؤقت للملفات الثابتة
+        source: "/_next/static/(.*)",
         headers: [
           {
             key: "Cache-Control",
@@ -34,22 +34,40 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // إعداد CSP لجميع الصفحات بحيث تُسمح بالموارد المطلوبة
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
             value: [
+              // السياسات الأساسية
               "default-src 'self';",
+
+              // سياسات البرامج النصية
               "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval';",
+
+              // سياسات التنسيقات
               "style-src 'self' 'unsafe-inline';",
-              "connect-src 'self' wss://exadoo-rxr9.onrender.com https://exadoo-rxr9.onrender.com https://tonapi.io https://raw.githubusercontent.com https://bridge.tonapi.io;",
-              // السماح بتحميل الصور من جميع المصادر باستخدام *
+
+              // سياسات الاتصالات
+              "connect-src 'self'",
+              "wss://exadoo-rxr9.onrender.com",
+              "https://exadoo-rxr9.onrender.com",
+              "wss://*.render.com",
+              "https://*.render.com",
+              "https://tonapi.io",
+              "https://raw.githubusercontent.com",
+              "https://bridge.tonapi.io;",
+
+              // سياسات الصور
               "img-src * data:;",
+
+              // سياسات الخطوط
               "font-src 'self';",
-              // إزالة about:blank لتجنب أخطاء CSP
+
+              // سياسات الإطارات
               "frame-src 'self' https://telegram.org https://wallet.tg;",
-            ].join(" "),
+
+            ].join(" ").replace(/;/g, ' ').trim(),
           },
         ],
       },
@@ -59,8 +77,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path*", // توجيه أي طلب يبدأ بـ /api/ إلى TonAPI
-        destination: "https://tonapi.io/v1/:path*", // نطاق TonAPI المستهدف
+        source: "/api/:path*",
+        destination: "https://tonapi.io/v1/:path*",
       },
     ];
   },
@@ -77,7 +95,7 @@ const nextConfig: NextConfig = {
   },
 
   env: {
-    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "", // تحميل المتغيرات البيئية من .env
+    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "",
   },
 };
 
