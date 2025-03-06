@@ -40,34 +40,22 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               // السياسات الأساسية
-              "default-src 'self';",
-
-              // سياسات البرامج النصية
+             "default-src 'self';",
               "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval';",
-
-              // سياسات التنسيقات
               "style-src 'self' 'unsafe-inline';",
-
-              // سياسات الاتصالات
-              "connect-src 'self'",
-              "wss://exadoo-rxr9.onrender.com",
-              "https://exadoo-rxr9.onrender.com",
-              "wss://*.render.com",
-              "https://*.render.com",
-              "https://tonapi.io",
-              "https://raw.githubusercontent.com",
-              "https://bridge.tonapi.io;",
-
-              // سياسات الصور
+              "connect-src 'self' " +
+                "wss://exadoo-rxr9.onrender.com " +
+                "https://exadoo-rxr9.onrender.com " +
+                "wss://*.render.com " +
+                "https://*.render.com " +
+                "https://tonapi.io " +
+                "https://raw.githubusercontent.com " +
+                "https://bridge.tonapi.io;",
               "img-src * data:;",
-
-              // سياسات الخطوط
               "font-src 'self';",
+              "frame-src 'self' https://telegram.org https://wallet.tg;"
 
-              // سياسات الإطارات
-              "frame-src 'self' https://telegram.org https://wallet.tg;",
-
-            ].join(" ").replace(/;/g, ' ').trim(),
+            ].join(" ").trim(),
           },
         ],
       },
