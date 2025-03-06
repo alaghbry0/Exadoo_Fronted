@@ -15,7 +15,7 @@ const SubscriptionStatusListener: React.FC = () => {
       console.log("✅ WebSocket connection opened");
       websocket.send(JSON.stringify({
         action: "register",
-        telegram_id: parseInt(telegramId)
+        telegram_id: telegramId.toString() // التعديل هنا: تحويل إلى سلسلة
       }));
     };
 
@@ -44,9 +44,15 @@ const SubscriptionStatusListener: React.FC = () => {
       console.error("❌ WebSocket error:", error);
     };
 
+    // إضافة معالجة حدث الإغلاق
+    websocket.onclose = (event) => {
+      console.log("🔌 WebSocket connection closed:", event.reason);
+      localStorage.removeItem('subscriptionData');
+    };
+
     return () => {
       websocket.close();
-      console.log("🔌 WebSocket connection closed");
+      console.log("🔌 WebSocket connection closed intentionally");
     };
   }, [telegramId]);
 
