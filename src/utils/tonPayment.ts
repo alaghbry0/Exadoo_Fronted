@@ -134,6 +134,8 @@ export const handleTonPayment = async (
   telegramId: string,
   telegramUsername: string,
   fullName: string
+  userTonAddress: string,
+  orderId: string
 ): Promise<{ payment_token?: string }> => {
   let sse: EventSource | null = null
   let timeoutId: NodeJS.Timeout | null = null
@@ -227,116 +229,124 @@ export const handleTonPayment = async (
     console.log('✅ استجابة المعاملة:', transactionResponse)
 
     // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع عبر TON API
-    console.log('📞 استدعاء /api/confirm_payment لتأكيد الدفع...')
+    // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع عبر TON API
+console.log('📞 استدعاء /api/confirm_payment لتأكيد الدفع...');
     const confirmPaymentResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Telegram-Id': telegramId, // إضافة header مع قيمة telegramId
         },
         body: JSON.stringify({
           webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
           userWalletAddress: userTonAddress,
           planId: tariffId,
           amount: '1e-05',
-          telegramId: telegramId,
+          telegramId: telegramId, // يمكن الاحتفاظ به أيضًا داخل الجسم
           telegramUsername: telegramUsername,
           fullName: fullName,
           orderId: orderId,
         }),
       }
-    )
+    );
 
     if (!confirmPaymentResponse.ok) {
       console.error(
         '❌ فشل استدعاء /api/confirm_payment:',
         confirmPaymentResponse.status,
         confirmPaymentResponse.statusText
-      )
-      setPaymentStatus('failed')
-      return {}
+      );
+      setPaymentStatus('failed');
+      return {};
     }
 
-    const confirmPaymentData = await confirmPaymentResponse.json()
-    console.log('✅ استجابة /api/confirm_payment:', confirmPaymentData)
+    const confirmPaymentData = await confirmPaymentResponse.json();
+    console.log('✅ استجابة /api/confirm_payment:', confirmPaymentData);
 
     // بدء اتصال SSE
-    const paymentToken = confirmPaymentData.payment_token
-    setPaymentStatus('processing') // تغيير الحالة للعملية الجارية
+    const paymentToken = confirmPaymentData.payment_token;
+    setPaymentStatus('processing'); // تغيير الحالة للعملية الجارية
 
-    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
-    sseUrl.searchParams.append('payment_token', paymentToken)
+    // تعديل رابط SSE ليشمل البادئة /api وإضافة telegramId كمعامل query
+    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`);
+    sseUrl.searchParams.append('payment_token', paymentToken);
+    sseUrl.searchParams.append('telegram_id', telegramId);
 
-
-    sse = new EventSource(sseUrl)
+    const sse = new EventSource(sseUrl.toString());
 
     // إضافة المؤقت لإدارة مهلة الانتظار (5 دقائق)
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (sse && sse.readyState !== EventSource.CLOSED) {
-        sse.close()
-        setPaymentStatus('failed')
-        console.warn('⏰ انتهت مهلة الانتظار')
+        sse.close();
+        setPaymentStatus('failed');
+        console.warn('⏰ انتهت مهلة الانتظار');
       }
-    }, 300000) // 300000 مللي ثانية = 5 دقائق
+    }, 300000); // 300000 مللي ثانية = 5 دقائق
 
     // معالجة الرسائل الواردة من SSE
     sse.onmessage = (e) => {
-  try {
-    const data = JSON.parse(e.data);
-    console.log('🔔 استلام حدث SSE:', data);
+      try {
+        const data = JSON.parse(e.data);
+        console.log('🔔 استلام حدث SSE:', data);
 
-    if (data.status === 'success') {
-      setPaymentStatus('success');
-      // إرسال الحدث المخصص مع البيانات المطلوبة
-      window.dispatchEvent(
-        new CustomEvent('subscription_update', {
-          detail: {
-            invite_link: data.invite_link,
-            formatted_message: data.message,
-            timestamp: Date.now()
-          }
-        })
-      );
-      sse?.close();
-    } else if (data.status === 'processing') {
-      setPaymentStatus('processing');
-    } else if (data.status === 'failed') {
-      setPaymentStatus('failed');
-      sse?.close();
-    }
+        if (data.status === 'success') {
+          setPaymentStatus('success');
+          // إرسال الحدث المخصص مع البيانات المطلوبة
+          window.dispatchEvent(
+            new CustomEvent('subscription_update', {
+              detail: {
+                invite_link: data.invite_link,
+                formatted_message: data.message,
+                timestamp: Date.now(),
+              },
+            })
+          );
+          sse.close();
+        } else if (data.status === 'processing') {
+          setPaymentStatus('processing');
+        } else if (data.status === 'failed') {
+          setPaymentStatus('failed');
+          sse.close();
+        }
 
-    if (data.status === 'success' || data.status === 'failed') {
-      if (timeoutId) clearTimeout(timeoutId);
-    }
-  } catch (error) {
-    console.error('❌ خطأ في معالجة حدث SSE:', error);
-  }
-};
+        if (data.status === 'success' || data.status === 'failed') {
+          clearTimeout(timeoutId);
+        }
+      } catch (error) {
+        console.error('❌ خطأ في معالجة حدث SSE:', error);
+      }
+    };
 
     // معالجة الأخطاء في اتصال SSE
     sse.onerror = (e) => {
-      if (timeoutId) clearTimeout(timeoutId)
-      console.error('❌ خطأ في اتصال SSE:', e)
-      setPaymentStatus('failed')
-      sse?.close()
+      clearTimeout(timeoutId);
+      console.error('❌ خطأ في اتصال SSE:', e);
+      setPaymentStatus('failed');
+      sse.close();
 
       // إعادة المحاولة بعد 5 ثواني
       setTimeout(() => {
-        console.log('🔄 إعادة محاولة الاتصال SSE...')
-        handleTonPayment(tonConnectUI, setPaymentStatus, tariffId, telegramId, telegramUsername, fullName)
-      }, 5000)
-    }
+        console.log('🔄 إعادة محاولة الاتصال SSE...');
+        handleTonPayment(
+          tonConnectUI,
+          setPaymentStatus,
+          tariffId,
+          telegramId,
+          telegramUsername,
+          fullName,
+          userTonAddress,
+          orderId
+        );
+      }, 5000);
+    };
 
     // بعد إعداد SSE وإدخال التعديلات، نعيد قيمة payment_token
-    return { payment_token: paymentToken }
+    return { payment_token: paymentToken };
   } catch (error: unknown) {
-    if (timeoutId) clearTimeout(timeoutId)
-    console.error('❌ فشل الدفع:', error)
-    setPaymentStatus('failed')
-    if (sse) {
-      sse.close()
-    }
-    return {}
+    console.error('❌ فشل الدفع:', error);
+    setPaymentStatus('failed');
+    return {};
   }
-}
+};
