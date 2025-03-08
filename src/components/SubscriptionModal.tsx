@@ -8,9 +8,11 @@ import { useUserStore } from '../stores/zustand/userStore'
 import { handleTonPayment } from '../utils/tonPayment'
 import type { SubscriptionPlan } from '@/typesPlan'
 import { useTelegram } from '../context/TelegramContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import usdtAnimationData from '@/animations/usdt.json'
 import starsAnimationData from '@/animations/stars.json'
+import { PaymentStatus } from '@/types/payment'
+import { Spinner } from '@/components/Spinner'
 
 const Lottie = dynamic(() => import('lottie-react'), {
   ssr: false,
@@ -22,41 +24,90 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const { telegramId } = useTelegram()
   const { telegramUsername, fullName } = useUserStore()
   const [tonConnectUI] = useTonConnectUI()
-  const [paymentStatus, setPaymentStatus] = useState<string | null>('idle')
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
   const [loading, setLoading] = useState(false)
+  const [eventSource, setEventSource] = useState<EventSource | null>(null)
 
-  const handlePayment = async () => {
-    if (!plan) return
-    try {
-      setLoading(true)
-      await handleTelegramStarsPayment(
-        plan.id,
-        parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, ''))
-      )
-      setPaymentStatus('success')
-    } catch {
-      setPaymentStatus('failed')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // تنظيف الموارد عند إلغاء المكون (SSE cleanup)
+  useEffect(() => {
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+        console.log('🏁 SSE connection closed');
+      }
+    };
+  }, [eventSource]);
 
+  // إغلاق أي اتصالات SSE عند إزالة المكون إذا كانت الحالة في حالة "processing"
+  useEffect(() => {
+    return () => {
+      if (paymentStatus === 'processing' && eventSource) {
+        eventSource.close();
+        console.log('🏁 SSE connection closed due to processing state cleanup');
+      }
+    };
+  }, [paymentStatus, eventSource]);
+
+  const startSSEConnection = (paymentToken: string) => {
+    const es = new EventSource(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/sse?payment_token=${paymentToken}`
+    );
+
+    es.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.status === 'success') {
+        setPaymentStatus('success');
+        es.close();
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      setEventSource(null);
+    };
+
+    setEventSource(es);
+  };
+
+  // تعديل دالة handleTonPaymentWrapper لتبدأ اتصال SSE بعد الحصول على payment_token
   const handleTonPaymentWrapper = async () => {
-    if (!plan) return
+    if (!plan) return;
     try {
-      setLoading(true)
-      await handleTonPayment(
+      setLoading(true);
+      const { payment_token } = await handleTonPayment(
         tonConnectUI,
         setPaymentStatus,
         plan.id.toString(),
         telegramId || 'unknown',
         telegramUsername || 'unknown',
         fullName || 'Unknown'
-      )
+      );
+      if (payment_token) {
+        startSSEConnection(payment_token);
+      }
+    } catch (error) {
+      console.error(error);
+      // معالجة الأخطاء حسب الحاجة
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const handlePayment = async () => {
+    if (!plan) return;
+    try {
+      setLoading(true);
+      await handleTelegramStarsPayment(
+        plan.id,
+        parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, ''))
+      );
+      setPaymentStatus('success');
+    } catch {
+      setPaymentStatus('failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -131,7 +182,10 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleTonPaymentWrapper}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0084FF] to-[#0066CC] text-white rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all"
+              disabled={loading || !telegramId || paymentStatus === 'processing'}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0084FF] to-[#0066CC] text-white rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all ${
+                paymentStatus === 'processing' ? 'cursor-wait' : ''
+              }`}
               aria-label="الدفع باستخدام USDT"
             >
               <Lottie
@@ -162,7 +216,17 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </motion.button>
 
             {/* Payment Status */}
-            {paymentStatus !== 'idle' && (
+            {paymentStatus === 'processing' && (
+              <div className="mt-3 text-center text-sm">
+                <div className="flex items-center justify-center gap-2">
+                  <Spinner className="h-4 w-4" />
+                  <p className="text-blue-600 font-medium">
+                    جارٍ المعالجة... الرجاء الانتظار
+                  </p>
+                </div>
+              </div>
+            )}
+            {paymentStatus !== 'idle' && paymentStatus !== 'processing' && (
               <div className="mt-3 text-center text-sm">
                 {paymentStatus === 'success' && (
                   <p className="text-green-600 font-medium">✅ تمت العملية بنجاح</p>

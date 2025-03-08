@@ -2,6 +2,7 @@ import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
 import { v4 as uuidv4 } from 'uuid'; // استيراد مكتبة UUID لإنشاء orderId فريد
 import { useTariffStore } from '../stores/zustand'
+import { PaymentStatus } from '@/types/payment'
 
 // واجهة تعريف JettonBalance (مثال - قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
 interface JettonBalance {
@@ -128,81 +129,83 @@ export const createJettonTransferPayload = (
 // دالة handleTonPayment التي تتضمن إنشاء orderId وإرسال المعاملة وتأكيدها مع إرسال بيانات الدفع إلى الخادم
 export const handleTonPayment = async (
   tonConnectUI: TonConnectUI,
-  setPaymentStatus: React.Dispatch<React.SetStateAction<string | null>>,
+  setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>,
   tariffId: string,
   telegramId: string,
   telegramUsername: string,
   fullName: string
-) => {
-  if (typeof setPaymentStatus !== "function") {
-    console.error("❌ دالة الحالة setPaymentStatus غير صالحة!");
-    return;
+): Promise<{ payment_token?: string }> => {
+  let sse: EventSource | null = null
+  let timeoutId: NodeJS.Timeout | null = null
+
+  if (typeof setPaymentStatus !== 'function') {
+    console.error('❌ دالة الحالة setPaymentStatus غير صالحة!')
+    return {}
   }
 
-  setPaymentStatus("pending");
+  setPaymentStatus('pending')
 
   try {
-    console.log("🚀 بدء عملية دفع USDT...");
+    console.log('🚀 بدء عملية دفع USDT...')
 
-    const userTonAddress = tonConnectUI.account?.address;
+    const userTonAddress = tonConnectUI.account?.address
     if (!userTonAddress) {
-      console.error("❌ لم يتم العثور على محفظة TON متصلة!");
-      setPaymentStatus("failed");
-      return;
+      console.error('❌ لم يتم العثور على محفظة TON متصلة!')
+      setPaymentStatus('failed')
+      return {}
     }
+    console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`)
 
-    console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`);
-
-    const userJettonWallet = await getUserJettonWallet(userTonAddress);
+    const userJettonWallet = await getUserJettonWallet(userTonAddress)
     if (!userJettonWallet) {
-      console.warn("🚨 المستخدم لا يملك محفظة USDT على TON.");
-      setPaymentStatus("failed");
-      return;
+      console.warn('🚨 المستخدم لا يملك محفظة USDT على TON.')
+      setPaymentStatus('failed')
+      return {}
     }
-    console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم: ${userJettonWallet}`);
+    console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم: ${userJettonWallet}`)
 
     // جلب عنوان البوت من Zustand بدلاً من استخدام قيمة ثابتة
-    const botWalletAddress = useTariffStore.getState().walletAddress;
+    const botWalletAddress = useTariffStore.getState().walletAddress
     if (!botWalletAddress) {
-      console.error("❌ عنوان محفظة البوت غير متوفر في المتجر!");
-      setPaymentStatus("failed");
-      return;
+      console.error('❌ عنوان محفظة البوت غير متوفر في المتجر!')
+      setPaymentStatus('failed')
+      return {}
     }
-    console.log(`✅ عنوان محفظة البوت من Zustand: ${botWalletAddress}`);
+    console.log(`✅ عنوان محفظة البوت من Zustand: ${botWalletAddress}`)
 
-    const recipientJettonWalletAddress = await getBotJettonWallet(botWalletAddress);
+    const recipientJettonWalletAddress = await getBotJettonWallet(botWalletAddress)
     if (!recipientJettonWalletAddress) {
-      console.error("❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.");
-      setPaymentStatus("failed");
-      return;
+      console.error('❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.')
+      setPaymentStatus('failed')
+      return {}
     }
-    console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
+    console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`)
 
     // تحويل المبلغ إلى nanoJettons (1 USDT = 1,000,000 NanoJettons)
-    const USDT_AMOUNT = 0.01; // القيمة الحالية 0.01 USDT
-    const amountInNanoJettons = BigInt(USDT_AMOUNT * 10 ** 6);
-    const gasFee = toNano("0.02").toString(); // رسوم الغاز 0.02 TON
+    const USDT_AMOUNT = 0.01 // القيمة الحالية 0.01 USDT
+    const amountInNanoJettons = BigInt(USDT_AMOUNT * 10 ** 6)
+    const gasFee = toNano('0.02').toString() // رسوم الغاز 0.02 TON
 
     if (amountInNanoJettons <= 0) {
-      console.error(`❌ مبلغ غير صالح بالـ nanoJettons: ${amountInNanoJettons}`);
-      setPaymentStatus("failed");
-      return;
+      console.error(`❌ مبلغ غير صالح بالـ nanoJettons: ${amountInNanoJettons}`)
+      setPaymentStatus('failed')
+      return {}
     }
 
-    console.log("🔍 بيانات الدفع:", {
+    console.log('🔍 بيانات الدفع:', {
       USDT_AMOUNT,
       amountInNanoJettons,
       userJettonWallet,
       recipientJettonWalletAddress,
-    });
+    })
 
     // إنشاء orderId فريد باستخدام UUID
-    const orderId = uuidv4();
-    console.log(`✅ تم إنشاء orderId: ${orderId}`);
+    const orderId = uuidv4()
+    console.log(`✅ تم إنشاء orderId: ${orderId}`)
 
     // إنشاء payload باستخدام العنوان الجديد الخاص بالبوت من Zustand
-    const payloadBase64 = createJettonTransferPayload(botWalletAddress, amountInNanoJettons, orderId);
-    console.log("🔹 Payload Base64:", payloadBase64);
+    const payloadBase64 = createJettonTransferPayload(botWalletAddress, amountInNanoJettons, orderId)
+    console.log('🔹 Payload Base64:', payloadBase64)
 
     // بناء المعاملة مع تضمين الـ payload
     const transaction = {
@@ -214,44 +217,125 @@ export const handleTonPayment = async (
           payload: payloadBase64,
         },
       ],
-    };
+    }
 
-    console.log("🔹 بيانات المعاملة:", JSON.stringify(transaction, null, 2));
-    console.log("🚀 إرسال المعاملة...");
+    console.log('🔹 بيانات المعاملة:', JSON.stringify(transaction, null, 2))
+    console.log('🚀 إرسال المعاملة...')
 
-    const transactionResponse = await tonConnectUI.sendTransaction(transaction);
-    console.log("✅ تم الدفع بنجاح باستخدام USDT!");
-    console.log("✅ استجابة المعاملة:", transactionResponse);
+    const transactionResponse = await tonConnectUI.sendTransaction(transaction)
+    console.log('✅ تم الدفع بنجاح باستخدام USDT!')
+    console.log('✅ استجابة المعاملة:', transactionResponse)
 
     // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع عبر TON API
-    console.log("📞 استدعاء /api/confirm_payment لتأكيد الدفع...");
-    const confirmPaymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET, // تأكد من ضبط هذا المتغير بالسر الصحيح
-        userWalletAddress: userTonAddress, // عنوان محفظة TON للمستخدم
-        planId: tariffId,                // رقم الخطة كـ string (مثلاً "1")
-        amount: "1e-05",                 // المبلغ الذي تم دفعه (مثلاً "0.01")
-        telegramId: telegramId,          // معرف Telegram للمستخدم
-        telegramUsername: telegramUsername, // اسم مستخدم Telegram
-        fullName: fullName,              // الاسم الكامل للمستخدم
-        orderId: orderId                 // orderId الفريد الذي تم إنشاؤه
-      }),
-    });
+    console.log('📞 استدعاء /api/confirm_payment لتأكيد الدفع...')
+    const confirmPaymentResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
+          userWalletAddress: userTonAddress,
+          planId: tariffId,
+          amount: '1e-05',
+          telegramId: telegramId,
+          telegramUsername: telegramUsername,
+          fullName: fullName,
+          orderId: orderId,
+        }),
+      }
+    )
 
     if (!confirmPaymentResponse.ok) {
-      console.error("❌ فشل استدعاء /api/confirm_payment:", confirmPaymentResponse.status, confirmPaymentResponse.statusText);
-      setPaymentStatus("failed");
-      return;
-    } else {
-      const confirmPaymentData = await confirmPaymentResponse.json();
-      console.log("✅ استجابة /api/confirm_payment:", confirmPaymentData);
+      console.error(
+        '❌ فشل استدعاء /api/confirm_payment:',
+        confirmPaymentResponse.status,
+        confirmPaymentResponse.statusText
+      )
+      setPaymentStatus('failed')
+      return {}
     }
-  } catch (error: unknown) {
-    console.error("❌ فشل الدفع:", error);
-    setPaymentStatus("failed");
+
+    const confirmPaymentData = await confirmPaymentResponse.json()
+    console.log('✅ استجابة /api/confirm_payment:', confirmPaymentData)
+
+    // بدء اتصال SSE
+    const paymentToken = confirmPaymentData.payment_token
+    setPaymentStatus('processing') // تغيير الحالة للعملية الجارية
+
+    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/sse`)
+    sseUrl.searchParams.append('payment_token', paymentToken)
+
+    sse = new EventSource(sseUrl)
+
+    // إضافة المؤقت لإدارة مهلة الانتظار (5 دقائق)
+    timeoutId = setTimeout(() => {
+      if (sse && sse.readyState !== EventSource.CLOSED) {
+        sse.close()
+        setPaymentStatus('failed')
+        console.warn('⏰ انتهت مهلة الانتظار')
+      }
+    }, 300000) // 300000 مللي ثانية = 5 دقائق
+
+    // معالجة الرسائل الواردة من SSE
+    sse.onmessage = (e) => {
+  try {
+    const data = JSON.parse(e.data);
+    console.log('🔔 استلام حدث SSE:', data);
+
+    if (data.status === 'success') {
+      setPaymentStatus('success');
+      // إرسال الحدث المخصص مع البيانات المطلوبة
+      window.dispatchEvent(
+        new CustomEvent('subscription_update', {
+          detail: {
+            invite_link: data.invite_link,
+            formatted_message: data.message,
+            timestamp: Date.now()
+          }
+        })
+      );
+      sse?.close();
+    } else if (data.status === 'processing') {
+      setPaymentStatus('processing');
+    } else if (data.status === 'failed') {
+      setPaymentStatus('failed');
+      sse?.close();
+    }
+
+    if (data.status === 'success' || data.status === 'failed') {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('❌ خطأ في معالجة حدث SSE:', error);
   }
 };
+
+    // معالجة الأخطاء في اتصال SSE
+    sse.onerror = (e) => {
+      if (timeoutId) clearTimeout(timeoutId)
+      console.error('❌ خطأ في اتصال SSE:', e)
+      setPaymentStatus('failed')
+      sse?.close()
+
+      // إعادة المحاولة بعد 5 ثواني
+      setTimeout(() => {
+        console.log('🔄 إعادة محاولة الاتصال SSE...')
+        handleTonPayment(tonConnectUI, setPaymentStatus, tariffId, telegramId, telegramUsername, fullName)
+      }, 5000)
+    }
+
+    // بعد إعداد SSE وإدخال التعديلات، نعيد قيمة payment_token
+    return { payment_token: paymentToken }
+  } catch (error: unknown) {
+    if (timeoutId) clearTimeout(timeoutId)
+    console.error('❌ فشل الدفع:', error)
+    setPaymentStatus('failed')
+    if (sse) {
+      sse.close()
+    }
+    return {}
+  }
+}

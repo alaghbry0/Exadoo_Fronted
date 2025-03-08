@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
-import SubscriptionStatusListener from '../components/SubscriptionStatusListener'
+
 import InviteAlert from '../components/InviteAlert'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useProfileStore } from '../stores/profileStore'
@@ -106,8 +106,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     <>
       <Component {...pageProps} router={router} />
       <FooterNav />
-      {/* مكون WebSocket الذي يحدّث Local Storage عند وصول بيانات الاشتراك */}
-      <SubscriptionStatusListener />
+
       {/* مكون التنبيه (Alert) الذي يعرض إشعار الدفع ورابط الدعوة */}
       <InviteAlert />
     </>
