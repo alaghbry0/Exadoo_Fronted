@@ -16,10 +16,9 @@ const InviteAlert: React.FC = () => {
     const handleStorageUpdate = (event: CustomEvent) => {
       setSubscriptionData(event.detail);
       setVisible(true);
-      setTimeout(() => setVisible(false), 10000); // إخفاء بعد 10 ثواني
+      // إزالة الإخفاء التلقائي؛ يبقى الإشعار حتى النقر على الرابط أو زر الإغلاق
     };
 
-    // استمع للحدث المخصص مع بيانات التفاصيل
     window.addEventListener('subscription_update', handleStorageUpdate as EventListener);
 
     return () => {
@@ -30,27 +29,22 @@ const InviteAlert: React.FC = () => {
   if (!subscriptionData || !visible) return null;
 
   return (
-
-  <Alert
-    color="success"
-    onDismiss={() => setVisible(false)}
-    className="fixed top-16 right-4 z-50 animate-fade-in"
-  >
-    <div className="flex items-center flex-col gap-2">
-      {/* عرض الرسالة الأصلية */}
-      <span dangerouslySetInnerHTML={sanitizeHtml(subscriptionData.formatted_message)} />
-
-      {/* زر فتح القناة بدون عرض الرابط */}
-      <button
-        onClick={() => window.open(subscriptionData.invite_link, '_blank')}
-        className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-blue-800 transition"
-      >
-        ⏩ انقر هنا للانضمام إلى القناة
-      </button>
-    </div>
-  </Alert>
-);
-
+    <Alert
+      color="success"
+      onDismiss={() => setVisible(false)}
+      className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in w-11/12 max-w-md"
+    >
+      <div className="flex items-center flex-col gap-2">
+        <span dangerouslySetInnerHTML={sanitizeHtml(subscriptionData.formatted_message)} />
+        <button
+          onClick={() => window.open(subscriptionData.invite_link, '_blank')}
+          className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-blue-800 transition"
+        >
+          ⏩ انقر هنا للانضمام إلى القناة
+        </button>
+      </div>
+    </Alert>
+  );
 };
 
 export default InviteAlert;
