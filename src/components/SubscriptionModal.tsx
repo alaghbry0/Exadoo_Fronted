@@ -28,52 +28,109 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [loading, setLoading] = useState(false)
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
 
-  // تنظيف الموارد عند إلغاء المكون (SSE cleanup)
+  // إعداد متغيرات إعادة المحاولة
+  const maxRetryCount = 3       // أقصى عدد لمحاولات إعادة الاتصال
+  const retryDelay = 3000       // تأخير 3 ثواني قبل إعادة المحاولة
+
+  // تنظيف اتصال SSE عند إزالة المكون
   useEffect(() => {
     return () => {
       if (eventSource) {
-        eventSource.close();
-        console.log('🏁 SSE connection closed');
+        eventSource.close()
+        console.log('🏁 SSE connection closed')
       }
-    };
-  }, [eventSource]);
+    }
+  }, [eventSource])
 
-  // إغلاق أي اتصالات SSE عند إزالة المكون إذا كانت الحالة في حالة "processing"
+  // تنظيف اتصال SSE عند إزالة المكون إذا كانت الحالة في وضع "processing"
   useEffect(() => {
     return () => {
       if (paymentStatus === 'processing' && eventSource) {
-        eventSource.close();
-        console.log('🏁 SSE connection closed due to processing state cleanup');
+        eventSource.close()
+        console.log('🏁 SSE connection closed due to processing state cleanup')
       }
-    };
-  }, [paymentStatus, eventSource]);
+    }
+  }, [paymentStatus, eventSource])
 
-  const startSSEConnection = (paymentToken: string) => {
-    const es = new EventSource(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/sse?payment_token=${paymentToken}`
-    );
+  // دالة بدء اتصال SSE مع آلية إعادة المحاولة عند الفشل
+  const startSSEConnection = (paymentToken: string, retryCount = 0) => {
+    setPaymentStatus('processing')
+    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
+    sseUrl.searchParams.append('payment_token', paymentToken)
+    sseUrl.searchParams.append('telegram_id', telegramId)
+    const es = new EventSource(sseUrl.toString())
 
+    console.log('🔗 بدء اتصال SSE:', sseUrl.toString())
+
+    // مؤقت لإنهاء الاتصال بعد 5 دقائق إذا لم يتم استلام رد
+    const timeoutId = setTimeout(() => {
+      if (es && es.readyState !== EventSource.CLOSED) {
+        es.close()
+        setPaymentStatus('failed')
+        console.warn('⏰ انتهت مهلة الانتظار')
+        // إعادة المحاولة إذا لم يتم تجاوز الحد الأقصى
+        if (retryCount < maxRetryCount) {
+          console.log(`إعادة المحاولة (${retryCount + 1}/${maxRetryCount}) بعد انتهاء المهلة`)
+          setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay)
+        }
+      }
+    }, 300000) // 300000 مللي ثانية = 5 دقائق
+
+    // معالجة الرسائل الواردة من SSE
     es.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      if (data.status === 'success') {
-        setPaymentStatus('success');
-        es.close();
+      try {
+        const data = JSON.parse(e.data)
+        console.log('🔔 استلام حدث SSE:', data)
+
+        if (data.status === 'success') {
+          setPaymentStatus('success')
+          // إرسال حدث مخصص لتحديث الاشتراك مع البيانات المطلوبة
+          window.dispatchEvent(
+            new CustomEvent('subscription_update', {
+              detail: {
+                invite_link: data.invite_link,
+                formatted_message: data.message,
+                timestamp: Date.now()
+              }
+            })
+          )
+          es.close()
+        } else if (data.status === 'processing') {
+          setPaymentStatus('processing')
+        } else if (data.status === 'failed') {
+          setPaymentStatus('failed')
+          es.close()
+        }
+
+        // عند نجاح العملية أو فشلها، يتم إيقاف المؤقت
+        if (data.status === 'success' || data.status === 'failed') {
+          clearTimeout(timeoutId)
+        }
+      } catch (error) {
+        console.error('❌ خطأ في معالجة حدث SSE:', error)
       }
-    };
+    }
 
-    es.onerror = () => {
-      es.close();
-      setEventSource(null);
-    };
+    // معالجة أخطاء اتصال SSE وإعادة المحاولة عند الفشل
+    es.onerror = (e) => {
+      clearTimeout(timeoutId)
+      console.error('❌ خطأ في اتصال SSE:', e)
+      setPaymentStatus('failed')
+      es.close()
+      if (retryCount < maxRetryCount) {
+        console.log(`إعادة المحاولة (${retryCount + 1}/${maxRetryCount}) بعد خطأ الاتصال`)
+        setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay)
+      }
+    }
 
-    setEventSource(es);
-  };
+    setEventSource(es)
+  }
 
-  // تعديل دالة handleTonPaymentWrapper لتبدأ اتصال SSE بعد الحصول على payment_token
+  // دالة الدفع باستخدام TonConnect تبدأ اتصال SSE بعد الحصول على payment_token
   const handleTonPaymentWrapper = async () => {
-    if (!plan) return;
+    if (!plan) return
     try {
-      setLoading(true);
+      setLoading(true)
       const { payment_token } = await handleTonPayment(
         tonConnectUI,
         setPaymentStatus,
@@ -81,33 +138,38 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         telegramId || 'unknown',
         telegramUsername || 'unknown',
         fullName || 'Unknown'
-      );
+      )
+      console.log('✅ استجابة /api/confirm_payment:', { payment_token })
       if (payment_token) {
-        startSSEConnection(payment_token);
+        startSSEConnection(payment_token)
       }
     } catch (error) {
-      console.error(error);
-      // معالجة الأخطاء حسب الحاجة
+      console.error('❌ فشل الدفع:', error)
+      setPaymentStatus('failed')
+      if (eventSource) {
+        eventSource.close()
+      }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
+  // دالة الدفع باستخدام Telegram Stars
   const handlePayment = async () => {
-    if (!plan) return;
+    if (!plan) return
     try {
-      setLoading(true);
+      setLoading(true)
       await handleTelegramStarsPayment(
         plan.id,
         parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, ''))
-      );
-      setPaymentStatus('success');
+      )
+      setPaymentStatus('success')
     } catch {
-      setPaymentStatus('failed');
+      setPaymentStatus('failed')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <motion.div
@@ -130,7 +192,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col max-h-[90vh]">
-          {/* Header with Sticky Close Button */}
+          {/* رأس النافذة مع زر إغلاق ثابت */}
           <div className="sticky top-0 bg-gradient-to-r from-[#0084FF] to-[#0066CC] px-4 py-3 flex justify-between items-center z-10">
             <h2 className="text-lg font-semibold text-white truncate">{plan?.name}</h2>
             <button
@@ -142,9 +204,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </button>
           </div>
 
-          {/* Scrollable Content */}
+          {/* محتوى قابل للتمرير */}
           <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
-            {/* Price & Duration */}
+            {/* السعر والفترة */}
             <div className="flex items-baseline justify-between bg-blue-50 rounded-lg p-4">
               <div className="space-y-1">
                 <span className="text-sm text-gray-600">
@@ -157,7 +219,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               </span>
             </div>
 
-            {/* Features Section */}
+            {/* قسم الميزات */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
                 الميزات المتضمنة:
@@ -176,7 +238,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </div>
           </div>
 
-          {/* Sticky Payment Section */}
+          {/* قسم الدفع الثابت */}
           <div className="sticky bottom-12 bg-white border-t p-5 sm:p-6 space-y-3">
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -188,10 +250,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               }`}
               aria-label="الدفع باستخدام USDT"
             >
-              <Lottie
-                animationData={usdtAnimationData}
-                className="w-6 h-6"
-              />
+              <Lottie animationData={usdtAnimationData} className="w-6 h-6" />
               <span>الدفع عبر USDT</span>
             </motion.button>
 
@@ -205,17 +264,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               }`}
               aria-label="الدفع باستخدام Telegram Stars"
             >
-              <Lottie
-                animationData={starsAnimationData}
-                className="w-6 h-6"
-              />
+              <Lottie animationData={starsAnimationData} className="w-6 h-6" />
               <span>
                 {loading ? 'جاري المعالجة...' : 'Telegram Stars'}
                 {!telegramId && ' (يتطلب تليجرام)'}
               </span>
             </motion.button>
 
-            {/* Payment Status */}
+            {/* عرض حالة الدفع */}
             {paymentStatus === 'processing' && (
               <div className="mt-3 text-center text-sm">
                 <div className="flex items-center justify-center gap-2">

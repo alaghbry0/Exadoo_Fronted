@@ -135,9 +135,6 @@ export const handleTonPayment = async (
   telegramUsername: string,
   fullName: string
 ): Promise<{ payment_token?: string }> => {
-  let sse: EventSource | null = null;
-  let timeoutId: NodeJS.Timeout | null = null;
-
   if (typeof setPaymentStatus !== 'function') {
     console.error('❌ دالة الحالة setPaymentStatus غير صالحة!');
     return {};
@@ -164,7 +161,7 @@ export const handleTonPayment = async (
     }
     console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم: ${userJettonWallet}`);
 
-    // جلب عنوان البوت من Zustand بدلاً من استخدام قيمة ثابتة
+    // جلب عنوان البوت من Zustand
     const botWalletAddress = useTariffStore.getState().walletAddress;
     if (!botWalletAddress) {
       console.error('❌ عنوان محفظة البوت غير متوفر في المتجر!');
@@ -203,7 +200,7 @@ export const handleTonPayment = async (
     const orderId = uuidv4();
     console.log(`✅ تم إنشاء orderId: ${orderId}`);
 
-    // إنشاء payload باستخدام العنوان الجديد الخاص بالبوت من Zustand
+    // إنشاء payload باستخدام العنوان الخاص بالبوت
     const payloadBase64 = createJettonTransferPayload(botWalletAddress, amountInNanoJettons, orderId);
     console.log('🔹 Payload Base64:', payloadBase64);
 
@@ -212,7 +209,7 @@ export const handleTonPayment = async (
       validUntil: Math.floor(Date.now() / 1000) + 600, // صلاحية 10 دقائق
       messages: [
         {
-          address: userJettonWallet, // يجب أن يكون عنوان محفظة Jetton للمستخدم وليس عنوانه الرئيسي
+          address: userJettonWallet, // عنوان محفظة Jetton للمستخدم
           amount: gasFee,
           payload: payloadBase64,
         },
@@ -234,7 +231,7 @@ export const handleTonPayment = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Telegram-Id': telegramId, // إضافة X-Telegram-Id كـ header
+          'X-Telegram-Id': telegramId,
         },
         body: JSON.stringify({
           webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
@@ -262,83 +259,13 @@ export const handleTonPayment = async (
     const confirmPaymentData = await confirmPaymentResponse.json();
     console.log('✅ استجابة /api/confirm_payment:', confirmPaymentData);
 
-    // بدء اتصال SSE
+    // إرجاع الـ payment_token وإعلام الحالة بأن الدفع في مرحلة المعالجة
     const paymentToken = confirmPaymentData.payment_token;
-    setPaymentStatus('processing'); // تغيير الحالة للعملية الجارية
-
-    // تعديل رابط SSE ليشمل البادئة "/api" وإضافة telegramId كـ query parameter
-    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`);
-    sseUrl.searchParams.append('payment_token', paymentToken);
-    sseUrl.searchParams.append('telegram_id', telegramId);
-
-    sse = new EventSource(sseUrl.toString());
-
-    // إضافة المؤقت لإدارة مهلة الانتظار (5 دقائق)
-    timeoutId = setTimeout(() => {
-      if (sse && sse.readyState !== EventSource.CLOSED) {
-        sse.close();
-        setPaymentStatus('failed');
-        console.warn('⏰ انتهت مهلة الانتظار');
-      }
-    }, 300000); // 300000 مللي ثانية = 5 دقائق
-
-    // معالجة الرسائل الواردة من SSE
-    sse.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        console.log('🔔 استلام حدث SSE:', data);
-
-        if (data.status === 'success') {
-          setPaymentStatus('success');
-          // إرسال الحدث المخصص مع البيانات المطلوبة
-          window.dispatchEvent(
-            new CustomEvent('subscription_update', {
-              detail: {
-                invite_link: data.invite_link,
-                formatted_message: data.message,
-                timestamp: Date.now()
-              }
-            })
-          );
-          sse?.close();
-        } else if (data.status === 'processing') {
-          setPaymentStatus('processing');
-        } else if (data.status === 'failed') {
-          setPaymentStatus('failed');
-          sse?.close();
-        }
-
-        if (data.status === 'success' || data.status === 'failed') {
-          if (timeoutId) clearTimeout(timeoutId);
-        }
-      } catch (error) {
-        console.error('❌ خطأ في معالجة حدث SSE:', error);
-      }
-    };
-
-    // معالجة الأخطاء في اتصال SSE
-    sse.onerror = (e) => {
-      if (timeoutId) clearTimeout(timeoutId);
-      console.error('❌ خطأ في اتصال SSE:', e);
-      setPaymentStatus('failed');
-      sse?.close();
-
-      // إعادة المحاولة بعد 5 ثواني
-      setTimeout(() => {
-        console.log('🔄 إعادة محاولة الاتصال SSE...');
-        handleTonPayment(tonConnectUI, setPaymentStatus, tariffId, telegramId, telegramUsername, fullName);
-      }, 5000);
-    };
-
-    // بعد إعداد SSE وإدخال التعديلات، نعيد قيمة payment_token
+    setPaymentStatus('processing');
     return { payment_token: paymentToken };
   } catch (error: unknown) {
-    if (timeoutId) clearTimeout(timeoutId);
     console.error('❌ فشل الدفع:', error);
     setPaymentStatus('failed');
-    if (sse) {
-      sse.close();
-    }
     return {};
   }
 };
