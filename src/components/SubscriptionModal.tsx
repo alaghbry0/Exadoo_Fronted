@@ -57,7 +57,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     setPaymentStatus('processing')
     const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
     sseUrl.searchParams.append('payment_token', paymentToken)
-    sseUrl.searchParams.append('telegram_id', telegramId)
+    sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
+
     const es = new EventSource(sseUrl.toString())
 
     console.log('🔗 بدء اتصال SSE:', sseUrl.toString())
