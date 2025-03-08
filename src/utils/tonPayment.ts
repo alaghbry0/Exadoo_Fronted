@@ -135,7 +135,7 @@ export const handleTonPayment = async (
   telegramUsername: string,
   fullName: string
   userTonAddress: string,
-  orderId: string
+  orderId: string,
 ): Promise<{ payment_token?: string }> => {
   let sse: EventSource | null = null
   let timeoutId: NodeJS.Timeout | null = null
