@@ -34,7 +34,7 @@ export const useTelegramPayment = () => {
       const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-telegram-payment-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, telegramId })
+        body: JSON.stringify({  telegramId })
       });
 
       if (!tokenResponse.ok) {

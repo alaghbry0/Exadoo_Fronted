@@ -45,7 +45,7 @@ if (isNaN(numericAmount)) { // <-- تم تصحيحه
     });
 
     // تحويل المبلغ إلى صيغة Telegram الصحيحة (سنتات)
-    const invoiceAmount = Math.round(numericAmount * 100); // تحويل إلى سنتات
+    const invoiceAmount = Math.round(numericAmount ); // تحويل إلى سنتات
 
     console.log("🔗 بيانات الفاتورة:", {
       payment_token,
