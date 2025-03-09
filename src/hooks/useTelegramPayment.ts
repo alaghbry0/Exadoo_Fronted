@@ -30,8 +30,8 @@ export const useTelegramPayment = () => {
       setError(null);
       setPaymentStatus('pending');
 
-      // 1. إنشاء payment_token
-      const tokenResponse = await fetch('/api/create-telegram-payment-token', {
+      // 1. إنشاء payment_token باستخدام عنوان الباك إند من متغيرات البيئة
+      const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-telegram-payment-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId, telegramId })
@@ -69,29 +69,28 @@ export const useTelegramPayment = () => {
 
       // 3. فتح واجهة الدفع
       return new Promise<PaymentResponse>((resolve) => {
-  // التحقق من وجود الدالة قبل استخدامها
-  if (!window.Telegram?.WebApp?.openInvoice) {
-    const errorMsg = "❌ نظام الدفع غير متاح";
-    setError(errorMsg);
-    resolve({ error: errorMsg });
-    return;
-  }
+        // التحقق من وجود الدالة قبل استخدامها
+        if (!window.Telegram?.WebApp?.openInvoice) {
+          const errorMsg = "❌ نظام الدفع غير متاح";
+          setError(errorMsg);
+          resolve({ error: errorMsg });
+          return;
+        }
 
-  // استدعاء دالة openInvoice مرة واحدة
-  window.Telegram.WebApp.openInvoice(invoiceData.invoice_url, (status: string) => {
-    if (status === "paid") {
-      setPaymentStatus("processing");
-      console.log("✅ تم الدفع بنجاح!");
-      resolve({ paymentToken: payment_token });
-    } else {
-      setPaymentStatus("failed");
-      const errorMsg = `فشلت العملية (${status})`;
-      setError(errorMsg);
-      resolve({ error: errorMsg });
-    }
-  });
-});
-
+        // استدعاء دالة openInvoice مرة واحدة
+        window.Telegram.WebApp.openInvoice(invoiceData.invoice_url, (status: string) => {
+          if (status === "paid") {
+            setPaymentStatus("processing");
+            console.log("✅ تم الدفع بنجاح!");
+            resolve({ paymentToken: payment_token });
+          } else {
+            setPaymentStatus("failed");
+            const errorMsg = `فشلت العملية (${status})`;
+            setError(errorMsg);
+            resolve({ error: errorMsg });
+          }
+        });
+      });
 
     } catch (error: unknown) {
       setPaymentStatus('failed');
