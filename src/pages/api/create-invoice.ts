@@ -45,15 +45,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // إنشاء payload مع البيانات الجديدة
     const payload = JSON.stringify({
-      planId: plan_id,
+  planId: plan_id,
   userId: numericTelegramId,
   paymentToken: payment_token,
   fullName: full_name,
-  telegramUsername: username
-    });
-
+  username: username
+});
     // تحويل المبلغ إلى صيغة Telegram الصحيحة (سنتات)
-    const invoiceAmount = Math.round(numericAmount);
+    const invoiceAmount = Math.round(numericAmount * 100);
 
     console.log("🔗 بيانات الفاتورة:", {
       payment_token,
@@ -76,10 +75,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           amount: invoiceAmount
         }],
         provider_data: {
-          payment_token: payment_token,
-          full_name: full_name,
-          telegram_username: username
-        }
+  payment_token: payment_token,
+  full_name: full_name,
+  username: username // توحيد اسم الحقل مع ما يطلبه Telegram
+}
       }),
     });
 

@@ -16,6 +16,7 @@ export const useTelegramPayment = () => {
   const handleTelegramStarsPayment = useCallback(async (
     planId: number,
     price: number,
+
     fullName: string,
     telegramUsername: string
   ): Promise<PaymentResponse> => {
@@ -66,8 +67,9 @@ export const useTelegramPayment = () => {
       });
 
       if (!invoiceResponse.ok) {
-        throw new Error("❌ فشل في إنشاء الفاتورة!");
-      }
+  const errorResponse = await invoiceResponse.json();
+  throw new Error(errorResponse.error || "فشل في إنشاء الفاتورة");
+}
 
       const invoiceData = await invoiceResponse.json();
       if (!invoiceData.invoice_url) {

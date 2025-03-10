@@ -4,6 +4,7 @@ export interface SubscriptionOption {
   id: number
   duration: string
   price: string
+
   originalPrice?: number
   savings?: string
 }
