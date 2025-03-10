@@ -13,7 +13,12 @@ export const useTelegramPayment = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | 'processing' | null>(null);
 
-  const handleTelegramStarsPayment = useCallback(async (planId: number, price: number): Promise<PaymentResponse> => {
+  const handleTelegramStarsPayment = useCallback(async (
+    planId: number,
+    price: number,
+    fullName: string,
+    telegramUsername: string
+  ): Promise<PaymentResponse> => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
       return { error: "Telegram WebApp not available" };
@@ -34,7 +39,7 @@ export const useTelegramPayment = () => {
       const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-telegram-payment-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({  telegramId })
+        body: JSON.stringify({ telegramId })
       });
 
       if (!tokenResponse.ok) {
@@ -46,7 +51,7 @@ export const useTelegramPayment = () => {
         throw new Error('❌ لم يتم استلام رمز الدفع من الخادم');
       }
 
-      // 2. إنشاء الفاتورة
+      // 2. إنشاء الفاتورة مع البيانات الجديدة (full_name و username)
       const invoiceResponse = await fetch("/api/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +59,9 @@ export const useTelegramPayment = () => {
           telegram_id: Number(telegramId),
           plan_id: planId,
           amount: price,
-          payment_token
+          payment_token,
+          full_name: fullName,
+          username: telegramUsername
         })
       });
 
@@ -67,9 +74,8 @@ export const useTelegramPayment = () => {
         throw new Error("❌ رابط الفاتورة غير موجود في الاستجابة");
       }
 
-      // 3. فتح واجهة الدفع
+      // 3. فتح واجهة الدفع باستخدام واجهة Telegram WebApp
       return new Promise<PaymentResponse>((resolve) => {
-        // التحقق من وجود الدالة قبل استخدامها
         if (!window.Telegram?.WebApp?.openInvoice) {
           const errorMsg = "❌ نظام الدفع غير متاح";
           setError(errorMsg);
@@ -77,30 +83,28 @@ export const useTelegramPayment = () => {
           return;
         }
 
-        // استدعاء دالة openInvoice مرة واحدة
         window.Telegram.WebApp.openInvoice(invoiceData.invoice_url, (status: string) => {
           if (status === "paid") {
-            setPaymentStatus("processing");
-            console.log("✅ تم الدفع بنجاح!");
-            resolve({ paymentToken: payment_token });
+            setTimeout(() => {
+              setPaymentStatus("processing");
+              console.log("✅ تم الدفع بنجاح!");
+              resolve({ paymentToken: payment_token });
+            }, 1000);
           } else {
-            setPaymentStatus("failed");
-            const errorMsg = `فشلت العملية (${status})`;
+            setPaymentStatus('failed');
+            const errorMsg = "❌ الدفع لم يتم بنجاح";
             setError(errorMsg);
             resolve({ error: errorMsg });
           }
+          setLoading(false);
         });
       });
-
-    } catch (error: unknown) {
-      setPaymentStatus('failed');
-      const errorMsg = error instanceof Error
-        ? error.message
-        : "❌ حدث خطأ غير معروف";
+    } catch (error) {
+      setLoading(false);
+      console.error("❌ خطأ غير متوقع:", error);
+      const errorMsg = error instanceof Error ? error.message : "❌ حدث خطأ غير معروف";
       setError(errorMsg);
       return { error: errorMsg };
-    } finally {
-      setLoading(false);
     }
   }, [telegramId]);
 

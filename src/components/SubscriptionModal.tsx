@@ -114,7 +114,10 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     setLoading(true);
     const { paymentToken } = await handleTelegramStarsPayment(
       plan.id,
-      parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, ''))
+      parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, '')),
+      fullName  || 'Unknown',
+      telegramUsername  || 'Unknown'
+
     );
 
     if (paymentToken) {

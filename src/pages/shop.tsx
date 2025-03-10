@@ -92,7 +92,9 @@ const defaultStyles: { [key: number]: {
   }
 };
 
-type SelectedPlan = SubscriptionCard & { selectedOption: SubscriptionOption };
+type SelectedPlan = SubscriptionCard & {
+  selectedOption: SubscriptionOption;
+  planId: number;};
 
 const ShopComponent: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);
@@ -344,7 +346,7 @@ const {
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedPlan({ ...card, selectedOption })}
+                        onClick={() => setSelectedPlan({ ...card, selectedOption, planId: selectedOption.id })}
                         className="w-full py-4 rounded-xl text-white font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg transition-all"
                         aria-label={`اشترك في خطة ${card.name}`}
                       >
