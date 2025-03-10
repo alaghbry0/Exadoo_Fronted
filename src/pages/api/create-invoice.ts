@@ -9,33 +9,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   console.log("📥 استلام طلب لإنشاء الفاتورة:", req.body);
 
-  // استخراج المتغيرات من body الطلب
-  const { telegram_id, plan_id, amount, payment_token, full_name, username } = req.body;
+  // استخراج payment_token من body الطلب
+  const { telegram_id, plan_id, amount, payment_token } = req.body;
 
-  // التحقق من وجود الحقول الأساسية المطلوبة
+  // التحقق من وجود جميع الحقول المطلوبة
   if (!payment_token || !telegram_id || !plan_id || amount === undefined) {
     console.error("❌ بيانات ناقصة:", { payment_token, telegram_id, plan_id, amount });
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // التحقق من الحقول الجديدة الخاصة بالمستخدم
-  if (!full_name || !username) {
-    console.error("❌ بيانات ناقصة:", { full_name, username });
-    return res.status(400).json({ error: "Missing user details" });
-  }
-
   const numericTelegramId = Number(telegram_id);
   const numericAmount = Number(amount);
 
-  if (isNaN(numericTelegramId)) {
-    console.error("❌ telegram_id غير صحيح:", telegram_id);
-    return res.status(400).json({ error: "Invalid telegram_id" });
-  }
+  if (isNaN(numericTelegramId)) { // <-- تم تصحيحه
+  console.error("❌ telegram_id غير صحيح:", telegram_id);
+  return res.status(400).json({ error: "Invalid telegram_id" });
+}
 
-  if (isNaN(numericAmount)) {
-    console.error("❌ amount غير صحيح:", amount);
-    return res.status(400).json({ error: "Invalid amount" });
-  }
+if (isNaN(numericAmount)) { // <-- تم تصحيحه
+  console.error("❌ amount غير صحيح:", amount);
+  return res.status(400).json({ error: "Invalid amount" });
+}
 
   if (!TELEGRAM_BOT_TOKEN) {
     console.error("❌ TELEGRAM_BOT_TOKEN غير مضبوط");
@@ -43,16 +37,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // إنشاء payload مع البيانات الجديدة
+    // إنشاء payload مع payment_token
     const payload = JSON.stringify({
-  planId: plan_id,
-  userId: numericTelegramId,
-  paymentToken: payment_token,
-  fullName: full_name,
-  username: username
-});
+      planId: plan_id,
+      userId: numericTelegramId,
+      paymentToken: payment_token
+    });
+
     // تحويل المبلغ إلى صيغة Telegram الصحيحة (سنتات)
-    const invoiceAmount = Math.round(numericAmount * 100);
+    const invoiceAmount = Math.round(numericAmount ); // تحويل إلى سنتات
 
     console.log("🔗 بيانات الفاتورة:", {
       payment_token,
@@ -67,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: "اشتراك VIP",
-        description: `تجديد اشتراك لمدة ${plan_id} أيام للمستخدم ${full_name} (@${username})`,
+        description: `تجديد اشتراك لمدة ${plan_id} أيام`,
         payload: payload,
         currency: "XTR",
         prices: [{
@@ -75,10 +68,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           amount: invoiceAmount
         }],
         provider_data: {
-  payment_token: payment_token,
-  full_name: full_name,
-  username: username
-}
+          payment_token: payment_token // إضافة payment_token كبيانات إضافية
+        }
       }),
     });
 
