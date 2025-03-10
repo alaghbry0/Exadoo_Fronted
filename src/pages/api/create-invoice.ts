@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         provider_data: {
           payment_token: payment_token,
           full_name: full_name,
-          telegram_username: username
+          telegram_username: telegramUsername
         }
       }),
     });
