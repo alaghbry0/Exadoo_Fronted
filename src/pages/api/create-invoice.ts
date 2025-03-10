@@ -45,10 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // إنشاء payload مع البيانات الجديدة
     const payload = JSON.stringify({
-      planId: plan_id,
+     planId: plan_id,
       userId: numericTelegramId,
       paymentToken: payment_token,
-      fullName: full_name,
+      fullName: fullName, // استخدام القيمة المعدلة
       username: username
     });
 
@@ -77,8 +77,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }],
         provider_data: {
           payment_token: payment_token,
-          full_name: full_name,
-          telegram_username: telegramUsername
+          full_name: fullName,
+          telegram_username: username
         }
       }),
     });
