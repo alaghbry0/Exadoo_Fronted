@@ -77,19 +77,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         provider_data: {
   payment_token: payment_token,
   full_name: full_name,
-  username: username // توحيد اسم الحقل مع ما يطلبه Telegram
+  username: username
 }
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ خطأ من Telegram API:", errorText);
-      return res.status(502).json({
-        error: "فشل الاتصال بخدمة الدفع",
-        details: errorText
-      });
-    }
+    const responseData = await response.json();
+console.log("📤 استجابة Telegram API:", JSON.stringify(responseData, null, 2));
+
+if (!responseData.ok || !responseData.result) {
+  console.error("❌ تفاصيل الخطأ:", {
+    error_code: responseData.error_code,
+    description: responseData.description
+  });
 
     const responseData = await response.json();
 
