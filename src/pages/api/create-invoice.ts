@@ -92,13 +92,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const responseData = await response.json();
-console.log("📤 استجابة Telegram API:", JSON.stringify(responseData, null, 2));
 
-if (!responseData.ok || !responseData.result) {
-  console.error("❌ تفاصيل الخطأ:", {
-    error_code: responseData.error_code,
-    description: responseData.description
-  });
+    if (!responseData.ok || !responseData.result) {
+      console.error("❌ فشل في إنشاء الفاتورة:", responseData.description);
+      return res.status(500).json({
+        error: "فشل في إنشاء الفاتورة",
+        details: responseData.description
+      });
+    }
 
     console.log("✅ فاتورة تم إنشاؤها بنجاح:", {
       payment_token,
