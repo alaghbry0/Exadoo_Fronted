@@ -48,6 +48,7 @@ type SubscriptionOption = {
   price: string;
   originalPrice?: number;
   savings?: string;
+  telegramStarsPrice: number
 };
 
 type SubscriptionCard = {
@@ -149,17 +150,17 @@ const {
     const savings = calculateSavings(typePlans);
 
     const options: SubscriptionOption[] = typePlans.map(plan => {
-      // تحويل السعر إلى رقم إذا كان سلسلة نصية
-      const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+  const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
 
-      return {
-        id: plan.id,
-        duration: plan.name,
-        price: !isNaN(price) ? price.toFixed(0) + '$' : '0$', // التأكد من أن السعر رقم
-        originalPrice: price,
-        savings: plan.name === 'سنوي' && savings ? `وفر ${savings}%` : undefined
-      };
-    });
+  return {
+    id: plan.id,
+    duration: plan.name,
+    price: !isNaN(price) ? price.toFixed(0) + '$' : '0$',
+    originalPrice: price,
+    telegramStarsPrice: plan.telegram_stars_price, // أضف هذا السطر
+    savings: plan.name === 'سنوي' && savings ? `وفر ${savings}%` : undefined
+  };
+});
 
     return {
       id: type.id,

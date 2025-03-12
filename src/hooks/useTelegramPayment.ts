@@ -13,7 +13,7 @@ export const useTelegramPayment = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid' | 'failed' | 'processing' | null>(null);
 
-  const handleTelegramStarsPayment = useCallback(async (planId: number, price: number): Promise<PaymentResponse> => {
+  const handleTelegramStarsPayment = useCallback(async (planId: number, starsPrice: number): Promise<PaymentResponse> => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) {
       alert("❗ يرجى فتح التطبيق داخل تليجرام");
       return { error: "Telegram WebApp not available" };
@@ -47,16 +47,16 @@ export const useTelegramPayment = () => {
       }
 
       // 2. إنشاء الفاتورة
-      const invoiceResponse = await fetch("/api/create-invoice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          telegram_id: Number(telegramId),
-          plan_id: planId,
-          amount: price,
-          payment_token
-        })
-      });
+     const invoiceResponse = await fetch("/api/create-invoice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      telegram_id: Number(telegramId),
+      plan_id: planId, // هذا هو معرف الخطة الصحيح
+      amount: starsPrice, // السعر بالنجوم
+      payment_token
+    })
+  });
 
       if (!invoiceResponse.ok) {
         throw new Error("❌ فشل في إنشاء الفاتورة!");

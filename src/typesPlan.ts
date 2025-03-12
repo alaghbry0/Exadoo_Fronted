@@ -7,6 +7,7 @@ export interface SubscriptionOption {
 
   originalPrice?: number
   savings?: string
+  telegramStarsPrice: number
 }
 
 export interface SubscriptionCard {

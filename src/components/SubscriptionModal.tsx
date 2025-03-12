@@ -113,10 +113,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   try {
     setLoading(true);
     const { paymentToken } = await handleTelegramStarsPayment(
-      plan.id,
-      parseFloat(plan.selectedOption.price.replace(/[^0-9.]/g, '')),
-
-
+      plan.selectedOption.id, // معرف الخطة المحددة
+      plan.selectedOption.telegramStarsPrice // السعر بالنجوم
     );
 
     if (paymentToken) {
