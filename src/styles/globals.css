@@ -132,3 +132,17 @@ body {
     border: 2px solid transparent;
   }
 }
+
+/* في ملف CSS عالمي */
+@media (max-width: 640px) {
+  .profile-header {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .subscription-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+}

@@ -95,7 +95,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       const { payment_token } = await handleTonPayment(
         tonConnectUI,
         setPaymentStatus,
-        plan.id.toString(),
+        plan.selectedOption.id.toString(),
         telegramId || 'unknown',
         telegramUsername || 'unknown',
         fullName || 'Unknown'
