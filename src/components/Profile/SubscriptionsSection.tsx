@@ -21,16 +21,14 @@ const statusColors: Record<StatusType, { bg: string; text: string }> = {
  */
 export default function SubscriptionsSection({ subscriptions }: SubscriptionsSectionProps) {
   return (
-    <<motion.div
-  className="w-full bg-gradient-to-b from-blue-600 to-blue-400 pt-8 pb-6 md:pt-12 md:pb-10"
-  initial={{ opacity: 0, y: -20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{
-    duration: 0.4,
-    ease: [0.4, 0, 0.2, 1],
-    delay: 0.2 // تأخير ظهور الهيدر
-  }}
->
+    <motion.div
+      className="container mx-auto px-4 -mt-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="flex items-center gap-3 mb-4">
           <div className="bg-[#eff8ff] p-2 rounded-xl shadow-inner">
             <FiZap className="text-xl text-[#2390f1]" />
           </div>
