@@ -17,15 +17,15 @@ const statusColors: Record<StatusType, { bg: string; text: string }> = {
 
 /**
  * المكون الرئيسي لعرض قسم الاشتراكات النشطة.
- * يتم عرضه باستخدام تأثيرات الحركة مع framer-motion.
+ * يتم تحريكه قليلاً إلى الأسفل لتجنب التلاصق مع قسم اسم المستخدم.
  */
 export default function SubscriptionsSection({ subscriptions }: SubscriptionsSectionProps) {
   return (
     <motion.div
-      className="container mx-auto px-4 -mt-6"
+      className="container mx-auto px-4 mt-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, delay: 0.4 }}
     >
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center gap-3 mb-4">
