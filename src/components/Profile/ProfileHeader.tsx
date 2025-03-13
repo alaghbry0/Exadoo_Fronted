@@ -60,11 +60,15 @@ export default function ProfileHeader({
 
   return (
     <motion.div
-      className="w-full bg-gradient-to-b from-blue-800 to-blue-600 pt-8 pb-6 md:pt-12 md:pb-10"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
+  className="w-full bg-gradient-to-b from-blue-600 to-blue-400 pt-8 pb-6 md:pt-12 md:pb-10"
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{
+    duration: 0.4,
+    ease: [0.4, 0, 0.2, 1],
+    delay: 0.2 // تأخير ظهور الهيدر
+  }}
+>
       <div className="container mx-auto px-4 flex flex-col items-center space-y-4">
         {/* صورة الملف الشخصي مع تحسينات الاستجابة */}
         <motion.div

@@ -71,13 +71,16 @@ export default function Profile() {
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
       <AnimatePresence mode="wait">
         <motion.div
-          key="profile-content"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24"
-        >
+  key="profile-content"
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -30 }}
+  transition={{
+    duration: 0.5,
+    ease: [0.4, 0, 0.2, 1]
+  }}
+  className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24"
+>
           {/*
             تحويل بيانات الـ API (snake_case) إلى أسماء متوافقة مع المكونات (camelCase):
             نستخدم telegramUsername كـ username، ويتم تمرير باقي البيانات وفقاً لذلك.
