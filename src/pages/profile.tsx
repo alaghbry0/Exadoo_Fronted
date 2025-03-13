@@ -7,7 +7,7 @@ import { useProfileStore } from '../stores/profileStore';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import Loader from '../components/Loader';
+import { Spinner } from '../components/Spinner'
 import { getUserSubscriptions } from '../services/api';
 
 export default function Profile() {
@@ -41,7 +41,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader />
+        <Spinner />
       </div>
     );
   }
