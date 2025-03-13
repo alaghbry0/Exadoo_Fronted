@@ -130,7 +130,7 @@ export const createJettonTransferPayload = (
 export const handleTonPayment = async (
   tonConnectUI: TonConnectUI,
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>,
-  planId: string,
+  selectedPlanId: string,
   telegramId: string,
   telegramUsername: string,
   fullName: string
@@ -236,7 +236,7 @@ export const handleTonPayment = async (
         body: JSON.stringify({
           webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
           userWalletAddress: userTonAddress,
-          planId: planId,
+          planId: selectedPlanId,
           amount: '1e-05',
           telegramId: telegramId,
           telegramUsername: telegramUsername,
