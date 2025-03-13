@@ -48,11 +48,10 @@ export const getSubscriptionPlans = async () => {
 };
 
 
-export const getUserData = async (telegramId: string) => { // تم إضافة telegramId كمعامل
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user?telegram_id=${telegramId}`);
-    if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-    }
+
+export const getUserSubscriptions = async (telegramId: string) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/subscriptions?telegram_id=${telegramId}`);
+    if (!res.ok) throw new Error('فشل في جلب الاشتراكات');
     return res.json();
 };
 

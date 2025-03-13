@@ -1,97 +1,100 @@
 'use client'
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from 'react-query';
 import { useUserStore } from "../stores/zustand/userStore";
 import { useProfileStore } from '../stores/profileStore';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import Loader from '../components/Loader';
+import { getUserSubscriptions } from '../services/api';
 
 export default function Profile() {
-  const { telegramUsername, fullName, photoUrl } = useUserStore();
-  const { userProfile, userSubscriptions } = useProfileStore();
+  // استخراج معلومات المستخدم من الـ store
+  // نستخدم أسماء camelCase للمكونات بينما تبقى تعريفات الـ API في snake_case
+  const { fullName, telegramUsername, photoUrl, telegramId } = useUserStore();
+  const { subscriptions, error, setSubscriptions, setError } = useProfileStore();
 
-  const userData = userProfile;
-  const subscriptionsData = userSubscriptions;
+  // استخدام React Query لجلب الاشتراكات مع منطق كاش مدمج (مدة صلاحية الكاش 5 دقائق)
+  const { isLoading, isError, refetch } = useQuery(
+    ['subscriptions', telegramId],
+    () => {
+      if (!telegramId) throw new Error('المعرف غير موجود');
+      return getUserSubscriptions(telegramId);
+    },
+    {
+      enabled: !!telegramId,
+      staleTime: 300000, // 5 دقائق
+      onSuccess: (data) => {
+        // حفظ البيانات في localStorage لتقليل استدعاءات الـ API
+        localStorage.setItem('subscriptions', JSON.stringify({
+          data: data.subscriptions,
+          timestamp: Date.now()
+        }));
+        setSubscriptions(data.subscriptions);
+      },
+      onError: (err: Error) => setError(err.message)
+    }
+  );
 
-  console.log("Profile.tsx: قيمة photoUrl من userStore:", photoUrl);
-
-  if (!userData) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
-        <SkeletonTheme baseColor="#f0f0f0" highlightColor="#f8f8f8" borderRadius="0.5rem" duration={1.2}>
-          <ProfileHeaderSkeleton />
-          <SubscriptionsSkeleton />
-        </SkeletonTheme>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader />
       </div>
     );
   }
 
-  if (!subscriptionsData && userData === null) {
+  if (isError) {
+    // بدلاً من إعادة تحميل الصفحة، يتم استخدام refetch لإعادة محاولة جلب البيانات
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24 flex items-center justify-center"
+      >
         <div className="text-center text-red-500">
-          <p className="mb-4">حدث خطأ أثناء جلب بيانات الاشتراك</p>
+          <p className="mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
           >
             إعادة المحاولة
           </button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
-      <div className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24">
-        {userData && (
-          <>
-            <ProfileHeader
-              fullName={fullName}
-              username={telegramUsername}
-              profile_photo={photoUrl}
-              joinDate={userData.join_date}
-            />
-            <SubscriptionsSection
-              subscriptions={subscriptionsData || []}
-              // لا تمرر دالة التجديد حتى لا يظهر زر التجديد
-            />
-          </>
-        )}
-        {/* تمت إزالة SubscriptionModal لعدم الحاجة لتجديد الاشتراك حالياً */}
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="profile-content"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24"
+        >
+          {/*
+            تحويل بيانات الـ API (snake_case) إلى أسماء متوافقة مع المكونات (camelCase):
+            نستخدم telegramUsername كـ username، ويتم تمرير باقي البيانات وفقاً لذلك.
+            إذا كانت خاصية joinDate غير متوفرة نقوم بتمرير null.
+          */}
+          <ProfileHeader
+            fullName={fullName}
+            username={telegramUsername}
+            profilePhoto={photoUrl}
+            joinDate={null}
+          />
+
+          <SubscriptionsSection
+            subscriptions={subscriptions || []}
+          />
+        </motion.div>
+      </AnimatePresence>
     </TonConnectUIProvider>
   );
 }
-
-const ProfileHeaderSkeleton = () => (
-  <SkeletonTheme baseColor="#e3e3e3" highlightColor="#f0f0f0">
-    <div className="w-full bg-gradient-to-b from-[#2390f1] to-[#1a75c4] pt-4 pb-8">
-      <div className="container mx-auto px-4 flex flex-col items-center">
-        <Skeleton circle width={80} height={80} className="mb-4" />
-        <Skeleton width={150} height={20} className="mb-2" />
-        <Skeleton width={120} height={16} />
-        <Skeleton width={140} height={16} className="mt-1" />
-      </div>
-    </div>
-  </SkeletonTheme>
-);
-
-const SubscriptionsSkeleton = () => (
-  <SkeletonTheme baseColor="#f0f0f0" highlightColor="#f8f8f8">
-    <div className="container mx-auto px-4 -mt-6">
-      <div className="bg-white rounded-xl shadow-sm p-3">
-        <div className="flex items-center gap-2 mb-4">
-          <Skeleton circle width={30} height={30} />
-          <Skeleton width={140} height={20} />
-        </div>
-        {[...Array(2)].map((_, i) => (
-          <Skeleton key={i} height={80} className="mb-3 rounded-lg" />
-        ))}
-      </div>
-    </div>
-  </SkeletonTheme>
-);

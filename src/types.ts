@@ -20,6 +20,6 @@ export type Subscription = {
   color?: string;
   expiry?: string;
   progress?: number;
-  status?: "نشط" | "منتهي";
+   status: "نشط" | "منتهي" | "unknown";
 };
 
