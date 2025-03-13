@@ -13,6 +13,7 @@ import usdtAnimationData from '@/animations/usdt.json'
 import starsAnimationData from '@/animations/stars.json'
 import { PaymentStatus } from '@/types/payment'
 import { Spinner } from '@/components/Spinner'
+import { useQueryClient } from 'react-query';
 
 const Lottie = dynamic(() => import('lottie-react'), {
   ssr: false,
@@ -27,6 +28,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
   const [loading, setLoading] = useState(false)
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
+
+   const queryClient = useQueryClient();
 
   const maxRetryCount = 3
   const retryDelay = 3000
@@ -60,6 +63,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         switch (data.status) {
           case 'success':
             setPaymentStatus('success')
+            queryClient.invalidateQueries(['subscriptions', telegramId]);
             window.dispatchEvent(new CustomEvent('subscription_update', {
               detail: { invite_link: data.invite_link, formatted_message: data.message }
             }))
