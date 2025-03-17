@@ -6,16 +6,19 @@ import QRCode from 'react-qr-code'
 import { useTelegram } from '../context/TelegramContext'
 import { Spinner } from '@/components/Spinner'
 
-// تعريف الواجهة واستخدامها في state
 interface PaymentDetails {
   deposit_address: string
   network: string
   amount: string
   qr_code: string
-  // لن نستخدم payment_token هنا لأنها ستستخدم للاتصال بالخادم الخلفي فقط
 }
 
-const Bep20PaymentModal = ({ plan, onClose }: { plan: PaymentDetails & { payment_token: string }; onClose: () => void }) => {
+interface Bep20PaymentModalProps {
+  plan: PaymentDetails & { payment_token: string }
+  onClose: () => void
+}
+
+const Bep20PaymentModal = ({ plan, onClose }: Bep20PaymentModalProps) => {
   const { telegramId } = useTelegram()
   const [copied, setCopied] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'pending' | 'verified' | 'failed'>('idle')
@@ -26,6 +29,7 @@ const Bep20PaymentModal = ({ plan, onClose }: { plan: PaymentDetails & { payment
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // دالة verifyPayment تستخدم deposit_address ومعرّف التليجرام فقط
   const verifyPayment = async () => {
     try {
       setVerificationStatus('pending')
@@ -33,7 +37,7 @@ const Bep20PaymentModal = ({ plan, onClose }: { plan: PaymentDetails & { payment
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          payment_token: plan.payment_token,
+          deposit_address: plan.deposit_address,
           telegramId: telegramId
         }),
       })

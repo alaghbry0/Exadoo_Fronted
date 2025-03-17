@@ -18,6 +18,14 @@ import Lottie from 'lottie-react'
 import usdtAnimationData from '@/animations/usdt.json'
 import starsAnimationData from '@/animations/stars.json'
 
+interface PaymentDetails {
+  deposit_address: string
+  network: string
+  amount: string
+  qr_code: string
+  payment_token: string
+}
+
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment } = useTelegramPayment()
   const { telegramId } = useTelegram()
@@ -26,14 +34,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
   const [loading, setLoading] = useState(false)
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
-  // الحالة الخاصة بتفاصيل الدفع عبر BEP‑20
-  const [bep20PaymentDetails, setBep20PaymentDetails] = useState<{
-    deposit_address: string
-    network: string
-    amount: string
-    qr_code: string
-    payment_token: string
-  } | null>(null)
+  // state لتفاصيل الدفع عبر BEP‑20 (يتضمن payment_token لاستخدامه في SSE)
+  const [bep20PaymentDetails, setBep20PaymentDetails] = useState<PaymentDetails | null>(null)
   const [showBep20Payment, setShowBep20Payment] = useState(false)
   const queryClient = useQueryClient()
   const maxRetryCount = 3
@@ -97,7 +99,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
   }
 
-  // دالة دفع BEP‑20: تُرسل طلب create-payment وتخزن البيانات ثم تُفتح نافذة الدفع
+  // دالة دفع BEP‑20: تُرسل طلب create‑payment وتخزن البيانات ثم تُبدأ اتصال SSE باستخدام payment_token
   const handleBep20PaymentWrapper = async () => {
     if (!plan) return
     try {
@@ -116,8 +118,10 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         })
       })
       if (!response.ok) throw new Error('فشل إنشاء الدفع')
-      const data = await response.json()
+      const data: PaymentDetails = await response.json()
       setBep20PaymentDetails(data)
+      // بدء اتصال SSE باستخدام payment_token المُستلم
+      startSSEConnection(data.payment_token)
       setShowBep20Payment(true)
     } catch (error) {
       console.error('BEP‑20 Payment error:', error)
@@ -202,19 +206,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
               <div className="flex items-baseline justify-between bg-blue-50 rounded-lg p-4">
                 <div className="space-y-1">
-                  <span className="text-sm text-gray-600">
-                    {plan?.selectedOption.price} :سعر الخطه
-                  </span>
+                  <span className="text-sm text-gray-600">{plan?.selectedOption.price} :سعر الخطه</span>
                 </div>
-                <span className="text-sm text-gray-600">
-                  الخطه: {plan?.selectedOption.duration}
-                </span>
+                <span className="text-sm text-gray-600">الخطه: {plan?.selectedOption.duration}</span>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                  الميزات المتضمنة:
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">الميزات المتضمنة:</h3>
                 <ul className="space-y-3">
                   {plan?.features?.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
