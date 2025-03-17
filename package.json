@@ -6,9 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p $PORT",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "postinstall": "next build",
-    "prepare": "next build"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
+
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
