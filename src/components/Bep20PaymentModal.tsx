@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { FiX, FiCopy } from 'react-icons/fi'
 import QRCode from 'react-qr-code'
 import { useTelegram } from '../context/TelegramContext'
-import { Spinner } from '@/components/Spinner'
+import { Spinner } from '../components/Spinner'
 
 interface PaymentDetails {
   deposit_address: string

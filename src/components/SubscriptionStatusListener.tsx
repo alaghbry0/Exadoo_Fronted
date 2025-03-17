@@ -9,7 +9,7 @@ const SubscriptionStatusListener: React.FC = () => {
   useEffect(() => {
     if (!telegramId) return;
 
-    const websocket = new WebSocket(`${process.env.NEXT_PUBLIC_BACKEND_WS_URL}/ws/subscription_status`);
+    const websocket = new WebSocket(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ws/subscription_status`);
 
     websocket.onopen = () => {
       console.log("✅ WebSocket connection opened");
