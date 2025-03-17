@@ -46,7 +46,6 @@ const nextConfig: NextConfig = {
               "connect-src 'self' " +
                 "wss://exadoo-rxr9.onrender.com " +
                 "https://exadoo-rxr9.onrender.com " +
-                "http://192.168.8.198:5000 " +
                 "wss://*.render.com " +
                 "https://*.render.com " +
                 "https://tonapi.io " +
