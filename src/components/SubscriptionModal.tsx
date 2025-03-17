@@ -15,8 +15,8 @@ import { useQueryClient } from 'react-query'
 import Bep20PaymentModal from '../components/Bep20PaymentModal'
 import { FaEthereum } from 'react-icons/fa'
 import Lottie from 'lottie-react'
-import usdtAnimationData from '@/animations/usdt.json'
-import starsAnimationData from '@/animations/stars.json'
+import usdtAnimationData from '../animations/usdt.json'
+import starsAnimationData from '../animations/stars.json'
 
 interface PaymentDetails {
   deposit_address: string
