@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiX, FiCopy } from 'react-icons/fi'
-import QRCode from 'react-qr-code'
+import dynamic from 'next/dynamic';
 import { useTelegram } from '../context/TelegramContext'
 import { Spinner } from '../components/Spinner'
 
@@ -17,6 +17,7 @@ interface Bep20PaymentModalProps {
   plan: PaymentDetails & { payment_token: string }
   onClose: () => void
 }
+const QRCode = dynamic(() => import('react-qr-code'), { ssr: false });
 
 const Bep20PaymentModal = ({ plan, onClose }: Bep20PaymentModalProps) => {
   const { telegramId } = useTelegram()

@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiCheckCircle } from 'react-icons/fi'
-import { useTelegramPayment } from '../hooks/useTelegramPayment'
+import { useTelegramPayment } from '../hooks/useTelegramPayment';
 import { useTonConnectUI } from '@tonconnect/ui-react'
-
+import dynamic from 'next/dynamic';
 import { useUserStore } from '../stores/zustand/userStore'
 import { handleTonPayment } from '../utils/tonPayment'
 import type { SubscriptionPlan } from '@/typesPlan'
@@ -14,7 +14,7 @@ import { Spinner } from '../components/Spinner'
 import { useQueryClient } from 'react-query'
 import Bep20PaymentModal from '../components/Bep20PaymentModal'
 import { FaEthereum } from 'react-icons/fa'
-import Lottie from 'lottie-react'
+
 import usdtAnimationData from '../animations/usdt.json'
 import starsAnimationData from '../animations/stars.json'
 
@@ -25,6 +25,11 @@ interface PaymentDetails {
   qr_code: string
   payment_token: string
 }
+
+const Lottie = dynamic(() => import('lottie-react'), {
+  ssr: false,
+  loading: () => <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+});
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { handleTelegramStarsPayment } = useTelegramPayment()
