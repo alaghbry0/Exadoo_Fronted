@@ -115,7 +115,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    planId: plan.id,
+    planId: plan.selectedOption.id,
     telegramId: telegramId,
     full_name: fullName,
     username: telegramUsername,
