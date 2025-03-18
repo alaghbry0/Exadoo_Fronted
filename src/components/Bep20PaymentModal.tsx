@@ -39,7 +39,8 @@ const Bep20PaymentModal = ({ plan, onClose }: Bep20PaymentModalProps) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           deposit_address: plan.deposit_address,
-          telegramId: telegramId
+          telegramId: telegramId,
+          webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ''
         }),
       })
       const result = await response.json()

@@ -110,18 +110,18 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     try {
       setLoading(true)
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/create-payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'webhookSecret': process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ''
-        },
-        body: JSON.stringify({
-          planId: plan.id,
-          telegramId: telegramId,
-          full_name: fullName,
-          username: telegramUsername
-        })
-      })
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    planId: plan.id,
+    telegramId: telegramId,
+    full_name: fullName,
+    username: telegramUsername,
+    webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET || ''
+  })
+})
       if (!response.ok) throw new Error('فشل إنشاء الدفع')
       const data: PaymentDetails = await response.json()
       setBep20PaymentDetails(data)
