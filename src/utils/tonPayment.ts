@@ -108,7 +108,7 @@ export const createJettonTransferPayload = (
         cellBuilder.storeRef(
             beginCell()
                 .storeUint(0x00000000, 32) // OP Code للتعليق النصي (0)
-                .storeStringTail(`orderId:${orderId}`) // تخزين orderId كسلسلة نصية
+                .storeStringTail(`${orderId}`) // تخزين orderId كسلسلة نصية
                 .endCell()
         );
 

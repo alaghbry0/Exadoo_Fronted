@@ -5,3 +5,13 @@ export type PaymentStatus =
   | 'processing'
   | 'success'
   | 'failed';
+
+export interface SubscriptionPlanExtended extends SubscriptionPlan {
+  selectedOption: {
+    id: number;
+    price: string;
+    duration: string;
+    telegramStarsPrice: number;
+  };
+  features: string[];
+}

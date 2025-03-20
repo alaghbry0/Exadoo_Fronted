@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start -p $PORT",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
-
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
@@ -34,6 +33,7 @@
     "pg": "^8.13.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-intersection-observer": "^9.15.1",
     "react-loading-skeleton": "^3.5.0",
@@ -41,7 +41,7 @@
     "react-query": "^3.39.3",
     "swr": "^2.3.0",
     "ton": "^6.13.1",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

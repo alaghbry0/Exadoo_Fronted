@@ -12,6 +12,7 @@ import { useTariffStore } from '../stores/zustand'
 import { fetchBotWalletAddress } from '../services/api'
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
 import { useProfileStore } from '../stores/profileStore' // تأكد من وجود هذا المسار
+import { NotificationToast } from '../components/NotificationToast'
 
 const queryClient = new QueryClient()
 
@@ -116,6 +117,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     <>
       <Component {...pageProps} router={router} />
       <FooterNav />
+      <NotificationToast />
       <InviteAlert />
     </>
   )
