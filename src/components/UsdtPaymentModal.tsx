@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { FiX } from 'react-icons/fi';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/router';
+import { useTariffStore } from '../stores/zustand'
+
 // استيراد النوع الصحيح
 import type { SubscriptionPlanExtended } from '@/types/payment';
 
@@ -63,7 +65,7 @@ const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
         startSSEConnection(payment_token);
       }
       // إعادة التوجيه إلى صفحة PaymentExchangePage مع تمرير البيانات عبر معلمات URL
-      const recipientAddress = process.env.NEXT_PUBLIC_RECIPIENT_ADDRESS || '0xRecipientAddress';
+      const recipientAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress';
       const amount = plan?.selectedOption.price || 'Unknown';
       const network = 'Ton Network';
 

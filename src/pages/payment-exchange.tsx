@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/router';
-import PaymentExchangePage from '@/components/PaymentExchangePage';
+import PaymentExchangePage from '../components/PaymentExchangePage';
 
 const PaymentExchange = () => {
   const router = useRouter();
