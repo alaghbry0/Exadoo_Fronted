@@ -36,12 +36,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
   const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'wallet' | 'exchange' | 'choose' | null>(null)
   const [exchangeDetails, setExchangeDetails] = useState<{
-    orderId: string
-    depositAddress: string
-    amount: string
-    network: string
-    paymentToken: string
-  } | null>(null)
+  orderId: string
+  depositAddress: string
+  amount: string
+  network: string
+  paymentToken: string
+  planName?: string
+
+} | null>(null)
   const queryClient = useQueryClient()
   const maxRetryCount = 3
   const retryDelay = 3000
@@ -161,7 +163,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           depositAddress: deposit_address,
           amount: plan.selectedOption.price,
           network: 'TON Network',
-          paymentToken: payment_token
+          paymentToken: payment_token,
+           planName: plan.name
         })
 
         startSSEConnection(payment_token)
