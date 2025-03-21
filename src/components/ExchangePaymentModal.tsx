@@ -1,8 +1,9 @@
 'use client'
 import { motion } from 'framer-motion'
-import { FiCopy, FiX } from 'react-icons/fi'
+import { FiCopy, FiX, FiClock, FiExternalLink, FiAlertTriangle } from 'react-icons/fi'
 import { useClipboard } from '../hooks/useClipboard'
 import QRCode from 'react-qr-code'
+import { useEffect, useState } from 'react'
 
 export const ExchangePaymentModal = ({
   details,
@@ -18,121 +19,160 @@ export const ExchangePaymentModal = ({
   onClose: () => void
 }) => {
   const { copy } = useClipboard()
+  const [timeLeft, setTimeLeft] = useState(900) // 15 دقيقة بالثواني
+  const [isCopied, setIsCopied] = useState<string | null>(null)
 
-  // تنسيق المبلغ لإضافة العملة
-  const formattedAmount = `${details.amount} TON`
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => Math.max(0, prev - 1))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
-   return (
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleCopy = (text: string, label: string) => {
+    copy(text)
+    setIsCopied(label)
+    setTimeout(() => setIsCopied(null), 2000)
+  }
+
+  const openWallet = () => {
+    window.open(`ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.orderId}`, '_blank')
+  }
+
+  return (
     <motion.div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[1001]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className="bg-white rounded-xl max-w-md w-full p-4 md:p-6 space-y-4 relative">
-        {/* Header */}
-        <div className="grid grid-cols-12 gap-4 items-center pb-4 border-b">
-          <h1 className="col-span-10 text-xl md:text-2xl font-bold text-gray-800 text-right">
-            تفاصيل التحويل
-          </h1>
+      <div className="bg-white rounded-xl max-w-md w-full p-4 md:p-6 space-y-4 relative mx-2 shadow-xl">
+        {/* Header Section */}
+        <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <FiClock className="text-red-600 w-5 h-5" />
+            <span className="font-medium text-red-600">
+              {formatTime(timeLeft)}
+            </span>
+          </div>
           <button
             onClick={onClose}
-            className="col-span-2 flex justify-end text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="إغلاق النافذة"
           >
             <FiX className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-12 gap-4">
-          {/* Address Section */}
-          <div className="col-span-12 bg-gray-50 p-4 rounded-lg">
-            <div className="grid grid-cols-12 gap-2 items-center">
-              <label className="col-span-12 text-sm text-gray-600 mb-1">عنوان المحفظة:</label>
-              <div className="col-span-10">
-                <span className="font-mono text-gray-800 text-sm md:text-base break-all">
-                  {details.depositAddress}
-                </span>
-              </div>
-              <button
-                onClick={() => copy(details.depositAddress)}
-                className="col-span-2 flex justify-center text-blue-600 hover:text-blue-800"
+        {/* Main Content */}
+        <div className="space-y-4">
+          {/* Payment Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                label: 'عنوان المحفظة',
+                value: details.depositAddress,
+                fullWidth: true,
+                icon: <FiCopy />
+              },
+              {
+                label: 'المبلغ المطلوب',
+                value: `${details.amount} TON`,
+                icon: <FiCopy />
+              },
+              {
+                label: 'الشبكة',
+                value: details.network,
+                icon: <FiCopy />
+              },
+              {
+                label: 'رقم الطلب',
+                value: details.orderId,
+                fullWidth: true,
+                icon: <FiCopy />
+              }
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                className={`col-span-${item.fullWidth ? 'full' : '1'} relative`}
+                whileHover={{ scale: 1.02 }}
               >
-                <FiCopy className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Amount Section */}
-          <div className="col-span-12 md:col-span-6 bg-gray-50 p-4 rounded-lg">
-            <div className="grid grid-cols-12 gap-2 items-center">
-              <label className="col-span-12 text-sm text-gray-600 mb-1">المبلغ المطلوب:</label>
-              <div className="col-span-10">
-                <span className="font-mono text-gray-800 text-sm md:text-base">
-                  {formattedAmount}
-                </span>
-              </div>
-              <button
-                onClick={() => copy(details.amount)}
-                className="col-span-2 flex justify-center text-blue-600 hover:text-blue-800"
-              >
-                <FiCopy className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Network Section */}
-          <div className="col-span-12 md:col-span-6 bg-gray-50 p-4 rounded-lg">
-            <div className="grid grid-cols-12 gap-2 items-center">
-              <label className="col-span-12 text-sm text-gray-600 mb-1">الشبكة:</label>
-              <div className="col-span-10">
-                <span className="font-mono text-gray-800 text-sm md:text-base">
-                  {details.network}
-                </span>
-              </div>
-              <button
-                onClick={() => copy(details.network)}
-                className="col-span-2 flex justify-center text-blue-600 hover:text-blue-800"
-              >
-                <FiCopy className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Order ID Section */}
-          <div className="col-span-12 bg-gray-50 p-4 rounded-lg">
-            <div className="grid grid-cols-12 gap-2 items-center">
-              <label className="col-span-12 text-sm text-gray-600 mb-1">تعليق الدفع (مطلوب):</label>
-              <div className="col-span-10">
-                <span className="font-mono text-gray-800 text-sm md:text-base break-all">
-                  {details.orderId}
-                </span>
-              </div>
-              <button
-                onClick={() => copy(details.orderId)}
-                className="col-span-2 flex justify-center text-blue-600 hover:text-blue-800"
-              >
-                <FiCopy className="w-5 h-5" />
-              </button>
-            </div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                      <p className="font-mono text-gray-800 text-sm break-all">
+                        {item.value}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(item.value, item.label)}
+                      className="text-gray-400 hover:text-blue-600 transition-colors p-1"
+                      aria-label={`نسخ ${item.label}`}
+                    >
+                      {item.icon}
+                    </button>
+                  </div>
+                  {isCopied === item.label && (
+                    <motion.span
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute bottom-1 right-1 text-xs text-green-600"
+                    >
+                      تم النسخ!
+                    </motion.span>
+                  )}
+                </div>
+              </motion.div>
+            ))}
           </div>
 
           {/* QR Code Section */}
-          <div className="col-span-12 flex justify-center p-4 bg-white rounded-lg border">
+          <motion.div
+            className="p-4 bg-white rounded-lg border-2 border-dashed border-blue-200 text-center"
+            whileHover={{ scale: 1.01 }}
+          >
             <QRCode
               value={`ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.orderId}`}
-              size={window.innerWidth < 768 ? 128 : 160}
+              size={160}
               fgColor="#1a365d"
+              className="mx-auto mb-4"
             />
-          </div>
+            <button
+              onClick={openWallet}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FiExternalLink className="w-4 h-4" />
+              <span>فتح في المحفظة</span>
+            </button>
+          </motion.div>
 
           {/* Warning Section */}
-          <div className="col-span-12 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <h3 className="text-yellow-800 font-medium mb-2 text-sm md:text-base">❗ تعليمات مهمة:</h3>
-            <ul className="list-disc list-inside text-yellow-700 text-xs md:text-sm space-y-1">
-              <li>تأكد من تطابق التعليق مع الطلب</li>
-              <li>لا تغلق الصفحة حتى اكتمال التحويل</li>
-              <li>قد تستغرق المعالجة حتى 15 دقيقة</li>
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 space-y-3">
+            <div className="flex items-center gap-2 text-yellow-800">
+              <FiAlertTriangle className="flex-shrink-0" />
+              <h3 className="font-medium">تعليمات مهمة</h3>
+            </div>
+            <ul className="text-yellow-700 text-sm space-y-2">
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>الالتزام برقم الطلب في حقل الملاحظات إلزامي</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>عدم إغلاق النافذة حتى اكتمال التحويل</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>التحويلات بدون ملاحظات لن يتم اعتمادها</span>
+              </li>
             </ul>
           </div>
         </div>
