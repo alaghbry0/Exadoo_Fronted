@@ -71,24 +71,24 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       try {
         const data = JSON.parse(e.data)
         switch (data.status) {
-          case 'success':
-            setPaymentStatus('success')
-            queryClient.invalidateQueries(['subscriptions', telegramId])
-            window.dispatchEvent(new CustomEvent('subscription_update', {
-              detail: { invite_link: data.invite_link, formatted_message: data.message }
-            }))
-            es.close()
-            showToast.success('تم تجديد الاشتراك بنجاح!')
-
-            break
-          case 'failed':
-            setPaymentStatus('failed')
-            es.close()
-            showToast.error('فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
-            break
-          default:
-            setPaymentStatus('processing')
-        }
+  case 'success':
+    setPaymentStatus('success')
+    queryClient.invalidateQueries(['subscriptions', telegramId])
+    window.dispatchEvent(new CustomEvent('subscription_update', {
+      detail: { invite_link: data.invite_link, formatted_message: data.message }
+    }))
+    es.close()
+    // استخدام الرسالة المرسلة من الخادم
+    showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
+    break
+  case 'failed':
+    setPaymentStatus('failed')
+    es.close()
+    showToast.error(data.message || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+    break
+  default:
+    setPaymentStatus('processing')
+}
       } catch (error) {
         console.error('❌ خطأ في معالجة حدث SSE:', error)
       }
@@ -146,7 +146,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           body: JSON.stringify({
             webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
             planId: plan.selectedOption.id,
-            amount: '1e-05',
+            amount: '0.01',
             telegramId,
             telegramUsername,
             fullName,
