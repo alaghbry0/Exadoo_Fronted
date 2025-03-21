@@ -1,125 +1,114 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiCheckCircle } from 'react-icons/fi';
-import { useTelegramPayment } from '../hooks/useTelegramPayment';
-import { useTonConnectUI } from '@tonconnect/ui-react';
-import dynamic from 'next/dynamic';
-import { useUserStore } from '../stores/zustand/userStore';
-import { handleTonPayment } from '../utils/tonPayment';
-import type { SubscriptionPlan } from '@/typesPlan';
-import { useTelegram } from '../context/TelegramContext';
-import { PaymentStatus } from '@/types/payment';
-import { Spinner } from '../components/Spinner';
-import { useQueryClient } from 'react-query';
+'use client'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FiX, FiCheckCircle } from 'react-icons/fi'
+import { useTelegramPayment } from '../hooks/useTelegramPayment'
+import { useTonConnectUI } from '@tonconnect/ui-react'
+import dynamic from 'next/dynamic'
+import { useUserStore } from '../stores/zustand/userStore'
+import { handleTonPayment } from '../utils/tonPayment'
+import type { SubscriptionPlan } from '@/typesPlan'
+import { useTelegram } from '../context/TelegramContext'
+import { PaymentStatus } from '@/types/payment'
+import { Spinner } from '../components/Spinner'
+import { useQueryClient } from 'react-query'
+import { v4 as uuidv4 } from 'uuid'
+import { UsdtPaymentMethodModal } from '../components/UsdtPaymentMethodModal'
+import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
+import { useTariffStore } from '../stores/zustand'
 
-// استيراد المتحرك الخاص بـ USDT والنجوم
-import usdtAnimationData from '../animations/usdt.json';
-import starsAnimationData from '../animations/stars.json';
+import { showToast } from '../components/ui/Toast'
+import usdtAnimationData from '../animations/usdt.json'
+import starsAnimationData from '../animations/stars.json'
 
-// تحميل مكتبة Lottie للرسوم المتحركة
 const Lottie = dynamic(() => import('lottie-react'), {
   ssr: false,
-  loading: () => <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />,
-});
+  loading: () => <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+})
 
-// استيراد مكون نافذة الدفع عبر USDT
-import UsdtPaymentModal from '../components/UsdtPaymentModal';
-
-// تعريف SubscriptionPlanExtended كما هو معرف في payment.d.ts
-interface SubscriptionPlanExtended extends SubscriptionPlan {
-  selectedOption: {
-    id: number;
-    price: string;
-    duration: string;
-    telegramStarsPrice: number;
-  };
-  features: string[];
-}
-
-interface SubscriptionModalProps {
-  plan: SubscriptionPlanExtended | null;
-  onClose: () => void;
-}
-
-const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ plan, onClose }) => {
-  const { handleTelegramStarsPayment } = useTelegramPayment();
-  const { telegramId } = useTelegram();
-  const { telegramUsername, fullName } = useUserStore();
-  const [tonConnectUI] = useTonConnectUI();
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-  const [loading, setLoading] = useState(false);
-  const [eventSource, setEventSource] = useState<EventSource | null>(null);
-  const [showUsdtModal, setShowUsdtModal] = useState(false);
-  const queryClient = useQueryClient();
-  const maxRetryCount = 3;
-  const retryDelay = 3000;
+const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
+  const { handleTelegramStarsPayment } = useTelegramPayment()
+  const { telegramId } = useTelegram()
+  const { telegramUsername, fullName } = useUserStore()
+  const [tonConnectUI] = useTonConnectUI()
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
+  const [loading, setLoading] = useState(false)
+  const [eventSource, setEventSource] = useState<EventSource | null>(null)
+  const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'wallet' | 'exchange' | 'choose' | null>(null)
+  const [exchangeDetails, setExchangeDetails] = useState<{
+    orderId: string
+    depositAddress: string
+    amount: string
+    network: string
+    paymentToken: string
+  } | null>(null)
+  const queryClient = useQueryClient()
+  const maxRetryCount = 3
+  const retryDelay = 3000
 
   useEffect(() => {
     return () => {
-      eventSource?.close();
-    };
-  }, [eventSource]);
+      eventSource?.close()
+    }
+  }, [eventSource])
 
   const startSSEConnection = (paymentToken: string, retryCount = 0) => {
-    setPaymentStatus('processing');
-    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`);
-    sseUrl.searchParams.append('payment_token', paymentToken);
-    sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown');
+    setPaymentStatus('processing')
+    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
+    sseUrl.searchParams.append('payment_token', paymentToken)
+    sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
 
-    const es = new EventSource(sseUrl.toString());
-    setEventSource(es);
+    const es = new EventSource(sseUrl.toString())
 
-    const timeoutId = setTimeout(() => {
-      es.close();
-      setPaymentStatus('failed');
-      if (retryCount < maxRetryCount) {
-        setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay);
-      }
-    }, 300000);
+    es.onopen = () => {
+      console.log('SSE connection established')
+      setEventSource(es)
+    }
 
-    es.onmessage = (e) => {
+    const handleMessage = (e: MessageEvent) => {
       try {
-        const data = JSON.parse(e.data);
+        const data = JSON.parse(e.data)
         switch (data.status) {
           case 'success':
-            setPaymentStatus('success');
-            queryClient.invalidateQueries(['subscriptions', telegramId]);
-            window.dispatchEvent(
-              new CustomEvent('subscription_update', {
-                detail: { invite_link: data.invite_link, formatted_message: data.message },
-              })
-            );
-            es.close();
-            break;
+            setPaymentStatus('success')
+            queryClient.invalidateQueries(['subscriptions', telegramId])
+            window.dispatchEvent(new CustomEvent('subscription_update', {
+              detail: { invite_link: data.invite_link, formatted_message: data.message }
+            }))
+            es.close()
+            showToast.success('تم تجديد الاشتراك بنجاح!')
+
+            break
           case 'failed':
-            setPaymentStatus('failed');
-            es.close();
-            break;
+            setPaymentStatus('failed')
+            es.close()
+            showToast.error('فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+            break
           default:
-            setPaymentStatus('processing');
+            setPaymentStatus('processing')
         }
-        clearTimeout(timeoutId);
       } catch (error) {
-        console.error('❌ خطأ في معالجة حدث SSE:', error);
+        console.error('❌ خطأ في معالجة حدث SSE:', error)
       }
-    };
+    }
+
+    es.addEventListener('message', handleMessage)
 
     es.onerror = () => {
-      clearTimeout(timeoutId);
-      es.close();
-      setPaymentStatus('failed');
       if (retryCount < maxRetryCount) {
-        setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay);
+        setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay)
+      } else {
+        setPaymentStatus('failed')
       }
-    };
-  };
+      es.close()
+    }
+  }
 
   const handleTonPaymentWrapper = async () => {
-    if (!plan) return;
+    if (!plan) return
     try {
-      setLoading(true);
-      const selectedPlanId = plan.selectedOption.id.toString();
+      setLoading(true)
+      const selectedPlanId = plan.selectedOption.id.toString()
       const { payment_token } = await handleTonPayment(
         tonConnectUI,
         setPaymentStatus,
@@ -127,34 +116,84 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ plan, onClose }) 
         telegramId || 'unknown',
         telegramUsername || 'unknown',
         fullName || 'Unknown'
-      );
-      if (payment_token) startSSEConnection(payment_token);
+      )
+      if (payment_token) startSSEConnection(payment_token)
     } catch {
-      setPaymentStatus('failed');
+      setPaymentStatus('failed')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const handleUsdtPaymentChoice = async (method: 'wallet' | 'exchange') => {
+    if (!plan) return
+
+    try {
+      setLoading(true)
+      if (method === 'wallet') {
+        await handleTonPaymentWrapper()
+      } else {
+        const orderId = uuidv4()
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Telegram-Id': telegramId || 'unknown',
+          },
+          body: JSON.stringify({
+            webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
+            planId: plan.selectedOption.id,
+            amount: '1e-05',
+            telegramId,
+            telegramUsername,
+            fullName,
+            orderId,
+          }),
+        })
+
+        if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع')
+
+        const { payment_token } = await response.json()
+        const deposit_address = useTariffStore.getState().walletAddress || '0xRecipientAddress';
+        setExchangeDetails({
+          orderId,
+          depositAddress: deposit_address,
+          amount: plan.selectedOption.price,
+          network: 'TON Network',
+          paymentToken: payment_token
+        })
+
+        startSSEConnection(payment_token)
+      }
+    } catch (error) {
+      console.error('خطأ في عملية الدفع:', error)
+      setPaymentStatus('failed')
+      showToast.error('فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleStarsPayment = async () => {
-    if (!plan) return;
+    if (!plan) return
     try {
-      setLoading(true);
+      setLoading(true)
       const { paymentToken } = await handleTelegramStarsPayment(
         plan.selectedOption.id,
         plan.selectedOption.telegramStarsPrice
-      );
+      )
       if (paymentToken) {
-        startSSEConnection(paymentToken);
+        startSSEConnection(paymentToken)
       } else {
-        setPaymentStatus('failed');
+        setPaymentStatus('failed')
       }
     } catch {
-      setPaymentStatus('failed');
+      setPaymentStatus('failed')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <>
@@ -199,10 +238,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ plan, onClose }) 
                 <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">الميزات المتضمنة:</h3>
                 <ul className="space-y-3">
                   {plan?.features?.map((feature, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
+                    <li key={index} className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
                       <FiCheckCircle className="text-[#0084FF] mt-1 flex-shrink-0" />
                       <span className="text-gray-700 leading-relaxed text-sm">{feature}</span>
                     </li>
@@ -213,27 +249,35 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ plan, onClose }) 
 
             {/* Payment Section */}
             <div className="sticky bottom-12 bg-white border-t p-5 sm:p-6 space-y-3">
+              {/* زر الدفع عبر USDT */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setShowUsdtModal(true)}
+                onClick={() => setUsdtPaymentMethod('choose')}
                 disabled={loading || paymentStatus === 'processing'}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0084FF] to-[#0066CC] text-white rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all ${
-                  paymentStatus === 'processing' ? 'cursor-wait' : ''
+                  loading || paymentStatus === 'processing' ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
                 aria-label="الدفع باستخدام USDT"
               >
-                <Lottie animationData={usdtAnimationData} className="w-6 h-6" />
-                <span>الدفع عبر USDT</span>
+                {loading ? (
+                  <Spinner className="w-5 h-5 text-white" />
+                ) : (
+                  <>
+                    <Lottie animationData={usdtAnimationData} className="w-6 h-6" />
+                    <span>الدفع عبر USDT</span>
+                  </>
+                )}
               </motion.button>
 
+              {/* زر الدفع باستخدام Telegram Stars */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleStarsPayment}
                 disabled={loading || !telegramId || paymentStatus === 'processing'}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFC800] text-gray-900 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all ${
-                  paymentStatus === 'processing' ? 'cursor-wait' : ''
+                  paymentStatus === 'processing' ? 'cursor-wait opacity-75' : ''
                 }`}
                 aria-label="الدفع باستخدام Telegram Stars"
               >
@@ -245,21 +289,11 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ plan, onClose }) 
               </motion.button>
 
               {paymentStatus === 'processing' && (
-                <div className="mt-3 text-center text-sm">
+                <div className="mt-3 text-center text-sm" aria-live="polite">
                   <div className="flex items-center justify-center gap-2">
-                    <Spinner className="w-4 h-4" />
+                    <Spinner className="w-4 h-4 text-blue-600" />
                     <p className="text-blue-600 font-medium">جارٍ المعالجة... الرجاء الانتظار</p>
                   </div>
-                </div>
-              )}
-              {paymentStatus !== 'idle' && paymentStatus !== 'processing' && (
-                <div className="mt-3 text-center text-sm">
-                  {paymentStatus === 'success' && (
-                    <p className="text-green-600 font-medium">✅ تمت العملية بنجاح</p>
-                  )}
-                  {paymentStatus === 'failed' && (
-                    <p className="text-red-600 font-medium">❌ فشلت عملية الدفع</p>
-                  )}
                 </div>
               )}
             </div>
@@ -267,21 +301,35 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ plan, onClose }) 
         </motion.div>
       </motion.div>
 
+      {/* المكونات الجديدة */}
       <AnimatePresence>
-        {showUsdtModal && plan && (
-          <UsdtPaymentModal
-            plan={plan}
-            telegramId={telegramId ?? ""}
-            telegramUsername={telegramUsername ?? ""}
-            fullName={fullName ?? ""}
-            onClose={() => setShowUsdtModal(false)}
-            handleTonPayment={handleTonPaymentWrapper}
-            startSSEConnection={startSSEConnection}
+        {usdtPaymentMethod === 'choose' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="z-[1000]"
+          >
+            <UsdtPaymentMethodModal
+              onClose={() => setUsdtPaymentMethod(null)}
+              onWalletSelect={() => handleUsdtPaymentChoice('wallet')}
+              onExchangeSelect={() => handleUsdtPaymentChoice('exchange')}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {exchangeDetails && (
+          <ExchangePaymentModal
+            details={exchangeDetails}
+            onClose={() => setExchangeDetails(null)}
           />
         )}
       </AnimatePresence>
     </>
-  );
-};
+  )
+}
 
-export default SubscriptionModal;
+export default SubscriptionModal

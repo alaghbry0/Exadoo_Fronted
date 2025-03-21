@@ -13,7 +13,7 @@ import { fetchBotWalletAddress } from '../services/api'
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
 import { useProfileStore } from '../stores/profileStore' // تأكد من وجود هذا المسار
 import { NotificationToast } from '../components/NotificationToast'
-import { CustomToast } from '../components/ui/Toast'
+
 
 const queryClient = new QueryClient()
 
@@ -118,7 +118,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     <>
       <Component {...pageProps} router={router} />
       <FooterNav />
-      <CustomToast />
+
       <NotificationToast />
       <InviteAlert />
     </>

@@ -1,25 +1,33 @@
-'use client';
-import React from 'react';
-import { useRouter } from 'next/router';
-import PaymentExchangePage from '../components/PaymentExchangePage';
+'use client'
+import { useSearchParams } from 'next/navigation'
+import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
+
 
 const PaymentExchange = () => {
-  const router = useRouter();
-  const { recipientAddress, amount, network, orderId } = router.query;
+  const searchParams = useSearchParams()
 
-  // تأكد من وجود كل المعلمات قبل العرض
-  if (!recipientAddress || !amount || !network || !orderId) {
-    return <div>تحميل...</div>;
+  // استخراج المعلمات من URL
+  const details = {
+    orderId: searchParams.get('orderId') || '',
+    depositAddress: searchParams.get('depositAddress') || '',
+    amount: searchParams.get('amount') || '',
+    network: searchParams.get('network') || 'TON',
+    paymentToken: searchParams.get('paymentToken') || ''
   }
 
-  return (
-    <PaymentExchangePage
-      recipientAddress={recipientAddress as string}
-      amount={amount as string}
-      network={network as string}
-      orderId={orderId as string}
-    />
-  );
-};
+  // التحقق من اكتمال البيانات
+  if (!details.orderId || !details.depositAddress || !details.amount) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 max-w-md">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">خطأ في تحميل البيانات</h1>
+          <p className="text-gray-600">يرجى التأكد من صحة رابط الدفع</p>
+        </div>
+      </div>
+    )
+  }
 
-export default PaymentExchange;
+  return <ExchangePaymentModal details={details} onClose={() => window.close()} />
+}
+
+export default PaymentExchange
