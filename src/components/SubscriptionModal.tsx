@@ -41,12 +41,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     paymentToken: string
     planName?: string
   } | null>(null)
+  const [isInitializing, setIsInitializing] = useState(false)
 
   const queryClient = useQueryClient()
-  const maxRetryCount = 5 // زيادة عدد المحاولات
-  const retryDelay = 5000 // زيادة زمن إعادة المحاولة
+  const maxRetryCount = 5
+  const retryDelay = 5000
 
-  // مراجع لتخزين بيانات الجلسة
   const paymentSessionRef = useRef<{
     paymentToken?: string
     orderId?: string
@@ -54,145 +54,201 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     es?: EventSource
   }>({})
 
-  // تحميل الجلسة المحفوظة من localStorage
-  useEffect(() => {
-    const savedSession = localStorage.getItem('paymentSession')
-    if (savedSession) {
-      paymentSessionRef.current = JSON.parse(savedSession)
+  // تحقق من صحة الجلسة مع الخادم
+  const verifyPaymentSession = useCallback(async (paymentToken: string) => {
+    try {
+      const response = await fetch(`/api/verify-payment/${paymentToken}`)
+      if (!response.ok) throw new Error('Invalid session')
+      return await response.json()
+    } catch (error) {
+      localStorage.removeItem('paymentData')
+      throw error
     }
   }, [])
 
-  // حفظ بيانات الدفع في localStorage عند تحديث exchangeDetails
-  useEffect(() => {
-    if (exchangeDetails && plan) {
-      localStorage.setItem(
-        'paymentData',
-        JSON.stringify({
-          paymentToken: exchangeDetails.paymentToken,
-          orderId: exchangeDetails.orderId,
-          planId: plan.selectedOption.id.toString()
-        })
-      )
+  const checkPaymentStatus = useCallback(async (paymentToken: string) => {
+  try {
+    const res = await fetch(`/api/check-payment/${paymentToken}`);
+    if (!res.ok) {
+      localStorage.removeItem('paymentData');
+      throw new Error('فشل في التحقق من حالة الدفع');
     }
-  }, [exchangeDetails, plan])
+    return await res.json();
+  } catch (error) {
+    console.error('Error checking payment status:', error);
+    throw error;
+  }
+}, []);
 
-  // تعديل useEffect الخاص باستعادة الجلسة
+const handlePaymentSuccess = useCallback(() => {
+  localStorage.removeItem('paymentSession');
+  localStorage.removeItem('paymentData');
+  paymentSessionRef.current = {};
+  setExchangeDetails(null);
+  setPaymentStatus('idle');
+  queryClient.invalidateQueries(['subscriptions', telegramId]);
+}, [queryClient, telegramId]);
+
+  // إدارة أحداث إغلاق الصفحة
   useEffect(() => {
-    const restoreSession = async () => {
-      if (plan) {
-        const savedData = localStorage.getItem('paymentData')
-        if (savedData) {
-          const { paymentToken, orderId, planId } = JSON.parse(savedData)
-          if (planId === plan.selectedOption.id.toString() && paymentToken) {
-            const depositAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress'
-            setExchangeDetails({
-              orderId,
-              depositAddress,
-              amount: plan.selectedOption.price,
-              network: 'TON Network',
-              paymentToken,
-              planName: plan.name,
-            })
-            startSSEConnection(paymentToken)
-          }
-        }
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (paymentStatus === 'processing') {
+        e.preventDefault()
+        e.returnValue = 'لديك عملية دفع قيد التقدم، هل أنت متأكد من المغادرة؟'
       }
     }
 
-    restoreSession()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan]) // تم إصلاح الإعتماديات هنا
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [paymentStatus])
 
-  // تنظيف الجلسة عند النجاح/الفشل
-  const handlePaymentSuccess = useCallback(() => {
-    localStorage.removeItem('paymentSession')
-    localStorage.removeItem('paymentData')
-    paymentSessionRef.current = {}
-    if (exchangeDetails) {
-      setExchangeDetails(null) // إغلاق نافذة الدفع عند النجاح
-    }
-  }, [exchangeDetails])
 
-  // تعديل تعريف الدالة startSSEConnection مع تضمين الإعتماديات المطلوبة
+
+  // إدارة اتصال SSE مع Exponential Backoff
   const startSSEConnection = useCallback((paymentToken: string, retryCount = 0) => {
-    setPaymentStatus('processing')
+  const delay = Math.min(1000 * 2 ** retryCount, 30000)
 
-    if (paymentSessionRef.current.es) {
-      paymentSessionRef.current.es.close()
+  if (paymentSessionRef.current.es) {
+    paymentSessionRef.current.es.close()
+  }
+
+  const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
+  sseUrl.searchParams.append('payment_token', paymentToken)
+  sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
+
+  const es = new EventSource(sseUrl.toString())
+  paymentSessionRef.current.es = es
+
+  const handleError = () => {
+    es.close()
+    if (retryCount < maxRetryCount) {
+      setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), delay)
+    } else {
+      localStorage.removeItem('paymentSession')
+      paymentSessionRef.current = {}
+      setPaymentStatus('failed')
+      showToast.error('تعذر الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت')
     }
+  }
 
-    const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
-    sseUrl.searchParams.append('payment_token', paymentToken)
-    sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
+  es.onopen = () => {
+    console.log('SSE connection established')
+    localStorage.setItem(
+      'paymentSession',
+      JSON.stringify({
+        paymentToken,
+        orderId: paymentSessionRef.current.orderId,
+        planId: plan?.selectedOption.id.toString(),
+      })
+    )
+  }
 
-    const es = new EventSource(sseUrl.toString())
-    paymentSessionRef.current.es = es
-
-    es.onopen = () => {
-      console.log('SSE connection established')
-      // حفظ الجلسة
-      localStorage.setItem(
-        'paymentSession',
-        JSON.stringify({
-          paymentToken,
-          orderId: paymentSessionRef.current.orderId,
-          planId: plan?.selectedOption.id.toString(),
-        })
-      )
+  const handleMessage = (e: MessageEvent) => {
+    try {
+      const data = JSON.parse(e.data)
+      switch (data.status) {
+        case 'success':
+          setPaymentStatus('success')
+          queryClient.invalidateQueries(['subscriptions', telegramId])
+          if (data.invite_link) {
+            window.dispatchEvent(
+              new CustomEvent('subscription_update', {
+                detail: {
+                  invite_link: data.invite_link,
+                  formatted_message: data.formatted_message || data.fmessage
+                }
+              })
+            )
+          }
+          es.close()
+          handlePaymentSuccess()
+          showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
+          break
+        case 'failed':
+          setPaymentStatus('failed')
+          es.close()
+          showToast.error(data.message || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+          break
+        default:
+          setPaymentStatus('processing')
+      }
+    } catch (error) {
+      console.error('❌ خطأ في معالجة حدث SSE:', error)
     }
+  }
 
-    const handleMessage = (e: MessageEvent) => {
+  es.addEventListener('message', handleMessage)
+  es.addEventListener('error', handleError)
+
+  return () => {
+    es.removeEventListener('message', handleMessage)
+    es.removeEventListener('error', handleError)
+    es.close()
+  }
+}, [
+  telegramId,
+  queryClient,
+  plan?.selectedOption.id,
+  maxRetryCount,
+  handlePaymentSuccess,
+  retryDelay,
+  checkPaymentStatus
+])
+
+
+ // استعادة الجلسة مع التحقق من الصحة
+  useEffect(() => {
+  const restoreSession = async () => {
+    if (plan && paymentStatus === 'idle') {
+      setIsInitializing(true);
       try {
-        const data = JSON.parse(e.data)
-        switch (data.status) {
-          case 'success':
-            setPaymentStatus('success')
-            queryClient.invalidateQueries(['subscriptions', telegramId])
-            if (data.invite_link) {
-              window.dispatchEvent(
-                new CustomEvent('subscription_update', {
-                  detail: { invite_link: data.invite_link, formatted_message: data.fmessage }
-                })
-              )
-            }
-            es.close()
-            handlePaymentSuccess()
-            showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
-            break
-          case 'failed':
-            setPaymentStatus('failed')
-            es.close()
-            showToast.error(data.message || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
-            break
-          default:
-            setPaymentStatus('processing')
+        const savedData = localStorage.getItem('paymentData');
+        if (!savedData) return;
+
+        const { paymentToken, orderId, planId } = JSON.parse(savedData);
+
+        // التحقق من تطابق معرّف الخطة
+        if (planId !== plan.selectedOption.id.toString()) {
+          localStorage.removeItem('paymentData');
+          return;
+        }
+
+        // التحقق من صلاحية الجلسة
+        const verification = await verifyPaymentSession(paymentToken);
+        if (!verification.valid) {
+          localStorage.removeItem('paymentData');
+          return;
+        }
+
+        // التحقق من حالة الدفع الفعلية
+        const paymentStatus = await checkPaymentStatus(paymentToken);
+
+        if (paymentStatus.status === 'pending') {
+          const depositAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress';
+          setExchangeDetails({
+            orderId,
+            depositAddress,
+            amount: plan.selectedOption.price,
+            network: 'TON Network',
+            paymentToken,
+            planName: plan.name,
+          });
+          startSSEConnection(paymentToken);
+        } else {
+          localStorage.removeItem('paymentData');
+          if (paymentStatus.status === 'success') handlePaymentSuccess();
         }
       } catch (error) {
-        console.error('❌ خطأ في معالجة حدث SSE:', error)
+        console.error('فشل في استعادة الجلسة:', error);
+        showToast.error('تعذر استعادة جلسة الدفع، يرجى البدء من جديد');
+        localStorage.removeItem('paymentData');
+      } finally {
+        setIsInitializing(false);
       }
     }
-
-    es.addEventListener('message', handleMessage)
-
-    es.onerror = () => {
-      if (retryCount < maxRetryCount) {
-        setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay)
-      } else {
-        localStorage.removeItem('paymentSession')
-        paymentSessionRef.current = {}
-        setPaymentStatus('failed')
-        showToast.error('تعذر الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت')
-      }
-      es.close()
-    }
-  }, [
-    telegramId,
-    queryClient,
-    handlePaymentSuccess,
-    plan?.selectedOption.id, // استخدام القيمة المباشرة بدلاً من الكائن كامل
-    maxRetryCount,
-    retryDelay
-  ])
+  };
+  restoreSession();
+}, [plan, paymentStatus, verifyPaymentSession, checkPaymentStatus, startSSEConnection, handlePaymentSuccess]);
 
   const handleTonPaymentWrapper = async () => {
     if (!plan) return
@@ -315,6 +371,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
   return (
     <>
+    {isInitializing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Spinner className="w-12 h-12 text-white" />
+        </div>
+      )}
       <motion.div
         className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-2 sm:p-4"
         initial={{ opacity: 0 }}
