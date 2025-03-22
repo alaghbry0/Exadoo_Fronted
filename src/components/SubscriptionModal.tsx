@@ -323,8 +323,8 @@ const handleMessage = (e: MessageEvent) => {
             body: JSON.stringify({
               webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
               planId: plan.selectedOption.id,
-              //amount: plan.selectedOption.price,
-              amount:0.01,
+              amount: plan.selectedOption.price,
+              //amount:0.01,
               telegramId,
               telegramUsername,
               fullName,
