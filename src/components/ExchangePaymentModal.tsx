@@ -142,7 +142,7 @@ export const ExchangePaymentModal = ({
                 animate={{ opacity: 1, y: 0 }}
                 className="absolute bottom-2 right-2 text-xs text-green-600"
               >
-                تم النسخ!
+
               </motion.span>
             )}
           </div>

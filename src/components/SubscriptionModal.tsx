@@ -243,7 +243,8 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             body: JSON.stringify({
               webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
               planId: plan.selectedOption.id,
-              amount: plan.selectedOption.price,
+              //amount: plan.selectedOption.price,
+              amount:0.01,
               telegramId,
               telegramUsername,
               fullName,
