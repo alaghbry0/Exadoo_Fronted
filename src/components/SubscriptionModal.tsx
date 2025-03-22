@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiCheckCircle } from 'react-icons/fi'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
@@ -16,7 +16,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { UsdtPaymentMethodModal } from '../components/UsdtPaymentMethodModal'
 import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
 import { useTariffStore } from '../stores/zustand'
-
 import { showToast } from '../components/ui/Toast'
 import usdtAnimationData from '../animations/usdt.json'
 import starsAnimationData from '../animations/stars.json'
@@ -33,7 +32,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [tonConnectUI] = useTonConnectUI()
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
   const [loading, setLoading] = useState(false)
-  const [eventSource, setEventSource] = useState<EventSource | null>(null)
   const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'wallet' | 'exchange' | 'choose' | null>(null)
   const [exchangeDetails, setExchangeDetails] = useState<{
     orderId: string
@@ -48,31 +46,99 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const maxRetryCount = 5 // زيادة عدد المحاولات
   const retryDelay = 5000 // زيادة زمن إعادة المحاولة
 
+  // مراجع لتخزين بيانات الجلسة
+  const paymentSessionRef = useRef<{
+    paymentToken?: string
+    orderId?: string
+    planId?: string
+    es?: EventSource
+  }>({})
+
+  // تحميل الجلسة المحفوظة من localStorage
+  useEffect(() => {
+    const savedSession = localStorage.getItem('paymentSession')
+    if (savedSession) {
+      paymentSessionRef.current = JSON.parse(savedSession)
+    }
+  }, [])
+
+  // حفظ بيانات الدفع في localStorage عند تحديث exchangeDetails
+  useEffect(() => {
+    if (exchangeDetails && plan) {
+      localStorage.setItem(
+        'paymentData',
+        JSON.stringify({
+          paymentToken: exchangeDetails.paymentToken,
+          orderId: exchangeDetails.orderId,
+          planId: plan.selectedOption.id.toString()
+        })
+      )
+    }
+  }, [exchangeDetails, plan])
+
+  // تعديل useEffect الخاص باستعادة الجلسة
+  useEffect(() => {
+    const restoreSession = async () => {
+      if (plan) {
+        const savedData = localStorage.getItem('paymentData')
+        if (savedData) {
+          const { paymentToken, orderId, planId } = JSON.parse(savedData)
+          if (planId === plan.selectedOption.id.toString() && paymentToken) {
+            const depositAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress'
+            setExchangeDetails({
+              orderId,
+              depositAddress,
+              amount: plan.selectedOption.price,
+              network: 'TON Network',
+              paymentToken,
+              planName: plan.name,
+            })
+            startSSEConnection(paymentToken)
+          }
+        }
+      }
+    }
+
+    restoreSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan]) // تم إصلاح الإعتماديات هنا
+
+  // تنظيف الجلسة عند النجاح/الفشل
   const handlePaymentSuccess = useCallback(() => {
+    localStorage.removeItem('paymentSession')
+    localStorage.removeItem('paymentData')
+    paymentSessionRef.current = {}
     if (exchangeDetails) {
       setExchangeDetails(null) // إغلاق نافذة الدفع عند النجاح
     }
   }, [exchangeDetails])
 
-  useEffect(() => {
-    return () => {
-      eventSource?.close()
-    }
-  }, [eventSource])
-
+  // تعديل تعريف الدالة startSSEConnection مع تضمين الإعتماديات المطلوبة
   const startSSEConnection = useCallback((paymentToken: string, retryCount = 0) => {
     setPaymentStatus('processing')
+
+    if (paymentSessionRef.current.es) {
+      paymentSessionRef.current.es.close()
+    }
+
     const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
     sseUrl.searchParams.append('payment_token', paymentToken)
     sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
 
-    const es = new EventSource(sseUrl.toString(), {
-      withCredentials: true // لإبقاء الاتصال نشطًا
-    })
+    const es = new EventSource(sseUrl.toString())
+    paymentSessionRef.current.es = es
 
     es.onopen = () => {
       console.log('SSE connection established')
-      setEventSource(es)
+      // حفظ الجلسة
+      localStorage.setItem(
+        'paymentSession',
+        JSON.stringify({
+          paymentToken,
+          orderId: paymentSessionRef.current.orderId,
+          planId: plan?.selectedOption.id.toString(),
+        })
+      )
     }
 
     const handleMessage = (e: MessageEvent) => {
@@ -82,11 +148,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           case 'success':
             setPaymentStatus('success')
             queryClient.invalidateQueries(['subscriptions', telegramId])
-            // التحقق من وجود رابط الدعوة قبل الإرسال
             if (data.invite_link) {
-              window.dispatchEvent(new CustomEvent('subscription_update', {
-                detail: { invite_link: data.invite_link, formatted_message: data.formatted_message }
-              }))
+              window.dispatchEvent(
+                new CustomEvent('subscription_update', {
+                  detail: { invite_link: data.invite_link, formatted_message: data.formatted_message }
+                })
+              )
             }
             es.close()
             handlePaymentSuccess()
@@ -111,12 +178,21 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       if (retryCount < maxRetryCount) {
         setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay)
       } else {
+        localStorage.removeItem('paymentSession')
+        paymentSessionRef.current = {}
         setPaymentStatus('failed')
         showToast.error('تعذر الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت')
       }
       es.close()
     }
-  }, [telegramId, queryClient, handlePaymentSuccess])
+  }, [
+    telegramId,
+    queryClient,
+    handlePaymentSuccess,
+    plan?.selectedOption.id, // استخدام القيمة المباشرة بدلاً من الكائن كامل
+    maxRetryCount,
+    retryDelay
+  ])
 
   const handleTonPaymentWrapper = async () => {
     if (!plan) return
@@ -139,6 +215,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
   }
 
+  // تعديل handleUsdtPaymentChoice مع التحقق من الجلسة السابقة وإصلاح نوع البيانات في paymentToken
   const handleUsdtPaymentChoice = async (method: 'wallet' | 'exchange') => {
     if (!plan) return
 
@@ -147,35 +224,53 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       if (method === 'wallet') {
         await handleTonPaymentWrapper()
       } else {
-        const orderId = uuidv4()
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Id': telegramId || 'unknown',
-            'Keep-Alive': 'timeout=3600' // إبقاء الاتصال لمدة ساعة
-          },
-          body: JSON.stringify({
-            webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
-            planId: plan.selectedOption.id,
-            amount: '0.01',
-            telegramId,
-            telegramUsername,
-            fullName,
-            orderId,
-          }),
-        })
+        // التحقق من وجود جلسة سابقة
+        const existingSession = paymentSessionRef.current
+        const isSamePlan = existingSession.planId === plan.selectedOption.id.toString()
 
-        if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع')
+        let orderId = existingSession.orderId
+        let payment_token = existingSession.paymentToken || '' // إضافة قيمة افتراضية
 
-        const { payment_token } = await response.json()
-        const deposit_address = useTariffStore.getState().walletAddress || '0xRecipientAddress';
+        if (!orderId || !isSamePlan) {
+          orderId = uuidv4()
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Telegram-Id': telegramId || 'unknown',
+              'Keep-Alive': 'timeout=3600' // إبقاء الاتصال لمدة ساعة
+            },
+            body: JSON.stringify({
+              webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
+              planId: plan.selectedOption.id,
+              amount: plan.selectedOption.price,
+              telegramId,
+              telegramUsername,
+              fullName,
+              orderId,
+            }),
+          })
+
+          if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع')
+
+          const data = await response.json()
+          payment_token = data.payment_token
+        }
+
+        // تحديث المرجع
+        paymentSessionRef.current = {
+          paymentToken: payment_token,
+          orderId,
+          planId: plan.selectedOption.id.toString()
+        }
+
+        const deposit_address = useTariffStore.getState().walletAddress || '0xRecipientAddress'
         setExchangeDetails({
           orderId,
           depositAddress: deposit_address,
           amount: plan.selectedOption.price,
           network: 'TON Network',
-          paymentToken: payment_token,
+          paymentToken: payment_token!, // استخدام Non-null assertion إذا كنت متأكداً من القيمة
           planName: plan.name
         })
 
@@ -210,9 +305,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
   }
 
-  // إخفاء رسالة الانتظار عند إغلاق النافذة
+  // إعادة تعيين حالة الدفع عند إغلاق النافذة إذا لم يكن هناك تفاصيل
   useEffect(() => {
-    if (paymentStatus === 'processing' && !exchangeDetails) {
+    if (!exchangeDetails && paymentStatus === 'processing') {
       setPaymentStatus('idle')
     }
   }, [exchangeDetails, paymentStatus])
@@ -354,7 +449,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           />
         )}
       </AnimatePresence>
-
     </>
   )
 }

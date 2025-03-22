@@ -1,11 +1,11 @@
 'use client'
 import { motion } from 'framer-motion'
-import { FiCopy, FiX, FiClock, FiAlertTriangle } from 'react-icons/fi' // أضفنا FiAlertTriangle
+import { FiCopy, FiX, FiClock, FiAlertTriangle } from 'react-icons/fi'
 import { useClipboard } from '../hooks/useClipboard'
 import QRCode from 'react-qr-code'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { PaymentStatus } from '@/types/payment' // تأكد من استيراد النوع
+import { PaymentStatus } from '@/types/payment'
 
 export const ExchangePaymentModal = ({
   details,
@@ -26,7 +26,10 @@ export const ExchangePaymentModal = ({
   const { copy } = useClipboard()
   const [timeLeft, setTimeLeft] = useState(1800)
   const [isCopied, setIsCopied] = useState<string | null>(null)
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle') // أضفنا حالة الدفع
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
+
+  // إزالة useEffect الخاص بالإغلاق التلقائي
+  // useEffect(() => { ... }) // تم إزالته
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -35,14 +38,14 @@ export const ExchangePaymentModal = ({
     return () => clearInterval(timer)
   }, [])
 
-  // محاكاة حالة الدفع الناجحة للاختبار
+  // محاكاة حالة الدفع الناجحة
   useEffect(() => {
-    if (timeLeft === 1700) { // تغيير هذه القيمة حسب الحاجة
+    if (timeLeft === 1700) {
       setPaymentStatus('success')
     }
   }, [timeLeft])
 
-  // استدعاء onSuccess عند نجاح الدفع
+  // إدارة نجاح الدفع
   useEffect(() => {
     if (paymentStatus === 'success' && onSuccess) {
       onSuccess()
@@ -63,7 +66,6 @@ export const ExchangePaymentModal = ({
 
   const qrValue = `ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.orderId}`
 
-  // تصميم رسائل التحذير
   const WarningMessage = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-start gap-2 mt-2 p-2 bg-red-50 rounded-md border border-red-100">
       <FiAlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" />
@@ -79,13 +81,14 @@ export const ExchangePaymentModal = ({
       exit={{ opacity: 0 }}
     >
       <div className="min-h-screen flex flex-col bg-white">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-4">
             <Image src="/logo.png" alt="Logo" width={40} height={40} />
             <div className="flex items-center gap-1">
               <FiClock className="text-red-600 w-5 h-5" />
-              <span className="font-medium text-red-600">متبقي للدفع {formatTime(timeLeft)}</span>
+              <span className="font-medium text-red-600">
+                متبقي للدفع {formatTime(timeLeft)}
+              </span>
             </div>
           </div>
           <button
@@ -97,7 +100,6 @@ export const ExchangePaymentModal = ({
           </button>
         </div>
 
-        {/* معلومات الخطة */}
         <div className="p-4 border-b border-gray-200 text-center">
           <h2 className="text-xl font-semibold text-gray-800">
             {details.planName || 'اسم الخطة'}
@@ -107,7 +109,6 @@ export const ExchangePaymentModal = ({
           </p>
         </div>
 
-        {/* QR Code */}
         <div className="p-4 flex flex-col items-center">
           <QRCode
             value={qrValue}
@@ -117,14 +118,11 @@ export const ExchangePaymentModal = ({
           />
         </div>
 
-        {/* تفاصيل الدفع */}
         <div className="p-4 space-y-6">
-          {/* العملة */}
           <div className="flex items-center gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
             <span className="font-medium text-gray-800">USDT (TON Network)</span>
           </div>
 
-          {/* العنوان */}
           <div className="relative bg-gray-50 p-4 rounded-lg border border-gray-200">
             <div className="flex justify-between items-start">
               <p className="text-xs text-gray-500 mb-1">العنوان</p>
@@ -149,19 +147,12 @@ export const ExchangePaymentModal = ({
             )}
           </div>
 
-          {/* المبلغ */}
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div className="flex justify-between items-start">
-              <p className="text-xs text-gray-500 mb-1">المبلغ</p>
-              <FiAlertTriangle className="text-red-600 w-5 h-5" />
-            </div>
+            <p className="text-xs text-gray-500 mb-1">المبلغ</p>
             <p className="font-mono text-gray-800">{details.amount}</p>
-            <WarningMessage>
-              يرجى احتساب رسوم الغاز الإضافية عند التحويل
-            </WarningMessage>
+            <p className="text-xs text-gray-500 mt-1">يرجى احتساب رسوم الغاز</p>
           </div>
 
-          {/* المذكرة */}
           <div className="relative bg-gray-50 p-4 rounded-lg border border-gray-200">
             <div className="flex justify-between items-start">
               <p className="text-xs text-gray-500 mb-1">المذكرة (مطلوب)</p>
@@ -181,7 +172,6 @@ export const ExchangePaymentModal = ({
           </div>
         </div>
 
-        {/* تذييل الصفحة */}
         <div className="p-4 border-t border-gray-200">
           <p className="text-center text-sm text-gray-600">
             يرجى عدم إغلاق هذه الصفحة أثناء المعالجة، انتظر حتى 90 ثانية لإكمال عملية النقل.
