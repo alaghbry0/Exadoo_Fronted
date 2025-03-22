@@ -1,22 +1,10 @@
 // utils/safeHtml.ts
-import DOMPurify from 'dompurify';
-
-let domPurify: typeof DOMPurify;
-
-if (typeof window !== 'undefined') {
-  // في بيئة العميل
-  domPurify = DOMPurify(window);
-} else {
-  // في بيئة الخادم (Next.js SSR)
-  import('jsdom').then(({ JSDOM }) => {
-    const { window } = new JSDOM('');
-    domPurify = DOMPurify(window);
-  }).catch(error => {
-    console.error('Failed to load jsdom:', error);
-    domPurify = DOMPurify; // Fallback
-  });
-}
+import DOMPurify from 'isomorphic-dompurify';
 
 export const sanitizeHtml = (html: string) => ({
-  __html: domPurify?.sanitize(html) || html
+  __html: DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    FORBID_TAGS: ['script', 'style'],
+  })
 });

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiCheckCircle } from 'react-icons/fi'
 import { useTelegramPayment } from '../hooks/useTelegramPayment'
@@ -36,17 +36,23 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
   const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'wallet' | 'exchange' | 'choose' | null>(null)
   const [exchangeDetails, setExchangeDetails] = useState<{
-  orderId: string
-  depositAddress: string
-  amount: string
-  network: string
-  paymentToken: string
-  planName?: string
+    orderId: string
+    depositAddress: string
+    amount: string
+    network: string
+    paymentToken: string
+    planName?: string
+  } | null>(null)
 
-} | null>(null)
   const queryClient = useQueryClient()
-  const maxRetryCount = 3
-  const retryDelay = 3000
+  const maxRetryCount = 5 // زيادة عدد المحاولات
+  const retryDelay = 5000 // زيادة زمن إعادة المحاولة
+
+  const handlePaymentSuccess = useCallback(() => {
+    if (exchangeDetails) {
+      setExchangeDetails(null) // إغلاق نافذة الدفع عند النجاح
+    }
+  }, [exchangeDetails])
 
   useEffect(() => {
     return () => {
@@ -54,13 +60,15 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }
   }, [eventSource])
 
-  const startSSEConnection = (paymentToken: string, retryCount = 0) => {
+  const startSSEConnection = useCallback((paymentToken: string, retryCount = 0) => {
     setPaymentStatus('processing')
     const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
     sseUrl.searchParams.append('payment_token', paymentToken)
     sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
 
-    const es = new EventSource(sseUrl.toString())
+    const es = new EventSource(sseUrl.toString(), {
+      withCredentials: true // لإبقاء الاتصال نشطًا
+    })
 
     es.onopen = () => {
       console.log('SSE connection established')
@@ -71,24 +79,27 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       try {
         const data = JSON.parse(e.data)
         switch (data.status) {
-  case 'success':
-    setPaymentStatus('success')
-    queryClient.invalidateQueries(['subscriptions', telegramId])
-    window.dispatchEvent(new CustomEvent('subscription_update', {
-      detail: { invite_link: data.invite_link, formatted_message: data.formatted_message }
-    }))
-    es.close()
-    // استخدام الرسالة المرسلة من الخادم
-    showToast.success(data.fmessage || 'تم تجديد الاشتراك بنجاح!')
-    break
-  case 'failed':
-    setPaymentStatus('failed')
-    es.close()
-    showToast.error(data.fmessage || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
-    break
-  default:
-    setPaymentStatus('processing')
-}
+          case 'success':
+            setPaymentStatus('success')
+            queryClient.invalidateQueries(['subscriptions', telegramId])
+            // التحقق من وجود رابط الدعوة قبل الإرسال
+            if (data.invite_link) {
+              window.dispatchEvent(new CustomEvent('subscription_update', {
+                detail: { invite_link: data.invite_link, formatted_message: data.formatted_message }
+              }))
+            }
+            es.close()
+            handlePaymentSuccess()
+            showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
+            break
+          case 'failed':
+            setPaymentStatus('failed')
+            es.close()
+            showToast.error(data.message || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+            break
+          default:
+            setPaymentStatus('processing')
+        }
       } catch (error) {
         console.error('❌ خطأ في معالجة حدث SSE:', error)
       }
@@ -101,10 +112,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         setTimeout(() => startSSEConnection(paymentToken, retryCount + 1), retryDelay)
       } else {
         setPaymentStatus('failed')
+        showToast.error('تعذر الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت')
       }
       es.close()
     }
-  }
+  }, [telegramId, queryClient, handlePaymentSuccess])
 
   const handleTonPaymentWrapper = async () => {
     if (!plan) return
@@ -136,12 +148,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         await handleTonPaymentWrapper()
       } else {
         const orderId = uuidv4()
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Telegram-Id': telegramId || 'unknown',
+            'Keep-Alive': 'timeout=3600' // إبقاء الاتصال لمدة ساعة
           },
           body: JSON.stringify({
             webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
@@ -164,7 +176,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           amount: plan.selectedOption.price,
           network: 'TON Network',
           paymentToken: payment_token,
-           planName: plan.name
+          planName: plan.name
         })
 
         startSSEConnection(payment_token)
@@ -197,6 +209,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       setLoading(false)
     }
   }
+
+  // إخفاء رسالة الانتظار عند إغلاق النافذة
+  useEffect(() => {
+    if (paymentStatus === 'processing' && !exchangeDetails) {
+      setPaymentStatus('idle')
+    }
+  }, [exchangeDetails, paymentStatus])
 
   return (
     <>
@@ -327,10 +346,15 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         {exchangeDetails && (
           <ExchangePaymentModal
             details={exchangeDetails}
-            onClose={() => setExchangeDetails(null)}
+            onClose={() => {
+              setExchangeDetails(null)
+              setPaymentStatus('idle') // إعادة تعيين الحالة عند الإغلاق
+            }}
+            onSuccess={handlePaymentSuccess} // تمرير دالة النجاح
           />
         )}
       </AnimatePresence>
+
     </>
   )
 }

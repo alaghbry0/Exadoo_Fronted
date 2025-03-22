@@ -1,14 +1,16 @@
 'use client'
 import { motion } from 'framer-motion'
-import { FiCopy, FiX, FiClock } from 'react-icons/fi'
+import { FiCopy, FiX, FiClock, FiAlertTriangle } from 'react-icons/fi' // أضفنا FiAlertTriangle
 import { useClipboard } from '../hooks/useClipboard'
 import QRCode from 'react-qr-code'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { PaymentStatus } from '@/types/payment' // تأكد من استيراد النوع
 
 export const ExchangePaymentModal = ({
   details,
-  onClose
+  onClose,
+  onSuccess
 }: {
   details: {
     orderId: string
@@ -17,14 +19,14 @@ export const ExchangePaymentModal = ({
     network: string
     paymentToken: string
     planName?: string
-
   }
   onClose: () => void
+  onSuccess?: () => void
 }) => {
   const { copy } = useClipboard()
-  // تعيين العداد التنازلي لـ30 دقيقة (1800 ثانية)
   const [timeLeft, setTimeLeft] = useState(1800)
   const [isCopied, setIsCopied] = useState<string | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle') // أضفنا حالة الدفع
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,6 +34,20 @@ export const ExchangePaymentModal = ({
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // محاكاة حالة الدفع الناجحة للاختبار
+  useEffect(() => {
+    if (timeLeft === 1700) { // تغيير هذه القيمة حسب الحاجة
+      setPaymentStatus('success')
+    }
+  }, [timeLeft])
+
+  // استدعاء onSuccess عند نجاح الدفع
+  useEffect(() => {
+    if (paymentStatus === 'success' && onSuccess) {
+      onSuccess()
+    }
+  }, [paymentStatus, onSuccess])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -45,8 +61,15 @@ export const ExchangePaymentModal = ({
     setTimeout(() => setIsCopied(null), 2000)
   }
 
-  // تكوين قيمة رمز الاستجابة السريعة
   const qrValue = `ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.orderId}`
+
+  // تصميم رسائل التحذير
+  const WarningMessage = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-start gap-2 mt-2 p-2 bg-red-50 rounded-md border border-red-100">
+      <FiAlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" />
+      <span className="text-red-700 text-xs">{children}</span>
+    </div>
+  )
 
   return (
     <motion.div
@@ -56,10 +79,9 @@ export const ExchangePaymentModal = ({
       exit={{ opacity: 0 }}
     >
       <div className="min-h-screen flex flex-col bg-white">
-        {/* Header: شعار التطبيق والعداد */}
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-4">
-            {/* شعار التطبيق - تأكد من وضع الصورة في المسار الصحيح */}
             <Image src="/logo.png" alt="Logo" width={40} height={40} />
             <div className="flex items-center gap-1">
               <FiClock className="text-red-600 w-5 h-5" />
@@ -85,7 +107,7 @@ export const ExchangePaymentModal = ({
           </p>
         </div>
 
-        {/* قسم رمز الاستجابة السريعة */}
+        {/* QR Code */}
         <div className="p-4 flex flex-col items-center">
           <QRCode
             value={qrValue}
@@ -95,28 +117,27 @@ export const ExchangePaymentModal = ({
           />
         </div>
 
-        {/* تفاصيل عملية الدفع */}
+        {/* تفاصيل الدفع */}
         <div className="p-4 space-y-6">
-          {/* القسم الأول: رمز العملة */}
+          {/* العملة */}
           <div className="flex items-center gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            {/* تأكد من وجود شعار USDT في المسار المحدد */}
-
             <span className="font-medium text-gray-800">USDT (TON Network)</span>
           </div>
 
-          {/* القسم الثاني: العنوان مع زر النسخ */}
+          {/* العنوان */}
           <div className="relative bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-xs text-gray-500 mb-1">العنوان</p>
+            <div className="flex justify-between items-start">
+              <p className="text-xs text-gray-500 mb-1">العنوان</p>
+              <button
+                onClick={() => handleCopy(details.depositAddress, 'العنوان')}
+                className="text-gray-400 hover:text-blue-600 transition-colors"
+              >
+                <FiCopy className="w-5 h-5" />
+              </button>
+            </div>
             <p className="font-mono text-gray-800 break-all">
               {details.depositAddress}
             </p>
-            <button
-              onClick={() => handleCopy(details.depositAddress, 'العنوان')}
-              className="absolute top-2 right-2 text-gray-400 hover:text-blue-600 transition-colors p-1"
-              aria-label="نسخ العنوان"
-            >
-              <FiCopy className="w-5 h-5" />
-            </button>
             {isCopied === 'العنوان' && (
               <motion.span
                 initial={{ opacity: 0, y: -5 }}
@@ -128,45 +149,42 @@ export const ExchangePaymentModal = ({
             )}
           </div>
 
-          {/* القسم الثالث: المبلغ مع نص مرفق */}
+          {/* المبلغ */}
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-xs text-gray-500 mb-1">المبلغ</p>
+            <div className="flex justify-between items-start">
+              <p className="text-xs text-gray-500 mb-1">المبلغ</p>
+              <FiAlertTriangle className="text-red-600 w-5 h-5" />
+            </div>
             <p className="font-mono text-gray-800">{details.amount}</p>
-            <p className="text-xs text-gray-500 mt-1">يرجى احتساب رسوم الغاز</p>
+            <WarningMessage>
+              يرجى احتساب رسوم الغاز الإضافية عند التحويل
+            </WarningMessage>
           </div>
 
-          {/* القسم الرابع: المذكرة مع زر النسخ ونص إضافي */}
+          {/* المذكرة */}
           <div className="relative bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-xs text-gray-500 mb-1">المذكرة (مطلوب)</p>
+            <div className="flex justify-between items-start">
+              <p className="text-xs text-gray-500 mb-1">المذكرة (مطلوب)</p>
+              <button
+                onClick={() => handleCopy(details.orderId, 'المذكرة')}
+                className="text-gray-400 hover:text-blue-600 transition-colors"
+              >
+                <FiCopy className="w-5 h-5" />
+              </button>
+            </div>
             <p className="font-mono text-gray-800 break-all">
               {details.orderId}
             </p>
-            <button
-              onClick={() => handleCopy(details.orderId, 'المذكرة')}
-              className="absolute top-2 right-2 text-gray-400 hover:text-blue-600 transition-colors p-1"
-              aria-label="نسخ المذكرة"
-            >
-              <FiCopy className="w-5 h-5" />
-            </button>
-            {isCopied === 'المذكرة' && (
-              <motion.span
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-2 right-2 text-xs text-green-600"
-              >
-                تم النسخ!
-              </motion.span>
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              يرجى التأكد من تضمين عنوان المذكرة عند اجراء عمليه الدفع
-            </p>
+            <WarningMessage>
+              تأكد من إضافة رمز المذكرة في الحقل المخصص أثناء التحويل
+            </WarningMessage>
           </div>
         </div>
 
-        {/* تذكير المستخدم بعدم اغلاق الصفحة */}
+        {/* تذييل الصفحة */}
         <div className="p-4 border-t border-gray-200">
           <p className="text-center text-sm text-gray-600">
-            يرجى عدم اغلاق هذه الصفحة أثناء المعالجة، انتظر حتى 90 ثانية لأكمال عمليه النقل.
+            يرجى عدم إغلاق هذه الصفحة أثناء المعالجة، انتظر حتى 90 ثانية لإكمال عملية النقل.
           </p>
         </div>
       </div>
