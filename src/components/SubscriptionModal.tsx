@@ -143,39 +143,63 @@ const handlePaymentSuccess = useCallback(() => {
     )
   }
 
-  const handleMessage = (e: MessageEvent) => {
-    try {
-      const data = JSON.parse(e.data)
+  // في دالة handleMessage
+const handleMessage = (e: MessageEvent) => {
+  try {
+    const data = JSON.parse(e.data)
+    console.log('📥 Received SSE event:', data)
+
+    // معالجة أنواع الرسائل المختلفة
+    if (data.type === 'overpayment') {
+      showToast.warning({
+        message: data.message,
+        action: {
+          text: 'اتصل بالدعم',
+          onClick: () => window.open('https://t.me/ExaadoSupport', '_blank')
+        }
+      })
+    } else if (data.type === 'subscription_success') {
+      showToast.success({
+        message: data.message,
+        action: data.invite_link ? {
+          text: 'انضم الآن',
+          onClick: () => window.open(data.invite_link, '_blank')
+        } : undefined
+      })
+    } else {
       switch (data.status) {
         case 'success':
-          setPaymentStatus('success')
-          queryClient.invalidateQueries(['subscriptions', telegramId])
-          if (data.invite_link) {
-            window.dispatchEvent(
-              new CustomEvent('subscription_update', {
-                detail: {
-                  invite_link: data.invite_link,
-                  formatted_message: data.formatted_message || data.fmessage
-                }
-              })
-            )
-          }
-          es.close()
-          handlePaymentSuccess()
           showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
           break
         case 'failed':
-          setPaymentStatus('failed')
-          es.close()
-          showToast.error(data.message || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+          showToast.error(data.message || 'فشلت عملية الدفع')
           break
-        default:
-          setPaymentStatus('processing')
       }
-    } catch (error) {
-      console.error('❌ خطأ في معالجة حدث SSE:', error)
     }
+
+    // تحديث الحالة
+    setPaymentStatus(data.status)
+    queryClient.invalidateQueries(['subscriptions', telegramId])
+
+    if (data.status === 'success') {
+      if (data.invite_link) {
+        window.dispatchEvent(
+          new CustomEvent('subscription_update', {
+            detail: {
+              invite_link: data.invite_link,
+              formatted_message: data.formatted_message
+            }
+          })
+        )
+      }
+      es.close()
+      handlePaymentSuccess()
+    }
+  } catch (error) {
+    console.error('❌ Error processing SSE event:', error)
+    showToast.error('حدث خطأ أثناء معالجة الدفع')
   }
+}
 
   es.addEventListener('message', handleMessage)
   es.addEventListener('error', handleError)
