@@ -133,7 +133,8 @@ export const handleTonPayment = async (
   selectedPlanId: string,
   telegramId: string,
   telegramUsername: string,
-  fullName: string
+  fullName: string,
+  amount: number
 ): Promise<{ payment_token?: string }> => {
   if (typeof setPaymentStatus !== 'function') {
     console.error('❌ دالة الحالة setPaymentStatus غير صالحة!');
@@ -179,7 +180,7 @@ export const handleTonPayment = async (
     console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
 
     // تحويل المبلغ إلى nanoJettons (1 USDT = 1,000,000 NanoJettons)
-    const USDT_AMOUNT = 0.01; // القيمة الحالية 0.01 USDT
+    const USDT_AMOUNT = amount; // استخدام السعر الممرر من الخطة
     const amountInNanoJettons = BigInt(USDT_AMOUNT * 10 ** 6);
     const gasFee = toNano('0.02').toString(); // رسوم الغاز 0.02 TON
 
@@ -237,7 +238,7 @@ export const handleTonPayment = async (
           webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
           userWalletAddress: userTonAddress,
           planId: selectedPlanId,
-          amount: '1e-05',
+          amount: USDT_AMOUNT.toString(),
           telegramId: telegramId,
           telegramUsername: telegramUsername,
           fullName: fullName,

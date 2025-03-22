@@ -279,13 +279,15 @@ const handleMessage = (e: MessageEvent) => {
     try {
       setLoading(true)
       const selectedPlanId = plan.selectedOption.id.toString()
+      const selectedPlanprice = Number(plan.selectedOption.price);
       const { payment_token } = await handleTonPayment(
         tonConnectUI,
         setPaymentStatus,
         selectedPlanId,
         telegramId || 'unknown',
         telegramUsername || 'unknown',
-        fullName || 'Unknown'
+        fullName || 'Unknown',
+        selectedPlanprice
       )
       if (payment_token) startSSEConnection(payment_token)
     } catch {
