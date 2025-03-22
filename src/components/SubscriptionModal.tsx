@@ -79,12 +79,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     }))
     es.close()
     // استخدام الرسالة المرسلة من الخادم
-    showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
+    showToast.success(data.fmessage || 'تم تجديد الاشتراك بنجاح!')
     break
   case 'failed':
     setPaymentStatus('failed')
     es.close()
-    showToast.error(data.message || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
+    showToast.error(data.fmessage || 'فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
     break
   default:
     setPaymentStatus('processing')
