@@ -75,7 +75,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     setPaymentStatus('success')
     queryClient.invalidateQueries(['subscriptions', telegramId])
     window.dispatchEvent(new CustomEvent('subscription_update', {
-      detail: { invite_link: data.invite_link, formatted_message: data.message }
+      detail: { invite_link: data.invite_link, formatted_message: data.formatted_message }
     }))
     es.close()
     // استخدام الرسالة المرسلة من الخادم
