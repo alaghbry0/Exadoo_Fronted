@@ -15,6 +15,8 @@
     "@ton/core": "^0.60.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.2.1",
+    "@tonclient/core": "^1.30.0",
+    "@tonclient/lib-web": "^1.30.0",
     "@tonconnect/ui": "^2.0.11",
     "@tonconnect/ui-react": "^2.0.11",
     "@twa-dev/sdk": "^8.0.2",

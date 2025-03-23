@@ -246,13 +246,14 @@ const handleMessage = (e: MessageEvent) => {
 
         // التحقق من حالة الدفع الفعلية
         const paymentStatus = await checkPaymentStatus(paymentToken);
+        const selectedPlanprice = plan.selectedOption.price.toString();
 
         if (paymentStatus.status === 'pending') {
           const depositAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress';
           setExchangeDetails({
             orderId,
             depositAddress,
-            amount: plan.selectedOption.price,
+            amount: selectedPlanprice,
             network: 'TON Network',
             paymentToken,
             planName: plan.name,
@@ -274,28 +275,45 @@ const handleMessage = (e: MessageEvent) => {
   restoreSession();
 }, [plan, paymentStatus, verifyPaymentSession, checkPaymentStatus, startSSEConnection, handlePaymentSuccess]);
 
-  const handleTonPaymentWrapper = async () => {
-    if (!plan) return
-    try {
-      setLoading(true)
-      const selectedPlanId = plan.selectedOption.id.toString()
-      const amount = Number(plan.selectedOption.price);
-      const { payment_token } = await handleTonPayment(
+ const handleTonPaymentWrapper = async () => {
+  if (!plan) return;
+
+  try {
+    setLoading(true);
+
+    // تحويل السعر إلى رقم مع إزالة الرموز غير الرقمية
+    const priceString = plan.selectedOption.price.toString().replace(/[^0-9.]/g, '');
+    const price = parseFloat(priceString);
+
+    if (isNaN(price)) {
+      throw new Error(`السعر غير صالح: ${plan.selectedOption.price}`);
+    }
+
+
+    const selectedPlanId = plan.selectedOption.id.toString();
+    const { payment_token } = await handleTonPayment(
         tonConnectUI,
         setPaymentStatus,
         selectedPlanId,
         telegramId || 'unknown',
         telegramUsername || 'unknown',
         fullName || 'Unknown',
-        amount
+        price
       )
-      if (payment_token) startSSEConnection(payment_token)
-    } catch {
-      setPaymentStatus('failed')
-    } finally {
-      setLoading(false)
-    }
+       if (payment_token) startSSEConnection(payment_token);
+  } catch (error) {
+  console.error('فشل الدفع:', error);
+  if (error instanceof Error) {
+    showToast.error(error.message);
+  } else {
+    showToast.error('فشلت عملية الدفع');
   }
+  setPaymentStatus('failed');
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   // تعديل handleUsdtPaymentChoice مع التحقق من الجلسة السابقة وإصلاح نوع البيانات في paymentToken
   const handleUsdtPaymentChoice = async (method: 'wallet' | 'exchange') => {
@@ -346,12 +364,12 @@ const handleMessage = (e: MessageEvent) => {
           orderId,
           planId: plan.selectedOption.id.toString()
         }
-
+        const selectedPlanprice = plan.selectedOption.price.toString();
         const deposit_address = useTariffStore.getState().walletAddress || '0xRecipientAddress'
         setExchangeDetails({
           orderId,
           depositAddress: deposit_address,
-          amount: plan.selectedOption.price,
+          amount: selectedPlanprice,
           network: 'TON Network',
           paymentToken: payment_token!, // استخدام Non-null assertion إذا كنت متأكداً من القيمة
           planName: plan.name

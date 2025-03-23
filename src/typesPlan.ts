@@ -3,7 +3,7 @@ import React from 'react'
 export interface SubscriptionOption {
   id: number;
   duration: string;
-  price: string;
+  price: number | string;
   originalPrice?: number;
   savings?: string;
   telegramStarsPrice: number;

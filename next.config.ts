@@ -48,13 +48,14 @@ const nextConfig: NextConfig = {
                 "https://exadoo-rxr9.onrender.com " +
                 "wss://*.render.com " +
                 "https://*.render.com " +
-                "http://192.168.0.96:5000 " +
+                "http://192.168.43.186:5000 " +
                 "https://tonapi.io " +
                 "https://raw.githubusercontent.com " +
                 "https://bridge.tonapi.io;",
               "img-src * data:;",
               "font-src 'self';",
-              "frame-src 'self' https://telegram.org https://wallet.tg;"
+              "frame-src 'self' https://telegram.org https://wallet.tg;",
+              "object-src 'self' data:;"
 
             ].join(" ").trim(),
           },
