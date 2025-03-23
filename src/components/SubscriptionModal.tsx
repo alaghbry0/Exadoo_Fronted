@@ -343,7 +343,7 @@ const handleMessage = (e: MessageEvent) => {
             body: JSON.stringify({
               webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
               planId: plan.selectedOption.id,
-              amount: plan.selectedOption.price,
+              amount: parseFloat(plan.selectedOption.price.toString().replace(/[^0-9.]/g, '')),
               //amount:0.01,
               telegramId,
               telegramUsername,
@@ -452,7 +452,11 @@ const handleMessage = (e: MessageEvent) => {
             <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
               <div className="flex items-baseline justify-between bg-blue-50 rounded-lg p-4">
                 <div className="space-y-1">
-                  <span className="text-sm text-gray-600">{plan?.selectedOption.price} :سعر الخطه</span>
+                  <span className="text-sm text-gray-600">
+  {parseFloat(
+    plan?.selectedOption?.price?.toString().replace(/[^0-9.]/g, '') ?? '0'
+  ).toFixed(2)} :سعر الخطه
+</span>
                 </div>
                 <span className="text-sm text-gray-600">الخطه: {plan?.selectedOption.duration}</span>
               </div>

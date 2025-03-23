@@ -149,18 +149,19 @@ const {
     const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id);
     const savings = calculateSavings(typePlans);
 
-    const options: SubscriptionOption[] = typePlans.map(plan => {
+  const options: SubscriptionOption[] = typePlans.map(plan => {
   const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
 
   return {
     id: plan.id,
     duration: plan.name,
-    price: !isNaN(price) ? price.toFixed(0) + '$' : '0$',
+    price: !isNaN(price) ? price.toFixed(2) : "0.00", // تحويل الرقم إلى سلسلة
     originalPrice: price,
-    telegramStarsPrice: plan.telegram_stars_price, // أضف هذا السطر
+    telegramStarsPrice: plan.telegram_stars_price,
     savings: plan.name === 'سنوي' && savings ? `وفر ${savings}%` : undefined
   };
 });
+
 
     return {
       id: type.id,
