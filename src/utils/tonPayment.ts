@@ -23,7 +23,7 @@ interface JettonApiResponse {
 
 /**
  * دالة جلب محفظة المستخدم (Jetton) باستخدام TonAPI v2.
- * (لم تعد نستخدمها للحصول على عنوان الدفع؛ سنستخدم العنوان الرئيسي للمستخدم)
+ * يتم استخدامها للحصول على عنوان محفظة jetton الخاص بالمستخدم.
  */
 export const getUserJettonWallet = async (userTonAddress: string) => {
   try {
@@ -43,7 +43,7 @@ export const getUserJettonWallet = async (userTonAddress: string) => {
       return null;
     }
 
-    console.log(`✅ User USDT Wallet Address: ${usdtJetton.wallet_address.address}`);
+    console.log(`✅ User USDT Wallet Address (jetton): ${usdtJetton.wallet_address.address}`);
     return usdtJetton.wallet_address.address;
   } catch (error) {
     console.error("❌ Error fetching User Jetton Wallet:", error);
@@ -82,7 +82,7 @@ export const getBotJettonWallet = async (botTonAddress: string) => {
 
 /**
  * دالة إنشاء حمولة تحويل Jetton.
- * تم تعديل المعامل الثالث لاستقبال paymentToken بدلاً من orderId.
+ * يتم تمرير paymentToken بدلاً من orderId.
  */
 export const createJettonTransferPayload = (
   recipientAddress: string | null,
@@ -105,13 +105,9 @@ export const createJettonTransferPayload = (
       .storeAddress(recipientTonAddress) // عنوان المستلم
       .storeAddress(null);      // response_destination
 
-    // عدم استخدام custom_payload هنا؛ لذا يتم تعيين العلم إلى false
     cellBuilder.storeBit(false);
-
-    // ضبط forward_ton_amount على قيمة غير صفرية (مثلاً 0.01 TON)
     cellBuilder.storeCoins(toNano("0.01"));
 
-    // استخدام forward payload لنقل paymentToken كسلسلة نصية
     cellBuilder.storeBit(true);
     cellBuilder.storeRef(
       beginCell()
@@ -136,10 +132,10 @@ export const createJettonTransferPayload = (
 
 /**
  * دالة handleTonPayment المعدلة:
- * - لم يعد يتم تمرير amount من الواجهة.
- * - يتم إرسال بيانات الدفع إلى الخادم لتأكيد الدفع (بدون orderId) ويتم استخدام القيمة (amount) التي تُعاد من الخادم.
- * - يتم إرسال عنوان المحفظة الرئيسي للمستخدم إلى نقطة /api/confirm_payment.
- * - يتم استخدام showToast.error و showToast.success لإظهار الإشعارات للمستخدم.
+ * - لا يتم تمرير amount من الواجهة.
+ * - إرسال بيانات الدفع إلى الخادم لتأكيد الدفع باستخدام العنوان الرئيسي للمستخدم.
+ * - عند بناء المعاملة يتم استخدام عنوان محفظة jetton الخاص بالمستخدم.
+ * - استخدام showToast.error و showToast.success لإظهار الإشعارات.
  */
 export const handleTonPayment = async (
   tonConnectUI: TonConnectUI,
@@ -169,29 +165,7 @@ export const handleTonPayment = async (
     }
     console.log(`✅ عنوان المحفظة الرئيسي للمستخدم: ${userMainWalletAddress}`);
 
-    // نستخدم العنوان الرئيسي للمستخدم مباشرةً في المعاملة
-    const senderAddress = userMainWalletAddress;
-
-    // جلب عنوان البوت من Zustand
-    const botWalletAddress = useTariffStore.getState().walletAddress;
-    if (!botWalletAddress) {
-      console.error('❌ عنوان محفظة البوت غير متوفر في المتجر!');
-      showToast.error('❌ عنوان محفظة البوت غير متوفر');
-      setPaymentStatus('failed');
-      return {};
-    }
-    console.log(`✅ عنوان محفظة البوت: ${botWalletAddress}`);
-
-    const recipientJettonWalletAddress = await getBotJettonWallet(botWalletAddress);
-    if (!recipientJettonWalletAddress) {
-      console.error('❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.');
-      showToast.error('❌ فشل جلب عنوان محفظة البوت');
-      setPaymentStatus('failed');
-      return {};
-    }
-    console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
-
-    // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع والحصول على payment_token و final amount
+    // إرسال عنوان المحفظة الرئيسي إلى الخادم في استدعاء /api/confirm_payment
     console.log('📞 استدعاء /api/confirm_payment لتأكيد الدفع...');
     const confirmPaymentResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`,
@@ -236,20 +210,49 @@ export const handleTonPayment = async (
       return {};
     }
 
-    // حساب القيمة النهائية بوحدات nanoJettons باستخدام finalAmount المُعاد من الخادم
+    // تحويل finalAmount إلى nanoJettons
     const finalAmountInNano = BigInt(finalAmount * 10 ** 6);
-    const gasFee = toNano('0.02').toString(); // رسوم الغاز 0.02 TON
+    const gasFee = toNano('0.02').toString();
+
+    // الحصول على عنوان محفظة jetton الخاص بالمستخدم (مطلوب لاستخدامه في بناء المعاملة)
+    const userJettonWalletAddress = await getUserJettonWallet(userMainWalletAddress);
+    if (!userJettonWalletAddress) {
+      console.error('❌ لم يتم العثور على عنوان محفظة USDT (jetton) للمستخدم.');
+      showToast.error('❌ الرجاء التأكد من وجود محفظة USDT.');
+      setPaymentStatus('failed');
+      return {};
+    }
+    console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم (jetton): ${userJettonWalletAddress}`);
+
+    // جلب عنوان محفظة البوت
+    const botWalletAddress = useTariffStore.getState().walletAddress;
+    if (!botWalletAddress) {
+      console.error('❌ عنوان محفظة البوت غير متوفر في المتجر!');
+      showToast.error('❌ عنوان محفظة البوت غير متوفر');
+      setPaymentStatus('failed');
+      return {};
+    }
+    console.log(`✅ عنوان محفظة البوت: ${botWalletAddress}`);
+
+    const recipientJettonWalletAddress = await getBotJettonWallet(botWalletAddress);
+    if (!recipientJettonWalletAddress) {
+      console.error('❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.');
+      showToast.error('❌ فشل جلب عنوان محفظة البوت');
+      setPaymentStatus('failed');
+      return {};
+    }
+    console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
 
     // إنشاء payload باستخدام عنوان البوت والـ paymentToken
     const payloadBase64 = createJettonTransferPayload(botWalletAddress, finalAmountInNano, paymentToken);
     console.log('🔹 Payload Base64:', payloadBase64);
 
-    // بناء المعاملة مع تضمين payload
+    // بناء المعاملة باستخدام عنوان محفظة jetton للمستخدم
     const transaction = {
-      validUntil: Math.floor(Date.now() / 1000) + 600, // صلاحية 10 دقائق
+      validUntil: Math.floor(Date.now() / 1000) + 600,
       messages: [
         {
-          address: senderAddress, // استخدام العنوان الرئيسي للمستخدم
+          address: userJettonWalletAddress, // استخدام عنوان محفظة jetton للمستخدم
           amount: gasFee,
           payload: payloadBase64,
         },
