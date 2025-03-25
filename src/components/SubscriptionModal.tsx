@@ -269,12 +269,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
     try {
       setLoading(true)
-      const priceString = plan.selectedOption.price.toString().replace(/[^0-9.]/g, '')
-      const price = parseFloat(priceString)
 
-      if (isNaN(price)) {
-        throw new Error(`السعر غير صالح: ${plan.selectedOption.price}`)
-      }
 
       const selectedPlanId = plan.selectedOption.id.toString()
       const { payment_token } = await handleTonPayment(
@@ -284,7 +279,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         telegramId || 'unknown',
         telegramUsername || 'unknown',
         fullName || 'Unknown',
-        price
+
       )
       if (payment_token) startSSEConnection(payment_token)
     } catch (error) {

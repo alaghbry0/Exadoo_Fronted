@@ -2,6 +2,7 @@ import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
 import { useTariffStore } from '../stores/zustand';
 import { PaymentStatus } from '@/types/payment';
+import { showToast } from '../components/ui/Toast';
 
 // واجهة تعريف JettonBalance (قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
 interface JettonBalance {
@@ -22,6 +23,7 @@ interface JettonApiResponse {
 
 /**
  * دالة جلب محفظة المستخدم (Jetton) باستخدام TonAPI v2.
+ * (لم تعد نستخدمها للحصول على عنوان الدفع؛ سنستخدم العنوان الرئيسي للمستخدم)
  */
 export const getUserJettonWallet = async (userTonAddress: string) => {
   try {
@@ -85,7 +87,7 @@ export const getBotJettonWallet = async (botTonAddress: string) => {
 export const createJettonTransferPayload = (
   recipientAddress: string | null,
   amount: bigint,
-  paymentToken: string // استخدام paymentToken بدلاً من orderId
+  paymentToken: string
 ) => {
   if (!recipientAddress) {
     throw new Error("❌ recipientAddress مفقود أو غير صالح");
@@ -134,10 +136,10 @@ export const createJettonTransferPayload = (
 
 /**
  * دالة handleTonPayment المعدلة:
- * - لا يتم إنشاء orderId من الواجهة.
- * - يتم إرسال بيانات الدفع إلى الخادم دون orderId.
- * - يتم استخدام قيمة السعر amount التي قد تُعاد من الخادم (إذا وُجدت).
- * - إظهار رسالة "الرجاء ربط محفظتك اولا" عبر showToast في حال عدم العثور على عنوان محفظة المرسل.
+ * - لم يعد يتم تمرير amount من الواجهة.
+ * - يتم إرسال بيانات الدفع إلى الخادم لتأكيد الدفع (بدون orderId) ويتم استخدام القيمة (amount) التي تُعاد من الخادم.
+ * - يتم إرسال عنوان المحفظة الرئيسي للمستخدم إلى نقطة /api/confirm_payment.
+ * - يتم استخدام showToast.error و showToast.success لإظهار الإشعارات للمستخدم.
  */
 export const handleTonPayment = async (
   tonConnectUI: TonConnectUI,
@@ -145,8 +147,7 @@ export const handleTonPayment = async (
   selectedPlanId: string,
   telegramId: string,
   telegramUsername: string,
-  fullName: string,
-  amount: number
+  fullName: string
 ): Promise<{ payment_token?: string }> => {
   if (typeof setPaymentStatus !== 'function') {
     console.error('❌ دالة الحالة setPaymentStatus غير صالحة!');
@@ -158,61 +159,39 @@ export const handleTonPayment = async (
   try {
     console.log('🚀 بدء عملية دفع USDT...');
 
-    const userTonAddress = tonConnectUI.account?.address;
-    if (!userTonAddress) {
-      // إظهار رسالة توضح ضرورة ربط المحفظة
+    // الحصول على عنوان المحفظة الرئيسي للمستخدم
+    const userMainWalletAddress = tonConnectUI.account?.address;
+    if (!userMainWalletAddress) {
       console.error('❌ الرجاء ربط محفظتك اولا');
+      showToast.error('الرجاء ربط محفظتك اولا');
       setPaymentStatus('failed');
       return {};
     }
-    console.log(`✅ عنوان محفظة المستخدم: ${userTonAddress}`);
+    console.log(`✅ عنوان المحفظة الرئيسي للمستخدم: ${userMainWalletAddress}`);
 
-    const userJettonWallet = await getUserJettonWallet(userTonAddress);
-    if (!userJettonWallet) {
-      console.warn('🚨 المستخدم لا يملك محفظة USDT على TON.');
-      setPaymentStatus('failed');
-      return {};
-    }
-    console.log(`✅ عنوان محفظة USDT الخاصة بالمستخدم: ${userJettonWallet}`);
+    // نستخدم العنوان الرئيسي للمستخدم مباشرةً في المعاملة
+    const senderAddress = userMainWalletAddress;
 
     // جلب عنوان البوت من Zustand
     const botWalletAddress = useTariffStore.getState().walletAddress;
     if (!botWalletAddress) {
       console.error('❌ عنوان محفظة البوت غير متوفر في المتجر!');
+      showToast.error('❌ عنوان محفظة البوت غير متوفر');
       setPaymentStatus('failed');
       return {};
     }
-    console.log(`✅ عنوان محفظة البوت من Zustand: ${botWalletAddress}`);
+    console.log(`✅ عنوان محفظة البوت: ${botWalletAddress}`);
 
     const recipientJettonWalletAddress = await getBotJettonWallet(botWalletAddress);
     if (!recipientJettonWalletAddress) {
       console.error('❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.');
+      showToast.error('❌ فشل جلب عنوان محفظة البوت');
       setPaymentStatus('failed');
       return {};
     }
     console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
 
-    // تحويل المبلغ إلى nanoJettons (1 USDT = 1,000,000 NanoJettons)
-    // لاحظ: سيتم استخدام السعر الذي يُعاد من الخادم إذا كان ذلك متاحاً.
-    const USDT_AMOUNT = amount;
-    const amountInNanoJettons = BigInt(USDT_AMOUNT * 10 ** 6);
-    const gasFee = toNano('0.02').toString(); // رسوم الغاز 0.02 TON
-
-    if (amountInNanoJettons <= 0) {
-      console.error(`❌ مبلغ غير صالح بالـ nanoJettons: ${amountInNanoJettons}`);
-      setPaymentStatus('failed');
-      return {};
-    }
-
-    console.log('🔍 بيانات الدفع:', {
-      USDT_AMOUNT,
-      amountInNanoJettons,
-      userJettonWallet,
-      recipientJettonWalletAddress,
-    });
-
-    // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع عبر TON API.
-    // لن يتم إرسال orderId ولا السعر amount هنا؛ ستقوم الخادم بتحديد السعر الصحيح.
+    // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع والحصول على payment_token و final amount
     console.log('📞 استدعاء /api/confirm_payment لتأكيد الدفع...');
     const confirmPaymentResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`,
@@ -224,7 +203,7 @@ export const handleTonPayment = async (
         },
         body: JSON.stringify({
           webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
-          userWalletAddress: userTonAddress,
+          userWalletAddress: userMainWalletAddress, // إرسال العنوان الرئيسي للمستخدم
           planId: selectedPlanId,
           telegramId: telegramId,
           telegramUsername: telegramUsername,
@@ -239,6 +218,7 @@ export const handleTonPayment = async (
         confirmPaymentResponse.status,
         confirmPaymentResponse.statusText
       );
+      showToast.error('❌ فشل استدعاء خدمة الدفع');
       setPaymentStatus('failed');
       return {};
     }
@@ -246,15 +226,21 @@ export const handleTonPayment = async (
     const confirmPaymentData = await confirmPaymentResponse.json();
     console.log('✅ استجابة /api/confirm_payment:', confirmPaymentData);
 
-    // استخدام القيمة المستلمة من الخادم: payment_token (وربما قيمة amount جديدة)
     const paymentToken = confirmPaymentData.payment_token;
-    // في حال أعاد الخادم قيمة amount مختلفة يمكن استخدامها في حسابات الحمولة
-    const finalAmount = confirmPaymentData.amount ? parseFloat(confirmPaymentData.amount) : USDT_AMOUNT;
+    // استخدام القيمة المستلمة من الخادم للسعر (مثلاً "0.01")
+    const finalAmount = confirmPaymentData.amount ? parseFloat(confirmPaymentData.amount) : 0;
+    if (finalAmount <= 0) {
+      console.error('❌ السعر المستلم من الخادم غير صالح.');
+      showToast.error('❌ السعر غير صالح');
+      setPaymentStatus('failed');
+      return {};
+    }
 
-    // حساب القيمة النهائية بوحدات nanoJettons باستخدام finalAmount من الخادم
+    // حساب القيمة النهائية بوحدات nanoJettons باستخدام finalAmount المُعاد من الخادم
     const finalAmountInNano = BigInt(finalAmount * 10 ** 6);
+    const gasFee = toNano('0.02').toString(); // رسوم الغاز 0.02 TON
 
-    // إنشاء payload باستخدام العنوان الخاص بالبوت والـ paymentToken بدلاً من orderId
+    // إنشاء payload باستخدام عنوان البوت والـ paymentToken
     const payloadBase64 = createJettonTransferPayload(botWalletAddress, finalAmountInNano, paymentToken);
     console.log('🔹 Payload Base64:', payloadBase64);
 
@@ -263,7 +249,7 @@ export const handleTonPayment = async (
       validUntil: Math.floor(Date.now() / 1000) + 600, // صلاحية 10 دقائق
       messages: [
         {
-          address: userJettonWallet,
+          address: senderAddress, // استخدام العنوان الرئيسي للمستخدم
           amount: gasFee,
           payload: payloadBase64,
         },
@@ -278,9 +264,11 @@ export const handleTonPayment = async (
     console.log('✅ استجابة المعاملة:', transactionResponse);
 
     setPaymentStatus('processing');
+    showToast.success('✅ تم الدفع بنجاح!');
     return { payment_token: paymentToken };
   } catch (error: unknown) {
     console.error('❌ فشل الدفع:', error);
+    showToast.error('❌ فشل الدفع');
     setPaymentStatus('failed');
     return {};
   }
