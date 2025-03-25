@@ -13,7 +13,7 @@ export const ExchangePaymentModal = ({
   onSuccess
 }: {
   details: {
-    orderId: string
+
     depositAddress: string
     amount: string
     network: string
@@ -64,7 +64,7 @@ export const ExchangePaymentModal = ({
     setTimeout(() => setIsCopied(null), 2000)
   }
 
-  const qrValue = `ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.orderId}`
+  const qrValue = `ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.paymentToken}`
 
   const WarningMessage = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-start gap-2 mt-2 p-2 bg-red-50 rounded-md border border-red-100">
@@ -157,14 +157,14 @@ export const ExchangePaymentModal = ({
             <div className="flex justify-between items-start">
               <p className="text-xs text-gray-500 mb-1">المذكرة (مطلوب)</p>
               <button
-                onClick={() => handleCopy(details.orderId, 'المذكرة')}
+                onClick={() => handleCopy(details.paymentToken, 'المذكرة')}
                 className="text-gray-400 hover:text-blue-600 transition-colors"
               >
                 <FiCopy className="w-5 h-5" />
               </button>
             </div>
             <p className="font-mono text-gray-800 break-all">
-              {details.orderId}
+              {details.paymentToken}
             </p>
             <WarningMessage>
               تأكد من إضافة رمز المذكرة في الحقل المخصص أثناء التحويل

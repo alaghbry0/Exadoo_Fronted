@@ -7,14 +7,14 @@ interface PaymentExchangePageProps {
   recipientAddress: string; // عنوان محفظة المستلم
   amount: string;           // المبلغ المطلوب
   network: string;          // اسم الشبكة (مثلاً: "Ton Network")
-  orderId: string;          // التعليق: orderId
+  paymentToken: string;          // التعليق: orderId
 }
 
 const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
   recipientAddress,
   amount,
   network,
-  orderId,
+  paymentToken,
 }) => {
   const [copied, setCopied] = useState<string>('');
 
@@ -69,19 +69,19 @@ const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
           </div>
           {/* التعليق (orderId) */}
           <div>
-            <p className="text-gray-600">التعليق (orderId):</p>
+            <p className="text-gray-600">التعليق (paymentToken):</p>
             <div className="flex items-center justify-between bg-gray-200 p-2 rounded">
-              <span className="text-gray-800 break-all">{orderId}</span>
-              <button onClick={() => copyText(orderId, 'orderId')}>
+              <span className="text-gray-800 break-all">{paymentToken}</span>
+              <button onClick={() => copyText(paymentToken, 'paymentToken')}>
                 <FiCopy className="w-5 h-5 text-gray-600" />
               </button>
             </div>
-            {copied === 'orderId' && <p className="text-green-600 text-sm">تم النسخ!</p>}
+            {copied === 'paymentToken' && <p className="text-green-600 text-sm">تم النسخ!</p>}
           </div>
         </div>
         <div className="mt-6 p-4 bg-yellow-100 rounded">
           <p className="text-yellow-800 text-center text-sm">
-            يرجى عدم إغلاق هذه الصفحة أثناء المعالجة، والتأكد من تضمين التعليق (orderId) عند إجراء عملية الدفع.
+            يرجى عدم إغلاق هذه الصفحة أثناء المعالجة، والتأكد من تضمين التعليق (paymentToken) عند إجراء عملية الدفع.
           </p>
         </div>
       </div>
