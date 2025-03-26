@@ -1,5 +1,3 @@
--tonPayment.ts
-
 import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
 import { useTariffStore } from '../stores/zustand';
@@ -137,9 +135,10 @@ export const createJettonTransferPayload = (
 
 /**
  * دالة handleTonPayment المعدلة:
- * - لا يتم استخدام amount من الواجهة الأمامية
- * - استخدام القيمة المرجعة من الخادم لـ amount
- * - إظهار الرسائل عبر showToast
+ * - لا يتم تمرير amount من الواجهة.
+ * - يتم إرسال بيانات الدفع إلى الخادم دون amount.
+ * - يتم استخدام قيمة amount التي قد تُعاد من الخادم (إذا وُجدت) في حساب الحمولة.
+ * - إظهار رسائل للمستخدم باستخدام showToast.error و showToast.success.
  */
 export const handleTonPayment = async (
   tonConnectUI: TonConnectUI,
@@ -147,10 +146,11 @@ export const handleTonPayment = async (
   selectedPlanId: string,
   telegramId: string,
   telegramUsername: string,
-  fullName: string,
+  fullName: string
 ): Promise<{ payment_token?: string }> => {
   if (typeof setPaymentStatus !== 'function') {
     console.error('❌ دالة الحالة setPaymentStatus غير صالحة!');
+    showToast.error('❌ دالة الحالة غير صالحة!');
     return {};
   }
 
@@ -161,7 +161,8 @@ export const handleTonPayment = async (
 
     const userTonAddress = tonConnectUI.account?.address;
     if (!userTonAddress) {
-      showToast.error('الرجاء ربط محفظتك أولاً');
+      console.error('❌ الرجاء ربط محفظتك اولا');
+      showToast.error('❌ الرجاء ربط محفظتك اولا');
       setPaymentStatus('failed');
       return {};
     }
@@ -169,7 +170,8 @@ export const handleTonPayment = async (
 
     const userJettonWallet = await getUserJettonWallet(userTonAddress);
     if (!userJettonWallet) {
-      showToast.error('المستخدم لا يملك محفظة USDT على TON.');
+      console.warn('🚨 المستخدم لا يملك محفظة USDT على TON.');
+      showToast.error('🚨 المستخدم لا يملك محفظة USDT على TON.');
       setPaymentStatus('failed');
       return {};
     }
@@ -178,7 +180,8 @@ export const handleTonPayment = async (
     // جلب عنوان البوت من Zustand
     const botWalletAddress = useTariffStore.getState().walletAddress;
     if (!botWalletAddress) {
-      showToast.error('عنوان محفظة البوت غير متوفر.');
+      console.error('❌ عنوان محفظة البوت غير متوفر في المتجر!');
+      showToast.error('❌ عنوان محفظة البوت غير متوفر!');
       setPaymentStatus('failed');
       return {};
     }
@@ -186,13 +189,16 @@ export const handleTonPayment = async (
 
     const recipientJettonWalletAddress = await getBotJettonWallet(botWalletAddress);
     if (!recipientJettonWalletAddress) {
-      showToast.error('تعذر الحصول على محفظة البوت USDT.');
+      console.error('❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.');
+      showToast.error('❌ لم يتمكن من جلب عنوان محفظة USDT الخاصة بالبوت.');
       setPaymentStatus('failed');
       return {};
     }
     console.log(`✅ عنوان محفظة USDT الخاصة بالبوت: ${recipientJettonWalletAddress}`);
 
-    // إرسال بيانات الدفع إلى الخادم لتأكيد الدفع
+    // رسوم الغاز ثابتة بقيمة 0.02 TON
+    const gasFee = toNano('0.02').toString();
+
     console.log('📞 استدعاء /api/confirm_payment لتأكيد الدفع...');
     const confirmPaymentResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`,
@@ -214,7 +220,12 @@ export const handleTonPayment = async (
     );
 
     if (!confirmPaymentResponse.ok) {
-      showToast.error('فشل في تأكيد الدفع. الرجاء المحاولة لاحقاً.');
+      console.error(
+        '❌ فشل استدعاء /api/confirm_payment:',
+        confirmPaymentResponse.status,
+        confirmPaymentResponse.statusText
+      );
+      showToast.error('❌ فشل تأكيد الدفع من الخادم.');
       setPaymentStatus('failed');
       return {};
     }
@@ -222,33 +233,28 @@ export const handleTonPayment = async (
     const confirmPaymentData = await confirmPaymentResponse.json();
     console.log('✅ استجابة /api/confirm_payment:', confirmPaymentData);
 
-    if (!confirmPaymentData.amount) {
-      showToast.error('حدث خطأ في تحديد المبلغ.');
+    // استخدام القيمة المستلمة من الخادم:
+    // paymentToken للإشارة إلى عملية الدفع
+    // وفي حال أعاد الخادم قيمة amount مختلفة نستخدمها في الحساب
+    const paymentToken = confirmPaymentData.payment_token;
+    const finalAmount = confirmPaymentData.amount ? parseFloat(confirmPaymentData.amount) : 0;
+    if (finalAmount <= 0) {
+      console.error('❌ مبلغ الدفع غير صالح من الخادم.');
+      showToast.error('❌ مبلغ الدفع غير صالح.');
       setPaymentStatus('failed');
       return {};
     }
 
-    const finalAmount = parseFloat(confirmPaymentData.amount);
+    // حساب finalAmount بوحدات nanoJettons (1 USDT = 1,000,000 NanoJettons)
     const finalAmountInNano = BigInt(finalAmount * 10 ** 6);
-    const gasFee = toNano('0.02').toString();
-
-    if (finalAmountInNano <= 0) {
-      showToast.error('المبلغ المحدد غير صالح.');
-      setPaymentStatus('failed');
-      return {};
-    }
 
     // إنشاء payload باستخدام العنوان الخاص بالبوت والـ paymentToken
-    const payloadBase64 = createJettonTransferPayload(
-      botWalletAddress,
-      finalAmountInNano,
-      confirmPaymentData.payment_token
-    );
+    const payloadBase64 = createJettonTransferPayload(botWalletAddress, finalAmountInNano, paymentToken);
     console.log('🔹 Payload Base64:', payloadBase64);
 
     // بناء المعاملة مع تضمين payload
     const transaction = {
-      validUntil: Math.floor(Date.now() / 1000) + 600,
+      validUntil: Math.floor(Date.now() / 1000) + 600, // صلاحية 10 دقائق
       messages: [
         {
           address: userJettonWallet,
@@ -263,13 +269,14 @@ export const handleTonPayment = async (
 
     const transactionResponse = await tonConnectUI.sendTransaction(transaction);
     console.log('✅ تم الدفع بنجاح باستخدام USDT!');
-    showToast.success('تمت عملية الدفع بنجاح! جاري التجهيز...');
+    console.log('✅ استجابة المعاملة:', transactionResponse);
+    showToast.success('✅ تم الدفع بنجاح!');
 
     setPaymentStatus('processing');
-    return { payment_token: confirmPaymentData.payment_token };
+    return { payment_token: paymentToken };
   } catch (error: unknown) {
     console.error('❌ فشل الدفع:', error);
-    showToast.error('فشل في عملية الدفع. الرجاء المحاولة مرة أخرى.');
+    showToast.error('❌ فشل الدفع. يرجى المحاولة مرة أخرى.');
     setPaymentStatus('failed');
     return {};
   }
