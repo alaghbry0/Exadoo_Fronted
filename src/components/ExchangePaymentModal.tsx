@@ -39,11 +39,23 @@ export const ExchangePaymentModal = ({
   }, [])
 
   // محاكاة حالة الدفع الناجحة
-  useEffect(() => {
-    if (timeLeft === 1700) {
-      setPaymentStatus('success')
+    useEffect(() => {
+  const checkPaymentStatus = async () => {
+    try {
+      const response = await fetch(`/api/check_payment?token=${details.paymentToken}`)
+      const data = await response.json()
+
+      if (data.status === 'success') {
+        setPaymentStatus('success')
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error)
     }
-  }, [timeLeft])
+  }
+
+  const interval = setInterval(checkPaymentStatus, 5000) // تحقق كل 5 ثوانٍ
+  return () => clearInterval(interval)
+}, [details.paymentToken])
 
   // إدارة نجاح الدفع
   useEffect(() => {
