@@ -55,7 +55,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   // التحقق من صلاحية الجلسة مع الخادم عبر paymentToken
   const verifyPaymentSession = useCallback(async (paymentToken: string) => {
     try {
-      const response = await fetch(`/api/verify-payment/${paymentToken}`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-payment/${paymentToken}`)
       if (!response.ok) throw new Error('Invalid session')
       return await response.json()
     } catch (error) {
