@@ -66,7 +66,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
   const checkPaymentStatus = useCallback(async (paymentToken: string) => {
     try {
-      const res = await fetch(`/api/check-payment/${paymentToken}`)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/check-payment/${paymentToken}`)
       if (!res.ok) {
         localStorage.removeItem('paymentData')
         throw new Error('فشل في التحقق من حالة الدفع')
