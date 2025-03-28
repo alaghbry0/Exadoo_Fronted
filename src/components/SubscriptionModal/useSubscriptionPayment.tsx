@@ -34,6 +34,73 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
 
   const maxRetryCount = 5
 
+  // نظام إدارة الإشعارات (تم نقله من داخل startSSEConnection)
+  interface NotificationData {
+    type?: 'overpayment' | 'subscription_success'
+    status?: 'success' | 'failed' | 'pending'
+    message?: string
+    invite_link?: string
+    formatted_message?: string
+  }
+
+  const notificationQueue = useRef<Array<{
+    data: NotificationData
+    priority: number
+    timestamp: number
+  }>>([])
+  const isProcessing = useRef(false)
+  
+  const processNotificationQueue = useCallback(() => {
+    if (isProcessing.current || notificationQueue.current.length === 0) return
+  
+    isProcessing.current = true
+    
+    // فرز الإشعارات حسب الأولوية والوقت
+    notificationQueue.current.sort((a, b) => {
+      if (a.priority !== b.priority) return b.priority - a.priority
+      return a.timestamp - b.timestamp
+    })
+  
+    const nextNotification = notificationQueue.current.shift()!
+    const { data } = nextNotification
+  
+    try {
+      if (data.type === 'overpayment') {
+        showToast.warning({
+          message: data.message || 'تم اكتشاف دفع زائد',
+          action: {
+            text: 'اتصل بالدعم',
+            onClick: () => window.open('https://t.me/ExaadoSupport', '_blank')
+          }
+        })
+      } else if (data.type === 'subscription_success') {
+        showToast.success({
+          message: data.message || 'تم تجديد الاشتراك بنجاح',
+          action: data.invite_link
+            ? {
+                text: 'انضم الآن',
+                onClick: () => window.open(data.invite_link, '_blank')
+              }
+            : undefined
+        })
+      } else {
+        switch (data.status) {
+          case 'success':
+            showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
+            break
+          case 'failed':
+            showToast.error(data.message || 'فشلت عملية الدفع')
+            break
+        }
+      }
+    } catch (error) {
+      console.error('Error showing notification:', error)
+    } finally {
+      isProcessing.current = false
+      setTimeout(processNotificationQueue, 1000) // معدل عرض آمن
+    }
+  }, [])
+
   const paymentSessionRef = useRef<{
     paymentToken?: string
     planId?: string
@@ -90,7 +157,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [paymentStatus])
 
-  // إدارة اتصال SSE مع إعادة المحاولة
   const startSSEConnection = useCallback((paymentToken: string, retryCount = 0) => {
     const delay = Math.min(1000 * 2 ** retryCount, 30000)
 
@@ -101,6 +167,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
     sseUrl.searchParams.append('payment_token', paymentToken)
     sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
+    sseUrl.searchParams.append('client_version', '1.2.0') // إضافة إصدار العميل
 
     const es = new EventSource(sseUrl.toString())
     paymentSessionRef.current.es = es
@@ -128,38 +195,33 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
       )
     }
 
+  
     const handleMessage = (e: MessageEvent) => {
       try {
         const data = JSON.parse(e.data)
         console.log('📥 Received SSE event:', data)
-
-        if (data.type === 'overpayment') {
-          showToast.warning({
-            message: data.message,
-            action: {
-              text: 'اتصل بالدعم',
-              onClick: () => window.open('https://t.me/ExaadoSupport', '_blank')
-            }
+  
+        // تحديد أولوية الإشعار
+        const priority =
+          data.status === 'failed' ? 3 :
+          data.type === 'subscription_success' ? 2 : 1
+  
+        // إضافة للإشعار للقائمة مع التحقق من التكرار
+        const isDuplicate = notificationQueue.current.some(
+          item => JSON.stringify(item.data) === JSON.stringify(data)
+        )
+        
+        if (!isDuplicate) {
+          notificationQueue.current.push({
+            data,
+            priority,
+            timestamp: Date.now()
           })
-        } else if (data.type === 'subscription_success') {
-          showToast.success({
-            message: data.message,
-            action: data.invite_link
-              ? {
-                  text: 'انضم الآن',
-                  onClick: () => window.open(data.invite_link, '_blank')
-                }
-              : undefined
-          })
-        } else {
-          switch (data.status) {
-            case 'success':
-              showToast.success(data.message || 'تم تجديد الاشتراك بنجاح!')
-              break
-            case 'failed':
-              showToast.error(data.message || 'فشلت عملية الدفع')
-              break
-          }
+        }
+  
+        // بدء المعالجة إذا لم تكن جارية
+        if (!isProcessing.current) {
+          processNotificationQueue()
         }
 
         setPaymentStatus(data.status)
@@ -198,7 +260,8 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     queryClient,
     plan?.selectedOption.id,
     maxRetryCount,
-    handlePaymentSuccess
+    handlePaymentSuccess,
+    processNotificationQueue
   ])
 
   // استعادة الجلسة من localStorage
