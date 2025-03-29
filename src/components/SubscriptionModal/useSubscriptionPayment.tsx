@@ -161,15 +161,17 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     const delay = Math.min(1000 * 2 ** retryCount, 30000)
 
     if (paymentSessionRef.current.es) {
-      paymentSessionRef.current.es.close()
+        paymentSessionRef.current.es.close()
     }
 
     const sseUrl = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sse`)
     sseUrl.searchParams.append('payment_token', paymentToken)
     sseUrl.searchParams.append('telegram_id', telegramId ?? 'unknown')
-    sseUrl.searchParams.append('client_version', '1.2.0') // إضافة إصدار العميل
+    sseUrl.searchParams.append('client_version', '1.2.1') // تحديث الإصدار
 
-    const es = new EventSource(sseUrl.toString())
+    const es = new EventSource(sseUrl.toString(), {
+        withCredentials: true // <-- هنا نضيف الخيار
+    })
     paymentSessionRef.current.es = es
 
     const handleError = () => {
@@ -197,26 +199,32 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
 
   
     const handleMessage = (e: MessageEvent) => {
-      try {
+    try {
         const data = JSON.parse(e.data)
-        console.log('📥 Received SSE event:', data)
-  
-        // تحديد أولوية الإشعار
+        console.log('📥 حدث SSE:', data)
+
+        // معالجة الحالات بدون status
+        if (!data.status) {
+            if (data.message?.includes('نجاح')) data.status = 'success'
+            else if (data.message?.includes('فشل')) data.status = 'failed'
+        }
+
+        // تحديد أولوية الإشعار (يجب أن يكون هذا قبل استخدام priority)
         const priority =
-          data.status === 'failed' ? 3 :
-          data.type === 'subscription_success' ? 2 : 1
-  
+            data.status === 'failed' ? 3 :
+            data.type === 'subscription_success' ? 2 : 1
+
         // إضافة للإشعار للقائمة مع التحقق من التكرار
         const isDuplicate = notificationQueue.current.some(
-          item => JSON.stringify(item.data) === JSON.stringify(data)
+            item => JSON.stringify(item.data) === JSON.stringify(data)
         )
-        
+
         if (!isDuplicate) {
-          notificationQueue.current.push({
-            data,
-            priority,
-            timestamp: Date.now()
-          })
+            notificationQueue.current.push({
+                data,
+                priority,
+                timestamp: Date.now()
+            })
         }
   
         // بدء المعالجة إذا لم تكن جارية

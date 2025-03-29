@@ -1,6 +1,5 @@
 'use client'
 import { Toaster, ToastIcon, resolveValue } from 'react-hot-toast'
-import { motion } from 'framer-motion'
 import { NotificationType, ToastAction } from '@/typesPlan'
 
 interface CustomToastData {
@@ -15,34 +14,23 @@ export const NotificationToast = () => (
     gutter={12}
     containerStyle={{ marginTop: '1rem' }}
     toastOptions={{
-      duration: 4000, // Default duration
-      className: 'relative flex items-start p-4 rounded-lg shadow-lg font-medium',
+      duration: 4000,
+      className: 'bg-white text-gray-900 shadow-xl font-medium p-4 rounded-lg',
       success: {
-        duration: 4000,
+        className: 'bg-green-50 text-green-700 border border-green-200',
+        iconTheme: { primary: '#059669', secondary: '#fff' },
       },
       error: {
-        duration: 4000,
-      },
+        className: 'bg-red-50 text-red-700 border border-red-200',
+        iconTheme: { primary: '#dc2626', secondary: '#fff' },
+      }
     }}
   >
     {(t) => {
       const customData = t as unknown as { data?: CustomToastData }
-      const toastType = customData.data?.type || t.type
 
       return (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 120 }}
-          className={`w-full max-w-md transition-all duration-300 ${
-            toastType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-            toastType === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
-            toastType === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-            toastType === 'info' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-            'bg-purple-50 text-purple-700 border border-purple-200'
-          }`}
-        >
+        <div className={t.className}>
           <div className="flex items-start">
             <ToastIcon toast={t} />
             <div className="ml-3 flex-1">
@@ -71,7 +59,7 @@ export const NotificationToast = () => (
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       )
     }}
   </Toaster>
