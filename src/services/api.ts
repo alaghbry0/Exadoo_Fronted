@@ -70,3 +70,20 @@ export const fetchBotWalletAddress = async () => {
     return null;
   }
 };
+
+
+import axios from 'axios'
+
+export const fetchUserPayments = async (params: {
+  telegramId: number
+  page?: number
+  status?: string
+  startDate?: string
+  endDate?: string
+}) => {
+  const response = await axios.get('${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/payments', { params })
+  return {
+    data: response.data.results,
+    pagination: response.data.pagination
+  }
+}

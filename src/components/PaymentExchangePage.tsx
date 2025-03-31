@@ -7,7 +7,7 @@ interface PaymentExchangePageProps {
   recipientAddress: string; // عنوان محفظة المستلم
   amount: string;           // المبلغ المطلوب
   network: string;          // اسم الشبكة (مثلاً: "Ton Network")
-  paymentToken: string;          // التعليق: orderId
+  paymentToken: string;          // التعليق:
 }
 
 const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({

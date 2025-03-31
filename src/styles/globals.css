@@ -190,3 +190,46 @@ body {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
+
+
+/* تحسينات الإشعارات */
+.toast-button {
+  @apply inline-flex items-center px-3 py-1 text-xs text-white rounded transition-all duration-200;
+}
+
+.close-button {
+  @apply p-1 hover:bg-black/5 rounded-full transition-colors duration-200 ml-2;
+}
+
+.x-icon {
+  @apply w-4 h-4 text-current;
+}
+
+/* حركات ظهور الإشعارات */
+[data-reach-toast] {
+  @apply animate-toast-enter;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-toast-enter {
+  animation: toast-enter 0.3s ease-out;
+}
+
+/* تحسينات عامة */
+button:focus {
+  @apply outline-none ring-2 ring-offset-2 ring-blue-500;
+}
+
+a[target="_blank"] {
+  @apply font-medium underline hover:text-blue-700;
+}

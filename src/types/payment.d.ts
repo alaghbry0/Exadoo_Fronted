@@ -15,3 +15,4 @@ export interface SubscriptionPlanExtended extends SubscriptionPlan {
   };
   features: string[];
 }
+

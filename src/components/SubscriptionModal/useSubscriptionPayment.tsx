@@ -12,6 +12,7 @@ import { useQueryClient } from 'react-query'
 import { useTariffStore } from '@/stores/zustand'
 import { showToast } from '@/components/ui/Toast'
 
+
 interface ExchangeDetails {
   depositAddress: string
   amount: string
@@ -109,7 +110,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     console.error('Error showing notification:', error)
   } finally {
     isProcessing.current = false
-    setTimeout(processNotificationQueue, 1000)
+    setTimeout(processNotificationQueue, 2000)
   }
 }, [])
 
