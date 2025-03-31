@@ -6,7 +6,6 @@ import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
-import InviteAlert from '../components/InviteAlert'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useTariffStore } from '../stores/zustand'
 import { fetchBotWalletAddress } from '../services/api'
@@ -121,7 +120,6 @@ function AppContent({ Component, pageProps, router }: AppProps) {
       <FooterNav />
 
       <NotificationToast />
-      <InviteAlert />
     </>
   )
 }
