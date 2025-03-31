@@ -1,9 +1,11 @@
-import { defineStore } from 'pinia'
+import { create } from 'zustand'
 
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    telegramId: 0,
-    // ... other user data
-  }),
-  // ... actions and getters
-})
+interface UserState {
+  telegramId: number
+  // ... other user data
+}
+
+export const useUserStore = create<UserState>(() => ({
+  telegramId: 0,
+  // ... other user data
+}))

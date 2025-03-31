@@ -51,7 +51,7 @@ export default function PaymentHistory() {
     if (telegramId) {
       fetchMoreData();
     }
-  }, [telegramId, offset])
+  }, [telegramId, offset, fetchMoreData])
 
   const handleGoBack = () => {
     router.back()
