@@ -19,7 +19,7 @@ export type Subscription = {
   subscriptionOptions?: string[];
   color?: string;
   expiry?: string;
-  progress?: number;
+  progress?: string;
    status: "نشط" | "منتهي" | "unknown";
 };
 
