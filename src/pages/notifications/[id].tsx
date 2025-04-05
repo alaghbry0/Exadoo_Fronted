@@ -1,69 +1,60 @@
 // pages/notifications/[id].tsx
-import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+'use client'
+import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { Spinner } from '@/components/Spinner'
+import { NotificationType } from '@/types/notification'
 
-type NotificationDetails = {
-  id: number
-  type: string
-  title?: string
-  message: string
-  created_at: string
-  read_status: boolean
-  extra_data?: {
-    subscription_history_id?: number
-  }
-  subscription_history?: {
-    invite_link?: string
-    subscription_type_name?: string
-    subscription_plan_name?: string
-    renewal_date?: string
-    expiry_date?: string
-  }
-}
-
-export default function NotificationDetails() {
+export default function NotificationDetails({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const { id } = router.query
-  const [notification, setNotification] = useState<NotificationDetails | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
   const telegramId = typeof window !== 'undefined' ? localStorage.getItem('telegram_id') : null
 
+  const { data: notification, isLoading, error } = useQuery<NotificationType>({
+    queryKey: ['notification', params.id, telegramId],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${params.id}`,
+        { params: { telegram_id: telegramId } }
+      )
+      return data
+    },
+    enabled: !!telegramId && !!params.id
+  })
+
   useEffect(() => {
-    if (!id || !telegramId) return
-
-    const fetchNotification = async () => {
-      try {
-        const { data } = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${id}`,
-          { params: { telegram_id: telegramId } }
-        )
-        setNotification(data)
-        setError('')
-      } catch (err) {
-        console.error('فشل في جلب التفاصيل:', err)
-        setError('تعذر تحميل تفاصيل الإشعار')
-      } finally {
-        setLoading(false)
-      }
+    if (notification && !notification.read_status) {
+      // تحديث حالة القراءة عند فتح التفاصيل
+      axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/mark-as-read/${notification.type}`,
+        { telegram_id: telegramId }
+      ).catch(console.error)
     }
+  }, [notification, telegramId])
 
-    fetchNotification()
-  }, [id, telegramId])
+  if (isLoading) return <Spinner className="w-12 h-12 mx-auto mt-20" />
 
-  if (loading) return <div className="p-4 text-center">جاري التحميل...</div>
-  if (error) return <div className="p-4 text-red-500">{error}</div>
-  if (!notification) return <div className="p-4">الإشعار غير موجود</div>
+  if (error) return (
+    <div className="p-4 text-red-500 text-center">
+      حدث خطأ أثناء تحميل تفاصيل الإشعار
+    </div>
+  )
+
+  if (!notification) return (
+    <div className="p-4 text-center">
+      الإشعار غير موجود
+    </div>
+  )
 
   return (
     <div className="max-w-2xl mx-auto p-4">
       <button
         onClick={() => router.back()}
-        className="mb-4 text-blue-600 hover:text-blue-700"
+        className="mb-4 text-blue-600 hover:text-blue-700 flex items-center gap-1"
       >
-        &larr; رجوع
+        <span>&larr;</span>
+        <span>رجوع</span>
       </button>
 
       <h1 className="text-2xl font-bold mb-4">تفاصيل الإشعار</h1>
@@ -71,7 +62,7 @@ export default function NotificationDetails() {
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="mb-4">
           <label className="text-gray-500 text-sm">نوع الإشعار:</label>
-          <p className="font-medium">{notification.type}</p>
+          <p className="font-medium capitalize">{notification.type.replace('_', ' ')}</p>
         </div>
 
         {notification.title && (
@@ -84,6 +75,19 @@ export default function NotificationDetails() {
         <div className="mb-4">
           <label className="text-gray-500 text-sm">الرسالة:</label>
           <p className="whitespace-pre-wrap">{notification.message}</p>
+        </div>
+
+        <div className="mb-4">
+          <label className="text-gray-500 text-sm">تاريخ الإرسال:</label>
+          <p>
+            {new Date(notification.created_at).toLocaleDateString('ar-EG', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </p>
         </div>
 
         {notification.subscription_history && (
