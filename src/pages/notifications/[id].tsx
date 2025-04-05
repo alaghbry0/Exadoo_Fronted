@@ -1,4 +1,4 @@
-// pages/notifications/[id].tsx
+1// pages/notifications/[id].tsx
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
@@ -15,7 +15,7 @@ export default function NotificationDetails({ params }: { params: { id: string }
     queryKey: ['notification', params.id, telegramId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${params.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/notifications/${params.id}`,
         { params: { telegram_id: telegramId } }
       )
       return data
@@ -27,7 +27,7 @@ export default function NotificationDetails({ params }: { params: { id: string }
     if (notification && !notification.read_status) {
       // تحديث حالة القراءة عند فتح التفاصيل
       axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/mark-as-read/${notification.type}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/notifications/mark-as-read/${notification.type}`,
         { telegram_id: telegramId }
       ).catch(console.error)
     }

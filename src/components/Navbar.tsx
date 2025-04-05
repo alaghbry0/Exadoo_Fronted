@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
     queryKey: ['unreadNotificationsCount', telegramId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/unread/count`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/notifications/unread/count`,
         { params: { telegram_id: telegramId } }
       )
       return data
