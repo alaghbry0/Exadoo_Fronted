@@ -270,7 +270,6 @@ export const handleTonPayment = async (
     const transactionResponse = await tonConnectUI.sendTransaction(transaction);
     console.log('✅ تم الدفع بنجاح باستخدام USDT!');
     console.log('✅ استجابة المعاملة:', transactionResponse);
-    showToast.success('✅ تم الدفع بنجاح!');
 
     setPaymentStatus('processing');
     return { payment_token: paymentToken };

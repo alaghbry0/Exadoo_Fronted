@@ -2,8 +2,8 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiX, FiFileText, FiClock } from 'react-icons/fi'
-import { useRouter } from 'next/navigation'
+import { FiX, FiClock } from 'react-icons/fi'
+
 
 import type { SubscriptionPlan } from '@/typesPlan'
 import { useTelegram } from '../context/TelegramContext'
@@ -19,7 +19,7 @@ import { useSubscriptionPayment } from '../components/SubscriptionModal/useSubsc
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { telegramId } = useTelegram()
   const queryClient = useQueryClient()
-  const router = useRouter()
+
 
   function handlePaymentSuccess() {
     queryClient.invalidateQueries(['subscriptions', telegramId])
@@ -37,10 +37,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
   const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'choose' | null>(null)
 
-  // الانتقال إلى صفحة سجل الدفعات
-  const goToPaymentHistory = () => {
-    router.push('/payment-history')
-  }
+
 
   return (
     <>
@@ -71,13 +68,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 <h2 className="text-lg font-semibold text-white truncate">{plan?.name}</h2>
               </div>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={goToPaymentHistory}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
-                  title="سجلات الدفعات"
-                >
-                  <FiFileText className="w-5 h-5 text-white group-hover:text-blue-100" />
-                </button>
+
                 <button
                   onClick={onClose}
                   className="text-white/90 hover:text-white transition-colors p-1"

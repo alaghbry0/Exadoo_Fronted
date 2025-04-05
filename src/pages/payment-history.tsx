@@ -72,7 +72,7 @@ export default function PaymentHistory() {
         <Button onClick={handleGoBack} color="gray" pill>
           <FiArrowLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-2xl font-bold flex-1 text-center">السحل</h1>
+        <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>
       </div>
 
       <InfiniteScroll
