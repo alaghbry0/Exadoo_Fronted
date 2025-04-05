@@ -8,18 +8,26 @@ export type UserProfile = {
   subscriptions?: Subscription[];
 };
 
-export type Subscription = {
-  id: number;
-  name: string;
-  price: string | number;
-  selectedOption?: string | null;
-  description?: string;
-  features?: string[];
-  animation?: object;
-  subscriptionOptions?: string[];
-  color?: string;
-  expiry?: string;
-  progress?: string;
-   status: "نشط" | "منتهي" | "unknown";
-};
+export interface Subscription {
+  id: number
+  name: string
+  price: string | number
+  selectedOption?: string | null
+  description?: string
+  features?: string[]
+  animation?: object
+  subscriptionOptions?: string[]
+  color?: string
+  expiry?: string
+  progress?: string
+  status: 'نشط' | 'منتهي' | 'unknown'
+}
 
+export interface SubscriptionsResponse {
+  subscriptions: Subscription[]
+  meta?: {
+    total: number
+    active: number
+    expired: number
+  }
+}

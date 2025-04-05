@@ -14,7 +14,7 @@ import { useProfileStore } from '../stores/profileStore'
 import { useSessionStore } from '../stores/sessionStore'
 
 // استيراد React Query والدوال من API
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { getSubscriptionTypes, getSubscriptionPlans } from '../services/api'
 
 // تعريف الواجهات المحدثة

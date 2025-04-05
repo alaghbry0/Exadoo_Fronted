@@ -8,7 +8,7 @@ import { handleTonPayment } from '@/utils/tonPayment'
 import { useTelegram } from '@/context/TelegramContext'
 import type { SubscriptionPlan } from '@/typesPlan'
 import { PaymentStatus } from '@/types/payment'
-import { useQueryClient } from 'react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTariffStore } from '@/stores/zustand'
 import { showToast } from '@/components/ui/Toast'
 
@@ -149,14 +149,16 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
 
   // عند نجاح الدفع
   const handlePaymentSuccess = useCallback(() => {
-    localStorage.removeItem('paymentSession')
-    localStorage.removeItem('paymentData')
-    paymentSessionRef.current = {}
-    setExchangeDetails(null)
-    setPaymentStatus('idle')
-    queryClient.invalidateQueries(['subscriptions', telegramId])
-    onSuccess()
-  }, [queryClient, telegramId, onSuccess])
+  localStorage.removeItem('paymentSession')
+  localStorage.removeItem('paymentData')
+  paymentSessionRef.current = {}
+  setExchangeDetails(null)
+  setPaymentStatus('idle')
+  queryClient.invalidateQueries({
+    queryKey: ['subscriptions', telegramId || '']
+  })
+  onSuccess()
+}, [queryClient, telegramId, onSuccess])
 
   // منع إغلاق الصفحة أثناء المعالجة
   useEffect(() => {
@@ -248,7 +250,9 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
         }
 
         setPaymentStatus(data.status)
-        queryClient.invalidateQueries(['subscriptions', telegramId])
+        queryClient.invalidateQueries({
+        queryKey: ['subscriptions', telegramId || '']
+        })
 
         if (data.status === 'success') {
           if (data.invite_link) {

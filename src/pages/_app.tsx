@@ -9,27 +9,38 @@ import SplashScreen from '../components/SplashScreen'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useTariffStore } from '../stores/zustand'
 import { fetchBotWalletAddress } from '../services/api'
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query'
-import { useProfileStore } from '../stores/profileStore' // تأكد من وجود هذا المسار
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { useProfileStore } from '../stores/profileStore'
 import { NotificationToast } from '../components/NotificationToast'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-
-
-const queryClient = new QueryClient()
+// إنشاء QueryClient خارج المكون الرئيسي لضمان عدم إعادة الإنشاء عند إعادة التصيير
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 دقائق
+      retry: 2,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      gcTime: 10 * 60 * 1000 // 10 دقائق للتخزين المؤقت
+    }
+  }
+})
 
 const useWalletAddress = () => {
-  return useQuery('walletAddress', fetchBotWalletAddress, {
-    retry: 3,
-    refetchOnWindowFocus: false,
+  return useQuery({
+    queryKey: ['walletAddress'],
+    queryFn: fetchBotWalletAddress,
+    retry: 3
   })
 }
 
-function AppContent({ Component, pageProps, router }: AppProps) {
+function AppContent({ children }: { children: React.ReactNode }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false)
   const { setSubscriptions } = useProfileStore()
   const { telegramId } = useTelegram()
   const { setWalletAddress } = useTariffStore()
-  const nextRouter = useRouter()
+  const router = useRouter()
 
   const {
     data: walletAddress,
@@ -38,7 +49,6 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     error: walletError
   } = useWalletAddress()
 
-  // إصلاح بنية useEffect لجلب الاشتراكات
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!telegramId) return
@@ -53,12 +63,7 @@ function AppContent({ Component, pageProps, router }: AppProps) {
           }
         }
 
-        // إضافة منطق جلب البيانات من الخادم هنا
-        // const freshData = await fetchSubscriptionsFromServer()
-        // localStorage.setItem('subscriptions', JSON.stringify({
-        //   data: freshData,
-        //   timestamp: Date.now()
-        // }))
+        // يمكنك إضافة منطق جلب البيانات من الخادم هنا
       } catch (error) {
         console.error('فشل في جلب الاشتراكات:', error)
       }
@@ -69,26 +74,24 @@ function AppContent({ Component, pageProps, router }: AppProps) {
     return () => clearInterval(interval)
   }, [telegramId, setSubscriptions])
 
-  // إصلاح المسافة البيضاء الزائدة
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        await nextRouter.prefetch('/')
-        await nextRouter.prefetch('/plans')
-        await nextRouter.prefetch('/profile')
+        await router.prefetch('/')
+        await router.prefetch('/plans')
+        await router.prefetch('/profile')
       } catch (error) {
         console.error('⚠️ خطأ أثناء التحميل المسبق:', error)
       }
     }
     prefetchPages()
-  }, [nextRouter])
+  }, [router])
 
   useEffect(() => {
     const timer = setTimeout(() => setMinDelayCompleted(true), 1500)
     return () => clearTimeout(timer)
   }, [])
 
-  // تحديث عنوان المحفظة عند التحميل
   useEffect(() => {
     if (walletAddress) {
       setWalletAddress(walletAddress)
@@ -116,19 +119,21 @@ function AppContent({ Component, pageProps, router }: AppProps) {
 
   return (
     <>
-      <Component {...pageProps} router={router} />
+      {children}
       <FooterNav />
-
       <NotificationToast />
     </>
   )
 }
 
-function MyApp({ Component, pageProps, router }: AppProps) {
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <TelegramProvider>
       <QueryClientProvider client={queryClient}>
-        <AppContent Component={Component} pageProps={pageProps} router={router} />
+        <ReactQueryDevtools initialIsOpen={false} />
+        <AppContent>
+          <Component {...pageProps} />
+        </AppContent>
       </QueryClientProvider>
     </TelegramProvider>
   )

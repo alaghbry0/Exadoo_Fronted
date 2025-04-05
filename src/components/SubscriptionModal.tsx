@@ -9,7 +9,7 @@ import type { SubscriptionPlan } from '@/typesPlan'
 import { useTelegram } from '../context/TelegramContext'
 
 import { Spinner } from '../components/Spinner'
-import { useQueryClient } from 'react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { UsdtPaymentMethodModal } from '../components/UsdtPaymentMethodModal'
 import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
 import { PaymentButtons } from '../components/SubscriptionModal/PaymentButtons'
@@ -22,8 +22,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
 
   function handlePaymentSuccess() {
-    queryClient.invalidateQueries(['subscriptions', telegramId])
-  }
+  queryClient.invalidateQueries({
+    queryKey: ['subscriptions', telegramId || '']
+  })
+}
+
 
   const {
     paymentStatus,
