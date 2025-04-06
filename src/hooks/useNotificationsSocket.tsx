@@ -1,3 +1,4 @@
+// تعديل في useNotificationsSocket.tsx
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 export function useNotificationsSocket<T = unknown>(
@@ -10,9 +11,12 @@ export function useNotificationsSocket<T = unknown>(
   const maxReconnectAttempts = 5;
   const baseReconnectDelay = 2000;
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const connectingRef = useRef<boolean>(false); // متغير جديد لتتبع حالة الاتصال الجارية
 
   const connect = useCallback(() => {
-    if (!telegramId) return;
+    if (!telegramId || connectingRef.current) return; // منع الاتصال المتزامن
+
+    connectingRef.current = true; // تعيين حالة الاتصال الجارية
 
     // إغلاق الاتصال السابق إذا كان موجودًا
     if (socketRef.current && socketRef.current.readyState !== WebSocket.CLOSED) {
@@ -22,7 +26,10 @@ export function useNotificationsSocket<T = unknown>(
     try {
       // تحويل معرف التليجرام إلى سلسلة نصية للتأكد من اتساق النوع
       const stringTelegramId = String(telegramId);
-      const wsUrl = `${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws/notifications?telegram_id=${stringTelegramId}`;
+      // استخدام wss بدلاً من https لاتصال WebSocket
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const hostWithoutProtocol = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/^https?:\/\//, '');
+      const wsUrl = `${wsProtocol}//${hostWithoutProtocol}/ws/notifications?telegram_id=${stringTelegramId}`;
 
       console.log(`Connecting to WebSocket: ${wsUrl}`);
       const socket = new WebSocket(wsUrl);
@@ -32,6 +39,7 @@ export function useNotificationsSocket<T = unknown>(
         console.log("WebSocket connected successfully");
         setIsConnected(true);
         reconnectAttemptsRef.current = 0; // إعادة تعيين عدد محاولات إعادة الاتصال
+        connectingRef.current = false; // إعادة تعيين حالة الاتصال
 
         // إرسال رسالة ping للتأكد من أن الاتصال نشط
         socket.send(JSON.stringify({ type: 'ping' }));
@@ -62,11 +70,13 @@ export function useNotificationsSocket<T = unknown>(
       socket.onerror = (error) => {
         console.error("WebSocket error:", error);
         setIsConnected(false);
+        connectingRef.current = false; // إعادة تعيين حالة الاتصال عند حدوث خطأ
       };
 
       socket.onclose = (e) => {
         console.log(`WebSocket closed with code: ${e.code}, reason: ${e.reason}, wasClean: ${e.wasClean}`);
         setIsConnected(false);
+        connectingRef.current = false; // إعادة تعيين حالة الاتصال عند الإغلاق
 
         // إيقاف ping إذا كان نشطًا
         if (socketRef.current?.pingInterval) {
@@ -94,10 +104,11 @@ export function useNotificationsSocket<T = unknown>(
       };
     } catch (error) {
       console.error("Failed to initialize WebSocket:", error);
+      connectingRef.current = false; // إعادة تعيين حالة الاتصال عند حدوث استثناء
     }
   }, [telegramId, onMessage]);
 
-  // معالجة تغيير معرف المستخدم
+  // الكود الحالي لمعالجة تغيير معرف المستخدم
   useEffect(() => {
     // تنظيف الاتصال السابق
     const cleanup = () => {
@@ -113,6 +124,7 @@ export function useNotificationsSocket<T = unknown>(
         reconnectTimeoutRef.current = null;
       }
       setIsConnected(false);
+      connectingRef.current = false; // إعادة تعيين حالة الاتصال
     };
 
     cleanup();
