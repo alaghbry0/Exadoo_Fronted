@@ -1,4 +1,3 @@
-// useNotificationsSocket.tsx
 import { useEffect, useRef, useCallback } from 'react';
 
 export function useNotificationsSocket<T = unknown>(
@@ -9,34 +8,42 @@ export function useNotificationsSocket<T = unknown>(
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const connect = useCallback(() => {
-    if (!telegramId) return;
+    if (!telegramId) {
+      console.error("❌ No Telegram ID provided.");
+      return;
+    }
 
-    // استخدام المسار الجديد الذي يتضمن telegramId
-    const socket = new WebSocket(`${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws/notifications/${telegramId}`);
+    const socketUrl = `${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws/notifications?telegram_id=${telegramId}`;
+    console.log(`Attempting to connect to WebSocket: ${socketUrl}`);
+    const socket = new WebSocket(socketUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("WebSocket connected");
+      console.log("✅ WebSocket connected");
     };
 
     socket.onmessage = (event) => {
+      console.log("🔄 WebSocket message received:", event.data);
       try {
         const data = JSON.parse(event.data);
         onMessage(data);
       } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
+        console.error("❌ Error parsing WebSocket message:", error);
       }
     };
 
     socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("❌ WebSocket error:", error);
     };
 
     socket.onclose = (e) => {
-      console.log("WebSocket closed", e);
+      console.log("🔌 WebSocket closed", e);
+      if (e.code !== 1000) { // في حال الإغلاق غير الطبيعي
+        console.error("❌ Abnormal WebSocket closure:", e.reason);
+      }
       if (!reconnectTimeoutRef.current) {
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log("Reconnecting WebSocket...");
+          console.log("🔄 Reconnecting WebSocket...");
           connect();
           reconnectTimeoutRef.current = null;
         }, 3000);
