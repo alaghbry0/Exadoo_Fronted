@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
-import NotificationFilter from '@/components/SubscriptionModal/NotificationFilter'
+import NotificationFilter from '@/components/NotificationFilter'
 import { Spinner } from '@/components/Spinner'
 import { NotificationType } from '@/types/notification'
 

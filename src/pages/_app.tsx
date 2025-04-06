@@ -13,16 +13,27 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { useProfileStore } from '../stores/profileStore'
 import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { useNotificationsSocket } from '@/hooks/useNotificationsSocket'
+import { NotificationsProvider, useNotificationsContext } from '@/context/NotificationsContext'
+import { showToast } from '@/components/ui/Toast'
 
-// إنشاء QueryClient خارج المكون الرئيسي لضمان عدم إعادة الإنشاء عند إعادة التصيير
+type NotificationMessage = {
+  type?: string
+  message?: string
+  unread_count?: number
+  invite_link?: string
+}
+
+
+// إنشاء QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 دقائق
+      staleTime: 5 * 60 * 1000,
       retry: 2,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
-      gcTime: 10 * 60 * 1000 // 10 دقائق للتخزين المؤقت
+      gcTime: 10 * 60 * 1000
     }
   }
 })
@@ -40,6 +51,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const { setSubscriptions } = useProfileStore()
   const { telegramId } = useTelegram()
   const { setWalletAddress } = useTariffStore()
+  const { setUnreadCount } = useNotificationsContext()
   const router = useRouter()
 
   const {
@@ -49,10 +61,28 @@ function AppContent({ children }: { children: React.ReactNode }) {
     error: walletError
   } = useWalletAddress()
 
+  // 🛠️ إصلاح الهوكس: يتم استدعاء useNotificationsSocket دائمًا
+  useNotificationsSocket<NotificationMessage>(telegramId, (data) => {
+  if (data.unread_count !== undefined) {
+    setUnreadCount(data.unread_count)
+  }
+  if (data.type === "subscription_renewal" && data.message) {
+    showToast.success({
+      message: data.message,
+      action: data.invite_link
+        ? {
+            text: 'انضم الآن',
+            onClick: () => window.open(data.invite_link, '_blank')
+          }
+        : undefined
+    })
+  }
+})
+
+
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!telegramId) return
-
       try {
         const cached = localStorage.getItem('subscriptions')
         if (cached) {
@@ -62,13 +92,11 @@ function AppContent({ children }: { children: React.ReactNode }) {
             return
           }
         }
-
-        // يمكنك إضافة منطق جلب البيانات من الخادم هنا
+        // يمكنك إضافة منطق جلب الاشتراكات هنا
       } catch (error) {
         console.error('فشل في جلب الاشتراكات:', error)
       }
     }
-
     fetchSubscriptions()
     const interval = setInterval(fetchSubscriptions, 300000)
     return () => clearInterval(interval)
@@ -102,7 +130,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const hasError = isWalletError
 
   if (!isDataLoaded) return <SplashScreen />
-
   if (hasError) {
     return (
       <div className="flex justify-center items-center h-screen text-red-500 text-center px-4">
@@ -129,12 +156,14 @@ function AppContent({ children }: { children: React.ReactNode }) {
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <TelegramProvider>
-      <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <AppContent>
-          <Component {...pageProps} />
-        </AppContent>
-      </QueryClientProvider>
+      <NotificationsProvider>
+        <QueryClientProvider client={queryClient}>
+          <ReactQueryDevtools initialIsOpen={false} />
+          <AppContent>
+            <Component {...pageProps} />
+          </AppContent>
+        </QueryClientProvider>
+      </NotificationsProvider>
     </TelegramProvider>
   )
 }
