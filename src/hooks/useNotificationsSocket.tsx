@@ -9,6 +9,10 @@ export function useNotificationsSocket<T = unknown>(
   const reconnectAttempts = useRef(0);
   const isMounted = useRef(true);
 
+  const handlePong = useCallback(() => {
+    reconnectAttempts.current = 0; // Reset reconnect attempts on successful pong
+  }, []);
+
   const connect = useCallback(() => {
     if (!telegramId || !isMounted.current) return;
 
@@ -21,11 +25,19 @@ export function useNotificationsSocket<T = unknown>(
     const handleMessage = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'pong') return;
+        if (data.type === 'ping') {
+          socket.send(JSON.stringify({ type: 'pong' }));
+          handlePong();
+          return;
+        }
         onMessage(data);
       } catch (error) {
         console.error("Error parsing message:", error);
       }
+    };
+
+    const handleError = (error: Event) => {
+      console.error("WebSocket error:", error);
     };
 
     const handleClose = (e: CloseEvent) => {
@@ -35,31 +47,27 @@ export function useNotificationsSocket<T = unknown>(
     };
 
     socket.addEventListener('message', handleMessage);
+    socket.addEventListener('error', handleError);
     socket.addEventListener('close', handleClose);
-
-    // إرسال ping كل 25 ثانية
-    const pingInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'ping' }));
-      }
-    }, 25000);
 
     return () => {
       socket.removeEventListener('message', handleMessage);
+      socket.removeEventListener('error', handleError);
       socket.removeEventListener('close', handleClose);
-      clearInterval(pingInterval);
     };
-  }, [telegramId, onMessage]);
+  }, [telegramId, onMessage, handlePong]);
 
   const scheduleReconnect = useCallback(() => {
     if (!isMounted.current) return;
 
-    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 60000);
     reconnectAttempts.current += 1;
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (isMounted.current) connect();
     }, delay);
+
+    return () => clearTimeout(timeoutId);
   }, [connect]);
 
   useEffect(() => {
