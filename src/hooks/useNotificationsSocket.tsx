@@ -1,4 +1,3 @@
-// تعديل في useNotificationsSocket.tsx
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 export function useNotificationsSocket<T = unknown>(
@@ -8,15 +7,17 @@ export function useNotificationsSocket<T = unknown>(
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
-  const maxReconnectAttempts = 5;
+  const maxReconnectAttempts = 10; // زيادة عدد المحاولات
   const baseReconnectDelay = 2000;
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const connectingRef = useRef<boolean>(false); // متغير جديد لتتبع حالة الاتصال الجارية
+  const connectingRef = useRef<boolean>(false);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastPongTimeRef = useRef<number>(Date.now());
 
   const connect = useCallback(() => {
-    if (!telegramId || connectingRef.current) return; // منع الاتصال المتزامن
+    if (!telegramId || connectingRef.current) return;
 
-    connectingRef.current = true; // تعيين حالة الاتصال الجارية
+    connectingRef.current = true;
 
     // إغلاق الاتصال السابق إذا كان موجودًا
     if (socketRef.current && socketRef.current.readyState !== WebSocket.CLOSED) {
@@ -26,105 +27,142 @@ export function useNotificationsSocket<T = unknown>(
     try {
       // تحويل معرف التليجرام إلى سلسلة نصية للتأكد من اتساق النوع
       const stringTelegramId = String(telegramId);
-      // استخدام wss بدلاً من https لاتصال WebSocket
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const hostWithoutProtocol = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/^https?:\/\//, '');
-      const wsUrl = `${wsProtocol}//${hostWithoutProtocol}/ws/notifications?telegram_id=${stringTelegramId}`;
 
-      console.log(`Connecting to WebSocket: ${wsUrl}`);
+      // تحديد العنوان بشكل صحيح
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      let wsUrl = '';
+
+      // استخدام البيئة المحلية أو الإنتاج
+      if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+        // إزالة البروتوكول من العنوان
+        const hostWithoutProtocol = process.env.NEXT_PUBLIC_BACKEND_URL.replace(/^https?:\/\//, '');
+        wsUrl = `${wsProtocol}//${hostWithoutProtocol}/ws/notifications?telegram_id=${stringTelegramId}`;
+      } else {
+        // البديل الاحتياطي للبيئة المحلية
+        wsUrl = `${wsProtocol}//${window.location.host}/ws/notifications?telegram_id=${stringTelegramId}`;
+      }
+
+      console.log(`🔄 محاولة الاتصال بـ WebSocket: ${wsUrl}`);
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
 
       socket.onopen = () => {
-        console.log("WebSocket connected successfully");
+        console.log("✅ تم الاتصال بـ WebSocket بنجاح");
         setIsConnected(true);
-        reconnectAttemptsRef.current = 0; // إعادة تعيين عدد محاولات إعادة الاتصال
-        connectingRef.current = false; // إعادة تعيين حالة الاتصال
+        reconnectAttemptsRef.current = 0;
+        connectingRef.current = false;
+        lastPongTimeRef.current = Date.now();
 
-        // إرسال رسالة ping للتأكد من أن الاتصال نشط
-        socket.send(JSON.stringify({ type: 'ping' }));
-
-        // بدء إرسال رسائل ping دورية للحفاظ على الاتصال
-        const pingInterval = setInterval(() => {
-          if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'ping' }));
-          } else {
-            clearInterval(pingInterval);
-          }
-        }, 30000); // كل 30 ثانية
-
-        // تخزين مرجع الفاصل الزمني للتنظيف لاحقًا
-        socketRef.current!.pingInterval = pingInterval;
+        // بدء مراقبة استجابة الخادم
+        startPingMonitoring();
       };
 
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("WebSocket message received:", data);
+          // console.log("📩 تم استلام رسالة WebSocket:", data);
+
+          // تحديث وقت آخر رد عند استلام pong
+          if (data.type === "pong") {
+            lastPongTimeRef.current = Date.now();
+            return; // لا تمرر رسائل ping/pong للمستخدم
+          }
+
           onMessage(data);
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          console.error("❌ خطأ في تحليل رسالة WebSocket:", error);
         }
       };
 
       socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        console.error("❌ خطأ في WebSocket:", error);
         setIsConnected(false);
-        connectingRef.current = false; // إعادة تعيين حالة الاتصال عند حدوث خطأ
+        connectingRef.current = false;
       };
 
       socket.onclose = (e) => {
-        console.log(`WebSocket closed with code: ${e.code}, reason: ${e.reason}, wasClean: ${e.wasClean}`);
+        console.log(`🔌 تم إغلاق WebSocket برمز: ${e.code}, السبب: "${e.reason}", إغلاق نظيف: ${e.wasClean}`);
         setIsConnected(false);
-        connectingRef.current = false; // إعادة تعيين حالة الاتصال عند الإغلاق
+        connectingRef.current = false;
+        stopPingMonitoring();
 
-        // إيقاف ping إذا كان نشطًا
-        if (socketRef.current?.pingInterval) {
-          clearInterval(socketRef.current.pingInterval);
-        }
 
-        // محاولة إعادة الاتصال مع زيادة الفترة الزمنية تدريجياً
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const delay = baseReconnectDelay * Math.pow(1.5, reconnectAttemptsRef.current);
-          console.log(`Scheduling reconnect attempt ${reconnectAttemptsRef.current + 1} in ${delay}ms`);
+          const delay = Math.min(
+            baseReconnectDelay * Math.pow(1.5, reconnectAttemptsRef.current),
+            30000
+          );
+
+          console.log(`🔄 جدولة محاولة إعادة الاتصال ${reconnectAttemptsRef.current + 1} خلال ${delay}ms`);
 
           if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
           }
 
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("Attempting to reconnect WebSocket...");
+            console.log("🔄 جاري محاولة إعادة الاتصال بـ WebSocket...");
             reconnectAttemptsRef.current += 1;
             connect();
             reconnectTimeoutRef.current = null;
           }, delay);
         } else {
-          console.warn(`Maximum reconnect attempts (${maxReconnectAttempts}) reached`);
+          console.warn(`⚠️ تم الوصول إلى الحد الأقصى من محاولات إعادة الاتصال (${maxReconnectAttempts})`);
         }
       };
     } catch (error) {
-      console.error("Failed to initialize WebSocket:", error);
-      connectingRef.current = false; // إعادة تعيين حالة الاتصال عند حدوث استثناء
+      console.error("❌ فشل في تهيئة WebSocket:", error);
+      connectingRef.current = false;
     }
   }, [telegramId, onMessage]);
 
-  // الكود الحالي لمعالجة تغيير معرف المستخدم
+  // مراقبة استجابة الخادم عبر ping/pong
+  const startPingMonitoring = useCallback(() => {
+    stopPingMonitoring();
+
+    const pingInterval = setInterval(() => {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        // إرسال ping للخادم
+        socketRef.current.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+
+        // التحقق من وقت آخر pong
+        const timeSinceLastPong = Date.now() - lastPongTimeRef.current;
+        if (timeSinceLastPong > 30000) { // 30 ثانية بدون استجابة
+          console.warn("⚠️ لم يتم استلام استجابة ping لمدة 30 ثانية، إعادة إنشاء الاتصال");
+          if (socketRef.current) {
+            socketRef.current.close();
+          }
+        }
+      }
+    }, 10000); // ping كل 10 ثواني
+
+    pingIntervalRef.current = pingInterval;
+  }, []);
+
+  const stopPingMonitoring = useCallback(() => {
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
+  }, []);
+
+  // إعادة إنشاء الاتصال عند تغيير معرف المستخدم
   useEffect(() => {
     // تنظيف الاتصال السابق
     const cleanup = () => {
+      stopPingMonitoring();
+
       if (socketRef.current) {
-        if (socketRef.current.pingInterval) {
-          clearInterval(socketRef.current.pingInterval);
-        }
         socketRef.current.close();
         socketRef.current = null;
       }
+
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
+
       setIsConnected(false);
-      connectingRef.current = false; // إعادة تعيين حالة الاتصال
+      connectingRef.current = false;
     };
 
     cleanup();
@@ -135,20 +173,33 @@ export function useNotificationsSocket<T = unknown>(
     }
 
     return cleanup;
-  }, [telegramId, connect]);
+  }, [telegramId, connect, stopPingMonitoring]);
 
   // إعادة محاولة الاتصال عند استعادة اتصال الشبكة
   useEffect(() => {
     const handleOnline = () => {
-      console.log("Network is back online, reconnecting WebSocket");
-      reconnectAttemptsRef.current = 0; // إعادة تعيين العداد
+      console.log("🔄 عادت الشبكة للعمل، إعادة الاتصال بـ WebSocket");
+      reconnectAttemptsRef.current = 0;
       connect();
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("🔄 عادت الصفحة للظهور، التحقق من اتصال WebSocket");
+        // إعادة الاتصال فقط إذا كان مغلقًا
+        if (socketRef.current?.readyState !== WebSocket.OPEN) {
+          reconnectAttemptsRef.current = 0;
+          connect();
+        }
+      }
+    };
+
     window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [connect]);
 
