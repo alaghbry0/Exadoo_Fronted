@@ -18,11 +18,15 @@ import { NotificationsProvider, useNotificationsContext } from '@/context/Notifi
 import { showToast } from '@/components/ui/Toast'
 
 type NotificationMessage = {
-  type?: string
-  message?: string
-  unread_count?: number
-  invite_link?: string
-}
+  type?: string;
+  data?: {
+    message?: string;
+    invite_link?: string;
+    expiry_date?: string;
+    count?: number; // للإشعارات غير المقروءة
+  };
+  unread_count?: number;
+};
 
 
 // إنشاء QueryClient
@@ -63,21 +67,21 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   // 🛠️ إصلاح الهوكس: يتم استدعاء useNotificationsSocket دائمًا
   useNotificationsSocket<NotificationMessage>(telegramId, (data) => {
-  if (data.unread_count !== undefined) {
-    setUnreadCount(data.unread_count)
+  if (data.type === "unread_update" && data.data?.count !== undefined) {
+    setUnreadCount(data.data.count);
   }
-  if (data.type === "subscription_renewal" && data.message) {
+  if (data.type === "subscription_renewal") {
     showToast.success({
-      message: data.message,
-      action: data.invite_link
+      message: data.data?.message || 'تم تجديد الاشتراك بنجاح',
+      action: data.data?.invite_link
         ? {
             text: 'انضم الآن',
-            onClick: () => window.open(data.invite_link, '_blank')
+            onClick: () => window.open(data.data.invite_link, '_blank')
           }
         : undefined
-    })
+    });
   }
-})
+});
 
 
   useEffect(() => {
