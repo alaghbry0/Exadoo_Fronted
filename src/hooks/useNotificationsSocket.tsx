@@ -21,7 +21,7 @@ export function useNotificationsSocket<T = unknown>(
 
     try {
       console.log(`محاولة الاتصال بـ WebSocket لـ ${telegramId}...`);
-      const socket = new WebSocket(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ws/notifications?telegram_id=${telegramId}`);
+      const socket = new WebSocket(`${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws/notifications?telegram_id=${telegramId}`);
       socketRef.current = socket;
 
       socket.onopen = () => {
