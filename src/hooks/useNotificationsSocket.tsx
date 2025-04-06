@@ -27,20 +27,7 @@ export function useNotificationsSocket<T = unknown>(
     try {
       // تحويل معرف التليجرام إلى سلسلة نصية للتأكد من اتساق النوع
       const stringTelegramId = String(telegramId);
-
-      // تحديد العنوان بشكل صحيح
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      let wsUrl = '';
-
-      // استخدام البيئة المحلية أو الإنتاج
-      if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-        // إزالة البروتوكول من العنوان
-        const hostWithoutProtocol = process.env.NEXT_PUBLIC_BACKEND_URL.replace(/^https?:\/\//, '');
-        wsUrl = `${wsProtocol}//${hostWithoutProtocol}/ws/notifications?telegram_id=${stringTelegramId}`;
-      } else {
-        // البديل الاحتياطي للبيئة المحلية
-        wsUrl = `${wsProtocol}//${window.location.host}/ws/notifications?telegram_id=${stringTelegramId}`;
-      }
+      const wsUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/ws/notifications?telegram_id=${stringTelegramId}`;
 
       console.log(`🔄 محاولة الاتصال بـ WebSocket: ${wsUrl}`);
       const socket = new WebSocket(wsUrl);
