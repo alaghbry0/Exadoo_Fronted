@@ -10,7 +10,7 @@ export function useNotificationsSocket<T = unknown>(
   const connect = useCallback(() => {
     if (!telegramId) return;
 
-    const socket = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}/ws/notifications?telegram_id=${telegramId}`);
+    const socket = new WebSocket(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ws/notifications?telegram_id=${telegramId}`);
     socketRef.current = socket;
 
     socket.onopen = () => {
