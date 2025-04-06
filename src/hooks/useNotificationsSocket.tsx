@@ -22,7 +22,7 @@ export function useNotificationsSocket<T = unknown>(
     try {
       // تحويل معرف التليجرام إلى سلسلة نصية للتأكد من اتساق النوع
       const stringTelegramId = String(telegramId);
-      const wsUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/ws/notifications?telegram_id=${stringTelegramId}`;
+      const wsUrl = `${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws/notifications?telegram_id=${stringTelegramId}`;
 
       console.log(`Connecting to WebSocket: ${wsUrl}`);
       const socket = new WebSocket(wsUrl);
