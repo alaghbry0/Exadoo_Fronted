@@ -23,7 +23,7 @@ type NotificationMessage = {
     message?: string;
     invite_link?: string;
     expiry_date?: string;
-    count?: number; // للإشعارات غير المقروءة
+    count?: number;
   };
   unread_count?: number;
 };
@@ -76,14 +76,16 @@ function AppContent({ children }: { children: React.ReactNode }) {
       action: data.data?.invite_link
         ? {
             text: 'انضم الآن',
-            onClick: () => window.open(data.data.invite_link, '_blank')
+            onClick: () => {
+              if (data.data?.invite_link) {
+                window.open(data.data.invite_link, '_blank');
+              }
+            }
           }
         : undefined
     });
   }
 });
-
-
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!telegramId) return
