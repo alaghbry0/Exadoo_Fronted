@@ -28,7 +28,6 @@ type NotificationMessage = {
   unread_count?: number;
 };
 
-
 // إنشاء QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,27 +64,38 @@ function AppContent({ children }: { children: React.ReactNode }) {
     error: walletError
   } = useWalletAddress()
 
-  // 🛠️ إصلاح الهوكس: يتم استدعاء useNotificationsSocket دائمًا
-  useNotificationsSocket<NotificationMessage>(telegramId, (data) => {
-  if (data.type === "unread_update" && data.data?.count !== undefined) {
-    setUnreadCount(data.data.count);
-  }
-  if (data.type === "subscription_renewal") {
-    showToast.success({
-      message: data.data?.message || 'تم تجديد الاشتراك بنجاح',
-      action: data.data?.invite_link
-        ? {
-            text: 'انضم الآن',
-            onClick: () => {
-              if (data.data?.invite_link) {
-                window.open(data.data.invite_link, '_blank');
+  // استخدام النسخة المحسنة من هوك useNotificationsSocket مع استرجاع حالة الاتصال
+  const { isConnected } = useNotificationsSocket<NotificationMessage>(telegramId, (data) => {
+    if (data.type === "unread_update" && data.data?.count !== undefined) {
+      setUnreadCount(data.data.count);
+    }
+    if (data.type === "subscription_renewal") {
+      showToast.success({
+        message: data.data?.message || 'تم تجديد الاشتراك بنجاح',
+        action: data.data?.invite_link
+          ? {
+              text: 'انضم الآن',
+              onClick: () => {
+                if (data.data?.invite_link) {
+                  window.open(data.data.invite_link, '_blank');
+                }
               }
             }
-          }
-        : undefined
-    });
-  }
-});
+          : undefined
+      });
+    }
+  });
+
+  // عرض مؤشر حالة الاتصال بالإشعارات
+  useEffect(() => {
+    if (isConnected) {
+      console.log("🟢 تم الاتصال بالإشعارات");
+      // يمكن هنا تعديل واجهة المستخدم لإظهار حالة الاتصال إذا لزم الأمر
+    } else {
+      console.log("🔴 تم فقدان الاتصال بالإشعارات");
+    }
+  }, [isConnected]);
+
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!telegramId) return
@@ -175,4 +185,3 @@ function MyApp({ Component, pageProps }: AppProps) {
 }
 
 export default MyApp
-

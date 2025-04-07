@@ -1,4 +1,14 @@
 // types/notification.ts
+export type SocketMessageType = {
+  type: 'unread_update' | 'subscription_renewed' | 'notification'
+  data?: {
+    count?: number
+    message?: string
+    invite_link?: string
+    [key: string]: unknown
+  }
+}
+
 export type NotificationType = {
   id: number
   type: 'subscription_renewal' | 'payment_success' | 'system_alert' | string
