@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Bell, RefreshCw, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Bell, RefreshCw } from 'lucide-react'
 import { Spinner } from '@/components/Spinner'
 import NotificationFilter from '@/components/NotificationFilter'
 import { useTelegram } from '../context/TelegramContext'
@@ -41,9 +41,12 @@ export default function NotificationsPage() {
   } = useNotifications(telegramId, filter)
 
   // التعامل مع رسائل الويب سوكيت
-  const handleSocketMessage = useCallback((message) => {
-    if (message.type === 'unread_update' && message.data?.count !== undefined) {
-      setUnreadCount(message.data.count)
+  const handleSocketMessage = useCallback((message: { type: string; data?: unknown }) => {
+    if (message.type === 'unread_update') {
+      const data = message.data as { count?: number };
+      if (data?.count !== undefined) {
+        setUnreadCount(data.count)
+      }
     } else if (message.type === 'new_notification') {
       queryClient.invalidateQueries({ queryKey: ['notifications', telegramId, filter] })
     }
@@ -82,7 +85,7 @@ export default function NotificationsPage() {
 
 
   const handleGoBack = () => {
-      router.back(`/index`);
+      router.back();
   };
 
   // حالة التحميل الأولية
@@ -152,7 +155,11 @@ export default function NotificationsPage() {
       </motion.div>
 
       {/* مكون التصفية */}
-      <NotificationFilter currentFilter={filter} />
+      <NotificationFilter 
+        currentFilter={filter}
+        unreadCount={unreadCountData || 0}
+        onMarkAllAsRead={markAllAsRead}
+      />
 
       {/* حالة فارغة في حال عدم وجود إشعارات */}
       {notifications.length === 0 && !isLoading && (
@@ -225,7 +232,7 @@ export default function NotificationsPage() {
                 <NotificationItem
                   key={notification.id}
                   notification={notification}
-                  telegramId={telegramId!}
+                  onMarkAsRead={async () => await markAllAsRead()}
                 />
               </motion.div>
             ))}

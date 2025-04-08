@@ -17,15 +17,27 @@ import { useNotificationsSocket } from '@/hooks/useNotificationsSocket'
 import { NotificationsProvider, useNotificationsContext } from '@/context/NotificationsContext'
 import { showToast } from '@/components/ui/Toast'
 
-type NotificationMessage = {
+interface NotificationExtraData {
+  invite_link?: string;
+}
+
+interface NotificationData {
+  count?: number;
   type?: string;
-  data?: any;
+  message?: string;
+  extra_data?: NotificationExtraData;
+  id?: string;
+}
+
+interface NotificationMessage {
+  type: string;
+  data?: unknown;
   id?: string;
   title?: string;
   message?: string;
   created_at?: string;
   read_status?: boolean;
-};
+}
 
 // Enhanced QueryClient with improved caching strategy
 const queryClient = new QueryClient({
@@ -68,42 +80,38 @@ function AppContent({ children }: { children: React.ReactNode }) {
     console.log("📩 WebSocket message received:", message);
 
     // Handle unread count updates
-    if (message.type === "unread_update" && message.data?.count !== undefined) {
-      setUnreadCount(message.data.count);
+    if (message.type === "unread_update") {
+      const data = message.data as { count?: number };
+      if (data?.count !== undefined) {
+        setUnreadCount(data.count);
+      }
       return;
     }
 
     // Handle new notifications
     if (message.type === "new_notification") {
-      const notificationData = message.data || message;
+      const notificationData = (message.data || message) as NotificationData;
 
       // Invalidate notification queries to refresh lists
       queryClient.invalidateQueries({
         queryKey: ['notifications', telegramId]
       });
 
-      // Show toast notification with appropriate action based on type
-      let toastAction;
+      // Show toast notification with appropriate message based on type
       let toastMessage = notificationData.message || 'تم استلام إشعار جديد';
 
       // Handle different notification types
       switch(notificationData.type) {
         case 'subscription_renewal':
           toastMessage = notificationData.message || 'تم تجديد الاشتراك بنجاح';
-          if (notificationData.extra_data?.invite_link) {
-            toastAction = {
-              text: 'انضم الآن',
-              onClick: () => window.open(notificationData.extra_data.invite_link, '_blank')
-            };
+          if (notificationData?.extra_data?.invite_link) {
+            window.open(notificationData.extra_data?.invite_link, '_blank');
           }
           break;
 
         case 'subscription_expiry':
           toastMessage = notificationData.message || 'اشتراكك على وشك الانتهاء';
-          toastAction = {
-            text: 'تجديد',
-            onClick: () => router.push('/plans')
-          };
+          router.push('/plans');
           break;
 
         case 'payment_success':
@@ -112,18 +120,11 @@ function AppContent({ children }: { children: React.ReactNode }) {
       }
 
       // Show toast with dynamic content
-      showToast.success({
-        message: toastMessage,
-        action: toastAction,
-        duration: 6000,
-        onClose: () => {},
-        onClick: () => {
-          // Navigate to notification details
-          if (notificationData.id) {
-            router.push(`/notifications/${notificationData.id}`);
-          }
-        }
-      });
+      showToast.success(toastMessage);
+      // Navigate to notification details if clicked
+      if (notificationData.id) {
+        router.push(`/notifications/${notificationData.id}`);
+      }
     }
 
     // Handle notification read status updates
@@ -139,7 +140,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   }, [setUnreadCount, router, telegramId]);
 
   // Enhanced WebSocket connection with improved state management
-  const { isConnected, connectionState } = useNotificationsSocket(
+  const { connectionState } = useNotificationsSocket(
     telegramId,
     handleWebSocketMessage
   );

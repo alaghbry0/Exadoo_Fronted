@@ -31,5 +31,9 @@ export type SubscriptionHistoryType = {
   renewal_date?: string
   expiry_date?: string
   telegram_id?: number
+  amount?: number
+  currency?: string
+  payment_method?: string
+  transaction_id?: string
   [key: string]: unknown
 }

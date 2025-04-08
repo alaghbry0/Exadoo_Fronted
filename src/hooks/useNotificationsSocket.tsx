@@ -10,7 +10,7 @@ export type NotificationEventType =
   | 'ping'
   | 'subscription_renewal';
 
-export interface NotificationMessage<T = any> {
+export interface NotificationMessage<T = unknown> {
   type: NotificationEventType;
   data?: T;
 }
@@ -93,7 +93,7 @@ export function useNotificationsSocket(
         if (!isMounted.current) return;
 
         try {
-          const data = JSON.parse(event.data);
+          const data: NotificationMessage = JSON.parse(event.data);
 
           if (data.type === "ping") {
             handlePing();

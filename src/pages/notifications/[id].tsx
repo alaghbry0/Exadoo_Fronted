@@ -51,8 +51,7 @@ export default function NotificationDetail() {
     data: notification,
     isLoading,
     error,
-    isError,
-    refetch
+    isError
   } = useQuery<NotificationType>({
     queryKey: ['notification', notificationId, telegramId],
     queryFn: async () => {
@@ -91,7 +90,7 @@ export default function NotificationDetail() {
       if (notification && !notification.read_status && telegramId) {
         try {
           await markAsRead(notification.id);
-          queryClient.setQueryData(['notification', notificationId, telegramId], (oldData: any) => {
+          queryClient.setQueryData(['notification', notificationId, telegramId], (oldData: NotificationType | undefined) => {
             if (!oldData) return oldData;
             return { ...oldData, read_status: true };
           });
@@ -117,7 +116,11 @@ export default function NotificationDetail() {
 
   // تحديد أيقونة الإشعار بناءً على نوعه
   const getNotificationIcon = () => {
-    switch (notification?.type) {
+    if (!notification?.type) {
+      return <Bell className="w-8 h-8 text-blue-600" />;
+    }
+    
+    switch (notification.type) {
       case 'subscription_renewal':
         return <Calendar className="w-8 h-8 text-emerald-600" />;
       case 'payment_success':
@@ -230,20 +233,28 @@ export default function NotificationDetail() {
               <div className="flex-1">
                 <div className="flex justify-between items-start flex-wrap gap-2">
                   <h2 className="text-xl font-semibold mb-2">
-                    {notification.title || notification.type?.replace(/_/g, ' ')}
+                    {notification?.title || notification?.type?.replace(/_/g, ' ') || 'إشعار بدون عنوان'}
                   </h2>
                   <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {getRelativeTime(notification.created_at)}
+                    {notification?.created_at ? getRelativeTime(notification.created_at) : 'تاريخ غير معروف'}
                   </span>
                 </div>
 
-                <p className="text-gray-700 whitespace-pre-wrap mb-4">
-                  {notification.message}
-                </p>
+                {notification?.message ? (
+                  <p className="text-gray-700 whitespace-pre-wrap mb-4">
+                    {notification.message}
+                  </p>
+                ) : (
+                  <p className="text-gray-500 italic mb-4">لا يوجد محتوى للإشعار</p>
+                )}
 
-                <div className="text-sm text-gray-500">
-                  {formatArabicDate(notification.created_at)}
-                </div>
+                {notification?.created_at ? (
+                  <div className="text-sm text-gray-500">
+                    {formatArabicDate(notification.created_at)}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic">تاريخ غير معروف</div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -260,13 +271,13 @@ export default function NotificationDetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {notification.subscription_history.amount && (
+                  {notification.subscription_history?.amount && (
                     <div className="bg-emerald-50 p-4 rounded-lg mb-6">
                       <h3 className="text-emerald-700 font-semibold mb-2">معلومات الدفع</h3>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">المبلغ المدفوع:</span>
                         <span className="text-lg font-bold text-emerald-700">
-                          {notification.subscription_history.amount} {notification.subscription_history.currency}
+                          {notification.subscription_history.amount} {notification.subscription_history.currency || ''}
                         </span>
                       </div>
                       {notification.subscription_history.payment_method && (
@@ -291,42 +302,42 @@ export default function NotificationDetail() {
                   <div className="flex items-center justify-between border-b pb-2">
                     <span className="text-gray-600">نوع الاشتراك:</span>
                     <span className="font-medium">
-                      {notification.subscription_history.subscription_type_name || 'غير محدد'}
+                      {notification.subscription_history?.subscription_type_name || 'غير محدد'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between border-b pb-2">
                     <span className="text-gray-600">خطة الاشتراك:</span>
                     <span className="font-medium">
-                      {notification.subscription_history.subscription_plan_name || 'غير محددة'}
+                      {notification.subscription_history?.subscription_plan_name || 'غير محددة'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between border-b pb-2">
                     <span className="text-gray-600">تاريخ التجديد:</span>
                     <span className="font-medium">
-                      {formatArabicDate(notification.subscription_history.renewal_date)}
+                      {notification.subscription_history?.renewal_date ? formatArabicDate(notification.subscription_history.renewal_date) : 'غير محدد'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between pb-2">
                     <span className="text-gray-600">تاريخ الانتهاء:</span>
                     <span className="font-medium">
-                      {formatArabicDate(notification.subscription_history.expiry_date)}
+                      {notification.subscription_history?.expiry_date ? formatArabicDate(notification.subscription_history.expiry_date) : 'غير محدد'}
                     </span>
                   </div>
 
-                  {notification.subscription_history?.invite_link && (
+                  {notification.subscription_history?.invite_link ? (
                     <div className="mt-6">
                       <Button
                         className="w-full gap-2 py-6 text-base"
-                        onClick={() => window.open(notification.subscription_history.invite_link, '_blank')}
+                        onClick={() => window.open(notification.subscription_history?.invite_link || '#', '_blank')}
                       >
                         <LinkIcon className="w-5 h-5" />
                         <span>الانضمام إلى القناة</span>
                       </Button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
