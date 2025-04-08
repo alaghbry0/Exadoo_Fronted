@@ -1,18 +1,35 @@
 // pages/notifications.tsx
 'use client'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import axios from 'axios'
+import { useCallback, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
-import NotificationFilter from '@/components/NotificationFilter'
+import InfiniteScroll from 'react-infinite-scroll-component'
+import { FiArrowLeft, FiBell } from 'react-icons/fi'
 import { Spinner } from '@/components/Spinner'
+import NotificationFilter from '@/components/NotificationFilter'
 import { NotificationType } from '@/types/notification'
+import { useTelegram } from '../context/TelegramContext'
+import { useNotificationsContext } from '@/context/NotificationsContext'
+import { useNotifications } from '@/hooks/useNotifications'
+import { useNotificationsSocket } from '@/hooks/useNotificationsSocket'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+
+// Dynamic import for better performance
+const NotificationItem = dynamic(
+  () => import('@/components/NotificationItem'),
+  { loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-lg"></div> }
+)
 
 export default function NotificationsPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const filter = (searchParams.get('filter') || 'all') as 'all' | 'unread'
-  const telegramId = typeof window !== 'undefined' ? localStorage.getItem('telegram_id') : null
+  const { telegramId } = useTelegram()
+  const { setUnreadCount } = useNotificationsContext()
+  const queryClient = useQueryClient()
 
+  // Get notifications with our enhanced hook
   const {
     data,
     fetchNextPage,
@@ -20,33 +37,28 @@ export default function NotificationsPage() {
     isFetchingNextPage,
     isLoading,
     error,
-  } = useInfiniteQuery<NotificationType[]>({
-    queryKey: ['notifications', telegramId, filter],
-    initialPageParam: 0,
-    queryFn: async ({ pageParam = 0 }) => {
-      const { data } = await axios.get<NotificationType[]>(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications`,
-        {
-          params: {
-            offset: pageParam,
-            limit: 10,
-            telegram_id: telegramId,
-            filter
-          }
-        }
-      )
-      return data
-    },
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === 10 ? allPages.length * 10 : undefined,
-    enabled: !!telegramId
-  })
+    refetch,
+  } = useNotifications(telegramId, filter)
 
-  const { data: unreadCount } = useQuery({
+  // Handle WebSocket messages
+  const handleSocketMessage = useCallback((message) => {
+    if (message.type === 'unread_update' && message.data?.count !== undefined) {
+      setUnreadCount(message.data.count)
+    } else if (message.type === 'new_notification') {
+      // Add the new notification to the cache and refetch
+      queryClient.invalidateQueries({ queryKey: ['notifications', telegramId, filter] })
+    }
+  }, [setUnreadCount, queryClient, telegramId, filter])
+
+  // Connect to WebSocket
+  const { isConnected, markAllAsRead } = useNotificationsSocket(telegramId, handleSocketMessage)
+
+  // Fetch unread notifications counter
+  const { data: unreadCountData } = useQuery({
     queryKey: ['unreadNotificationsCount', telegramId],
     queryFn: async () => {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/unread/count`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/unread-count`,
         { params: { telegram_id: telegramId } }
       )
       return data.unread_count as number
@@ -54,110 +66,142 @@ export default function NotificationsPage() {
     enabled: !!telegramId
   })
 
+  // Mark all as read when entering the page
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage()
-      }
+    if (telegramId && isConnected) {
+      // Only mark as read if we're on the notifications page
+      markAllAsRead()
     }
+  }, [telegramId, isConnected, markAllAsRead])
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+  // Handle pull-to-refresh
+  const handleRefresh = useCallback(() => {
+    refetch()
+  }, [refetch])
 
-  if (isLoading) return <Spinner className="w-12 h-12 mx-auto mt-20" />
-
-  if (error) return (
-    <div className="p-4 text-red-500 text-center">
-      حدث خطأ أثناء تحميل الإشعارات
-    </div>
-  )
-
+  // Flatten all pages into a single array
   const notifications = data?.pages.flat() || []
 
+  // Handle back button
+  const handleGoBack = () => {
+    router.back()
+  }
+
+  // Loading state
+  if (isLoading && notifications.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-4 bg-gray-50">
+        <div className="animate-pulse">
+          <FiBell size={40} className="text-blue-500" />
+        </div>
+        <p className="text-gray-600">جارٍ جلب بيانات الإشعارات...</p>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center min-h-screen">
+        <div className="bg-red-50 p-4 rounded-lg text-red-600 mb-4">
+          حدث خطأ أثناء تحميل الإشعارات
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
+          إعادة المحاولة
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">الإشعارات</h1>
-
-      <div className="mb-4 bg-blue-50 p-3 rounded-lg">
-        <span className="font-semibold">الإشعارات غير المقروءة:</span>
-        <span className="mr-2">{unreadCount || 0}</span>
+    <div
+      className="container mx-auto p-4 bg-gray-50 min-h-screen"
+      id="scrollableDiv"
+    >
+      {/* Header with connection status */}
+      <div className="flex items-center mb-6 sticky top-0 bg-gray-50 z-10 py-2">
+        <button
+          onClick={handleGoBack}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full"
+        >
+          <FiArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-2xl font-bold flex-1 text-center">الإشعارات</h1>
+        <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
       </div>
 
-      <NotificationFilter />
-
-      <div className="space-y-3">
-        {notifications.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            telegramId={telegramId!}
-          />
-        ))}
+      {/* Unread count badge */}
+      <div className="mb-4 bg-blue-50 p-3 rounded-lg text-center">
+        <span className="font-semibold">الإشعارات غير المقروءة: </span>
+        <span className="inline-flex items-center justify-center bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+          {unreadCountData || 0}
+        </span>
       </div>
 
+      {/* Filter */}
+      <NotificationFilter currentFilter={filter} />
+
+      {/* Empty state */}
+      {notifications.length === 0 && !isLoading && (
+        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+          <FiBell size={48} className="mb-4 opacity-50" />
+          <p>لا توجد إشعارات {filter === 'unread' ? 'غير مقروءة' : ''}</p>
+        </div>
+      )}
+
+      {/* Notifications list */}
+      <InfiniteScroll
+        dataLength={notifications.length}
+        next={fetchNextPage}
+        hasMore={!!hasNextPage}
+        loader={
+          <div className="flex items-center justify-center py-4">
+            <Spinner />
+            <span className="mr-2 text-gray-600">جارٍ التحميل...</span>
+          </div>
+        }
+        endMessage={
+          notifications.length > 0 ? (
+            <p className="text-center my-4 text-gray-500">
+              لا توجد المزيد من الإشعارات
+            </p>
+          ) : null
+        }
+        refreshFunction={handleRefresh}
+        pullDownToRefresh
+        pullDownToRefreshThreshold={50}
+        pullDownToRefreshContent={
+          <div className="text-center py-3 text-gray-500">
+            اسحب للأسفل للتحديث
+          </div>
+        }
+        releaseToRefreshContent={
+          <div className="text-center py-3 text-blue-500">
+            حرر للتحديث
+          </div>
+        }
+        scrollableTarget="scrollableDiv"
+      >
+        <div className="space-y-3">
+          {notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              telegramId={telegramId!}
+            />
+          ))}
+        </div>
+      </InfiniteScroll>
+
+      {/* Loading indicator for next page */}
       {isFetchingNextPage && (
         <div className="flex justify-center my-4">
           <Spinner />
         </div>
       )}
-
-      {!hasNextPage && notifications.length > 0 && (
-        <p className="text-center text-gray-500 mt-4">
-          لا توجد المزيد من الإشعارات
-        </p>
-      )}
-    </div>
-  )
-}
-
-const NotificationItem = ({ notification, telegramId }: { notification: NotificationType, telegramId: string }) => {
-  const router = useRouter()
-
-  const handleMarkAsRead = async () => {
-    try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/mark-as-read/${notification.type}`,
-        { telegram_id: telegramId }
-      )
-      router.push(`/notifications/${notification.id}?telegram_id=${telegramId}`)
-    } catch (error) {
-      console.error('Error marking notification as read:', error)
-    }
-  }
-
-  return (
-    <div
-      className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-        !notification.read_status
-          ? 'bg-white border-blue-200 shadow-sm hover:bg-blue-50'
-          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-      }`}
-      onClick={handleMarkAsRead}
-    >
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className={`font-medium ${
-            !notification.read_status ? 'text-blue-600' : 'text-gray-600'
-          }`}>
-            {notification.title || notification.type}
-          </h3>
-          <p className="text-gray-600 text-sm mt-1">
-            {new Date(notification.created_at).toLocaleDateString('ar-EG', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </p>
-        </div>
-        {!notification.read_status && (
-          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-            جديد
-          </span>
-        )}
-      </div>
     </div>
   )
 }

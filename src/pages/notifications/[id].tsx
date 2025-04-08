@@ -1,130 +1,286 @@
-
+// pages/notifications/[id].tsx
 'use client'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useEffect } from 'react'
+import { FiArrowRight, FiBell, FiCalendar, FiClock, FiLink } from 'react-icons/fi'
 import { Spinner } from '@/components/Spinner'
 import { NotificationType } from '@/types/notification'
+import { useTelegram } from '@/context/TelegramContext'
+import { useNotificationsContext } from '@/context/NotificationsContext'
+import { formatDistanceToNow } from 'date-fns'
+import { ar } from 'date-fns/locale'
 
-export default function NotificationDetails({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const telegramId = typeof window !== 'undefined' ? localStorage.getItem('telegram_id') : null
+// دالة مساعدة لتحويل التواريخ
+const formatArabicDate = (dateString?: string) => {
+  if (!dateString) return 'غير محدد';
+  return new Date(dateString).toLocaleDateString('ar-EG', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
-  const { data: notification, isLoading, error } = useQuery<NotificationType>({
-    queryKey: ['notification', params.id, telegramId],
+export default function NotificationDetails({ params }: { params?: { id?: string } }) {
+  const router = useRouter();
+  const routeParams = useParams(); // استخدام hook جديد للحصول على المعلمات
+
+  // الحصول على معرف الإشعار من params (المرسل عبر الـprops) أو من hook الطريق
+  const notificationId = params?.id || routeParams?.id as string;
+
+  const { telegramId } = useTelegram();
+  const { markAsRead } = useNotificationsContext();
+  const queryClient = useQueryClient();
+
+  // التحقق من وجود المعرف قبل إجراء الاستعلام
+  const enabled = !!telegramId && !!notificationId;
+
+  const {
+    data: notification,
+    isLoading,
+    error,
+    isError
+  } = useQuery<NotificationType>({
+    queryKey: ['notification', notificationId, telegramId],
     queryFn: async () => {
+      // التحقق من وجود المعلمات المطلوبة
+      if (!notificationId || !telegramId) {
+        throw new Error('معرف الإشعار أو معرف تليجرام غير متوفر');
+      }
+
+      const cachedItem = localStorage.getItem(`notification_${notificationId}_${telegramId}`);
+      if (cachedItem) {
+        const { data, timestamp } = JSON.parse(cachedItem);
+        if (Date.now() - timestamp < 5 * 60 * 1000) {
+          return data;
+        }
+      }
+
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${params.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notification/${notificationId}`,
         { params: { telegram_id: telegramId } }
-      )
-      return data
+      );
+
+      localStorage.setItem(
+        `notification_${notificationId}_${telegramId}`,
+        JSON.stringify({ data, timestamp: Date.now() })
+      );
+
+      return data;
     },
-    enabled: !!telegramId && !!params.id
-  })
+    enabled: enabled,
+    staleTime: 5 * 60 * 1000
+  });
 
+  // تحسين إدارة الحالة مع useEffect وتأكد من وجود البيانات
   useEffect(() => {
-    if (notification && !notification.read_status) {
-      // تحديث حالة القراءة عند فتح التفاصيل
-      axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/apinotifications/mark-as-read/${notification.type}`,
-        { telegram_id: telegramId }
-      ).catch(console.error)
+    const handleMarkAsRead = async () => {
+      // تحقق من كل الشروط بشكل صريح
+      if (notification && typeof notification.id !== 'undefined' && !notification.read_status && telegramId) {
+        try {
+          await markAsRead(notification.id);
+
+          // تحديث البيانات في ذاكرة التخزين المؤقت
+          queryClient.setQueryData(
+            ['notification', notificationId, telegramId],
+            (oldData: any) => {
+              if (!oldData) return oldData;
+              return { ...oldData, read_status: true };
+            }
+          );
+        } catch (error) {
+          console.error('Failed to mark as read:', error);
+        }
+      }
+    };
+
+    // تنفيذ دالة تحديد حالة القراءة فقط إذا كانت كل الشروط متوفرة
+    if (notification && telegramId) {
+      handleMarkAsRead();
     }
-  }, [notification, telegramId])
+  }, [notification, telegramId, markAsRead, queryClient, notificationId]);
 
-  if (isLoading) return <Spinner className="w-12 h-12 mx-auto mt-20" />
+  const getRelativeTime = (dateString?: string) => {
+    if (!dateString) return 'غير معروف';
+    return formatDistanceToNow(new Date(dateString), {
+      addSuffix: true,
+      locale: ar
+    });
+  };
 
-  if (error) return (
-    <div className="p-4 text-red-500 text-center">
-      حدث خطأ أثناء تحميل تفاصيل الإشعار
-    </div>
-  )
+  const getNotificationIcon = () => {
+    switch (notification?.type) {
+      case 'subscription_renewal':
+        return <FiCalendar className="w-8 h-8 text-green-600" />;
+      case 'subscription_expiry':
+        return <FiClock className="w-8 h-8 text-orange-600" />;
+      default:
+        return <FiBell className="w-8 h-8 text-blue-600" />;
+    }
+  };
 
-  if (!notification) return (
-    <div className="p-4 text-center">
-      الإشعار غير موجود
-    </div>
-  )
+  const handleGoBack = () => {
+    router.back();
+  };
 
-  return (
-    <div className="max-w-2xl mx-auto p-4">
-      <button
-        onClick={() => router.back()}
-        className="mb-4 text-blue-600 hover:text-blue-700 flex items-center gap-1"
-      >
-        <span>&larr;</span>
-        <span>رجوع</span>
-      </button>
-
-      <h1 className="text-2xl font-bold mb-4">تفاصيل الإشعار</h1>
-
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="mb-4">
-          <label className="text-gray-500 text-sm">نوع الإشعار:</label>
-          <p className="font-medium capitalize">{notification.type.replace('_', ' ')}</p>
-        </div>
-
-        {notification.title && (
-          <div className="mb-4">
-            <label className="text-gray-500 text-sm">العنوان:</label>
-            <p className="font-medium">{notification.title}</p>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <label className="text-gray-500 text-sm">الرسالة:</label>
-          <p className="whitespace-pre-wrap">{notification.message}</p>
-        </div>
-
-        <div className="mb-4">
-          <label className="text-gray-500 text-sm">تاريخ الإرسال:</label>
-          <p>
-            {new Date(notification.created_at).toLocaleDateString('ar-EG', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
+  // تحقق ما إذا كان هناك معرف للإشعار أو معرف للمستخدم
+  if (!notificationId || !telegramId) {
+    return (
+      <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center">
+        <div className="bg-red-50 p-6 rounded-lg text-center max-w-md w-full">
+          <FiBell className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-red-700 mb-2">
+            بيانات غير كافية
+          </h2>
+          <p className="text-red-600 mb-4">
+            معرف الإشعار أو معرف المستخدم غير متوفر
           </p>
+          <button
+            onClick={handleGoBack}
+            className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            العودة
+          </button>
         </div>
+      </div>
+    );
+  }
 
-        {notification.subscription_history && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <h2 className="text-lg font-semibold mb-3">تفاصيل الاشتراك</h2>
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Spinner className="w-12 h-12 mb-4" />
+        <p className="text-gray-600">جاري تحميل تفاصيل الإشعار...</p>
+      </div>
+    );
+  }
 
-            <div className="space-y-2">
-              <p>
-                <span className="text-gray-500">النوع:</span>{' '}
-                {notification.subscription_history.subscription_type_name}
-              </p>
-              <p>
-                <span className="text-gray-500">الخطة:</span>{' '}
-                {notification.subscription_history.subscription_plan_name}
-              </p>
-              <p>
-                <span className="text-gray-500">تاريخ التجديد:</span>{' '}
-                {new Date(notification.subscription_history.renewal_date!).toLocaleDateString('ar-EG')}
-              </p>
-              <p>
-                <span className="text-gray-500">تاريخ الانتهاء:</span>{' '}
-                {new Date(notification.subscription_history.expiry_date!).toLocaleDateString('ar-EG')}
-              </p>
-              {notification.subscription_history.invite_link && (
-                <a
-                  href={notification.subscription_history.invite_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline inline-block mt-2"
-                >
-                  رابط الانضمام إلى القناة
-                </a>
-              )}
+  if (isError || !notification) {
+    return (
+      <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center">
+        <div className="bg-red-50 p-6 rounded-lg text-center max-w-md w-full">
+          <FiBell className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-red-700 mb-2">
+            تعذر تحميل الإشعار
+          </h2>
+          <p className="text-red-600 mb-4">
+            {error instanceof Error ? error.message : 'حدث خطأ أثناء تحميل بيانات الإشعار'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['notification', notificationId] })}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              إعادة المحاولة
+            </button>
+            <button
+              onClick={handleGoBack}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              العودة
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+    return (
+    <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
+      <div className="flex items-center mb-6">
+        <button
+          onClick={handleGoBack}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full"
+        >
+          <FiArrowRight className="w-5 h-5" />
+        </button>
+        <h1 className="text-2xl font-bold flex-1 text-center">تفاصيل الإشعار</h1>
+        <div className="w-10"></div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-blue-50 rounded-full">
+            {getNotificationIcon()}
+          </div>
+
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <h2 className="text-xl font-semibold mb-2">
+                {notification.title || notification.type?.replace(/_/g, ' ')}
+              </h2>
+              <span className="text-sm text-gray-500">
+                {getRelativeTime(notification.created_at)}
+              </span>
+            </div>
+
+            <p className="text-gray-700 whitespace-pre-wrap mb-4">
+              {notification.message}
+            </p>
+
+            <div className="text-sm text-gray-500">
+              {formatArabicDate(notification.created_at)}
             </div>
           </div>
-        )}
+        </div>
       </div>
+
+      {notification.subscription_history && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">
+            تفاصيل الاشتراك
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <span className="w-32 text-gray-600">نوع الاشتراك:</span>
+              <span className="font-medium">
+                {notification.subscription_history.subscription_type_name || 'غير محدد'}
+              </span>
+            </div>
+
+            <div className="flex items-center">
+              <span className="w-32 text-gray-600">خطة الاشتراك:</span>
+              <span className="font-medium">
+                {notification.subscription_history.subscription_plan_name || 'غير محددة'}
+              </span>
+            </div>
+
+            <div className="flex items-center">
+              <span className="w-32 text-gray-600">تاريخ التجديد:</span>
+              <span className="font-medium">
+                {formatArabicDate(notification.subscription_history.renewal_date)}
+              </span>
+            </div>
+
+            <div className="flex items-center">
+              <span className="w-32 text-gray-600">تاريخ الانتهاء:</span>
+              <span className="font-medium">
+                {formatArabicDate(notification.subscription_history.expiry_date)}
+              </span>
+            </div>
+
+            {notification.subscription_history?.invite_link && (
+  <div className="mt-6">
+    <a
+      href={notification.subscription_history.invite_link || '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+      aria-label="الانضمام إلى القناة عبر الرابط"
+    >
+      <FiLink className="w-5 h-5" />
+      <span>الانضمام إلى القناة</span>
+    </a>
+  </div>
+)}
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

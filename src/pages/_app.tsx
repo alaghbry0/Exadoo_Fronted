@@ -1,6 +1,6 @@
 // _app.tsx
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
@@ -19,24 +19,23 @@ import { showToast } from '@/components/ui/Toast'
 
 type NotificationMessage = {
   type?: string;
-  data?: {
-    message?: string;
-    invite_link?: string;
-    expiry_date?: string;
-    count?: number;
-  };
-  unread_count?: number;
+  data?: any;
+  id?: string;
+  title?: string;
+  message?: string;
+  created_at?: string;
+  read_status?: boolean;
 };
 
-// إنشاء QueryClient
+// Enhanced QueryClient with improved caching strategy
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 2,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
-      gcTime: 10 * 60 * 1000
+      gcTime: 10 * 60 * 1000 // 10 minutes
     }
   }
 })
@@ -50,105 +49,182 @@ const useWalletAddress = () => {
 }
 
 function AppContent({ children }: { children: React.ReactNode }) {
-  const [minDelayCompleted, setMinDelayCompleted] = useState(false)
-  const { setSubscriptions } = useProfileStore()
-  const { telegramId } = useTelegram()
-  const { setWalletAddress } = useTariffStore()
-  const { setUnreadCount } = useNotificationsContext()
-  const router = useRouter()
+  const [minDelayCompleted, setMinDelayCompleted] = useState(false);
+  const { setSubscriptions } = useProfileStore();
+  const { telegramId } = useTelegram();
+  const { setWalletAddress } = useTariffStore();
+  const { setUnreadCount } = useNotificationsContext();
+  const router = useRouter();
 
   const {
     data: walletAddress,
     isLoading: isWalletLoading,
     isError: isWalletError,
     error: walletError
-  } = useWalletAddress()
+  } = useWalletAddress();
 
-  // استخدام النسخة المحسنة من هوك useNotificationsSocket مع استرجاع حالة الاتصال
-  const { isConnected } = useNotificationsSocket<NotificationMessage>(telegramId, (data) => {
-    if (data.type === "unread_update" && data.data?.count !== undefined) {
-      setUnreadCount(data.data.count);
+  // Enhanced WebSocket message handler with improved notification display
+  const handleWebSocketMessage = useCallback((message: NotificationMessage) => {
+    console.log("📩 WebSocket message received:", message);
+
+    // Handle unread count updates
+    if (message.type === "unread_update" && message.data?.count !== undefined) {
+      setUnreadCount(message.data.count);
+      return;
     }
-    if (data.type === "subscription_renewal") {
-      showToast.success({
-        message: data.data?.message || 'تم تجديد الاشتراك بنجاح',
-        action: data.data?.invite_link
-          ? {
-              text: 'انضم الآن',
-              onClick: () => {
-                if (data.data?.invite_link) {
-                  window.open(data.data.invite_link, '_blank');
-                }
-              }
-            }
-          : undefined
+
+    // Handle new notifications
+    if (message.type === "new_notification") {
+      const notificationData = message.data || message;
+
+      // Invalidate notification queries to refresh lists
+      queryClient.invalidateQueries({
+        queryKey: ['notifications', telegramId]
       });
-    }
-  });
 
-  // عرض مؤشر حالة الاتصال بالإشعارات
-  useEffect(() => {
-    if (isConnected) {
-      console.log("🟢 تم الاتصال بالإشعارات");
-      // يمكن هنا تعديل واجهة المستخدم لإظهار حالة الاتصال إذا لزم الأمر
-    } else {
-      console.log("🔴 تم فقدان الاتصال بالإشعارات");
-    }
-  }, [isConnected]);
+      // Show toast notification with appropriate action based on type
+      let toastAction;
+      let toastMessage = notificationData.message || 'تم استلام إشعار جديد';
 
-  useEffect(() => {
-    const fetchSubscriptions = async () => {
-      if (!telegramId) return
-      try {
-        const cached = localStorage.getItem('subscriptions')
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached)
-          if (Date.now() - timestamp < 300000) {
-            setSubscriptions(data)
-            return
+      // Handle different notification types
+      switch(notificationData.type) {
+        case 'subscription_renewal':
+          toastMessage = notificationData.message || 'تم تجديد الاشتراك بنجاح';
+          if (notificationData.extra_data?.invite_link) {
+            toastAction = {
+              text: 'انضم الآن',
+              onClick: () => window.open(notificationData.extra_data.invite_link, '_blank')
+            };
+          }
+          break;
+
+        case 'subscription_expiry':
+          toastMessage = notificationData.message || 'اشتراكك على وشك الانتهاء';
+          toastAction = {
+            text: 'تجديد',
+            onClick: () => router.push('/plans')
+          };
+          break;
+
+        case 'payment_success':
+          toastMessage = notificationData.message || 'تم استلام الدفعة بنجاح';
+          break;
+      }
+
+      // Show toast with dynamic content
+      showToast.success({
+        message: toastMessage,
+        action: toastAction,
+        duration: 6000,
+        onClose: () => {},
+        onClick: () => {
+          // Navigate to notification details
+          if (notificationData.id) {
+            router.push(`/notifications/${notificationData.id}`);
           }
         }
-        // يمكنك إضافة منطق جلب الاشتراكات هنا
-      } catch (error) {
-        console.error('فشل في جلب الاشتراكات:', error)
-      }
+      });
     }
-    fetchSubscriptions()
-    const interval = setInterval(fetchSubscriptions, 300000)
-    return () => clearInterval(interval)
-  }, [telegramId, setSubscriptions])
 
+    // Handle notification read status updates
+    if (message.type === "notification_read") {
+      queryClient.invalidateQueries({
+        queryKey: ['notifications', telegramId]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['unreadNotificationsCount', telegramId]
+      });
+    }
+
+  }, [setUnreadCount, router, telegramId]);
+
+  // Enhanced WebSocket connection with improved state management
+  const { isConnected, connectionState } = useNotificationsSocket(
+    telegramId,
+    handleWebSocketMessage
+  );
+
+  // Improved connection status logging with status tracking
+  useEffect(() => {
+    const logConnectionStatus = () => {
+      const status = {
+        'connected': "🟢 Connected to notification service",
+        'connecting': "🟠 Connecting to notification service...",
+        'disconnected': "🔴 Disconnected from notification service"
+      }[connectionState];
+
+      console.log(status || "⚪ Unknown connection state");
+    };
+
+    logConnectionStatus();
+  }, [connectionState]);
+
+  // Enhanced subscription fetching with better caching
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      if (!telegramId) return;
+
+      try {
+        const cached = localStorage.getItem(`subscriptions_${telegramId}`);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes cache
+            console.log("📦 Using cached subscriptions");
+            setSubscriptions(data);
+            return;
+          }
+        }
+
+        // Fetch logic would go here
+        // For now, we're just implementing the caching part
+
+      } catch (error) {
+        console.error('❌ Failed to fetch subscriptions:', error);
+      }
+    };
+
+    fetchSubscriptions();
+    const interval = setInterval(fetchSubscriptions, 5 * 60 * 1000); // Refresh every 5 minutes
+
+    return () => clearInterval(interval);
+  }, [telegramId, setSubscriptions]);
+
+  // Prefetch important pages for better navigation experience
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        await router.prefetch('/')
-        await router.prefetch('/plans')
-        await router.prefetch('/profile')
+        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications'];
+        await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
+        console.log("🔄 Prefetched important pages");
       } catch (error) {
-        console.error('⚠️ خطأ أثناء التحميل المسبق:', error)
+        console.error('⚠️ Error during prefetch:', error);
       }
-    }
-    prefetchPages()
-  }, [router])
+    };
 
+    prefetchPages();
+  }, [router]);
+
+  // Minimum delay for splash screen
   useEffect(() => {
-    const timer = setTimeout(() => setMinDelayCompleted(true), 1500)
-    return () => clearTimeout(timer)
-  }, [])
+    const timer = setTimeout(() => setMinDelayCompleted(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
+  // Update wallet address in store when available
   useEffect(() => {
     if (walletAddress) {
-      setWalletAddress(walletAddress)
+      setWalletAddress(walletAddress);
     }
-  }, [walletAddress, setWalletAddress])
+  }, [walletAddress, setWalletAddress]);
 
-  const isDataLoaded = minDelayCompleted && !isWalletLoading
-  const hasError = isWalletError
+  const isDataLoaded = minDelayCompleted && !isWalletLoading;
+  const hasError = isWalletError;
 
-  if (!isDataLoaded) return <SplashScreen />
+  if (!isDataLoaded) return <SplashScreen />;
+
   if (hasError) {
     return (
-      <div className="flex justify-center items-center h-screen text-red-500 text-center px-4">
+      <div className="flex flex-col justify-center items-center h-screen text-red-500 text-center px-4">
         <p>❌ خطأ في تحميل البيانات: {walletError?.toString()}</p>
         <button
           onClick={() => window.location.reload()}
@@ -157,7 +233,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
           إعادة المحاولة
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -166,22 +242,22 @@ function AppContent({ children }: { children: React.ReactNode }) {
       <FooterNav />
       <NotificationToast />
     </>
-  )
+  );
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <TelegramProvider>
-      <NotificationsProvider>
-        <QueryClientProvider client={queryClient}>
-          <ReactQueryDevtools initialIsOpen={false} />
+      <QueryClientProvider client={queryClient}>
+        <NotificationsProvider>
           <AppContent>
             <Component {...pageProps} />
           </AppContent>
-        </QueryClientProvider>
-      </NotificationsProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </NotificationsProvider>
+      </QueryClientProvider>
     </TelegramProvider>
-  )
+  );
 }
 
-export default MyApp
+export default MyApp;

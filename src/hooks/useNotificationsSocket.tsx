@@ -1,154 +1,185 @@
+// hooks/useNotificationsSocket.ts
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
-export function useNotificationsSocket<T = unknown>(
+export type NotificationEventType =
+  | 'connection_established'
+  | 'unread_update'
+  | 'new_notification'
+  | 'notification_read'
+  | 'ping'
+  | 'subscription_renewal';
+
+export interface NotificationMessage<T = any> {
+  type: NotificationEventType;
+  data?: T;
+}
+
+export function useNotificationsSocket(
   telegramId: string | null,
-  onMessage: (data: T) => void
+  onMessage: (data: NotificationMessage) => void
 ) {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const messageQueueRef = useRef<T[]>([]);
+  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const messageQueueRef = useRef<any[]>([]);
   const maxReconnectAttempts = 5;
   const reconnectAttemptsRef = useRef(0);
-  
-  // معالجة رسائل ping/pong للحفاظ على الاتصال
+  const isMounted = useRef(false);
+  const queryClient = useQueryClient();
+
+  // Keep track of mount state to prevent memory leaks
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Handle ping messages from server
   const handlePing = useCallback(() => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ type: "pong" }));
     }
   }, []);
 
+  // Mark notifications as read via WebSocket
+  const markAllAsRead = useCallback(() => {
+    if (socketRef.current?.readyState === WebSocket.OPEN && telegramId) {
+      socketRef.current.send(JSON.stringify({
+        type: "mark_as_read",
+        data: { telegram_id: telegramId }
+      }));
+
+      // Optimistic update
+      queryClient.setQueryData(['unreadNotificationsCount', telegramId], 0);
+    }
+  }, [telegramId, queryClient]);
+
+  // Connect to WebSocket
   const connect = useCallback(() => {
-    if (!telegramId) {
-      console.error("❌ No Telegram ID provided.");
-      return;
-    }
+    if (!telegramId || !isMounted.current) return;
 
-    // إغلاق الاتصال القديم إذا كان موجودًا
-    if (socketRef.current && socketRef.current.readyState !== WebSocket.CLOSED) {
+    setConnectionState('connecting');
+
+    // Close existing connection
+    if (socketRef.current) {
+      socketRef.current.onclose = null;
       socketRef.current.close();
+      socketRef.current = null;
     }
 
-    const socketUrl = `${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws/notifications?telegram_id=${telegramId}`;
-    console.log(`Attempting to connect to WebSocket: ${socketUrl}`);
-    
+    const socketUrl = `${process.env.NEXT_PUBLIC_wsBACKEND_URL}/ws?telegram_id=${telegramId}`;
+
     try {
       const socket = new WebSocket(socketUrl);
       socketRef.current = socket;
 
       socket.onopen = () => {
+        if (!isMounted.current) return;
+
         console.log("✅ WebSocket connected");
-        setIsConnected(true);
-        reconnectAttemptsRef.current = 0; // إعادة تعيين عداد محاولات إعادة الاتصال
-        
-        // إرسال الرسائل المخزنة في القائمة
+        setConnectionState('connected');
+        reconnectAttemptsRef.current = 0;
+
+        // Send queued messages
         while (messageQueueRef.current.length > 0) {
-          const message = messageQueueRef.current.shift();
-          if (message && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(message));
-          }
+          const msg = messageQueueRef.current.shift();
+          socket.send(JSON.stringify(msg));
         }
       };
 
       socket.onmessage = (event) => {
+        if (!isMounted.current) return;
+
         try {
           const data = JSON.parse(event.data);
+
           if (data.type === "ping") {
             handlePing();
-          } else {
-            onMessage(data);
+            return;
           }
+
+          // Handle other messages
+          onMessage(data);
+
+          // Invalidate queries based on message type
+          if (data.type === 'new_notification' || data.type === 'notification_read') {
+            queryClient.invalidateQueries({
+              queryKey: ['notifications', telegramId]
+            });
+          }
+
         } catch (error) {
-          console.error("❌ Error parsing WebSocket message:", error);
+          console.error("❌ Error parsing message:", error);
         }
       };
 
       socket.onerror = (error) => {
         console.error("❌ WebSocket error:", error);
-        setIsConnected(false);
+        setConnectionState('disconnected');
       };
 
       socket.onclose = (e) => {
-        console.log("🔌 WebSocket closed", e);
-        setIsConnected(false);
-        
-        if (e.code !== 1000 && e.code !== 1001) { // الإغلاق غير الطبيعي
-          console.error("❌ Abnormal WebSocket closure:", e.reason);
-          
-          if (reconnectAttemptsRef.current < maxReconnectAttempts && !reconnectTimeoutRef.current) {
-            const backoffTime = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+        if (!isMounted.current) return;
+
+        console.log(`🔌 WebSocket closed (code: ${e.code})`);
+        setConnectionState('disconnected');
+
+        // Attempt reconnect for abnormal closures
+        if (e.code !== 1000 && e.code !== 1001) {
+          if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+            const delay = Math.min(5000, 1000 * Math.pow(2, reconnectAttemptsRef.current));
             reconnectAttemptsRef.current++;
-            
+
             reconnectTimeoutRef.current = setTimeout(() => {
-              console.log(`🔄 Reconnecting WebSocket... (Attempt ${reconnectAttemptsRef.current})`);
-              connect();
-              reconnectTimeoutRef.current = null;
-            }, backoffTime);
-          } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-            console.error("❌ Maximum reconnection attempts reached.");
+              if (isMounted.current) {
+                console.log(`🔄 Reconnecting... (Attempt ${reconnectAttemptsRef.current})`);
+                connect();
+              }
+            }, delay);
           }
         }
       };
-
     } catch (error) {
-      console.error("❌ Error creating WebSocket connection:", error);
+      console.error("❌ WebSocket connection error:", error);
+      setConnectionState('disconnected');
     }
-  }, [telegramId, onMessage, handlePing]);
+  }, [telegramId, handlePing, onMessage, queryClient]);
 
-  // طريقة آمنة لإرسال الرسائل
-  const sendMessage = useCallback((message: T) => {
+  // Send message to WebSocket server
+  const sendMessage = useCallback((message: any) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(message as Record<string, unknown>));
+      socketRef.current.send(JSON.stringify(message));
+      return true;
     } else {
-      // تخزين الرسالة للإرسال بعد إعادة الاتصال
-      messageQueueRef.current.push(message as T);
-      
-      // محاولة إعادة الاتصال إذا لم يكن هناك اتصال مفتوح
-      if (!isConnected && !reconnectTimeoutRef.current) {
-        connect();
-      }
+      messageQueueRef.current.push(message);
+      return false;
     }
-  }, [connect, isConnected]);
+  }, []);
 
-  // إعادة الاتصال عند التنقل بين الصفحات
+  // Connect when telegramId changes
   useEffect(() => {
-    // استخدام visibilitychange لاكتشاف عودة المستخدم للصفحة
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // التحقق من حالة الاتصال عند العودة للصفحة
-        if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-          connect();
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // إنشاء الاتصال عند تحميل المكون
+    if (!telegramId) return;
     connect();
 
-    // تنظيف عند إزالة المكون
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      
-      // احتفظ بالاتصال مفتوحًا عند التنقل بين الصفحات ولكن إغلاقه عند إزالة المكون بالكامل
       if (socketRef.current) {
-        // بدلاً من إغلاق الاتصال فورًا، نضع علامة للإغلاق بعد فترة قصيرة
-        // للسماح بالتنقل بين الصفحات دون إغلاق الاتصال
-        const socket = socketRef.current;
-        setTimeout(() => {
-          // إغلاق الاتصال فقط إذا لم يتم إعادة إنشاء مكون جديد
-          if (socket === socketRef.current) {
-            socket.close(1000, "Component unmounted");
-          }
-        }, 100);
+        socketRef.current.close(1000, "Component unmount");
+        socketRef.current = null;
       }
-      
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
     };
-  }, [connect]);
+  }, [connect, telegramId]);
 
-  return { isConnected, sendMessage };
+  return {
+    connectionState,
+    isConnected: connectionState === 'connected',
+    isConnecting: connectionState === 'connecting',
+    sendMessage,
+    markAllAsRead
+  };
 }
