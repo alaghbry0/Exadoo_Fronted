@@ -18,7 +18,7 @@ module.exports = {
           500: '#0084FF',
           600: '#0066CC',
         },
-        primary: "#0077ff",
+        primary:  'hsl(var(--primary))',
         secondary: "#ff5722",
         neutral: {
           100: "#f5f5f5",

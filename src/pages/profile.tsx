@@ -10,6 +10,7 @@ import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { Spinner } from '../components/Spinner';
 import { getUserSubscriptions } from '../services/api';
 import type { Subscription } from '../types';
+import { useRouter } from 'next/navigation';
 
 interface SubscriptionsResponse {
   subscriptions: Subscription[];
@@ -18,6 +19,7 @@ interface SubscriptionsResponse {
 export default function Profile() {
   const { fullName, telegramUsername, photoUrl, telegramId } = useUserStore();
   const { subscriptions, setSubscriptions } = useProfileStore();
+  const router = useRouter();
 
   const queryKey = ['subscriptions', telegramId?.toString() || ''];
 
@@ -71,6 +73,10 @@ export default function Profile() {
       </motion.div>
     );
   }
+  const goToPaymentHistory = () => {
+    router.push('/payment-history');
+  };
+
 
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
@@ -91,6 +97,7 @@ export default function Profile() {
             username={telegramUsername}
             profilePhoto={photoUrl}
             joinDate={null}
+            onPaymentHistoryClick={goToPaymentHistory}
           />
 
           <SubscriptionsSection subscriptions={subscriptions || []} />

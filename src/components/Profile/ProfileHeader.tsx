@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { FiClock, FiUser } from 'react-icons/fi';
 import { useMemo } from 'react';
+import { FiFileText } from 'react-icons/fi';
 
 /**
  * دالة مساعدة للتحقق من صلاحية رابط الصورة.
@@ -26,6 +27,7 @@ interface ProfileHeaderProps {
   username?: string | null;
   profilePhoto?: string | null;
   joinDate?: string | null;
+  onPaymentHistoryClick?: () => void;
 }
 
 const DEFAULT_AVATAR = '/logo-288.png';
@@ -41,7 +43,8 @@ export default function ProfileHeader({
   fullName = 'مستخدم بدون اسم',
   username = 'بدون معرف',
   profilePhoto,
-  joinDate
+  joinDate,
+  onPaymentHistoryClick
 }: ProfileHeaderProps) {
 
   // استخدام useMemo لتنسيق التاريخ لتقليل الحسابات غير الضرورية
@@ -69,6 +72,17 @@ export default function ProfileHeader({
     delay: 0.2 // تأخير ظهور الهيدر
   }}
 >
+    <motion.button
+  onClick={onPaymentHistoryClick}
+  className="absolute top-4 left-4 p-2 hover:bg-white/10 rounded-lg transition-colors group" // تغيير end-4 إلى left-4
+  title="سجلات الدفعات"
+  initial={{ opacity: 0, x: -20 }} // تغيير x من 20 إلى -20 للحركة من اليسار
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ delay: 0.3 }}
+>
+  <FiFileText className="w-5 h-5 text-white group-hover:text-blue-100" />
+</motion.button>
+
       <div className="container mx-auto px-4 flex flex-col items-center space-y-4">
         {/* صورة الملف الشخصي مع تحسينات الاستجابة */}
         <motion.div
