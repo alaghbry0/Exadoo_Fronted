@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [unreadCount]);
+  }, [unreadCount, displayCount]);
 
   // ✅ التحقق من القيم الصحيحة
   const validatedCount = Math.max(0, Number(displayCount)) || 0;

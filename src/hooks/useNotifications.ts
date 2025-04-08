@@ -1,7 +1,7 @@
 // hooks/useNotifications.ts
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 
 export function useNotifications(telegramId: string | null, filter: 'all' | 'unread' = 'all') {
   const queryClient = useQueryClient();

@@ -1,8 +1,22 @@
 // context/NotificationsContext.tsx
 import React, { createContext, useCallback, useContext, useState, ReactNode, useEffect } from 'react';
+import { InfiniteData } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useTelegram } from './TelegramContext';
+
+interface Notification {
+  id: number;
+  read_status: boolean;
+}
+
+interface NotificationPage {
+  notifications: Notification[];
+  pageInfo: {
+    hasNextPage: boolean;
+    endCursor?: string;
+  };
+}
 
 interface NotificationsContextProps {
   unreadCount: number;
@@ -19,31 +33,26 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const { telegramId } = useTelegram();
   const queryClient = useQueryClient();
 
-  // Fetch initial unread count on mount
   useEffect(() => {
     const fetchUnreadCount = async () => {
       if (!telegramId) return;
 
       try {
-        // Try to get from cache first
         const cachedCount = localStorage.getItem(`unreadCount_${telegramId}`);
         if (cachedCount) {
           const { count, timestamp } = JSON.parse(cachedCount);
-          if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes cache
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
             setUnreadCount(count);
             return;
           }
         }
 
-        // If not in cache or expired, fetch from API
         const { data } = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/unread-count`,
           { params: { telegram_id: telegramId } }
         );
 
         setUnreadCount(data.unread_count || 0);
-
-        // Cache the result
         localStorage.setItem(
           `unreadCount_${telegramId}`,
           JSON.stringify({ count: data.unread_count, timestamp: Date.now() })
@@ -56,50 +65,44 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     fetchUnreadCount();
   }, [telegramId]);
 
-  // Optimistically mark a notification as read
   const markAsRead = useCallback((notificationId: number | string) => {
-  if (!telegramId) return;
+    if (!telegramId) return;
 
-
-  // تحويل المعرف إلى سلسلة نصية للتأكد من توافقه
-  const idString = notificationId.toString();
-    // Optimistic update - reduce count immediately
+    const idString = notificationId.toString();
     setUnreadCount(prev => Math.max(0, prev - 1));
 
-    // Update cache for better UX
     queryClient.setQueryData(
       ['notifications', telegramId, 'all'],
-      (oldData: any) => {
+      (oldData: InfiniteData<NotificationPage> | undefined) => {
         if (!oldData) return oldData;
-
         return {
           ...oldData,
-          pages: oldData.pages.map((page: any) =>
-            page.map((item: any) =>
-              item.id === notificationId ? { ...item, read_status: true } : item
+          pages: oldData.pages.map(page => ({
+            ...page,
+            notifications: page.notifications.map(notification => 
+              notification.id === notificationId ? { ...notification, read_status: true } : notification
             )
-          )
+          }))
         };
       }
     );
 
-    // Update unread notifications view as well
     queryClient.setQueryData(
       ['notifications', telegramId, 'unread'],
-      (oldData: any) => {
+      (oldData: InfiniteData<NotificationPage> | undefined) => {
         if (!oldData) return oldData;
-
-        // Remove the notification from unread view or mark it as read
         return {
           ...oldData,
-          pages: oldData.pages.map((page: any) =>
-            page.filter((item: any) => item.id !== notificationId)
-          ).filter(page => page.length > 0)
+          pages: oldData.pages.map(page => ({
+            ...page,
+            notifications: page.notifications.filter(notification => 
+              notification.id !== notificationId
+            )
+          })).filter(page => page.notifications.length > 0)
         };
       }
     );
 
-    // Update the unread count cache
     const cachedCountData = localStorage.getItem(`unreadCount_${telegramId}`);
     if (cachedCountData) {
       const { timestamp } = JSON.parse(cachedCountData);
@@ -109,48 +112,43 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       );
     }
 
-    // Send API request to update server
     axios.put(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${idString}/mark-read`,
-    null,
-    { params: { telegram_id: telegramId } }
-
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${idString}/mark-read`,
+      null,
+      { params: { telegram_id: telegramId } }
     ).catch(error => {
       console.error('Failed to mark notification as read:', error);
-      // Revert optimistic update on failure
       setUnreadCount(prev => prev + 1);
     });
   }, [telegramId, unreadCount, queryClient]);
 
-  // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     if (!telegramId) return;
 
-    // Optimistic update
     const previousCount = unreadCount;
     setUnreadCount(0);
 
-    // Update cache for both all and unread views
     queryClient.setQueryData(
       ['notifications', telegramId, 'all'],
-      (oldData: any) => {
+      (oldData: InfiniteData<NotificationPage> | undefined) => {
         if (!oldData) return oldData;
-
         return {
           ...oldData,
-          pages: oldData.pages.map((page: any) =>
-            page.map((item: any) => ({ ...item, read_status: true }))
-          )
+          pages: oldData.pages.map(page => ({
+            ...page,
+            notifications: page.notifications.map(notification => ({
+              ...notification,
+              read_status: true
+            }))
+          }))
         };
       }
     );
 
-    // Clear unread notifications view
     queryClient.setQueryData(
       ['notifications', telegramId, 'unread'],
-      (oldData: any) => {
+      (oldData: InfiniteData<NotificationPage> | undefined) => {
         if (!oldData) return oldData;
-
         return {
           ...oldData,
           pages: []
@@ -158,7 +156,6 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       }
     );
 
-    // Update the unread count cache
     const cachedCountData = localStorage.getItem(`unreadCount_${telegramId}`);
     if (cachedCountData) {
       const { timestamp } = JSON.parse(cachedCountData);
@@ -169,7 +166,6 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     }
 
     try {
-      // Send API request
       await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/mark-all-read`,
         null,
@@ -177,19 +173,14 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       );
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
-      // Revert optimistic update on failure
       setUnreadCount(previousCount);
     }
   }, [telegramId, unreadCount, queryClient]);
 
-  // Invalidate notification queries
   const invalidateNotifications = useCallback(() => {
     if (!telegramId) return;
-
     queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
     queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
-
-    // Clear cache
     localStorage.removeItem(`notifications_${telegramId}_all`);
     localStorage.removeItem(`notifications_${telegramId}_unread`);
     localStorage.removeItem(`unreadCount_${telegramId}`);

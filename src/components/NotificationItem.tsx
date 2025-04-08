@@ -22,7 +22,6 @@ import { NotificationType } from '@/types/notification'
 interface NotificationItemProps {
   notification: NotificationType;
   onMarkAsRead: (id: string) => Promise<void>;
-  onNotificationClick: (notification: NotificationType) => void;
 }
 
 
@@ -30,13 +29,12 @@ interface NotificationItemProps {
 const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
   onMarkAsRead,
-  onNotificationClick,
 }) => {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
   const [swipeProgress, setSwipeProgress] = useState(0);
-  const [isRippling, setIsRippling] = useState(false);
+  const [isRippling] = useState(false);
 
   // تحديد أيقونة الإشعار حسب النوع
   const getNotificationIcon = () => {
@@ -67,28 +65,13 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   });
 
  // تعامل مع الضغط على الإشعار
-  const handleNotificationClick = () => {
+  const handleNotificationClick = async () => {
     if (notification && notification.id) {
       router.push(`/notifications/${notification.id}`)
 
-      // تطبيق التحديث التفاعلي لحالة القراءة
+      // تحديث حالة القراءة
       if (!notification.read_status) {
-        queryClient.setQueryData(
-          ['notifications', telegramId, 'all'],
-          (oldData: any) => {
-            if (!oldData) return oldData
-
-            return {
-              ...oldData,
-              pages: oldData.pages.map((page: any) =>
-                page.map((item: any) =>
-                  item.id === notification.id ? { ...item, read_status: true } : item
-                )
-              )
-            }
-          }
-        )
-        markAsRead(notification.id)
+        await onMarkAsRead(String(notification.id));
       }
     }
   }
@@ -101,7 +84,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
     setIsMarking(true);
     try {
-      await onMarkAsRead(notification.id);
+      await onMarkAsRead(String(notification.id));
     } finally {
       setIsMarking(false);
     }
@@ -117,7 +100,23 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     },
     onSwipedLeft: () => {
       if (!notification.read_status && swipeProgress > 60) {
-        handleMarkAsRead(new MouseEvent('click'));
+        const mockEvent = {
+          stopPropagation: () => {},
+          preventDefault: () => {},
+          nativeEvent: new MouseEvent('click'),
+          isDefaultPrevented: () => false,
+          isPropagationStopped: () => false,
+          persist: () => {},
+          currentTarget: null,
+          target: null,
+          bubbles: false,
+          cancelable: false,
+          defaultPrevented: false,
+          eventPhase: 0,
+          timeStamp: 0,
+          type: 'click'
+        } as unknown as React.MouseEvent;
+        handleMarkAsRead(mockEvent);
       }
       setSwipeProgress(0);
     },

@@ -22,7 +22,7 @@ export function useNotificationsSocket(
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
-  const messageQueueRef = useRef<any[]>([]);
+  const messageQueueRef = useRef<NotificationMessage[]>([]);
   const maxReconnectAttempts = 5;
   const reconnectAttemptsRef = useRef(0);
   const isMounted = useRef(false);
@@ -148,7 +148,7 @@ export function useNotificationsSocket(
   }, [telegramId, handlePing, onMessage, queryClient]);
 
   // Send message to WebSocket server
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: NotificationMessage) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(message));
       return true;
