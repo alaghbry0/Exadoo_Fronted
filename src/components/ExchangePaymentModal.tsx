@@ -151,33 +151,48 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
           </div>
         </div>
 
-        {/* بطاقة العنوان */}
-        <div className="relative bg-gray-50 rounded-xl p-4 border border-gray-100">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">العنوان</span>
-            <div className="flex items-center gap-1">
+        {/* بطاقة العنوان - تصميم محسن */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 shadow-sm"
+        >
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">↗</span>
+              </div>
+              <span className="text-sm font-medium text-gray-700">عنوان المحفظة</span>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => copyToClipboard(details.depositAddress, 'address')}
-                className="flex items-center gap-1 text-blue-600"
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
               >
                 <FiCopy className="w-5 h-5" />
                 <span className="text-xs">{copied === 'address' ? 'تم النسخ' : ''}</span>
               </button>
               <button
                 onClick={() => setShowAddressQR(true)}
-                className="flex items-center gap-1 text-blue-600"
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
               >
                 <QrCode className="w-5 h-5" />
               </button>
             </div>
           </div>
-          <div className="p-3 bg-white rounded-lg border border-gray-200">
+          <div className="p-3 bg-white rounded-lg border border-blue-200 mb-2">
             <p className="font-mono text-sm break-all text-gray-800 select-all">
               {details.depositAddress}
             </p>
           </div>
 
-          <p className="text-xs text-red-500 mr-1"> كلا المذكرة والعنوان مطلوبان لنجاح معالجه الدفع </p>
+          <div className="flex items-start gap-2 p-2 bg-red-50 rounded-md border border-red-100">
+            <FiAlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" />
+            <span className="text-red-700 text-xs">
+              كلا المذكرة والعنوان مطلوبان لنجاح معالجة الدفع
+            </span>
+          </div>
 
           {/* نافذة منبثقة لعرض رمز QR لعنوان المحفظة */}
           <AnimatePresence>
@@ -212,22 +227,39 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
-        {/* بطاقة المبلغ */}
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">المبلغ</span>
-            <div className="flex items-center gap-1 bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 text-xs">
-              <span className="font-bold">{details.amount}</span>
-              <span>USDT</span>
+        {/* بطاقة المبلغ - تصميم محسن */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 shadow-sm"
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                
+              </div>
+              <span className="text-sm font-medium text-gray-700">المبلغ المطلوب</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-blue-200">
+              <span className="text-xl font-bold text-gray-900">{details.amount}</span>
+              <span className="text-blue-600 font-medium">USDT</span>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-1">يرجى احتساب رسوم الشبكة عند الإرسال</p>
-        </div>
+          <p className="text-xs text-blue-700 mt-2 text-right">
+            يرجى احتساب رسوم الشبكة عند الإرسال
+          </p>
+        </motion.div>
 
-        {/* بطاقة المذكرة مع التحذير وإضافة أيقونة QR */}
-        <div className="relative bg-gray-50 rounded-xl p-4 border border-gray-100">
+        {/* بطاقة المذكرة مع التحذير وإضافة أيقونة QR - تصميم محسن */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 shadow-sm"
+        >
           <div className="flex justify-between items-center mb-2">
             <div>
               <span className="text-sm font-medium text-gray-700">المذكرة</span>
@@ -293,7 +325,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
       </div>
 
       {/* تذييل الصفحة */}
