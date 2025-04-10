@@ -45,11 +45,11 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline';",
               "connect-src 'self' " +
                 "wss://exadoo-rxr9.onrender.com " +
-                "ws://192.168.43.186:5000 " +
+                "ws://10.2.0.2:5000 " +
                 "https://exadoo-rxr9.onrender.com " +
                 "wss://*.render.com " +
                 "https://*.render.com " +
-                "http://192.168.43.186:5000 " +
+                "http://10.2.0.2:5000 " +
                 "https://tonapi.io " +
                 "https://raw.githubusercontent.com " +
                 "https://bridge.tonapi.io;",

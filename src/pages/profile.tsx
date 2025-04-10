@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
@@ -11,6 +11,7 @@ import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { getUserSubscriptions } from '../services/api';
 import type { Subscription } from '../types';
 import { useRouter } from 'next/navigation';
+import { useNotificationsSocket, NotificationMessage } from '../hooks/useNotificationsSocket';
 
 interface SubscriptionsResponse {
   subscriptions: Subscription[];
@@ -36,13 +37,27 @@ export default function Profile() {
     queryKey,
     queryFn: async ({ pageParam = 1 }) => {
       if (!telegramId) throw new Error('المعرف غير موجود');
-      return await getUserSubscriptions(`${telegramId.toString()}?page=${pageParam}`);
+      return await getUserSubscriptions(telegramId.toString(), pageParam);
     },
-    initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextPage ? lastPage.nextPage : undefined,
     enabled: !!telegramId,
     staleTime: 300000,
   });
+
+  const handleSocketMessage = useCallback((message: NotificationMessage) => {
+    console.log("Received WebSocket message:", message);
+    // يتم معالجة الرسائل بداخل useNotificationsSocket
+  }, []);
+
+  // استخدام WebSocket للتحديثات الفورية
+  const { isConnected } = useNotificationsSocket(
+    telegramId?.toString() || null,
+    handleSocketMessage
+  );
+
+  useEffect(() => {
+    console.log(`WebSocket connection status: ${isConnected ? 'متصل' : 'غير متصل'}`);
+  }, [isConnected]);
 
   useEffect(() => {
     if (data) {
@@ -63,7 +78,6 @@ export default function Profile() {
   };
 
   if (isLoading) {
-    // عرض تحميل تدرجي أثناء جلب البيانات الأولية
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white">
         <SkeletonLoader />
