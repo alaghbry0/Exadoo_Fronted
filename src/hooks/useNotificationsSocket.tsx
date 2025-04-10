@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useProfileStore } from '../stores/profileStore';
 
 export type NotificationEventType =
   | 'connection_established'
@@ -27,7 +26,6 @@ export function useNotificationsSocket(
   const reconnectAttemptsRef = useRef(0);
   const isMounted = useRef(false);
   const queryClient = useQueryClient();
-  const { setSubscriptions } = useProfileStore();
 
   // Keep track of mount state to prevent memory leaks
   useEffect(() => {
@@ -108,7 +106,7 @@ export function useNotificationsSocket(
 
           // معالجة خاصة لكل نوع من الرسائل
           if (data.type === 'new_notification') {
-            const newNotification = data.data as unknown;
+          const newNotification = data.data as unknown;
 
             // تحديث عداد الإشعارات غير المقروءة
             queryClient.setQueryData(
@@ -197,25 +195,7 @@ export function useNotificationsSocket(
               );
             }
           }
-          // إضافة معالجة تحديث الاشتراك
-          else if (data.type === 'subscription_renewal') {
-            // تحديث بيانات الاشتراك
-            console.log("✅ تم استلام تحديث للاشتراك:", data.data);
-            
-            // إلغاء تخزين مؤقت للاشتراكات
-            queryClient.invalidateQueries({ queryKey: ['subscriptions', telegramId] });
-            
-            // تحديث الاشتراكات في مخزن الملف الشخصي
-            const subscriptionsData = data.data as { subscriptions: any[] };
-            if (subscriptionsData?.subscriptions) {
-              setSubscriptions(subscriptionsData.subscriptions);
-              // تحديث التخزين المحلي أيضاً
-              localStorage.setItem('subscriptions', JSON.stringify({
-                data: subscriptionsData.subscriptions,
-                timestamp: Date.now()
-              }));
-            }
-          }
+
         } catch (error) {
           console.error("❌ Error parsing message:", error);
         }
@@ -251,7 +231,7 @@ export function useNotificationsSocket(
       console.error("❌ WebSocket connection error:", error);
       setConnectionState('disconnected');
     }
-  }, [telegramId, handlePing, onMessage, queryClient, setSubscriptions]);
+  }, [telegramId, handlePing, onMessage, queryClient]);
 
   // Send message to WebSocket server
   const sendMessage = useCallback((message: NotificationMessage) => {

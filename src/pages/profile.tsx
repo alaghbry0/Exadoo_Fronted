@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
@@ -9,14 +9,7 @@ import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { getUserSubscriptions } from '../services/api';
-import type { Subscription } from '../types';
 import { useRouter } from 'next/navigation';
-import { useNotificationsSocket, NotificationMessage } from '../hooks/useNotificationsSocket';
-
-interface SubscriptionsResponse {
-  subscriptions: Subscription[];
-  nextPage?: number | null;
-}
 
 export default function Profile() {
   const { fullName, telegramUsername, photoUrl, telegramId } = useUserStore();
@@ -33,31 +26,17 @@ export default function Profile() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery<SubscriptionsResponse, Error>({
+  } = useInfiniteQuery({
     queryKey,
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async () => {
       if (!telegramId) throw new Error('المعرف غير موجود');
-      return await getUserSubscriptions(telegramId.toString(), pageParam);
+      return await getUserSubscriptions(telegramId.toString());
     },
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextPage ? lastPage.nextPage : undefined,
     enabled: !!telegramId,
     staleTime: 300000,
   });
-
-  const handleSocketMessage = useCallback((message: NotificationMessage) => {
-    console.log("Received WebSocket message:", message);
-    // يتم معالجة الرسائل بداخل useNotificationsSocket
-  }, []);
-
-  // استخدام WebSocket للتحديثات الفورية
-  const { isConnected } = useNotificationsSocket(
-    telegramId?.toString() || null,
-    handleSocketMessage
-  );
-
-  useEffect(() => {
-    console.log(`WebSocket connection status: ${isConnected ? 'متصل' : 'غير متصل'}`);
-  }, [isConnected]);
 
   useEffect(() => {
     if (data) {
