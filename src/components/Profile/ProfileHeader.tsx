@@ -1,8 +1,11 @@
+
+// 2-ProfileHeader.tsx المحسن
+
 import React, { useMemo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Clock, User, FileText, Award } from 'lucide-react';
-import { cn } from '@/lib/utils'; // تأكد من وجود الدالة أو استبدلها بتجميع السلاسل العادية
+import { cn } from '@/lib/utils';
 
 /**
  * دالة مساعدة للتحقق من صلاحية رابط الصورة.
@@ -64,48 +67,48 @@ export default function ProfileHeader({
   return (
     <div className="w-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-b-3xl shadow-md overflow-hidden relative">
       {/* خلفية تدرجية رمزية */}
-      <div className="h-16 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSIxMDAiPgo8cmVjdCB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDAwMCI+PC9yZWN0Pgo8cGF0aCBkPSJNMjggNjZMMCA1MEwwIDMzTDI4IDE3TDU2IDMzTDU2IDUwTDI4IDY2TDI4IDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+CjxwYXRoIGQ9Ik0yOCAwTDI4IDM0TDAgNTBMMCA2M0wyOCA3OUw1NiA2M0w1NiA1MEwyOCAzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-15" />
+      <div className="h-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSIxMDAiPgo8cmVjdCB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDAwMCI+PC9yZWN0Pgo8cGF0aCBkPSJNMjggNjZMMCA1MEwwIDMzTDI4IDE3TDU2IDMzTDU2IDUwTDI4IDY2TDI4IDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+CjxwYXRoIGQ9Ik0yOCAwTDI4IDM0TDAgNTBMMCA2M0wyOCA3OUw1NiA2M0w1NiA1MEwyOCAzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-15" />
 
-      {/* زر سجل الدفعات (إن وُجد) */}
+      {/* زر سجل الدفعات (إن وُجد) وتكبيره */}
       {onPaymentHistoryClick && (
         <motion.button
           onClick={onPaymentHistoryClick}
-          className="absolute top-4 left-4 p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md transition-all hover:bg-white/20 active:scale-95"
+          className="absolute top-5 left-5 p-3.5 bg-white/15 backdrop-blur-sm rounded-full shadow-md transition-all hover:bg-white/25 active:scale-95 touch-manipulation"
           title="سجلات الدفعات"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
           aria-label="عرض سجل الدفعات"
         >
-          <FileText className="w-5 h-5 text-white" />
+          <FileText className="w-6 h-6 text-white" />
         </motion.button>
       )}
 
-      {/* أيقونة الجوائز (الإنجازات) */}
+      {/* أيقونة الجوائز (الإنجازات) وتكبيرها */}
       <motion.div
-        className="absolute top-4 right-4 p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md"
+        className="absolute top-5 right-5 p-3.5 bg-white/15 backdrop-blur-sm rounded-full shadow-md"
         title="الإنجازات"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <Award className="w-5 h-5 text-white" />
+        <Award className="w-6 h-6 text-white" />
       </motion.div>
 
-      <div className="px-4 pb-6 -mt-8">
-        {/* صورة الملف الشخصي */}
+      <div className="px-4 pb-8 -mt-8">
+        {/* صورة الملف الشخصي وتكبيرها */}
         <div className="relative flex justify-center">
           <div className="relative">
             <div className={cn(
-              "w-20 h-20 rounded-full",
+              "w-24 h-24 rounded-full", // تكبير من 20 إلى 24
               "border-4 border-white shadow-lg overflow-hidden",
               "bg-white"
             )}>
               <Image
                 src={avatarSrc}
                 alt={`صورة ${fullName}`}
-                width={80}
-                height={80}
+                width={96}
+                height={96}
                 className="object-cover w-full h-full"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/logo-288.png';
@@ -115,22 +118,22 @@ export default function ProfileHeader({
           </div>
         </div>
 
-        {/* معلومات المستخدم */}
-        <div className="mt-3 text-center space-y-2">
-          <h1 className="text-lg font-bold text-white text-shadow-sm">
+        {/* معلومات المستخدم مع تكبير النصوص */}
+        <div className="mt-4 text-center space-y-3">
+          <h1 className="text-xl font-bold text-white text-shadow-sm">
             {fullName}
           </h1>
-          <div className="flex flex-col items-center gap-2 text-sm">
-            <div className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full">
-              <User className="w-3.5 h-3.5 text-blue-100" />
-              <span className="text-white/90 truncate max-w-[180px] text-xs">
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 bg-white/15 px-4 py-2 rounded-full">
+              <User className="w-4 h-4 text-blue-100" />
+              <span className="text-white/90 truncate max-w-[180px] text-sm">
                 @{username}
               </span>
             </div>
             {joinDate && (
-              <div className="flex items-center gap-1 text-white/80">
-                <Clock className="w-3 h-3" />
-                <span className="text-xs">
+              <div className="flex items-center gap-2 text-white/90">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm">
                   عضو منذ {formattedJoinDate}
                 </span>
               </div>

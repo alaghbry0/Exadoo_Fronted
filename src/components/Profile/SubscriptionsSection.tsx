@@ -19,26 +19,27 @@ const statusColors: Record<StatusType, { bg: string; text: string; border: strin
 
 export default function SubscriptionsSection({ subscriptions }: SubscriptionsSectionProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-4 mt-4">
+    <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
       {/* رأس القسم مع الأيقونة والعنوان وزر عرض الكل */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="bg-blue-50 p-1.5 rounded-lg">
-          <Zap className="w-4 h-4 text-blue-600" />
+      <div className="flex items-center gap-3 mb-4">
+        {/* حاوية الأيقونة مع Padding محسّن */}
+        <div className="bg-blue-50 p-2 rounded-lg">
+          <Zap className="w-5 h-5 text-blue-600" />
         </div>
-        <h2 className="text-sm font-semibold text-gray-800">الاشتراكات النشطة</h2>
+        <h2 className="text-base font-semibold text-gray-800">الاشتراكات النشطة</h2>
         <motion.button
-          className="ml-auto text-blue-600 flex items-center text-xs font-medium"
+          className="ml-auto text-blue-600 flex items-center text-sm font-medium"
           whileHover={{ x: -2 }}
           whileTap={{ scale: 0.97 }}
         >
           عرض الكل
-          <ChevronRight className="w-3 h-3 ml-1" />
+          <ChevronRight className="w-4 h-4 ml-1" />
         </motion.button>
       </div>
 
       <AnimatePresence mode="popLayout">
         {subscriptions.length > 0 ? (
-          <ul className="space-y-2.5">
+          <ul className="space-y-3.5">
             {subscriptions.map((sub, index) => (
               <SubscriptionItem
                 key={sub.id}
@@ -67,10 +68,9 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
     : 'unknown';
   const colors = statusColors[currentStatus];
 
-  // دالة للتحقق مما إذا كان الاشتراك جديداً (أقل من 3 أيام) وكأنه نشط
+  // التحقق مما إذا كان الاشتراك جديداً (أقل من 40 يوماً) ونشطاً
   const isNewSubscription = (): boolean => {
     if (!sub.start_date || sub.status !== 'نشط') return false;
-
     const startDate = new Date(sub.start_date);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - startDate.getTime());
@@ -89,7 +89,7 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
   return (
     <motion.li
       className={cn(
-        "rounded-lg p-3 border shadow-sm transition-all duration-200",
+        "rounded-lg p-4 border shadow-sm transition-all duration-200",
         "group hover:shadow-md hover:border-blue-100"
       )}
       initial={{ opacity: 0, y: 15 }}
@@ -97,17 +97,17 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
       exit={{ opacity: 0, y: -15 }}
       transition={{ delay: 0.5 + index * 0.1 }}
     >
-      <div className="flex justify-between items-start gap-2">
+      <div className="flex justify-between items-start gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-800 text-xs line-clamp-1 mb-0.5 group-hover:text-blue-700">
+          <h3 className="font-medium text-gray-800 text-sm line-clamp-1 mb-1 group-hover:text-blue-700">
             {sub.name}
           </h3>
-          <p className="text-gray-500 text-[10px] line-clamp-1">{sub.expiry}</p>
+          <p className="text-gray-500 text-xs line-clamp-1">{sub.expiry}</p>
         </div>
         <div>
           <span
             className={cn(
-              "text-[10px] px-1.5 py-0.5 rounded-full transition-colors duration-200 inline-flex items-center",
+              "text-xs px-2.5 py-1 rounded-full transition-colors duration-200 inline-flex items-center",
               colors.bg,
               colors.text,
               colors.border
@@ -118,11 +118,11 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
         </div>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-3">
         <Progress
           value={sub.progress || 0}
           className={cn(
-            "h-1",
+            "h-2",
             sub.status === 'نشط' ? "bg-gray-100" : "bg-gray-50"
           )}
           indicatorClassName={cn(
@@ -133,19 +133,18 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
         />
       </div>
 
-      {/* زر طلب استرداد يظهر فقط إذا كان الاشتراك نشط وجديد */}
       {showRefundButton && (
-        <div className="mt-2 flex justify-end">
+        <div className="mt-3 flex justify-end">
           <motion.button
             onClick={handleRefundClick}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.5 + index * 0.1 + 0.3 }}
-            className="flex items-center gap-1.5 bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-medium hover:bg-red-100 transition-colors ring-1 ring-red-200"
+            className="flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-red-100 transition-colors ring-1 ring-red-200"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            <RefreshCcw className="w-3 h-3" />
+            <RefreshCcw className="w-3.5 h-3.5" />
             طلب استرداد
           </motion.button>
         </div>
@@ -155,12 +154,12 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
 };
 
 const NoSubscriptionsMessage = () => (
-  <div className="text-center py-4">
-    <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-50 rounded-full mb-2 shadow-sm">
-      <Star className="w-4 h-4 text-blue-500" />
+  <div className="text-center py-8">
+    <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-full mb-4 shadow-sm">
+      <Star className="w-6 h-6 text-blue-500" />
     </div>
-    <p className="text-gray-600 text-xs">لا توجد اشتراكات نشطة حالياً</p>
-    <p className="text-gray-400 text-[10px] mt-1">
+    <p className="text-gray-600 text-sm">لا توجد اشتراكات نشطة حالياً</p>
+    <p className="text-gray-400 text-xs mt-2">
       يمكنك الاشتراك في أحد باقاتنا للوصول إلى المحتوى المميز
     </p>
   </div>

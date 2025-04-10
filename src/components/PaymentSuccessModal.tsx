@@ -10,7 +10,7 @@ interface PaymentSuccessModalProps {
 export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
   return (
     <motion.div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex justify-center items-center p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -27,7 +27,7 @@ export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">تمت عملية الدفع بنجاح!</h2>
           <p className="text-gray-600 mb-6">
-            تم ارسال المبلغ وسيتم تفعيل اشتراكك خلال دقائق
+            تم استلام المبلغ وتفعيل اشتراكك. يمكنك الآن الاستمتاع بخدماتنا.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}

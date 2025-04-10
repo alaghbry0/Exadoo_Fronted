@@ -30,7 +30,7 @@ const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 z-20">
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4 text-center">تفاصيل الدفع عبر منصات التداول</h1>
         <div className="space-y-4">

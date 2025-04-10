@@ -1,12 +1,11 @@
 // pages/notifications.tsx
 'use client'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Bell, RefreshCw } from 'lucide-react'
-import { Spinner } from '@/components/Spinner'
+import { AlertCircle, ArrowLeft, Bell, Check, RefreshCw } from 'lucide-react'
 import NotificationFilter from '@/components/NotificationFilter'
 import { useTelegram } from '../context/TelegramContext'
 import { useNotificationsContext } from '@/context/NotificationsContext'
@@ -14,11 +13,33 @@ import { useNotifications } from '@/hooks/useNotifications'
 import { useNotificationsSocket } from '@/hooks/useNotificationsSocket'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
+import { NotificationType } from '@/types/notification'
 
 // استيراد ديناميكي لمكون NotificationItem لتحسين الأداء
 const NotificationItem = dynamic(
   () => import('@/components/NotificationItem'),
-  { loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-lg"></div> }
+  {
+    loading: () => <NotificationSkeleton />
+  }
+)
+
+// إضافة مكون هيكلي للتحميل
+const NotificationSkeleton = () => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div className="flex gap-3">
+      <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+      <div className="flex-1">
+        <div className="h-5 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-100 rounded w-full mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse"></div>
+        <div className="flex gap-2 mt-3">
+          <div className="h-5 bg-gray-100 rounded-full w-20 animate-pulse"></div>
+          <div className="h-5 bg-gray-100 rounded-full w-24 animate-pulse"></div>
+        </div>
+      </div>
+      <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse"></div>
+    </div>
+  </div>
 )
 
 export default function NotificationsPage() {
@@ -29,10 +50,16 @@ export default function NotificationsPage() {
   const { setUnreadCount } = useNotificationsContext()
   const queryClient = useQueryClient()
 
+  // إضافة مرجع للتمرير والسحب للتحديث
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshProgress, setRefreshProgress] = useState(0)
+  const [startY, setStartY] = useState(0)
+
   // إضافة حالة لتتبع الإشعارات الجديدة (IDs)
   const [newNotificationIds, setNewNotificationIds] = useState<number[]>([])
 
-  // جلب الإشعارات باستخدام الـ hook المخصص
+  // استخدام Hook المحسن لجلب الإشعارات
   const {
     data,
     fetchNextPage,
@@ -43,6 +70,43 @@ export default function NotificationsPage() {
     refetch,
   } = useNotifications(telegramId, filter)
 
+  // تنفيذ وظيفة التحديث بالسحب
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (scrollRef.current && scrollRef.current.scrollTop === 0) {
+      setStartY(e.touches[0].clientY)
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY === 0 || isRefreshing) return
+
+    const currentY = e.touches[0].clientY
+    const diff = currentY - startY
+
+    if (diff > 5 && diff < 100 && scrollRef.current && scrollRef.current.scrollTop === 0) {
+      setRefreshProgress(Math.min(diff / 80 * 100, 100))
+    }
+  }
+
+  const handleTouchEnd = async () => {
+    if (refreshProgress > 70) {
+      setIsRefreshing(true)
+      try {
+        await refetch()
+        queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] })
+      } finally {
+        setTimeout(() => {
+          setIsRefreshing(false)
+          setRefreshProgress(0)
+          setStartY(0)
+        }, 600)
+      }
+    } else {
+      setRefreshProgress(0)
+      setStartY(0)
+    }
+  }
+
   // التعامل مع رسائل WebSocket وتحديث الإشعارات
   const handleSocketMessage = useCallback(
     (message: { type: string; data?: unknown }) => {
@@ -52,13 +116,34 @@ export default function NotificationsPage() {
           setUnreadCount(data.count)
         }
       } else if (message.type === 'new_notification' && message.data) {
-        // التحديث القديم: إعادة استعلام الإشعارات
-        queryClient.invalidateQueries({ queryKey: ['notifications', telegramId, filter] })
+        // التحديث المحسن: إضافة الإشعار الجديد مباشرة إلى بداية القائمة
+        const newNotification = message.data as NotificationType
 
-        // التعديل الجديد: إضافة التأشير للإشعار الجديد
-        const newNotification = message.data as { id: number }
         if (newNotification.id) {
+          // إضافة الإشعار الجديد إلى القائمة مباشرة إذا كان الفلتر "all" أو كان الإشعار غير مقروء
+          if (filter === 'all' || (filter === 'unread' && !newNotification.read_status)) {
+            queryClient.setQueryData(
+              ['notifications', telegramId, filter],
+              (oldData: { pages: NotificationType[][] } | undefined) => {
+                if (!oldData?.pages?.length) return oldData
+
+                const updatedPages = [...oldData.pages]
+                updatedPages[0] = [newNotification, ...updatedPages[0]]
+
+                return {
+                  ...oldData,
+                  pages: updatedPages
+                }
+              }
+            )
+          }
+
+          // تحديث عدد الإشعارات غير المقروءة
+          queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] })
+
+          // تأشير للإشعار الجديد
           setNewNotificationIds(prev => [...prev, newNotification.id])
+
           // إزالة التأشير بعد 5 ثواني
           setTimeout(() => {
             setNewNotificationIds(prev => prev.filter(id => id !== newNotification.id))
@@ -69,10 +154,10 @@ export default function NotificationsPage() {
     [setUnreadCount, queryClient, telegramId, filter]
   )
 
-  // الاتصال بالويب سوكيت
+  // الاتصال بالويب سوكيت مع معالجة أفضل للاتصال
   const { isConnected, markAllAsRead } = useNotificationsSocket(telegramId, handleSocketMessage)
 
-  // جلب عدد الإشعارات غير المقروءة
+  // جلب عدد الإشعارات غير المقروءة مع استراتيجية تخزين مؤقت محسنة
   const { data: unreadCountData } = useQuery({
     queryKey: ['unreadNotificationsCount', telegramId],
     queryFn: async () => {
@@ -82,180 +167,355 @@ export default function NotificationsPage() {
       )
       return data.unread_count as number
     },
-    enabled: !!telegramId
+    enabled: !!telegramId,
+    staleTime: 30000, // تعتبر البيانات حديثة لمدة 30 ثانية
+    refetchOnWindowFocus: true // إعادة الجلب عند التركيز على النافذة
   })
 
-  // تعليم جميع الإشعارات كمقروءة عند دخول الصفحة (في حال كان الويب سوكيت متصل)
+  // تعليم جميع الإشعارات كمقروءة عند دخول الصفحة (فقط إذا كان الفلتر "all")
   useEffect(() => {
-    if (telegramId && isConnected) {
+    if (telegramId && isConnected && filter === 'all') {
       markAllAsRead()
     }
-  }, [telegramId, isConnected, markAllAsRead])
+  }, [telegramId, isConnected, filter, markAllAsRead])
+
+  // تلقائي تحميل المزيد عند الوصول إلى نهاية الصفحة
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current
+        if (scrollHeight - scrollTop - clientHeight < 200 && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      }
+    }
+
+    const scrollContainer = scrollRef.current
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll)
+      return () => scrollContainer.removeEventListener('scroll', handleScroll)
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   // تجميع جميع الإشعارات في مصفوفة واحدة
   const notifications = data?.pages.flat() || []
 
   const handleGoBack = () => {
-  router.push('/')
-}
+    router.push('/')
+  }
+
+  // استخدام متغير للتحكم بتنسيقات مختلفة
+  const themeColors = {
+    primary: 'blue',
+    accent: 'indigo',
+    background: 'gray-50',
+    cardBg: 'white',
+    unreadBg: 'blue-50',
+    unreadBorder: 'blue-200',
+  }
+
   // حالة التحميل الأولية
   if (isLoading && notifications.length === 0) {
     return (
+
+
       <div className="min-h-screen flex flex-col items-center justify-center space-y-4 bg-gray-50">
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}>
-          <Bell size={40} className="text-blue-500" />
+
+
+        <motion.div
+
+
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+        >
+          <Bell size={40} className={`text-${themeColors.primary}-500`} />
+
         </motion.div>
+
         <p className="text-gray-600">جارٍ جلب بيانات الإشعارات...</p>
+
+        {/* إضافة متحركات أفضل للتحميل */}
+        <div className="w-64 mt-2">
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <motion.div
+              className={`h-full bg-${themeColors.primary}-500`}
+              initial={{ width: "0%" }}
+              animate={{ width: ["0%", "100%", "0%"] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+
+            />
+          </div>
+        </div>
       </div>
     )
   }
 
-  // حالة الخطأ
+
+
+
+
+  // حالة الخطأ المحسنة
   if (error) {
     return (
       <div className="p-6 flex flex-col items-center justify-center min-h-screen">
-        <div className="bg-red-50 p-4 rounded-lg text-red-600 mb-4">
-          حدث خطأ أثناء تحميل الإشعارات
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+
+
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-red-50 p-6 rounded-xl text-red-600 mb-6 text-center max-w-md w-full border border-red-100 shadow-sm"
+
         >
-          إعادة المحاولة
-        </button>
+          <AlertCircle className="mx-auto h-12 w-12 mb-4 text-red-500" />
+          <h3 className="text-lg font-bold mb-2">حدث خطأ أثناء تحميل الإشعارات</h3>
+          <p className="mb-4 text-sm text-red-500">تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => refetch()}
+            className="bg-red-500 text-white px-5 py-2.5 rounded-lg shadow-sm hover:bg-red-600 transition-colors w-full flex items-center justify-center gap-2"
+          >
+            <RefreshCw size={16} />
+            إعادة المحاولة
+          </motion.button>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 bg-gray-50 min-h-screen" id="scrollableDiv">
-      {/* رأس الصفحة مع زر الرجوع ومؤشر الاتصال المتحرك */}
-      <div className="flex items-center mb-6 sticky top-0 bg-gray-50 z-10 py-3">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleGoBack}
-          className="bg-white hover:bg-gray-100 text-gray-800 font-bold p-3 rounded-full shadow-sm border border-gray-200"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </motion.button>
-        <h1 className="text-xl font-bold flex-1 text-center text-gray-800">الإشعارات</h1>
-        <motion.div
-          className="w-3 h-3 rounded-full"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          style={{ backgroundColor: isConnected ? '#22c55e' : '#ef4444' }}
-        />
-      </div>
 
-      {/* شريط حالة الإشعارات غير المقروءة مع حركة دخول بسيطة */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="mb-5 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl shadow-sm border border-blue-100 flex items-center justify-between"
-      >
-        <div className="flex items-center">
-          <Bell size={20} className="text-blue-500 mr-2" />
-          <span className="font-semibold text-gray-700">الإشعارات غير المقروءة:</span>
-        </div>
-        <span className="inline-flex items-center justify-center bg-blue-500 text-white rounded-full px-3 py-1 text-sm font-medium">
-          {unreadCountData || 0}
-        </span>
-      </motion.div>
+   <div
+  className={`relative min-h-screen bg-${themeColors.background} z-20`} // إضافة z-20
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+>
 
-      {/* مكون التصفية */}
-      <NotificationFilter
-        currentFilter={filter}
-        unreadCount={unreadCountData || 0}
-        onMarkAllAsRead={markAllAsRead}
-      />
 
-      {/* حالة فارغة في حال عدم وجود إشعارات */}
-      {notifications.length === 0 && !isLoading && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-16 mt-4 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100"
-        >
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-            className="mb-4 opacity-50"
-          >
-            <Bell size={64} className="text-gray-400" />
-          </motion.div>
-          <p className="text-lg">لا توجد إشعارات {filter === 'unread' ? 'غير مقروءة' : ''}</p>
-          <p className="text-sm text-gray-400 mt-2">ستظهر هنا عند استلامك إشعارات جديدة</p>
-        </motion.div>
-      )}
-
-      {/* قائمة الإشعارات */}
-      {notifications.length > 0 && (
-        <div className="space-y-4">
-          <AnimatePresence>
-            {notifications.map((notification) => (
+      {/* مؤشر السحب للتحديث */}
+      {(refreshProgress > 0 || isRefreshing) && (
+        <div className="absolute top-0 left-0 right-0 flex justify-center transition-all z-20 pt-2">
+          <div className="bg-white p-3 rounded-full shadow-md">
+            {isRefreshing ? (
               <motion.div
-                key={notification.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  // إضافة وميض للإشعارات الجديدة عند ظهورها
-                  backgroundColor: newNotificationIds.includes(notification.id)
-                    ? ['#ffffff', '#f0f9ff', '#ffffff']
-                    : undefined
-                }}
-                transition={{
-                  duration: 0.3,
-                  backgroundColor: { repeat: 3, duration: 1 }
-                }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className={`${newNotificationIds.includes(notification.id) ? 'ring-2 ring-blue-400' : ''}`}
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               >
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={async () => await markAllAsRead()}
-                  isNew={newNotificationIds.includes(notification.id)}
-                />
+                <RefreshCw size={24} className={`text-${themeColors.primary}-500`} />
               </motion.div>
-            ))}
-          </AnimatePresence>
+            ) : (
+              <motion.div
+                style={{ rotate: `${refreshProgress * 3.6}deg` }}
+                className="transition-all"
+              >
+                <RefreshCw size={24} className={`text-${themeColors.primary}-500`} />
+              </motion.div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* زر تحميل المزيد */}
-      {hasNextPage && notifications.length > 0 && !isFetchingNextPage && (
-        <div className="flex justify-center my-6">
+      <div
+        ref={scrollRef}
+        className="container mx-auto px-4 py-6 h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+        id="scrollableDiv"
+      >
+        {/* رأس الصفحة مع زر الرجوع ومؤشر الاتصال المتحرك */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className={`flex items-center mb-4 sticky top-0 bg-${themeColors.background} z-10 py-3`}
+        >
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => fetchNextPage()}
-            className="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-5 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+            onClick={handleGoBack}
+            className="bg-white hover:bg-gray-100 text-gray-800 font-bold p-3 rounded-full shadow-sm border border-gray-200"
           >
-            <RefreshCw size={16} />
-            تحميل المزيد
+            <ArrowLeft className="w-5 h-5" />
           </motion.button>
-        </div>
-      )}
+          <h1 className="text-xl font-bold flex-1 text-center text-gray-800">الإشعارات</h1>
 
-      {/* مؤشر تحميل المزيد */}
-      {isFetchingNextPage && (
-        <div className="flex justify-center my-6">
-          <Spinner />
-          <span className="mr-2 text-gray-600">جارٍ التحميل...</span>
-        </div>
-      )}
+          {/* مؤشر حالة الاتصال مع تلميحات */}
+          <div className="relative group">
+            <motion.div
+              className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+              animate={{
+                scale: [1, isConnected ? 1.2 : 1.3, 1],
+                boxShadow: isConnected
+                  ? ['0 0 0 0 rgba(34, 197, 94, 0)', '0 0 0 4px rgba(34, 197, 94, 0.3)', '0 0 0 0 rgba(34, 197, 94, 0)']
+                  : ['0 0 0 0 rgba(239, 68, 68, 0)', '0 0 0 4px rgba(239, 68, 68, 0.3)', '0 0 0 0 rgba(239, 68, 68, 0)']
+              }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+            <div className="absolute top-6 right-0 transform translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity w-max">
+              {isConnected ? 'متصل بالخادم' : 'غير متصل'}
+            </div>
+          </div>
+        </motion.div>
 
-      {/* رسالة نهاية القائمة */}
-      {!hasNextPage && notifications.length > 0 && (
-        <div className="text-center my-6 pb-4 text-gray-500 bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-          لقد وصلت إلى نهاية الإشعارات
-        </div>
-      )}
+        {/* شريط حالة الإشعارات غير المقروءة مع حركة دخول بسيطة */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className={`mb-5 bg-gradient-to-r from-${themeColors.primary}-50 to-${themeColors.accent}-50 p-4 rounded-xl shadow-sm border border-${themeColors.primary}-100 flex items-center justify-between`}
+        >
+          <div className="flex items-center">
+            <Bell size={20} className={`text-${themeColors.primary}-500 mr-2`} />
+            <span className="font-semibold text-gray-700">الإشعارات غير المقروءة:</span>
+          </div>
+          <motion.span
+            className={`inline-flex items-center justify-center bg-${themeColors.primary}-500 text-white rounded-full px-3 py-1 text-sm font-medium`}
+            initial={{ scale: 1 }}
+            animate={{ scale: unreadCountData && unreadCountData > 0 ? [1, 1.1, 1] : 1 }}
+            transition={{ duration: 0.3, type: "spring" }}
+          >
+            {unreadCountData || 0}
+          </motion.span>
+        </motion.div>
 
+        {/* مكون التصفية المحسن */}
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <NotificationFilter
+            currentFilter={filter}
+            unreadCount={unreadCountData || 0}
+            onMarkAllAsRead={markAllAsRead}
+          />
+        </motion.div>
+
+        {/* حالة فارغة محسنة في حال عدم وجود إشعارات */}
+        {notifications.length === 0 && !isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-col items-center justify-center py-16 mt-6 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100"
+          >
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+              className="mb-6 relative"
+            >
+              <div className="absolute inset-0 bg-blue-100 rounded-full opacity-20 scale-150 animate-pulse"></div>
+              <Bell size={80} className="text-gray-400 relative z-10" />
+            </motion.div>
+            <p className="text-lg font-medium">لا توجد إشعارات {filter === 'unread' ? 'غير مقروءة' : ''}</p>
+            <p className="text-sm text-gray-400 mt-2 max-w-xs text-center">
+              {filter === 'unread'
+                ? 'قمت بقراءة جميع الإشعارات. ستظهر الإشعارات الجديدة هنا فور وصولها.'
+                : 'ستظهر الإشعارات هنا عندما تتلقى تحديثات جديدة أو إشعارات من النظام.'
+              }
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => refetch()}
+              className={`mt-6 bg-${themeColors.primary}-50 text-${themeColors.primary}-600 border border-${themeColors.primary}-200 hover:bg-${themeColors.primary}-100 px-5 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2`}
+            >
+              <RefreshCw size={16} />
+              تحديث
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* قائمة الإشعارات المحسنة */}
+        {notifications.length > 0 && (
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <AnimatePresence initial={false}>
+              {notifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    backgroundColor: newNotificationIds.includes(notification.id)
+                      ? ['#ffffff', '#f0f9ff', '#ffffff']
+                      : undefined
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    delay: index < 5 ? index * 0.05 : 0, // تأخير متزايد للعناصر الخمسة الأولى فقط
+                    backgroundColor: { repeat: 3, duration: 1 }
+                  }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className={`${newNotificationIds.includes(notification.id) ? `ring-2 ring-${themeColors.primary}-400` : ''}`}
+                >
+                  <NotificationItem
+                    notification={notification}
+                    onMarkAsRead={async () => await markAllAsRead()}
+                    isNew={newNotificationIds.includes(notification.id)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {/* زر تحميل المزيد (يظهر فقط عند التمرير اليدوي قبل الوصول للنهاية) */}
+        {hasNextPage && notifications.length > 0 && !isFetchingNextPage && (
+          <div className="flex justify-center my-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => fetchNextPage()}
+              className={`bg-white text-${themeColors.primary}-600 border border-${themeColors.primary}-200 hover:bg-${themeColors.primary}-50 px-5 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2`}
+            >
+              <RefreshCw size={16} />
+              تحميل المزيد
+            </motion.button>
+          </div>
+        )}
+
+        {/* مؤشر تحميل المزيد بتصميم محسن */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center items-center my-6 p-3 bg-white rounded-lg shadow-sm">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            >
+              <RefreshCw size={20} className={`text-${themeColors.primary}-500 mr-2`} />
+            </motion.div>
+            <span className="text-gray-600">جارٍ تحميل المزيد من الإشعارات...</span>
+          </div>
+        )}
+
+        {/* رسالة نهاية القائمة بتصميم محسن */}
+        {!hasNextPage && notifications.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-center my-6 pb-4 text-gray-500 bg-white rounded-lg p-3 shadow-sm border border-gray-100"
+          >
+            <div className="flex flex-col items-center py-3">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className={`w-12 h-12 rounded-full bg-${themeColors.primary}-50 flex items-center justify-center mb-3`}
+              >
+                <Check className={`w-6 h-6 text-${themeColors.primary}-500`} />
+              </motion.div>
+              <p>لقد وصلت إلى نهاية الإشعارات</p>
+              <p className="text-sm text-gray-400 mt-1">تم عرض جميع الإشعارات المتوفرة</p>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 // components/NotificationItem.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -13,7 +13,8 @@ import {
   AlertCircle,
   Bell,
   Check,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,7 +23,7 @@ import { NotificationType } from '@/types/notification';
 interface NotificationItemProps {
   notification: NotificationType;
   onMarkAsRead: (id: number) => void;
-  isNew?: boolean; // خاصية للإشارة إلى الإشعارات الجديدة
+  isNew?: boolean;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
@@ -34,7 +35,28 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
   const [swipeProgress, setSwipeProgress] = useState(0);
-  const [isRippling] = useState(false);
+  const [isRippling, setIsRippling] = useState(false);
+  const [showDismissButton, setShowDismissButton] = useState(false);
+  const [isDismissing, setIsDismissing] = useState(false);
+
+  // إضافة تأثير موجة الضغط
+  useEffect(() => {
+    let rippleTimeout: NodeJS.Timeout;
+    if (isRippling) {
+      rippleTimeout = setTimeout(() => setIsRippling(false), 800);
+    }
+    return () => clearTimeout(rippleTimeout);
+  }, [isRippling]);
+
+  // تأثير للإشعارات الجديدة
+  useEffect(() => {
+    if (isNew) {
+      const timeout = setTimeout(() => {
+        // المؤقت سيعمل في كونتكست الإشعار، أما إلغاء التأشير فيتم خارجياً
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isNew]);
 
   // تحديد أيقونة الإشعار حسب النوع
   const getNotificationIcon = () => {
@@ -67,6 +89,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   // التعامل مع الضغط على الإشعار
   const handleNotificationClick = () => {
     if (notification && notification.id) {
+      setIsRippling(true);
+      // إحالة المستخدم لصفحة تفاصيل الإشعار
       router.push(`/notifications/${notification.id}`);
       // تحديث حالة القراءة عند الضغط، إذا كانت غير مقروءة
       if (!notification.read_status) {
@@ -76,24 +100,48 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   };
 
   // دالة تحديد الإشعار كمقروء
-  const handleMarkAsRead = (e: React.MouseEvent) => {
+  const handleMarkAsRead = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (notification.read_status || isMarking) return;
 
     setIsMarking(true);
     try {
-      onMarkAsRead(notification.id);
+      await onMarkAsRead(notification.id);
+      // تأثير بصري لتغيير الحالة
+      setIsRippling(true);
     } finally {
-      setIsMarking(false);
+      setTimeout(() => setIsMarking(false), 300);
     }
+  };
+
+  // دالة تجاهل الإشعار أو حذفه
+  const handleDismiss = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDismissing(true);
+
+    // هنا يمكن إضافة منطق حذف الإشعار إذا كان مطلوباً
+
+    // تأثير انتقالي للحذف
+    setTimeout(() => {
+      // يمكن هنا إضافة API لحذف الإشعار
+      setIsDismissing(false);
+    }, 300);
   };
 
   // إعداد التعامل مع السحب للأجهزة المحمولة
   const swipeHandlers = useSwipeable({
     onSwiping: (eventData) => {
+      // تفعيل كشف التمرير لليمين/اليسار
       if (eventData.dir === 'Left' && !notification.read_status) {
+        // كشف سحب لليسار للتحديد كمقروء
         const progress = Math.min(Math.abs(eventData.deltaX) / 150, 1) * 100;
         setSwipeProgress(progress);
+      } else if (eventData.dir === 'Right') {
+        // كشف سحب لليمين لإظهار زر الحذف
+        const progress = Math.min(Math.abs(eventData.deltaX) / 100, 1);
+        if (progress > 0.3) {
+          setShowDismissButton(true);
+        }
       }
     },
     onSwipedLeft: () => {
@@ -117,6 +165,12 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         handleMarkAsRead(mockEvent);
       }
       setSwipeProgress(0);
+    },
+    onSwipedRight: () => {
+      // الحفاظ على زر الحذف مرئي إذا تم السحب بما فيه الكفاية
+      if (!showDismissButton) {
+        setShowDismissButton(false);
+      }
     },
     onSwiped: () => {
       setSwipeProgress(0);
@@ -168,58 +222,104 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   // تحديد لون الخلفية والحدود حسب حالة القراءة وإضافة تأثير الإشعار الجديد
   const containerClasses = `rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ${
     notification.read_status ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
-  } ${isNew ? 'animate-pulse' : ''}`;
+  } ${isNew ? 'notification-new-highlight' : ''}`;
 
   return (
     <motion.div
       {...swipeHandlers}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={false}
+      animate={
+        isDismissing
+          ? { opacity: 0, x: "100%", height: 0 }
+          : { opacity: 1, x: showDismissButton ? 50 : 0, height: "auto" }
+      }
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={`${containerClasses} relative`}
       onClick={handleNotificationClick}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
+      layout
     >
+      {/* زر الحذف عند السحب */}
+      <AnimatePresence>
+        {showDismissButton && (
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md"
+            onClick={handleDismiss}
+          >
+            <X size={18} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/* عرض شارة "جديد" إذا كان الإشعار جديد */}
       {isNew && (
-        <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full animate-pulse-slow"
+        >
           جديد
-        </div>
+        </motion.div>
       )}
 
       {/* مؤشر السحب يُظهر تقدم حركة السحب */}
       {!notification.read_status && (
-        <div className="absolute inset-0 bg-blue-100" style={{ opacity: swipeProgress / 100 }} />
+        <motion.div
+          className="absolute inset-0 bg-blue-100"
+          style={{ opacity: swipeProgress / 100 }}
+        />
       )}
 
       {/* تأثير الموجة عند الضغط */}
-      {isRippling && (
-        <span className="absolute inset-0 bg-blue-100 opacity-50 animate-pulse" />
-      )}
+      <AnimatePresence>
+        {isRippling && (
+          <motion.span
+            initial={{ scale: 0.8, opacity: 0.8 }}
+            animate={{ scale: 1.2, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 bg-blue-100 rounded-xl"
+          />
+        )}
+      </AnimatePresence>
 
       <div className="flex items-start gap-3 p-4">
         {/* أيقونة الإشعار مع خلفية دائرية */}
-        <div className={`flex-shrink-0 p-2 rounded-full ${notification.read_status ? 'bg-gray-100' : 'bg-blue-100'}`}>
+        <motion.div
+          className={`flex-shrink-0 p-2 rounded-full ${
+            notification.read_status ? 'bg-gray-100' : 'bg-blue-100'
+          }`}
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+        >
           {getNotificationIcon()}
-        </div>
+        </motion.div>
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-col">
             {/* عنوان الإشعار */}
-            <h3 className={`font-semibold truncate ${!notification.read_status ? 'text-blue-700' : 'text-gray-900'}`}>
+            <h3 className={`font-semibold truncate ${
+              !notification.read_status ? 'text-blue-700' : 'text-gray-900'
+            }`}>
               {notification.title || notification.type.replace(/_/g, ' ')}
             </h3>
 
             {/* رسالة الإشعار مع تأثير الانزلاق */}
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} mode="wait">
               <motion.p
                 key={`message-${isExpanded}`}
-                initial={{ height: 'auto', opacity: 1 }}
+                initial={{ height: 'auto', opacity: 0.8 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 'auto', opacity: 0.5 }}
                 transition={{ duration: 0.2 }}
-                className={`mt-1 text-sm ${notification.read_status ? 'text-gray-600' : 'text-gray-800'}`}
+                className={`mt-1 text-sm ${
+                  notification.read_status ? 'text-gray-600' : 'text-gray-800'
+                }`}
               >
                 {notification.message.length > 100 && !isExpanded
                   ? `${notification.message.substring(0, 100)}...`
@@ -229,35 +329,43 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
             {/* زر عرض المزيد/عرض أقل */}
             {notification.message.length > 100 && (
-              <button
+              <motion.button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
                 className="text-blue-600 text-sm mt-1 hover:underline flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {isExpanded ? 'عرض أقل' : 'عرض المزيد'}
                 <motion.span
                   animate={{ rotate: isExpanded ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="w-4 h-4 mr-1" />
                 </motion.span>
-              </button>
+              </motion.button>
             )}
 
             {/* معلومات إضافية */}
             <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                <Clock className="w-3 h-3 mr-1" />
+              <motion.span
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full"
+              >
+                <Clock className="w-3 h-3 ml-1" />
                 {formattedDate}
-              </span>
+              </motion.span>
               {getTypeBadge()}
               {notification.extra_data && notification.extra_data.subscription_history_id && (
-                <span className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                  <Info className="w-3 h-3 mr-1" />
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full"
+                >
+                  <Info className="w-3 h-3 ml-1" />
                   معلومات الاشتراك
-                </span>
+                </motion.span>
               )}
             </div>
           </div>
@@ -285,7 +393,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
               )}
             </motion.button>
           )}
-          <ChevronRight className="w-5 h-5 text-gray-400 ml-1" />
+          <ChevronRight className="w-5 h-5 text-gray-400 mr-1" />
         </div>
       </div>
     </motion.div>

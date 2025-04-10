@@ -141,7 +141,7 @@ export default function NotificationDetail() {
   // حالة عدم توفر المعطيات الأساسية
   if (!notificationId || !telegramId) {
     return (
-      <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center">
+      <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center ">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,11 +177,12 @@ export default function NotificationDetail() {
   // حالة الخطأ أو عدم الحصول على بيانات الإشعار
   if (isError || !notification) {
     return (
+
       <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 p-6 rounded-lg text-center max-w-md w-full"
+          className="bg-red-50 p-6 rounded-lg text-center max-w-md w-full "
         >
           <Bell className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-red-700 mb-2">
@@ -205,9 +206,14 @@ export default function NotificationDetail() {
   }
 
   return (
-    <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
-      {/* رأس الصفحة */}
-      <div className="flex items-center mb-6 sticky top-0 bg-gray-50 z-10 py-2">
+
+
+
+    <div className="container mx-auto p-4 bg-gray-50 min-h-screen relative z-20">
+      {/* رأس الصفحة مع z-index أعلى */}
+      <div className="flex items-center mb-6 sticky top-0 bg-gray-50 z-30 py-2">
+
+
         <Button
           onClick={handleGoBack}
           variant="outline"
@@ -220,8 +226,15 @@ export default function NotificationDetail() {
         <h1 className="text-xl md:text-2xl font-bold flex-1 text-center">التفاصيل</h1>
         <div className="w-10"></div>
       </div>
+      {/* باقي المحتوى */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="relative z-20"
+      >
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+
         {/* بطاقة تفاصيل الإشعار */}
         <Card className="mb-6">
           <CardContent className="pt-6">
@@ -345,5 +358,6 @@ export default function NotificationDetail() {
         )}
       </motion.div>
     </div>
+
   );
 }

@@ -13,10 +13,10 @@ interface NotificationFilterProps {
   onMarkAllAsRead: () => void;
 }
 
-const NotificationFilter = ({ 
-  currentFilter, 
-  unreadCount, 
-  onMarkAllAsRead 
+const NotificationFilter = ({
+  currentFilter,
+  unreadCount,
+  onMarkAllAsRead
 }: NotificationFilterProps) => {
   const router = useRouter();
 const searchParams = new URLSearchParams(router.asPath.split('?')[1] || '');
@@ -71,7 +71,7 @@ const searchParams = new URLSearchParams(router.asPath.split('?')[1] || '');
         >
           <Bell size={16} />
           <span>جميع الإشعارات</span>
-          
+
           {currentFilter === 'all' && (
             <motion.div
               layoutId="filterIndicator"
@@ -106,7 +106,7 @@ const searchParams = new URLSearchParams(router.asPath.split('?')[1] || '');
               )}
             </AnimatePresence>
           </div>
-          
+
           {currentFilter === 'unread' && (
             <motion.div
               layoutId="filterIndicator"

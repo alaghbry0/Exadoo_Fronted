@@ -155,18 +155,18 @@ const FooterNav: React.FC<FooterNavProps> = ({
 
   return (
     <motion.nav
-      dir="rtl"
-      initial="visible"
-      animate={isVisible ? "visible" : "hidden"}
-      variants={navVariants}
-      className="fixed bottom-0 w-full z-50 shadow-lg"
-      style={{
-        height: `${theme.height}px`,
-        backdropFilter: `blur(${theme.blurIntensity})`,
-        backgroundColor: `${theme.backgroundColor}${Math.round(theme.backgroundOpacity * 255).toString(16).padStart(2, '0')}`,
-        borderTop: `1px solid ${theme.borderColor}${Math.round(theme.borderOpacity * 255).toString(16).padStart(2, '0')}`,
-      }}
-    >
+  dir="rtl"
+  initial="visible"
+  animate={isVisible ? "visible" : "hidden"}
+  variants={navVariants}
+  className="fixed bottom-0 w-full z-10" // تغيير من z-50 إلى z-10
+  style={{
+    height: `${theme.height}px`,
+    backdropFilter: `blur(${theme.blurIntensity})`,
+    backgroundColor: `${theme.backgroundColor}${Math.round(theme.backgroundOpacity * 255).toString(16).padStart(2, '0')}`,
+    borderTop: `1px solid ${theme.borderColor}${Math.round(theme.borderOpacity * 255).toString(16).padStart(2, '0')}`,
+  }}
+>
       <div className="mx-auto h-full max-w-lg relative">
         <div className="flex justify-around items-center h-full w-full px-2">
           {items.map((item) => {

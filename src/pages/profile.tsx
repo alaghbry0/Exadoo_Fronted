@@ -1,3 +1,5 @@
+// 1-profile.tsx المحسن
+
 'use client'
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,7 +55,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
-        <Spinner />
+        <Spinner className="w-10 h-10" /> {/* تكبير الـ Spinner */}
       </div>
     );
   }
@@ -63,14 +65,14 @@ export default function Profile() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen bg-gradient-to-b from-gray-50 to-white safe-area-padding pb-24 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-b from-gray-50 to-white safe-area-padding pb-24 flex items-center justify-center p-4"
       >
-        <div className="text-center p-6 rounded-2xl shadow-lg bg-white/90 backdrop-blur-sm border border-gray-100">
-          <h2 className="text-xl font-semibold mb-4 text-red-500">حدث خطأ</h2>
-          <p className="mb-6 text-gray-600">فشل في تحميل الاشتراكات، يرجى المحاولة مرة أخرى</p>
+        <div className="text-center p-6 rounded-2xl shadow-lg bg-white/90 backdrop-blur-sm border border-gray-100 w-full max-w-md">
+          <h2 className="text-2xl font-semibold mb-4 text-red-500">حدث خطأ</h2>
+          <p className="mb-6 text-gray-600 text-base">فشل في تحميل الاشتراكات، يرجى المحاولة مرة أخرى</p>
           <button
             onClick={() => refetch()}
-            className="px-6 py-3 bg-app-blue-500 text-white rounded-xl hover:bg-app-blue-600 transition-colors text-sm shadow-md hover:shadow-lg active:scale-95 transition-transform"
+            className="px-8 py-4 bg-app-blue-500 text-white rounded-xl hover:bg-app-blue-600 transition-colors text-base shadow-md hover:shadow-lg active:scale-95 transition-transform"
           >
             إعادة المحاولة
           </button>
@@ -88,7 +90,7 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -30 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className="min-h-screen bg-gradient-to-b from-gray-50 to-white safe-area-padding pb-24"
+          className="min-h-screen bg-gradient-to-b from-gray-50 to-white safe-area-padding pb-28"
         >
           <ProfileHeader
             fullName={fullName}
@@ -97,7 +99,9 @@ export default function Profile() {
             joinDate={null}
             onPaymentHistoryClick={goToPaymentHistory}
           />
-          <SubscriptionsSection subscriptions={subscriptions || []} />
+          <div className="px-4 pt-2"> {/* إضافة padding لمزيد من المساحة */}
+            <SubscriptionsSection subscriptions={subscriptions || []} />
+          </div>
         </motion.div>
       </AnimatePresence>
     </TonConnectUIProvider>
