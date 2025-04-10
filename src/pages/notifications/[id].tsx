@@ -16,7 +16,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Spinner } from '@/components/Spinner';
 import { useTelegram } from '@/context/TelegramContext';
 import { useNotificationsContext } from '@/context/NotificationsContext';
 
@@ -167,9 +166,43 @@ export default function NotificationDetail() {
   // حالة التحميل
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Spinner className="w-12 h-12 mb-4" />
-        <p className="text-gray-600">جاري التحميل...</p>
+      <div className="container mx-auto p-4 min-h-[60vh] space-y-6">
+        {/* هيكل Skeleton للرأس */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
+        </div>
+        
+        {/* هيكل Skeleton للبطاقة الرئيسية */}
+        <div className="p-6 bg-white rounded-lg shadow">
+          <div className="flex gap-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
+            <div className="flex-1 space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        {/* هيكل Skeleton لبطاقة تفاصيل الدفع */}
+        <div className="p-6 bg-white rounded-lg shadow space-y-4">
+          <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -4,7 +4,6 @@ import { ExchangePaymentModal } from './ExchangePaymentModal';
 import { useToast } from '@/hooks/use-toast';
 
 interface PaymentExchangeProps {
-  orderId?: string;
   depositAddress: string;
   amount: string;
   network?: string;
@@ -14,7 +13,6 @@ interface PaymentExchangeProps {
 }
 
 const PaymentExchange: React.FC<PaymentExchangeProps> = ({
-  orderId,
   depositAddress,
   amount,
   network = 'TON',
@@ -62,7 +60,6 @@ const PaymentExchange: React.FC<PaymentExchangeProps> = ({
   return (
     <ExchangePaymentModal
       details={{
-        orderId,
         depositAddress,
         amount,
         network,

@@ -1,28 +1,45 @@
 'use client'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, ChevronRight, RefreshCcw, Star } from 'lucide-react'
-import { Subscription } from '@/types'
-import { cn } from '@/lib/utils'
-import { Progress } from '@/components/ui/progress-custom'
+import React, { useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, ChevronRight, RefreshCcw, Star } from 'lucide-react';
+import { Subscription } from '@/types';
+import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress-custom';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 
 type SubscriptionsSectionProps = {
-  subscriptions: Subscription[]
-}
+  subscriptions: Subscription[];
+  loadMore: () => void;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+};
 
 // تعريف حالات الاشتراك مع تخصيص ألوان الخلفية والنص والحد لكل حالة
-type StatusType = 'نشط' | 'منتهي' | 'unknown'
+type StatusType = 'نشط' | 'منتهي' | 'unknown';
 const statusColors: Record<StatusType, { bg: string; text: string; border: string }> = {
   'نشط': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-100' },
   'منتهي': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-100' },
   'unknown': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100' }
 };
 
-export default function SubscriptionsSection({ subscriptions }: SubscriptionsSectionProps) {
+export default function SubscriptionsSection({ subscriptions, loadMore, hasMore, isLoadingMore }: SubscriptionsSectionProps) {
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const lastSubscriptionRef = useCallback((node: HTMLDivElement) => {
+    if (isLoadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMore();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, hasMore, loadMore]);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
       {/* رأس القسم مع الأيقونة والعنوان وزر عرض الكل */}
       <div className="flex items-center gap-3 mb-4">
-        {/* حاوية الأيقونة مع Padding محسّن */}
         <div className="bg-blue-50 p-2 rounded-lg">
           <Zap className="w-5 h-5 text-blue-600" />
         </div>
@@ -40,20 +57,28 @@ export default function SubscriptionsSection({ subscriptions }: SubscriptionsSec
       <AnimatePresence mode="popLayout">
         {subscriptions.length > 0 ? (
           <ul className="space-y-3.5">
-            {subscriptions.map((sub, index) => (
-              <SubscriptionItem
-                key={sub.id}
-                sub={sub}
-                index={index}
-              />
-            ))}
+            {subscriptions.map((sub, index) => {
+              if (index === subscriptions.length - 1) {
+                return (
+                  <div ref={lastSubscriptionRef} key={sub.id}>
+                    <SubscriptionItem sub={sub} index={index} />
+                  </div>
+                );
+              }
+              return <SubscriptionItem key={sub.id} sub={sub} index={index} />;
+            })}
           </ul>
         ) : (
           <NoSubscriptionsMessage />
         )}
       </AnimatePresence>
+      {isLoadingMore && (
+        <div className="mt-4">
+          <SkeletonLoader />
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
 interface SubscriptionItemProps {
@@ -75,7 +100,7 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 40;
+    return diffDays <= 3;
   };
 
   // دالة للتعامل مع طلب الاسترداد

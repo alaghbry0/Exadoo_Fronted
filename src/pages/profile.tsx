@@ -1,21 +1,20 @@
-// 1-profile.tsx المحسن
-
 'use client'
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
 import { useProfileStore } from '../stores/profileStore';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import { Spinner } from '../components/Spinner';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { getUserSubscriptions } from '../services/api';
 import type { Subscription } from '../types';
 import { useRouter } from 'next/navigation';
 
 interface SubscriptionsResponse {
   subscriptions: Subscription[];
+  nextPage?: number | null;
 }
 
 export default function Profile() {
@@ -25,26 +24,37 @@ export default function Profile() {
 
   const queryKey = ['subscriptions', telegramId?.toString() || ''];
 
-  const { data, isLoading, isError, refetch } = useQuery<SubscriptionsResponse, Error>({
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<SubscriptionsResponse, Error>({
     queryKey,
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 1 }) => {
       if (!telegramId) throw new Error('المعرف غير موجود');
-      return await getUserSubscriptions(telegramId.toString());
+      return await getUserSubscriptions(`${telegramId.toString()}?page=${pageParam}`);
     },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage ? lastPage.nextPage : undefined,
     enabled: !!telegramId,
     staleTime: 300000,
   });
 
   useEffect(() => {
-    if (data?.subscriptions) {
+    if (data) {
+      const allSubscriptions = data.pages.flatMap(page => page.subscriptions);
       localStorage.setItem(
         'subscriptions',
         JSON.stringify({
-          data: data.subscriptions,
+          data: allSubscriptions,
           timestamp: Date.now()
         })
       );
-      setSubscriptions(data.subscriptions);
+      setSubscriptions(allSubscriptions);
     }
   }, [data, setSubscriptions]);
 
@@ -53,9 +63,10 @@ export default function Profile() {
   };
 
   if (isLoading) {
+    // عرض تحميل تدرجي أثناء جلب البيانات الأولية
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
-        <Spinner className="w-10 h-10" /> {/* تكبير الـ Spinner */}
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <SkeletonLoader />
       </div>
     );
   }
@@ -81,6 +92,12 @@ export default function Profile() {
     );
   }
 
+  const loadMoreHandler = () => {
+    if (hasNextPage) {
+      fetchNextPage();
+    }
+  };
+
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
       <AnimatePresence mode="wait">
@@ -99,8 +116,13 @@ export default function Profile() {
             joinDate={null}
             onPaymentHistoryClick={goToPaymentHistory}
           />
-          <div className="px-4 pt-2"> {/* إضافة padding لمزيد من المساحة */}
-            <SubscriptionsSection subscriptions={subscriptions || []} />
+          <div className="px-4 pt-2">
+            <SubscriptionsSection
+              subscriptions={subscriptions || []}
+              loadMore={loadMoreHandler}
+              hasMore={!!hasNextPage}
+              isLoadingMore={isFetchingNextPage}
+            />
           </div>
         </motion.div>
       </AnimatePresence>

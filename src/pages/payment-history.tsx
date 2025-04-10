@@ -3,7 +3,6 @@ import InfiniteScroll from 'react-infinite-scroll-component'
 import { PaymentHistoryItem } from '@/components/PaymentHistoryItem'
 import axios from 'axios'
 import { useTelegram } from '../context/TelegramContext'
-import { Spinner } from '../components/Spinner'
 import { Button } from 'flowbite-react'
 import { useRouter } from 'next/router'
 import { FiArrowLeft } from 'react-icons/fi'
@@ -59,9 +58,30 @@ export default function PaymentHistory() {
 
   if (isLoading && payments.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center space-y-4 bg-gray-50">
-        <Spinner />
-        <p className="text-gray-600">جارٍ جلب بيانات سجل الدفعات...</p>
+      <div className="container mx-auto p-4 min-h-[60vh] space-y-6">
+        {/* هيكل Skeleton للرأس */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
+        </div>
+        
+        {/* هيكل Skeleton للعناصر */}
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="p-6 bg-white rounded-lg shadow space-y-4">
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+            <div className="flex justify-between">
+              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
@@ -80,9 +100,19 @@ export default function PaymentHistory() {
         next={fetchMoreData}
         hasMore={hasMore}
         loader={
-          <div className="flex items-center justify-center py-4">
-            <Spinner />
-            <span className="ml-2 text-gray-600">جارٍ التحميل...</span>
+          <div className="p-6 space-y-4">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="p-4 bg-white rounded-lg shadow space-y-3">
+                <div className="flex justify-between">
+                  <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+                </div>
+                <div className="flex justify-between">
+                  <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         }
         endMessage={

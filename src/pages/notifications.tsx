@@ -15,7 +15,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { NotificationType } from '@/types/notification'
 
-// استيراد ديناميكي لمكون NotificationItem لتحسين الأداء
+// استيراد ديناميكي لمكون NotificationItem مع هيكل تحميل محسن
 const NotificationItem = dynamic(
   () => import('@/components/NotificationItem'),
   {
@@ -23,22 +23,43 @@ const NotificationItem = dynamic(
   }
 )
 
-// إضافة مكون هيكلي للتحميل
+// هيكل تحميل محسن للإشعارات
 const NotificationSkeleton = () => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+  <motion.div
+    initial={{ opacity: 0.5, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    className="bg-white rounded-xl shadow-sm border border-gray-200 p-4"
+  >
     <div className="flex gap-3">
       <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
-      <div className="flex-1">
-        <div className="h-5 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-        <div className="h-4 bg-gray-100 rounded w-full mb-2 animate-pulse"></div>
+      <div className="flex-1 space-y-2">
+        <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+        <div className="h-4 bg-gray-100 rounded w-full animate-pulse"></div>
         <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse"></div>
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 pt-2">
           <div className="h-5 bg-gray-100 rounded-full w-20 animate-pulse"></div>
           <div className="h-5 bg-gray-100 rounded-full w-24 animate-pulse"></div>
         </div>
       </div>
       <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse"></div>
     </div>
+  </motion.div>
+)
+
+// مكون هيكل تحميل للصفحة الأولى
+const PageSkeleton = () => (
+  <div className="container mx-auto px-4 py-6 space-y-4">
+    {/* محاكاة شريط التصفية */}
+    <div className="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+      <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+      <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+    </div>
+
+    {/* محاكاة 5 إشعارات */}
+    {[...Array(5)].map((_, i) => (
+      <NotificationSkeleton key={`skeleton-${i}`} />
+    ))}
   </div>
 )
 
@@ -216,41 +237,8 @@ export default function NotificationsPage() {
 
   // حالة التحميل الأولية
   if (isLoading && notifications.length === 0) {
-    return (
-
-
-      <div className="min-h-screen flex flex-col items-center justify-center space-y-4 bg-gray-50">
-
-
-        <motion.div
-
-
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-        >
-          <Bell size={40} className={`text-${themeColors.primary}-500`} />
-
-        </motion.div>
-
-        <p className="text-gray-600">جارٍ جلب بيانات الإشعارات...</p>
-
-        {/* إضافة متحركات أفضل للتحميل */}
-        <div className="w-64 mt-2">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div
-              className={`h-full bg-${themeColors.primary}-500`}
-              initial={{ width: "0%" }}
-              animate={{ width: ["0%", "100%", "0%"] }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-
-            />
-          </div>
-        </div>
-      </div>
-    )
+    return <PageSkeleton />
   }
-
-
 
 
 
@@ -285,36 +273,33 @@ export default function NotificationsPage() {
   }
 
   return (
-
-   <div
-  className={`relative min-h-screen bg-${themeColors.background} z-20`} // إضافة z-20
-  onTouchStart={handleTouchStart}
-  onTouchMove={handleTouchMove}
-  onTouchEnd={handleTouchEnd}
->
-
-
-      {/* مؤشر السحب للتحديث */}
+    <div
+      className={`relative min-h-screen bg-${themeColors.background} z-20`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* مؤشر السحب للتحديث - تم تحسينه */}
       {(refreshProgress > 0 || isRefreshing) && (
-        <div className="absolute top-0 left-0 right-0 flex justify-center transition-all z-20 pt-2">
-          <div className="bg-white p-3 rounded-full shadow-md">
-            {isRefreshing ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-              >
-                <RefreshCw size={24} className={`text-${themeColors.primary}-500`} />
-              </motion.div>
-            ) : (
-              <motion.div
-                style={{ rotate: `${refreshProgress * 3.6}deg` }}
-                className="transition-all"
-              >
-                <RefreshCw size={24} className={`text-${themeColors.primary}-500`} />
-              </motion.div>
-            )}
+        <motion.div 
+          className="absolute top-0 left-0 right-0 flex justify-center z-20 pt-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ 
+            opacity: 1, 
+            y: refreshProgress > 0 ? Math.min(refreshProgress / 2, 20) : 0 
+          }}
+        >
+          <div className={`p-2 rounded-full shadow-md ${
+            isRefreshing ? 'bg-white' : 'bg-gradient-to-r from-blue-100 to-indigo-100'
+          }`}>
+            <motion.div
+              animate={{ rotate: isRefreshing ? 360 : refreshProgress * 3.6 }}
+              transition={{ duration: isRefreshing ? 1 : 0 }}
+            >
+              <RefreshCw size={24} className={`text-${themeColors.primary}-500`} />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       <div
@@ -427,13 +412,8 @@ export default function NotificationsPage() {
         )}
 
         {/* قائمة الإشعارات المحسنة */}
-        {notifications.length > 0 && (
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+        {notifications.length > 0 ? (
+          <motion.div className="space-y-4">
             <AnimatePresence initial={false}>
               {notifications.map((notification, index) => (
                 <motion.div
@@ -449,11 +429,10 @@ export default function NotificationsPage() {
                   }}
                   transition={{
                     duration: 0.3,
-                    delay: index < 5 ? index * 0.05 : 0, // تأخير متزايد للعناصر الخمسة الأولى فقط
+                    delay: index < 5 ? index * 0.05 : 0,
                     backgroundColor: { repeat: 3, duration: 1 }
                   }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className={`${newNotificationIds.includes(notification.id) ? `ring-2 ring-${themeColors.primary}-400` : ''}`}
                 >
                   <NotificationItem
                     notification={notification}
@@ -464,8 +443,7 @@ export default function NotificationsPage() {
               ))}
             </AnimatePresence>
           </motion.div>
-        )}
-
+        ) : null}
         {/* زر تحميل المزيد (يظهر فقط عند التمرير اليدوي قبل الوصول للنهاية) */}
         {hasNextPage && notifications.length > 0 && !isFetchingNextPage && (
           <div className="flex justify-center my-6">
@@ -483,39 +461,33 @@ export default function NotificationsPage() {
 
         {/* مؤشر تحميل المزيد بتصميم محسن */}
         {isFetchingNextPage && (
-          <div className="flex justify-center items-center my-6 p-3 bg-white rounded-lg shadow-sm">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-            >
-              <RefreshCw size={20} className={`text-${themeColors.primary}-500 mr-2`} />
-            </motion.div>
-            <span className="text-gray-600">جارٍ تحميل المزيد من الإشعارات...</span>
-          </div>
+          <motion.div 
+            className="my-6 space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {[...Array(3)].map((_, i) => (
+              <NotificationSkeleton key={`loading-${i}`} />
+            ))}
+          </motion.div>
         )}
 
-        {/* رسالة نهاية القائمة بتصميم محسن */}
+        {/* رسالة نهاية القائمة - تم تحسينها */}
         {!hasNextPage && notifications.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-center my-6 pb-4 text-gray-500 bg-white rounded-lg p-3 shadow-sm border border-gray-100"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center my-6 pb-4"
           >
-            <div className="flex flex-col items-center py-3">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                className={`w-12 h-12 rounded-full bg-${themeColors.primary}-50 flex items-center justify-center mb-3`}
-              >
-                <Check className={`w-6 h-6 text-${themeColors.primary}-500`} />
-              </motion.div>
-              <p>لقد وصلت إلى نهاية الإشعارات</p>
-              <p className="text-sm text-gray-400 mt-1">تم عرض جميع الإشعارات المتوفرة</p>
+            <div className="inline-flex items-center text-gray-400 text-sm bg-gray-50 px-4 py-2 rounded-full">
+              <Check size={16} className="mr-2" />
+              لقد شاهدت جميع الإشعارات
             </div>
           </motion.div>
         )}
       </div>
     </div>
-  )
+    
+  );
 }
