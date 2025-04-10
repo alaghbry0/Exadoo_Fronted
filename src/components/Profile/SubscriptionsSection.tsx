@@ -1,127 +1,167 @@
 'use client'
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiZap, FiStar } from 'react-icons/fi';
-import { Subscription } from '@/types';
+import { motion, AnimatePresence } from 'framer-motion'
+import { Zap, ChevronRight, RefreshCcw, Star } from 'lucide-react'
+import { Subscription } from '@/types'
+import { cn } from '@/lib/utils'
+import { Progress } from '@/components/ui/progress-custom'
 
 type SubscriptionsSectionProps = {
   subscriptions: Subscription[]
+}
+
+// تعريف حالات الاشتراك مع تخصيص ألوان الخلفية والنص والحد لكل حالة
+type StatusType = 'نشط' | 'منتهي' | 'unknown'
+const statusColors: Record<StatusType, { bg: string; text: string; border: string }> = {
+  'نشط': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-100' },
+  'منتهي': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-100' },
+  'unknown': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100' }
 };
 
-// تعريف حالات الاشتراك مع تخصيص ألوان الخلفية والنص لكل حالة
-type StatusType = 'نشط' | 'منتهي' | 'unknown';
-const statusColors: Record<StatusType, { bg: string; text: string }> = {
-  'نشط': { bg: 'bg-green-100', text: 'text-green-700' },
-  'منتهي': { bg: 'bg-orange-100', text: 'text-orange-700' },
-  'unknown': { bg: 'bg-gray-100', text: 'text-gray-700' }
-};
-
-/**
- * المكون الرئيسي لعرض قسم الاشتراكات النشطة.
- * يتم تحريكه قليلاً إلى الأسفل لتجنب التلاصق مع قسم اسم المستخدم.
- */
 export default function SubscriptionsSection({ subscriptions }: SubscriptionsSectionProps) {
   return (
-    <motion.div
-      className="container mx-auto px-4 mt-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.4 }}
-    >
-      <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-[#eff8ff] p-2 rounded-xl shadow-inner">
-            <FiZap className="text-xl text-[#2390f1]" />
-          </div>
-          <h2 className="text-lg font-semibold text-[#1a202c]">
-            الاشتراكات النشطة
-          </h2>
+    <div className="bg-white rounded-2xl shadow-sm p-4 mt-4">
+      {/* رأس القسم مع الأيقونة والعنوان وزر عرض الكل */}
+      <div className="flex items-center gap-2 mb-3">
+        <div className="bg-blue-50 p-1.5 rounded-lg">
+          <Zap className="w-4 h-4 text-blue-600" />
         </div>
-
-        <AnimatePresence mode="popLayout">
-          {subscriptions.length > 0 ? (
-            <ul className="space-y-3">
-              {subscriptions.map((sub) => (
-                <SubscriptionItem key={sub.id} sub={sub} />
-              ))}
-            </ul>
-          ) : (
-            <NoSubscriptionsMessage />
-          )}
-        </AnimatePresence>
+        <h2 className="text-sm font-semibold text-gray-800">الاشتراكات النشطة</h2>
+        <motion.button
+          className="ml-auto text-blue-600 flex items-center text-xs font-medium"
+          whileHover={{ x: -2 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          عرض الكل
+          <ChevronRight className="w-3 h-3 ml-1" />
+        </motion.button>
       </div>
-    </motion.div>
-  );
+
+      <AnimatePresence mode="popLayout">
+        {subscriptions.length > 0 ? (
+          <ul className="space-y-2.5">
+            {subscriptions.map((sub, index) => (
+              <SubscriptionItem
+                key={sub.id}
+                sub={sub}
+                index={index}
+              />
+            ))}
+          </ul>
+        ) : (
+          <NoSubscriptionsMessage />
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
-/**
- * مكون لعرض عنصر اشتراك فردي.
- * يتم التحقق من الحالة وإظهار اللون المناسب للنص والخلفية بناءً عليها.
- */
 interface SubscriptionItemProps {
   sub: Subscription;
+  index: number;
 }
 
-const SubscriptionItem = ({ sub }: SubscriptionItemProps) => {
-  // التأكد من تطابق الحالة مع القيم المعرفة، وإلا تعيين الحالة إلى 'unknown'
-  const currentStatus: StatusType = sub.status && statusColors[sub.status]
-    ? sub.status
+const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
+  // تحديد الحالة بين "نشط" أو "منتهي"، وإلا اعتبرها "unknown"
+  const currentStatus: StatusType = (sub.status === 'نشط' || sub.status === 'منتهي')
+    ? (sub.status as StatusType)
     : 'unknown';
+  const colors = statusColors[currentStatus];
+
+  // دالة للتحقق مما إذا كان الاشتراك جديداً (أقل من 3 أيام) وكأنه نشط
+  const isNewSubscription = (): boolean => {
+    if (!sub.start_date || sub.status !== 'نشط') return false;
+
+    const startDate = new Date(sub.start_date);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 40;
+  };
+
+  // دالة للتعامل مع طلب الاسترداد
+  const handleRefundClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open('https://t.me/ExaadoSupport', '_blank');
+  };
+
+  const showRefundButton = isNewSubscription();
 
   return (
     <motion.li
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-[#f8fbff] rounded-lg p-3 border border-[#eff8ff] shadow-sm hover:shadow-md transition-shadow"
+      className={cn(
+        "rounded-lg p-3 border shadow-sm transition-all duration-200",
+        "group hover:shadow-md hover:border-blue-100"
+      )}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ delay: 0.5 + index * 0.1 }}
     >
-      <div className="flex justify-between items-start gap-3">
-        <div className="flex-1">
-          <h3 className="font-medium text-[#1a202c] text-sm mb-1">
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-gray-800 text-xs line-clamp-1 mb-0.5 group-hover:text-blue-700">
             {sub.name}
           </h3>
-          <p className="text-gray-600 text-xs opacity-90">
-            {sub.expiry}
-          </p>
+          <p className="text-gray-500 text-[10px] line-clamp-1">{sub.expiry}</p>
         </div>
-
-        <div className="flex items-center gap-2">
+        <div>
           <span
-            className={`text-xs px-2 py-1 rounded-full ${statusColors[currentStatus].bg} ${statusColors[currentStatus].text}`}
+            className={cn(
+              "text-[10px] px-1.5 py-0.5 rounded-full transition-colors duration-200 inline-flex items-center",
+              colors.bg,
+              colors.text,
+              colors.border
+            )}
           >
             {currentStatus !== 'unknown' ? sub.status : 'غير معروف'}
           </span>
         </div>
       </div>
 
-      <div className="mt-3">
-        <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${sub.progress}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="absolute h-full bg-gradient-to-r from-[#2390f1] to-[#1a75c4] rounded-full"
-          />
-        </div>
+      <div className="mt-2">
+        <Progress
+          value={sub.progress}
+          className={cn(
+            "h-1",
+            sub.status === 'نشط' ? "bg-gray-100" : "bg-gray-50"
+          )}
+          indicatorClassName={cn(
+            sub.status === 'نشط'
+              ? "bg-gradient-to-r from-blue-400 to-blue-600"
+              : "bg-orange-300"
+          )}
+        />
       </div>
+
+      {/* زر طلب استرداد يظهر فقط إذا كان الاشتراك نشط وجديد */}
+      {showRefundButton && (
+        <div className="mt-2 flex justify-end">
+          <motion.button
+            onClick={handleRefundClick}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5 + index * 0.1 + 0.3 }}
+            className="flex items-center gap-1.5 bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-medium hover:bg-red-100 transition-colors ring-1 ring-red-200"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <RefreshCcw className="w-3 h-3" />
+            طلب استرداد
+          </motion.button>
+        </div>
+      )}
     </motion.li>
   );
 };
 
-/**
- * رسالة تُعرض عند عدم وجود اشتراكات نشطة.
- */
 const NoSubscriptionsMessage = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="text-center py-4"
-  >
-    <div className="inline-block bg-[#eff8ff] p-3 rounded-full mb-3 shadow-sm">
-      <FiStar className="text-2xl text-[#2390f1]" />
+  <div className="text-center py-4">
+    <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-50 rounded-full mb-2 shadow-sm">
+      <Star className="w-4 h-4 text-blue-500" />
     </div>
-    <p className="text-gray-600 text-sm">
-      لا توجد اشتراكات نشطة حالياً
+    <p className="text-gray-600 text-xs">لا توجد اشتراكات نشطة حالياً</p>
+    <p className="text-gray-400 text-[10px] mt-1">
+      يمكنك الاشتراك في أحد باقاتنا للوصول إلى المحتوى المميز
     </p>
-  </motion.div>
+  </div>
 );

@@ -1,19 +1,18 @@
-'use client'
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { FiClock, FiUser } from 'react-icons/fi';
-import { useMemo } from 'react';
-import { FiFileText } from 'react-icons/fi';
+import { Clock, User, FileText, Award } from 'lucide-react';
+import { cn } from '@/lib/utils'; // تأكد من وجود الدالة أو استبدلها بتجميع السلاسل العادية
 
 /**
  * دالة مساعدة للتحقق من صلاحية رابط الصورة.
- * إذا كان الرابط صحيحاً يبدأ بـ "https://"، يتم إرجاعه، وإلا يتم إرجاع الصورة الافتراضية.
+ * إذا كان الرابط صحيحاً يبدأ بـ "https://"، يتم إرجاعه،
+ * وإلا يتم إرجاع الصورة الافتراضية ('/logo-288.png').
  */
-export function getValidPhotoUrl(url: string | null, defaultAvatar: string): string {
+export function getValidPhotoUrl(url: string | null, defaultAvatar: string = '/logo-288.png'): string {
   if (!url) return defaultAvatar;
   try {
     if (url.startsWith('https://')) {
-      new URL(url); // التحقق من صحة الرابط
+      new URL(url);
       return url;
     }
   } catch (error) {
@@ -30,8 +29,6 @@ interface ProfileHeaderProps {
   onPaymentHistoryClick?: () => void;
 }
 
-const DEFAULT_AVATAR = '/logo-288.png';
-
 // إعدادات تنسيق التاريخ لعرض تاريخ الانضمام
 const DATE_OPTIONS: Intl.DateTimeFormatOptions = {
   year: 'numeric',
@@ -44,10 +41,9 @@ export default function ProfileHeader({
   username = 'بدون معرف',
   profilePhoto,
   joinDate,
-  onPaymentHistoryClick
+  onPaymentHistoryClick,
 }: ProfileHeaderProps) {
-
-  // استخدام useMemo لتنسيق التاريخ لتقليل الحسابات غير الضرورية
+  // تنسيق التاريخ باستخدام useMemo لتقليل العمليات الحسابية
   const formattedJoinDate = useMemo(() => {
     if (!joinDate) return 'غير معروف';
     try {
@@ -58,83 +54,87 @@ export default function ProfileHeader({
     }
   }, [joinDate]);
 
-  // استخدام الدالة المساعدة للتحقق من صلاحية رابط الصورة
-  const avatarSrc = useMemo(() => getValidPhotoUrl(profilePhoto ?? null, DEFAULT_AVATAR), [profilePhoto]);
+  // التحقق من صلاحية رابط الصورة واستخدام الصورة الافتراضية '/logo-288.png' في حال عدم صحتها
+  const avatarSrc = useMemo(
+    () => getValidPhotoUrl(profilePhoto ?? null, '/logo-288.png'),
+    [profilePhoto]
+  );
 
   return (
-    <motion.div
-  className="w-full bg-gradient-to-b from-blue-600 to-blue-400 pt-8 pb-6 md:pt-12 md:pb-10"
-  initial={{ opacity: 0, y: -20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{
-    duration: 0.4,
-    ease: [0.4, 0, 0.2, 1],
-    delay: 0.2 // تأخير ظهور الهيدر
-  }}
->
-    <motion.button
-  onClick={onPaymentHistoryClick}
-  className="absolute top-4 left-4 p-2 hover:bg-white/10 rounded-lg transition-colors group" // تغيير end-4 إلى left-4
-  title="سجلات الدفعات"
-  initial={{ opacity: 0, x: -20 }} // تغيير x من 20 إلى -20 للحركة من اليسار
-  animate={{ opacity: 1, x: 0 }}
-  transition={{ delay: 0.3 }}
->
-  <FiFileText className="w-5 h-5 text-white group-hover:text-blue-100" />
-</motion.button>
+    <div className="w-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-b-3xl shadow-md overflow-hidden relative">
+      {/* خلفية تدرجية رمزية */}
+      <div className="h-16 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSIxMDAiPgo8cmVjdCB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDAwMCI+PC9yZWN0Pgo8cGF0aCBkPSJNMjggNjZMMCA1MEwwIDMzTDI4IDE3TDU2IDMzTDU2IDUwTDI4IDY2TDI4IDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+CjxwYXRoIGQ9Ik0yOCAwTDI4IDM0TDAgNTBMMCA2M0wyOCA3OUw1NiA2M0w1NiA1MEwyOCAzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-15" />
 
-      <div className="container mx-auto px-4 flex flex-col items-center space-y-4">
-        {/* صورة الملف الشخصي مع تحسينات الاستجابة */}
-        <motion.div
-          className="relative group ring-4 ring-white/20 ring-offset-2 ring-offset-blue-100 rounded-full"
-          whileHover={{ scale: 1.03 }}
-          transition={{ type: 'spring', stiffness: 300 }}
-        >
-          <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative">
-            <Image
-              src={avatarSrc}
-              alt={`صورة ${fullName}`}
-              width={128}
-              height={128}
-              className="object-cover w-full h-full"
-              loading="eager"
-              priority
-              onError={(e) => {
-                e.currentTarget.src = DEFAULT_AVATAR;
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-blue-800/20 backdrop-blur-[2px]" />
-          </div>
-        </motion.div>
-
-        {/* معلومات المستخدم مع تحسينات الطباعة */}
-        <motion.div
-          className="text-center space-y-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+      {/* زر سجل الدفعات (إن وُجد) */}
+      {onPaymentHistoryClick && (
+        <motion.button
+          onClick={onPaymentHistoryClick}
+          className="absolute top-4 left-4 p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md transition-all hover:bg-white/20 active:scale-95"
+          title="سجلات الدفعات"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
+          aria-label="عرض سجل الدفعات"
         >
-          <h1 className="text-xl md:text-2xl font-bold text-white drop-shadow-md leading-tight">
+          <FileText className="w-5 h-5 text-white" />
+        </motion.button>
+      )}
+
+      {/* أيقونة الجوائز (الإنجازات) */}
+      <motion.div
+        className="absolute top-4 right-4 p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md"
+        title="الإنجازات"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Award className="w-5 h-5 text-white" />
+      </motion.div>
+
+      <div className="px-4 pb-6 -mt-8">
+        {/* صورة الملف الشخصي */}
+        <div className="relative flex justify-center">
+          <div className="relative">
+            <div className={cn(
+              "w-20 h-20 rounded-full",
+              "border-4 border-white shadow-lg overflow-hidden",
+              "bg-white"
+            )}>
+              <img
+                src={avatarSrc}
+                alt={`صورة ${fullName}`}
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo-288.png';
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* معلومات المستخدم */}
+        <div className="mt-3 text-center space-y-2">
+          <h1 className="text-lg font-bold text-white text-shadow-sm">
             {fullName}
           </h1>
-
-          <div className="flex flex-col items-center text-sm md:text-base">
-            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-              <FiUser className="text-white/80 shrink-0" />
-              <span className="text-white/90 truncate max-w-[160px] md:max-w-[240px]">
+          <div className="flex flex-col items-center gap-2 text-sm">
+            <div className="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full">
+              <User className="w-3.5 h-3.5 text-blue-100" />
+              <span className="text-white/90 truncate max-w-[180px] text-xs">
                 @{username}
               </span>
             </div>
-
             {joinDate && (
-              <div className="flex items-center gap-2 text-white/80 mt-2">
-                <FiClock className="shrink-0" />
-                <span className="text-sm">عضو منذ {formattedJoinDate}</span>
+              <div className="flex items-center gap-1 text-white/80">
+                <Clock className="w-3 h-3" />
+                <span className="text-xs">
+                  عضو منذ {formattedJoinDate}
+                </span>
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

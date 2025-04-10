@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiClock } from 'react-icons/fi'
 
-
 import type { SubscriptionPlan } from '@/typesPlan'
 import { useTelegram } from '../context/TelegramContext'
 
@@ -15,18 +14,17 @@ import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
 import { PaymentButtons } from '../components/SubscriptionModal/PaymentButtons'
 import { PlanFeaturesList } from '../components/SubscriptionModal/PlanFeaturesList'
 import { useSubscriptionPayment } from '../components/SubscriptionModal/useSubscriptionPayment'
+import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { telegramId } = useTelegram()
   const queryClient = useQueryClient()
 
-
   function handlePaymentSuccess() {
-  queryClient.invalidateQueries({
-    queryKey: ['subscriptions', telegramId || '']
-  })
-}
-
+    queryClient.invalidateQueries({
+      queryKey: ['subscriptions', telegramId || '']
+    })
+  }
 
   const {
     paymentStatus,
@@ -35,12 +33,16 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     setExchangeDetails,
     isInitializing,
     handleUsdtPaymentChoice,
-    handleStarsPayment
+    handleStarsPayment,
+    resetPaymentStatus
   } = useSubscriptionPayment(plan, handlePaymentSuccess)
 
   const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'choose' | null>(null)
 
-
+  const handleSuccessModalClose = () => {
+    resetPaymentStatus()
+    onClose()
+  }
 
   return (
     <>
@@ -50,6 +52,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         </div>
       )}
       <motion.div
+        dir="rtl"
         className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-2 sm:p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -57,7 +60,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         onClick={onClose}
       >
         <motion.div
-          className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-400" // إضافة حدود ناعمة
+          className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-400"
           initial={{ y: '100%', scale: 0.95 }}
           animate={{ y: 0, scale: 1 }}
           exit={{ y: '100%', scale: 0.95 }}
@@ -65,13 +68,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col max-h-[100vh]">
-            {/* Header معدل */}
+            {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 flex justify-between items-center z-10 shadow-sm">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-semibold text-white truncate">{plan?.name}</h2>
               </div>
               <div className="flex items-center gap-1">
-
                 <button
                   onClick={onClose}
                   className="text-white/90 hover:text-white transition-colors p-1"
@@ -82,12 +84,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
               </div>
             </div>
 
-            {/* Content معدل */}
+            {/* Content */}
             <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
-              {/* بطاقة السعر المعدلة */}
+              {/* بطاقة السعر */}
               <div className="flex items-center justify-between bg-blue-50/50 rounded-xl p-4 border border-blue-100">
                 <div className="flex items-center gap-2 text-blue-600">
-
                   <span className="font-semibold">{plan?.selectedOption.price} </span>
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
@@ -96,29 +97,21 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 </div>
               </div>
 
-              {/* قائمة الميزات مع تحسين التمرير */}
+              {/* قائمة الميزات */}
               <div className="max-h-[300px] overflow-y-auto pr-2 pb-9">
                 <PlanFeaturesList features={plan?.features} />
               </div>
             </div>
 
-            {/* Payment Section المعدل */}
+            {/* Payment Section */}
             <div className="sticky bottom-11 bg-white border-t p-7 sm:p-6 space-y-7">
               <PaymentButtons
-                loading={loading || paymentStatus === 'processing'}
+                loading={loading}
                 paymentStatus={paymentStatus}
                 onUsdtSelect={() => setUsdtPaymentMethod('choose')}
                 onStarsSelect={handleStarsPayment}
                 telegramId={telegramId || undefined}
               />
-              {paymentStatus === 'processing' && (
-                <div className="mt-3 text-center text-sm" aria-live="polite">
-                  <div className="flex items-center justify-center gap-2">
-                    <Spinner className="w-4 h-4 text-blue-600" />
-                    <p className="text-blue-600 font-medium">جارٍ المعالجة... الرجاء الانتظار</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </motion.div>
@@ -150,6 +143,13 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             onClose={() => setExchangeDetails(null)}
             onSuccess={handlePaymentSuccess}
           />
+        )}
+      </AnimatePresence>
+
+      {/* مودال نجاح الدفع */}
+      <AnimatePresence>
+        {paymentStatus === 'success' && (
+          <PaymentSuccessModal onClose={handleSuccessModalClose} />
         )}
       </AnimatePresence>
     </>

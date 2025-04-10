@@ -1,4 +1,3 @@
-// hooks/useNotificationsSocket.ts
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -85,7 +84,9 @@ export function useNotificationsSocket(
         // Send queued messages
         while (messageQueueRef.current.length > 0) {
           const msg = messageQueueRef.current.shift();
-          socket.send(JSON.stringify(msg));
+          if (msg) {
+            socket.send(JSON.stringify(msg));
+          }
         }
       };
 
@@ -103,11 +104,93 @@ export function useNotificationsSocket(
           // Handle other messages
           onMessage(data);
 
-          // Invalidate queries based on message type
-          if (data.type === 'new_notification' || data.type === 'notification_read') {
-            queryClient.invalidateQueries({
-              queryKey: ['notifications', telegramId]
+          // معالجة خاصة لكل نوع من الرسائل
+          if (data.type === 'new_notification') {
+            const newNotification = data.data as any;
+
+            // تحديث عداد الإشعارات غير المقروءة
+            queryClient.setQueryData(
+              ['unreadNotificationsCount', telegramId],
+              (oldCount: number) => (oldCount || 0) + 1
+            );
+
+            // إضافة الإشعار الجديد إلى كلا النوعين من القوائم (الكل وغير المقروءة)
+            ['all', 'unread'].forEach(filterType => {
+              queryClient.setQueryData(
+                ['notifications', telegramId, filterType],
+                (oldData: any) => {
+                  if (!oldData || !oldData.pages || !oldData.pages[0]) return oldData;
+
+                  // إنشاء نسخة جديدة من الصفحات مع الإشعار الجديد في المقدمة
+                  const updatedPages = [...oldData.pages];
+
+                  if (updatedPages[0] && Array.isArray(updatedPages[0])) {
+                    // إضافة الإشعار الجديد في بداية المصفوفة
+                    updatedPages[0] = [newNotification, ...updatedPages[0]];
+
+                    // اختياري: لا تدع القائمة تزيد عن 10 عناصر في الصفحة الأولى
+                    if (updatedPages[0].length > 10) {
+                      updatedPages[0] = updatedPages[0].slice(0, 10);
+                    }
+                  }
+
+                  return {
+                    ...oldData,
+                    pages: updatedPages
+                  };
+                }
+              );
             });
+          }
+          else if (data.type === 'notification_read') {
+            // تحديث حالة قراءة الإشعار
+            const readNotificationId = (data.data as any)?.notification_id;
+
+            if (readNotificationId) {
+              // تحديث حالة القراءة في قائمة 'الكل'
+              queryClient.setQueryData(
+                ['notifications', telegramId, 'all'],
+                (oldData: any) => {
+                  if (!oldData) return oldData;
+
+                  return {
+                    ...oldData,
+                    pages: oldData.pages.map((page: any[]) =>
+                      page.map(notification =>
+                        notification.id === readNotificationId
+                          ? { ...notification, read_status: true }
+                          : notification
+                      )
+                    )
+                  };
+                }
+              );
+
+              // إزالة الإشعار من قائمة 'غير المقروءة'
+              queryClient.setQueryData(
+                ['notifications', telegramId, 'unread'],
+                (oldData: any) => {
+                  if (!oldData) return oldData;
+
+                  return {
+                    ...oldData,
+                    pages: oldData.pages.map((page: any[]) =>
+                      page.filter(notification => notification.id !== readNotificationId)
+                    ).filter(page => page.length > 0)
+                  };
+                }
+              );
+            }
+          }
+          else if (data.type === 'unread_update') {
+            // تحديث عدد الإشعارات غير المقروءة
+            const unreadData = data.data as { count?: number };
+            if (unreadData?.count !== undefined) {
+              queryClient.setQueryData(
+                ['unreadNotificationsCount', telegramId],
+                unreadData.count
+              );
+            }
           }
 
         } catch (error) {

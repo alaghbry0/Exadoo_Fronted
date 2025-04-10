@@ -1,8 +1,9 @@
 // pages/notifications.tsx
 'use client'
-import { useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/router'
+import { useSearchParams } from 'next/navigation'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Bell, RefreshCw } from 'lucide-react'
@@ -29,6 +30,9 @@ export default function NotificationsPage() {
   const { setUnreadCount } = useNotificationsContext()
   const queryClient = useQueryClient()
 
+  // إضافة حالة لتتبع الإشعارات الجديدة (IDs)
+  const [newNotificationIds, setNewNotificationIds] = useState<number[]>([])
+
   // جلب الإشعارات باستخدام الـ hook المخصص
   const {
     data,
@@ -40,17 +44,31 @@ export default function NotificationsPage() {
     refetch,
   } = useNotifications(telegramId, filter)
 
-  // التعامل مع رسائل الويب سوكيت
-  const handleSocketMessage = useCallback((message: { type: string; data?: unknown }) => {
-    if (message.type === 'unread_update') {
-      const data = message.data as { count?: number };
-      if (data?.count !== undefined) {
-        setUnreadCount(data.count)
+  // التعامل مع رسائل WebSocket وتحديث الإشعارات
+  const handleSocketMessage = useCallback(
+    (message: { type: string; data?: unknown }) => {
+      if (message.type === 'unread_update') {
+        const data = message.data as { count?: number }
+        if (data?.count !== undefined) {
+          setUnreadCount(data.count)
+        }
+      } else if (message.type === 'new_notification' && message.data) {
+        // التحديث القديم: إعادة استعلام الإشعارات
+        queryClient.invalidateQueries({ queryKey: ['notifications', telegramId, filter] })
+
+        // التعديل الجديد: إضافة التأشير للإشعار الجديد
+        const newNotification = message.data as { id: number }
+        if (newNotification.id) {
+          setNewNotificationIds(prev => [...prev, newNotification.id])
+          // إزالة التأشير بعد 5 ثواني
+          setTimeout(() => {
+            setNewNotificationIds(prev => prev.filter(id => id !== newNotification.id))
+          }, 5000)
+        }
       }
-    } else if (message.type === 'new_notification') {
-      queryClient.invalidateQueries({ queryKey: ['notifications', telegramId, filter] })
-    }
-  }, [setUnreadCount, queryClient, telegramId, filter])
+    },
+    [setUnreadCount, queryClient, telegramId, filter]
+  )
 
   // الاتصال بالويب سوكيت
   const { isConnected, markAllAsRead } = useNotificationsSocket(telegramId, handleSocketMessage)
@@ -68,7 +86,7 @@ export default function NotificationsPage() {
     enabled: !!telegramId
   })
 
-  // تعليم كل الإشعارات كمقروءة عند الدخول للصفحة (في حال كان الويب سوكيت متصل)
+  // تعليم جميع الإشعارات كمقروءة عند دخول الصفحة (في حال كان الويب سوكيت متصل)
   useEffect(() => {
     if (telegramId && isConnected) {
       markAllAsRead()
@@ -83,11 +101,9 @@ export default function NotificationsPage() {
   // تجميع جميع الإشعارات في مصفوفة واحدة
   const notifications = data?.pages.flat() || []
 
-
   const handleGoBack = () => {
-      router.back();
-  };
-
+  router.push('/')
+}
   // حالة التحميل الأولية
   if (isLoading && notifications.length === 0) {
     return (
@@ -155,7 +171,7 @@ export default function NotificationsPage() {
       </motion.div>
 
       {/* مكون التصفية */}
-      <NotificationFilter 
+      <NotificationFilter
         currentFilter={filter}
         unreadCount={unreadCountData || 0}
         onMarkAllAsRead={markAllAsRead}
@@ -180,44 +196,8 @@ export default function NotificationsPage() {
         </motion.div>
       )}
 
-      {/* عرض قائمة الإشعارات بنظام Infinite Scroll */}
-      <InfiniteScroll
-        dataLength={notifications.length}
-        next={fetchNextPage}
-        hasMore={!!hasNextPage}
-        loader={
-          <div className="flex items-center justify-center py-6">
-            <Spinner />
-            <span className="mr-3 text-gray-600 font-medium">جارٍ التحميل...</span>
-          </div>
-        }
-        endMessage={
-          notifications.length > 0 ? (
-            <p className="text-center my-6 py-3 text-gray-500 bg-gray-100 rounded-lg">
-              لقد وصلت إلى نهاية الإشعارات
-            </p>
-          ) : null
-        }
-        refreshFunction={handleRefresh}
-        pullDownToRefresh
-        pullDownToRefreshThreshold={50}
-        pullDownToRefreshContent={
-          <div className="text-center py-4 text-gray-500 flex items-center justify-center">
-            <RefreshCw size={24} className="animate-bounce mr-2" />
-            اسحب للأسفل للتحديث
-          </div>
-        }
-        releaseToRefreshContent={
-          <div className="text-center py-4 text-blue-600 font-medium flex items-center justify-center">
-            <motion.div animate={{ rotate: 180 }} transition={{ duration: 0.3 }}>
-              <RefreshCw size={24} className="mr-2" />
-            </motion.div>
-            حرر للتحديث
-          </div>
-        }
-        scrollableTarget="scrollableDiv"
-        className="pb-20"
-      >
+      {/* قائمة الإشعارات */}
+      {notifications.length > 0 && (
         <div className="space-y-4">
           <AnimatePresence>
             {notifications.map((notification) => (
@@ -225,27 +205,63 @@ export default function NotificationsPage() {
                 key={notification.id}
                 layout
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  // إضافة وميض للإشعارات الجديدة عند ظهورها
+                  backgroundColor: newNotificationIds.includes(notification.id)
+                    ? ['#ffffff', '#f0f9ff', '#ffffff']
+                    : undefined
+                }}
+                transition={{
+                  duration: 0.3,
+                  backgroundColor: { repeat: 3, duration: 1 }
+                }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
+                className={`${newNotificationIds.includes(notification.id) ? 'ring-2 ring-blue-400' : ''}`}
               >
                 <NotificationItem
                   key={notification.id}
                   notification={notification}
                   onMarkAsRead={async () => await markAllAsRead()}
+                  isNew={newNotificationIds.includes(notification.id)}
                 />
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
-      </InfiniteScroll>
+      )}
 
-      {/* مؤشر تحميل المزيد في حال كان هناك صفحات إضافية */}
-      {isFetchingNextPage && (
-        <div className="flex justify-center my-4">
-          <Spinner />
+      {/* زر تحميل المزيد */}
+      {hasNextPage && notifications.length > 0 && !isFetchingNextPage && (
+        <div className="flex justify-center my-6">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={fetchNextPage}
+            className="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-5 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+          >
+            <RefreshCw size={16} />
+            تحميل المزيد
+          </motion.button>
         </div>
       )}
+
+      {/* مؤشر تحميل المزيد */}
+      {isFetchingNextPage && (
+        <div className="flex justify-center my-6">
+          <Spinner />
+          <span className="mr-2 text-gray-600">جارٍ التحميل...</span>
+        </div>
+      )}
+
+      {/* رسالة نهاية القائمة */}
+      {!hasNextPage && notifications.length > 0 && (
+        <div className="text-center my-6 pb-4 text-gray-500 bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+          لقد وصلت إلى نهاية الإشعارات
+        </div>
+      )}
+
     </div>
   )
 }

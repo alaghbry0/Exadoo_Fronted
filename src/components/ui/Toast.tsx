@@ -4,14 +4,16 @@ import { toast, Toaster } from 'react-hot-toast'
 import type { Toast } from 'react-hot-toast'
 import { FiCheckCircle, FiAlertTriangle, FiX, FiExternalLink } from 'react-icons/fi'
 
-/* تعريف نوع Toast المخصص مع خاصية action إن وجدت */
+/* تعريف نوع Toast المخصص مع دعم onClick والإجراء (action) */
 type CustomToastType = Toast & {
   action?: {
     text: string
     onClick: () => void
   }
+  onClick?: () => void
 }
 
+/* مكون CustomToast يقوم بعرض جميع التوستات المُفعلة */
 export const CustomToast: React.FC = () => {
   return (
     <Toaster position="top-center">
@@ -20,8 +22,8 @@ export const CustomToast: React.FC = () => {
         // استخراج role من ariaProps إن وُجد
         const { role: ariaRole, ...restAriaProps } = ariaProps || {}
 
-        // تكوين التنسيق وفقًا لنوع الرسالة
-        const toastConfigMapping = {
+        // إعداد التنسيق بناءً على نوع التوست
+        const toastConfigMapping: Record<string, { icon: React.ReactNode; className: string }> = {
           success: {
             icon: <FiCheckCircle className="text-green-500 w-6 h-6" />,
             className: 'bg-green-50 text-green-700 border border-green-100'
@@ -39,13 +41,21 @@ export const CustomToast: React.FC = () => {
             className: 'bg-gray-50 text-gray-700 border border-gray-100'
           }
         }
-        const toastConfig =
-          (toastConfigMapping as Record<string, { icon: React.ReactNode; className: string }>)[type] ||
-          { icon: null, className: 'bg-gray-50 text-gray-700 border border-gray-100' }
+        const toastConfig = toastConfigMapping[type] || { icon: null, className: 'bg-gray-50 text-gray-700 border border-gray-100' }
 
         return (
           <div
-            className={`${toastConfig.className} flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg max-w-md`}
+            // إذا تم تمرير onClick، يتم تفعيل حدث النقر على كامل التوست
+            onClick={(e) => {
+              if (t.onClick) {
+                e.stopPropagation()
+                t.onClick()
+                toast.dismiss(t.id)
+              }
+            }}
+            className={`${toastConfig.className} flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg max-w-md ${
+              t.onClick ? 'cursor-pointer' : 'cursor-default'
+            }`}
             role={ariaRole || 'alert'}
             {...restAriaProps}
           >
@@ -79,15 +89,17 @@ export const CustomToast: React.FC = () => {
   )
 }
 
-// تعريف نوع المحتوى الخاص بالإشعارات
+/* تعريف نوع المحتوى الخاص بالتوستات المُخصصة */
 type ToastContent = {
   message: string
+  onClick?: () => void
   action?: {
     text: string
     onClick: () => void
   }
 }
 
+/* الدوال الخاصة بعرض التوست بأنواعها المختلفة */
 export const showToast = {
   success: (content: string | ToastContent) => {
     if (typeof content === 'string') {
@@ -95,7 +107,16 @@ export const showToast = {
     } else {
       toast.custom((t: CustomToastType) => (
         <div
-          className="bg-green-50 text-green-700 border border-green-100 flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg max-w-md"
+          onClick={(e) => {
+            if (content.onClick) {
+              e.stopPropagation()
+              content.onClick()
+              toast.dismiss(t.id)
+            }
+          }}
+          className={`bg-green-50 text-green-700 border border-green-100 flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg max-w-md ${
+            content.onClick ? 'cursor-pointer' : 'cursor-default'
+          }`}
           role="alert"
         >
           <FiCheckCircle className="text-green-500 w-6 h-6" />
@@ -105,8 +126,7 @@ export const showToast = {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  content.action?.onClick()
-
+                  content.action.onClick()
                   toast.dismiss(t.id)
                 }}
                 className="mt-1 inline-flex items-center gap-1 text-green-600 hover:text-green-800"
@@ -124,7 +144,7 @@ export const showToast = {
           </button>
         </div>
       ), {
-        icon: <FiCheckCircle className="text-green-500 w-6 h-6" />,
+        icon: <FiCheckCircle className="text-green-500 w-6 h-6" />
       })
     }
   },
@@ -132,7 +152,16 @@ export const showToast = {
   warning: (content: ToastContent) =>
     toast.custom((t: CustomToastType) => (
       <div
-        className="bg-yellow-50 text-yellow-700 border border-yellow-100 flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg max-w-md"
+        onClick={(e) => {
+          if (content.onClick) {
+            e.stopPropagation()
+            content.onClick()
+            toast.dismiss(t.id)
+          }
+        }}
+        className={`bg-yellow-50 text-yellow-700 border border-yellow-100 flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg max-w-md ${
+          content.onClick ? 'cursor-pointer' : 'cursor-default'
+        }`}
         role="alert"
       >
         <FiAlertTriangle className="text-yellow-500 w-6 h-6" />
@@ -142,8 +171,7 @@ export const showToast = {
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                content.action?.onClick()
-
+                content.action.onClick()
                 toast.dismiss(t.id)
               }}
               className="mt-1 inline-flex items-center gap-1 text-yellow-600 hover:text-yellow-800"
@@ -163,15 +191,17 @@ export const showToast = {
     ), { duration: 15000 })
 }
 
-// تعريف واجهة Window الموسعة
+/* توسيع واجهة Window لإضافة showToast عالميًا */
 declare global {
   interface Window {
-    showToast: typeof showToast;
+    showToast: typeof showToast
   }
 }
 
-// في نهاية الملف
+// إذا كان الكود يعمل على المتصفح، نضيف showToast لكائن window
 if (typeof window !== 'undefined') {
-  window.showToast = showToast;
-  console.log('يمكنك الآن استخدام showToast() في الكونسول');
+  window.showToast = showToast
+  console.log('يمكنك الآن استخدام showToast() في الكونسول')
 }
+
+export default CustomToast

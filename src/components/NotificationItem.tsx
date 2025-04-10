@@ -1,8 +1,8 @@
 // components/NotificationItem.tsx
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { formatDistanceToNow } from 'date-fns'
-import { ar } from 'date-fns/locale'
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { formatDistanceToNow } from 'date-fns';
+import { ar } from 'date-fns/locale';
 import {
   Calendar,
   CreditCard,
@@ -14,21 +14,21 @@ import {
   Bell,
   Check,
   ChevronRight
-} from 'lucide-react'
-import { useSwipeable } from 'react-swipeable'
-import { motion, AnimatePresence } from 'framer-motion'
-import { NotificationType } from '@/types/notification'
+} from 'lucide-react';
+import { useSwipeable } from 'react-swipeable';
+import { motion, AnimatePresence } from 'framer-motion';
+import { NotificationType } from '@/types/notification';
 
 interface NotificationItemProps {
   notification: NotificationType;
-  onMarkAsRead: (id: string) => Promise<void>;
+  onMarkAsRead: (id: number) => void;
+  isNew?: boolean; // خاصية للإشارة إلى الإشعارات الجديدة
 }
-
-
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
   onMarkAsRead,
+  isNew = false,
 }) => {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -64,27 +64,25 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     locale: ar,
   });
 
- // تعامل مع الضغط على الإشعار
-  const handleNotificationClick = async () => {
+  // التعامل مع الضغط على الإشعار
+  const handleNotificationClick = () => {
     if (notification && notification.id) {
-      router.push(`/notifications/${notification.id}`)
-
-      // تحديث حالة القراءة
+      router.push(`/notifications/${notification.id}`);
+      // تحديث حالة القراءة عند الضغط، إذا كانت غير مقروءة
       if (!notification.read_status) {
-        await onMarkAsRead(String(notification.id));
+        onMarkAsRead(notification.id);
       }
     }
-  }
-
+  };
 
   // دالة تحديد الإشعار كمقروء
-  const handleMarkAsRead = async (e: React.MouseEvent) => {
+  const handleMarkAsRead = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (notification.read_status || isMarking) return;
 
     setIsMarking(true);
     try {
-      await onMarkAsRead(String(notification.id));
+      onMarkAsRead(notification.id);
     } finally {
       setIsMarking(false);
     }
@@ -167,10 +165,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     return <span className={className}>{label}</span>;
   };
 
-  // تحديد لون الخلفية والحدود حسب حالة القراءة
+  // تحديد لون الخلفية والحدود حسب حالة القراءة وإضافة تأثير الإشعار الجديد
   const containerClasses = `rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ${
     notification.read_status ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
-  }`;
+  } ${isNew ? 'animate-pulse' : ''}`;
 
   return (
     <motion.div
@@ -183,6 +181,13 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
     >
+      {/* عرض شارة "جديد" إذا كان الإشعار جديد */}
+      {isNew && (
+        <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
+          جديد
+        </div>
+      )}
+
       {/* مؤشر السحب يُظهر تقدم حركة السحب */}
       {!notification.read_status && (
         <div className="absolute inset-0 bg-blue-100" style={{ opacity: swipeProgress / 100 }} />

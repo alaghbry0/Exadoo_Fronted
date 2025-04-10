@@ -3,13 +3,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-
 import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
 import { Button, Footer } from 'flowbite-react'
 import { HiOutlineCash, HiOutlineChartBar, HiOutlineCurrencyDollar } from 'react-icons/hi'
 import Navbar from '../components/Navbar'  // استيراد مكون الـ Navbar الجديد
-
-
 
 const Home: React.FC = () => {
   const featuresData = [
@@ -33,7 +30,7 @@ const Home: React.FC = () => {
   return (
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <div className="min-h-screen bg-white safe-area-padding pb-16 font-inter">
-        {/* استخدام المكون المستقل للـ Navbar */}
+        {/* شريط التنقل */}
         <Navbar />
 
         {/* Hero Section - تصميم مركّز مع عناصر محسّنة */}
@@ -53,6 +50,7 @@ const Home: React.FC = () => {
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
                 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight"
               >
                 <span className="block text-blue-600 mt-2">استثمر بذكاء</span>
@@ -63,9 +61,10 @@ const Home: React.FC = () => {
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
                 className="text-gray-600 mb-8 max-w-xl mx-auto text-base leading-relaxed"
               >
-                وصول فوري إلى تحليلات دقيقه للأسواق وتوصيات استثمارية مدروسة
+                وصول فوري إلى تحليلات دقيقة للأسواق وتوصيات استثمارية مدروسة
               </motion.p>
 
               {/* زر CTA في المنتصف مع تأثيرات محسنة */}
@@ -77,8 +76,7 @@ const Home: React.FC = () => {
               >
                 <Link href="/shop">
                   <Button
-                    className="bg-gradient-to-r from-[#0084ff] to-[#0066cc] text-white px-7 py-2.5 rounded-xl
-                    hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                    className="bg-gradient-to-r from-[#0084ff] to-[#0066cc] text-white px-7 py-2.5 rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5"
                   >
                     <span className="text-base font-semibold">ابدأ الآن</span>
                   </Button>
@@ -118,13 +116,15 @@ const Home: React.FC = () => {
         {/* CTA Section - تصميم مبسط بدون إشارات مجانية */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <div className="bg-gradient-to-r from-[#0084ff] to-[#0066cc] rounded-xl p-6 text-center">
+
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-8 md:p-12 text-center shadow-xl">
               <h2 className="text-xl font-bold text-white mb-3">
                 انضم إلى قنواتنا المميزة
               </h2>
               <div className="flex justify-center gap-3">
                 <Link href="/shop">
-                  <Button color="light" className="px-5 py-2.5 rounded-lg text-sm">
+                  <Button className="bg-white text-primary hover:bg-white/90 px-8 py-2 rounded-lg text-base font-semibold" size="sm">
+
                     عرض جميع الخطط
                   </Button>
                 </Link>
@@ -132,6 +132,9 @@ const Home: React.FC = () => {
             </div>
           </div>
         </section>
+
+
+
 
         {/* Footer - تصميم أنيق مع تفاصيل دقيقة */}
         <Footer className="border-t border-gray-100 bg-white">
@@ -144,13 +147,14 @@ const Home: React.FC = () => {
                 className="text-gray-500 text-sm"
               />
               <div className="flex gap-5 mt-3 md:mt-0">
-
+                {/* يمكن إضافة روابط التواصل الاجتماعي أو روابط إضافية هنا */}
               </div>
             </div>
           </div>
         </Footer>
       </div>
 
+      {/* تخصيص زر TonConnect باستخدام CSS داخلي */}
       <style jsx global>{`
         .ton-connect-button {
           background: rgba(0, 132, 255, 0.1) !important;
@@ -161,7 +165,6 @@ const Home: React.FC = () => {
           font-weight: 500 !important;
           transition: all 0.2s ease !important;
         }
-
         .ton-connect-button:hover {
           background: rgba(0, 132, 255, 0.15) !important;
           border-color: #0084ff !important;

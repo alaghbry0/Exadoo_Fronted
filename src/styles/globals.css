@@ -76,16 +76,11 @@ body {
 }
 
 /* تحسين تجربة RTL */
-[dir="rtl"] {
+/* Custom utilities for RTL support */
+.rtl {
   direction: rtl;
-  text-align: right;
 }
-[dir="rtl"] .text-left {
-  text-align: right !important;
-}
-[dir="rtl"] .text-right {
-  text-align: left !important;
-}
+
 
 /* تحسين تأثيرات الحركة */
 @keyframes progress-pulse {
@@ -126,7 +121,7 @@ body {
   }
   .gradient-border {
     background: linear-gradient(white, white),
-                linear-gradient(to right, #3B82F6, #1D4ED8);
+                linear-gradient(135deg, #2390f1 0%, #1a6dbd 100%);
     background-clip: padding-box, border-box;
     background-origin: padding-box, border-box;
     border: 2px solid transparent;
@@ -233,3 +228,4 @@ button:focus {
 a[target="_blank"] {
   @apply font-medium underline hover:text-blue-700;
 }
+

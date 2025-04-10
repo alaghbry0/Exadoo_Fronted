@@ -169,7 +169,7 @@ export default function NotificationDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Spinner className="w-12 h-12 mb-4" />
-        <p className="text-gray-600">جاري تحميل تفاصيل الإشعار...</p>
+        <p className="text-gray-600">جاري التحميل...</p>
       </div>
     );
   }
@@ -217,7 +217,7 @@ export default function NotificationDetail() {
         </Button>
 
 
-        <h1 className="text-xl md:text-2xl font-bold flex-1 text-center">تفاصيل الإشعار</h1>
+        <h1 className="text-xl md:text-2xl font-bold flex-1 text-center">التفاصيل</h1>
         <div className="w-10"></div>
       </div>
 

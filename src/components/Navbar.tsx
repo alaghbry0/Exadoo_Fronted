@@ -5,13 +5,16 @@ import Image from 'next/image';
 import { Navbar as FlowbiteNavbar } from 'flowbite-react';
 import { FiBell } from 'react-icons/fi';
 import { useNotificationsContext } from '@/context/NotificationsContext';
+import { useRouter } from 'next/router'
 
 const Navbar: React.FC = () => {
   const { unreadCount } = useNotificationsContext();
   const [displayCount, setDisplayCount] = useState(unreadCount);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
 
-  // ✅ مزامنة فورية مع تحديثات القيمة الحقيقية
+  // مزامنة فورية مع تحديثات القيمة الحقيقية
   useEffect(() => {
     if (unreadCount !== displayCount) {
       // بدء التحريك
@@ -29,8 +32,15 @@ const Navbar: React.FC = () => {
     }
   }, [unreadCount, displayCount]);
 
-  // ✅ التحقق من القيم الصحيحة
+    const goTonotificationspage = () => {
+    router.push('/notifications');
+  };
+
+  // التحقق من القيم الصحيحة
   const validatedCount = Math.max(0, Number(displayCount)) || 0;
+
+  // تنسيق عرض العدد
+  const formattedCount = validatedCount > 99 ? '99+' : validatedCount;
 
   return (
     <FlowbiteNavbar className="bg-white border-b border-gray-100 sticky top-0 z-20">
@@ -48,32 +58,57 @@ const Navbar: React.FC = () => {
             <span className="text-xl font-bold text-gray-900">Exaado</span>
           </Link>
 
-          <Link
-            href="/notifications"
-            className="relative hover:opacity-75 transition-opacity"
-            aria-label="الإشعارات"
+          <button
+            aria-label={`الإشعارات - ${validatedCount > 0 ? `${formattedCount} إشعارات غير مقروءة` : 'لا توجد إشعارات جديدة'}`}
+            className="relative group p-2 hover:bg-gray-100 rounded-full transition-all duration-200"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={goTonotificationspage}
           >
-            <FiBell className="w-6 h-6 text-gray-700" />
+
+
+            <FiBell className={`w-6 h-6 transition-colors duration-200 ${isHovered || validatedCount > 0 ? 'text-blue-600' : 'text-gray-700'}`} />
+
             {validatedCount > 0 && (
               <span className={`
-                absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center
+                absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full
+                flex items-center justify-center
+                transition-all duration-200
+                ${validatedCount > 9 ? 'min-w-6 h-6 px-1' : 'w-5 h-5'}
                 ${isAnimating ? 'animate-ping-once' : ''}
+                ${isHovered ? 'bg-red-700 transform scale-110' : 'bg-red-600'}
               `}>
-                {validatedCount > 99 ? '99+' : validatedCount}
+                {formattedCount}
               </span>
             )}
-          </Link>
+
+            {isHovered && validatedCount === 0 && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+            )}
+
+            {/* تلميح عند التحويم */}
+            <span className={`
+              absolute top-full right-0 mt-2 bg-gray-800 text-white text-xs rounded py-1 px-2
+              transition-opacity duration-200 whitespace-nowrap
+              ${isHovered ? 'opacity-100' : 'opacity-0 invisible'}
+            `}>
+              {validatedCount > 0 ? `${formattedCount} إشعارات غير مقروءة` : 'لا توجد إشعارات جديدة'}
+            </span>
+          </button>
         </div>
       </div>
 
       <style jsx global>{`
         @keyframes ping-once {
           0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.2); opacity: 0.8; }
+          50% { transform: scale(1.3); opacity: 0.8; }
           100% { transform: scale(1); opacity: 1; }
         }
         .animate-ping-once {
-          animation: ping-once 0.3s ease-out;
+          animation: ping-once 0.5s ease-out;
+        }
+        .min-w-6 {
+          min-width: 1.5rem;
         }
       `}</style>
     </FlowbiteNavbar>

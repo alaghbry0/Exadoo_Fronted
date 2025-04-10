@@ -271,6 +271,7 @@ const {
 
               return (
                 <motion.div
+                dir="rtl"
                   key={card.id}
                   className="relative"
                   initial={{ opacity: 0, y: 50 }}

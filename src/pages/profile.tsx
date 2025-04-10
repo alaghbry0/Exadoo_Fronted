@@ -46,9 +46,13 @@ export default function Profile() {
     }
   }, [data, setSubscriptions]);
 
+  const goToPaymentHistory = () => {
+    router.push('/payment-history');
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
         <Spinner />
       </div>
     );
@@ -59,13 +63,14 @@ export default function Profile() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-b from-gray-50 to-white safe-area-padding pb-24 flex items-center justify-center"
       >
-        <div className="text-center text-red-500">
-          <p className="mb-4">حدث خطأ أثناء تحميل الاشتراكات</p>
+        <div className="text-center p-6 rounded-2xl shadow-lg bg-white/90 backdrop-blur-sm border border-gray-100">
+          <h2 className="text-xl font-semibold mb-4 text-red-500">حدث خطأ</h2>
+          <p className="mb-6 text-gray-600">فشل في تحميل الاشتراكات، يرجى المحاولة مرة أخرى</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+            className="px-6 py-3 bg-app-blue-500 text-white rounded-xl hover:bg-app-blue-600 transition-colors text-sm shadow-md hover:shadow-lg active:scale-95 transition-transform"
           >
             إعادة المحاولة
           </button>
@@ -73,10 +78,6 @@ export default function Profile() {
       </motion.div>
     );
   }
-  const goToPaymentHistory = () => {
-    router.push('/payment-history');
-  };
-
 
   return (
     <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
@@ -86,11 +87,8 @@ export default function Profile() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -30 }}
-          transition={{
-            duration: 0.5,
-            ease: [0.4, 0, 0.2, 1]
-          }}
-          className="min-h-screen bg-gradient-to-b from-[#f8fbff] to-white safe-area-padding pb-24"
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          className="min-h-screen bg-gradient-to-b from-gray-50 to-white safe-area-padding pb-24"
         >
           <ProfileHeader
             fullName={fullName}
@@ -99,7 +97,6 @@ export default function Profile() {
             joinDate={null}
             onPaymentHistoryClick={goToPaymentHistory}
           />
-
           <SubscriptionsSection subscriptions={subscriptions || []} />
         </motion.div>
       </AnimatePresence>

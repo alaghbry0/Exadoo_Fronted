@@ -34,6 +34,7 @@ module.exports = {
       },
       // 🔠 إعداد الخطوط
       fontFamily: {
+      arabic: ['Tajawal', 'sans-serif'],
         sans: ['"Inter"', 'sans-serif'],
         serif: ['"Merriweather"', 'serif'],
       },

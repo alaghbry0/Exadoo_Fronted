@@ -8,6 +8,7 @@ import { useTelegram } from './TelegramContext';
 interface Notification {
   id: number;
   read_status: boolean;
+  // يمكن إضافة المزيد من الخصائص هنا
 }
 
 interface NotificationPage {
@@ -21,7 +22,7 @@ interface NotificationPage {
 interface NotificationsContextProps {
   unreadCount: number;
   setUnreadCount: (count: number) => void;
-  markAsRead: (notificationId: number) => void;
+  markAsRead: (notificationId: number | string) => void;
   invalidateNotifications: () => void;
   markAllAsRead: () => Promise<void>;
 }
@@ -68,9 +69,10 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const markAsRead = useCallback((notificationId: number | string) => {
     if (!telegramId) return;
 
-    const idString = notificationId.toString();
+    // تخفيض عداد الإشعارات غير المقروءة
     setUnreadCount(prev => Math.max(0, prev - 1));
 
+    // تحديث بيانات الإشعارات في الكاش الخاص بالـ "all"
     queryClient.setQueryData(
       ['notifications', telegramId, 'all'],
       (oldData: InfiniteData<NotificationPage> | undefined) => {
@@ -79,30 +81,34 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
           ...oldData,
           pages: oldData.pages.map(page => ({
             ...page,
-            notifications: page.notifications.map(notification => 
-              notification.id === notificationId ? { ...notification, read_status: true } : notification
+            notifications: page.notifications.map(notification =>
+              notification.id === notificationId
+                ? { ...notification, read_status: true }
+                : notification
             )
           }))
         };
       }
     );
 
+    // تحديث بيانات الإشعارات في الكاش الخاص بالـ "unread"
     queryClient.setQueryData(
       ['notifications', telegramId, 'unread'],
       (oldData: InfiniteData<NotificationPage> | undefined) => {
         if (!oldData) return oldData;
         return {
           ...oldData,
-          pages: oldData.pages.map(page => ({
-            ...page,
-            notifications: page.notifications.filter(notification => 
-              notification.id !== notificationId
-            )
-          })).filter(page => page.notifications.length > 0)
+          pages: oldData.pages
+            .map(page => ({
+              ...page,
+              notifications: page.notifications.filter(notification => notification.id !== notificationId)
+            }))
+            .filter(page => page.notifications.length > 0)
         };
       }
     );
 
+    // تحديث قيمة الكاش المحلي للعداد
     const cachedCountData = localStorage.getItem(`unreadCount_${telegramId}`);
     if (cachedCountData) {
       const { timestamp } = JSON.parse(cachedCountData);
@@ -112,12 +118,14 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
       );
     }
 
+    // إرسال الطلب لخادم الخلفية لتحديث حالة الإشعار
     axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${idString}/mark-read`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/notifications/${notificationId}/mark-read`,
       null,
       { params: { telegram_id: telegramId } }
     ).catch(error => {
       console.error('Failed to mark notification as read:', error);
+      // في حال فشل الطلب يرجع العداد لحالته السابقة
       setUnreadCount(prev => prev + 1);
     });
   }, [telegramId, unreadCount, queryClient]);
