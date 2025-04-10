@@ -89,6 +89,21 @@ export const CustomToast: React.FC = () => {
   )
 }
 
+/* تعريف أنواع التوست المطلوبة */
+export type ToastActionElement = React.ReactElement<{
+  onClick: () => void
+  children: React.ReactNode
+}>
+
+export type ToastProps = {
+  id: string
+  title?: React.ReactNode
+  description?: React.ReactNode
+  action?: ToastActionElement
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
 /* تعريف نوع المحتوى الخاص بالتوستات المُخصصة */
 type ToastContent = {
   message: string
@@ -126,7 +141,7 @@ export const showToast = {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  content.action.onClick()
+                  content.action?.onClick()
                   toast.dismiss(t.id)
                 }}
                 className="mt-1 inline-flex items-center gap-1 text-green-600 hover:text-green-800"
@@ -171,7 +186,7 @@ export const showToast = {
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                content.action.onClick()
+                content.action?.onClick()
                 toast.dismiss(t.id)
               }}
               className="mt-1 inline-flex items-center gap-1 text-yellow-600 hover:text-yellow-800"

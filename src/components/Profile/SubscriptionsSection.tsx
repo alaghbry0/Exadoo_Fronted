@@ -120,7 +120,7 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
 
       <div className="mt-2">
         <Progress
-          value={sub.progress}
+          value={sub.progress || 0}
           className={cn(
             "h-1",
             sub.status === 'نشط' ? "bg-gray-100" : "bg-gray-50"

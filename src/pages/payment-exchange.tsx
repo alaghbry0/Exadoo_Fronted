@@ -27,7 +27,11 @@ const PaymentExchange = () => {
     )
   }
 
-  return <ExchangePaymentModal details={details} onClose={() => window.close()} />
+  return <ExchangePaymentModal 
+    details={details} 
+    onClose={() => window.close()}
+    paymentStatus="pending"
+  />
 }
 
 export default PaymentExchange

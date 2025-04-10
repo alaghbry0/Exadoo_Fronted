@@ -142,6 +142,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             details={exchangeDetails}
             onClose={() => setExchangeDetails(null)}
             onSuccess={handlePaymentSuccess}
+            paymentStatus={paymentStatus}
           />
         )}
       </AnimatePresence>

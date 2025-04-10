@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { useSearchParams } from 'next/navigation'
-import InfiniteScroll from 'react-infinite-scroll-component'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Bell, RefreshCw } from 'lucide-react'
 import { Spinner } from '@/components/Spinner'
@@ -92,11 +91,6 @@ export default function NotificationsPage() {
       markAllAsRead()
     }
   }, [telegramId, isConnected, markAllAsRead])
-
-  // دالة التحديث عند السحب للأسفل
-  const handleRefresh = useCallback(() => {
-    refetch()
-  }, [refetch])
 
   // تجميع جميع الإشعارات في مصفوفة واحدة
   const notifications = data?.pages.flat() || []
@@ -238,7 +232,7 @@ export default function NotificationsPage() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={fetchNextPage}
+            onClick={() => fetchNextPage()}
             className="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 px-5 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2"
           >
             <RefreshCw size={16} />

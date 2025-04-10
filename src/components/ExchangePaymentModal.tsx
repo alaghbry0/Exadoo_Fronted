@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiCopy, FiX, FiClock, FiAlertTriangle, FiCheck } from 'react-icons/fi'
 import { QrCode } from 'lucide-react'
 import QRCode from 'react-qr-code'
-import Image from 'next/image'
 import { PaymentStatus } from '@/types/payment'
 import { useToast } from '@/hooks/use-toast'
 
@@ -14,6 +13,7 @@ interface ExchangeDetails {
   network: string
   paymentToken: string
   planName?: string
+  orderId?: string
 }
 
 interface ExchangePaymentModalProps {
@@ -46,8 +46,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     if (paymentStatus === 'success' && onSuccess) {
       toast({
         title: 'تم الدفع بنجاح!',
-        description: 'تم تجديد اشتراكك بنجاح',
-        variant: 'default',
+        description: 'تم تجديد اشتراكك بنجاح'
       })
       onSuccess()
     }
@@ -64,8 +63,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     setCopied(type);
     toast({
       title: "تم النسخ",
-      description: `تم نسخ ${type === 'address' ? 'العنوان' : 'المذكرة'} بنجاح`,
-      variant: "default",
+      description: `تم نسخ ${type === 'address' ? 'العنوان' : 'المذكرة'} بنجاح`
     });
     setTimeout(() => setCopied(null), 2000);
   };

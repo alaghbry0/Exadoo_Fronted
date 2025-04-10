@@ -69,10 +69,17 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
     console.log("isTelegramAppRef.current:", isTelegramAppRef.current);
 
+    const tg = window.Telegram?.WebApp;
+    if (!tg) {
+      console.log("Telegram WebApp not available");
+      retryInitDataFetch();
+      return;
+    }
+
     tg.ready();
     tg.expand();
 
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    if (tg?.initDataUnsafe?.user) {
       const user = tg.initDataUnsafe.user;
       const userData = {
         telegramId: user.id?.toString() || null,

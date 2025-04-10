@@ -2,7 +2,6 @@
 'use client'
 import { motion } from 'framer-motion'
 import { Spinner } from '@/components/Spinner'
-import {  FiStar } from 'react-icons/fi' // أيقونات جديدة
 import type { PaymentStatus } from '@/types/payment'
 import { Star, Wallet } from 'lucide-react';
 

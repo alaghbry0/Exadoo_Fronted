@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Clock, User, FileText, Award } from 'lucide-react';
 import { cn } from '@/lib/utils'; // تأكد من وجود الدالة أو استبدلها بتجميع السلاسل العادية
@@ -100,9 +101,11 @@ export default function ProfileHeader({
               "border-4 border-white shadow-lg overflow-hidden",
               "bg-white"
             )}>
-              <img
+              <Image
                 src={avatarSrc}
                 alt={`صورة ${fullName}`}
+                width={80}
+                height={80}
                 className="object-cover w-full h-full"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/logo-288.png';

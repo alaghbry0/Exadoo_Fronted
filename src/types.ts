@@ -19,7 +19,8 @@ export interface Subscription {
   subscriptionOptions?: string[]
   color?: string
   expiry?: string
-  progress?: string
+  start_date?: string
+  progress?: number
   status: 'نشط' | 'منتهي' | 'unknown'
 }
 

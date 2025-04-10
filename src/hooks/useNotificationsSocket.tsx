@@ -106,7 +106,7 @@ export function useNotificationsSocket(
 
           // معالجة خاصة لكل نوع من الرسائل
           if (data.type === 'new_notification') {
-            const newNotification = data.data as any;
+          const newNotification = data.data as unknown;
 
             // تحديث عداد الإشعارات غير المقروءة
             queryClient.setQueryData(
@@ -118,7 +118,7 @@ export function useNotificationsSocket(
             ['all', 'unread'].forEach(filterType => {
               queryClient.setQueryData(
                 ['notifications', telegramId, filterType],
-                (oldData: any) => {
+                (oldData: {pages: Array<Array<unknown>>}) => {
                   if (!oldData || !oldData.pages || !oldData.pages[0]) return oldData;
 
                   // إنشاء نسخة جديدة من الصفحات مع الإشعار الجديد في المقدمة
@@ -144,18 +144,21 @@ export function useNotificationsSocket(
           }
           else if (data.type === 'notification_read') {
             // تحديث حالة قراءة الإشعار
-            const readNotificationId = (data.data as any)?.notification_id;
+            interface ReadNotificationData {
+              notification_id: string;
+            }
+            const readNotificationId = (data.data as ReadNotificationData)?.notification_id;
 
             if (readNotificationId) {
               // تحديث حالة القراءة في قائمة 'الكل'
               queryClient.setQueryData(
                 ['notifications', telegramId, 'all'],
-                (oldData: any) => {
+                (oldData: {pages: Array<Array<{id: string}>>}) => {
                   if (!oldData) return oldData;
 
                   return {
                     ...oldData,
-                    pages: oldData.pages.map((page: any[]) =>
+                    pages: oldData.pages.map((page: Array<{id: string}>) =>
                       page.map(notification =>
                         notification.id === readNotificationId
                           ? { ...notification, read_status: true }
@@ -169,12 +172,12 @@ export function useNotificationsSocket(
               // إزالة الإشعار من قائمة 'غير المقروءة'
               queryClient.setQueryData(
                 ['notifications', telegramId, 'unread'],
-                (oldData: any) => {
+                (oldData: {pages: Array<Array<{id: string}>>}) => {
                   if (!oldData) return oldData;
 
                   return {
                     ...oldData,
-                    pages: oldData.pages.map((page: any[]) =>
+                    pages: oldData.pages.map((page: Array<{id: string}>) =>
                       page.filter(notification => notification.id !== readNotificationId)
                     ).filter(page => page.length > 0)
                   };
