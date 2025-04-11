@@ -225,7 +225,7 @@ export const handleTonPayment = async (
         confirmPaymentResponse.status,
         confirmPaymentResponse.statusText
       );
-      showToast.error('❌ فشل تأكيد الدفع من الخادم.');
+      showToast.error(' فشل تأكيد الدفع من الخادم.');
       setPaymentStatus('failed');
       return {};
     }
@@ -240,7 +240,7 @@ export const handleTonPayment = async (
     const finalAmount = confirmPaymentData.amount ? parseFloat(confirmPaymentData.amount) : 0;
     if (finalAmount <= 0) {
       console.error('❌ مبلغ الدفع غير صالح من الخادم.');
-      showToast.error('❌ مبلغ الدفع غير صالح.');
+      showToast.error(' مبلغ الدفع غير صالح.');
       setPaymentStatus('failed');
       return {};
     }
@@ -269,13 +269,14 @@ export const handleTonPayment = async (
 
     const transactionResponse = await tonConnectUI.sendTransaction(transaction);
     console.log('✅ تم الدفع بنجاح باستخدام USDT!');
+    showToast.error(' فشل الدفع. يرجى المحاولة مرة أخرى.');
     console.log('✅ استجابة المعاملة:', transactionResponse);
 
     setPaymentStatus('processing');
     return { payment_token: paymentToken };
   } catch (error: unknown) {
     console.error('❌ فشل الدفع:', error);
-    showToast.error('❌ فشل الدفع. يرجى المحاولة مرة أخرى.');
+    showToast.success('.تم الدفع بنجاح, سنقوم بمعالجه طلبك وتجديد اشتراك خلال دقائق');
     setPaymentStatus('failed');
     return {};
   }

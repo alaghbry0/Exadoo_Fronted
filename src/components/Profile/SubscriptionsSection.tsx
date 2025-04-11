@@ -1,7 +1,7 @@
 'use client'
 import React, { useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ChevronRight, RefreshCcw, Star } from 'lucide-react';
+import { Zap, RefreshCcw, Star } from 'lucide-react';
 import { Subscription } from '@/types';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress-custom';
@@ -12,6 +12,8 @@ type SubscriptionsSectionProps = {
   loadMore: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
+  onRefreshClick: () => void;  // إضافة دالة للتحديث
+  isRefreshing: boolean;  // إضافة حالة التحديث
 };
 
 // تعريف حالات الاشتراك مع تخصيص ألوان الخلفية والنص والحد لكل حالة
@@ -22,7 +24,14 @@ const statusColors: Record<StatusType, { bg: string; text: string; border: strin
   'unknown': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100' }
 };
 
-export default function SubscriptionsSection({ subscriptions, loadMore, hasMore, isLoadingMore }: SubscriptionsSectionProps) {
+export default function SubscriptionsSection({ 
+  subscriptions, 
+  loadMore, 
+  hasMore, 
+  isLoadingMore, 
+  onRefreshClick, 
+  isRefreshing 
+}: SubscriptionsSectionProps) {
   const observer = useRef<IntersectionObserver | null>(null);
 
   const lastSubscriptionRef = useCallback((node: HTMLDivElement) => {
@@ -38,20 +47,24 @@ export default function SubscriptionsSection({ subscriptions, loadMore, hasMore,
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
-      {/* رأس القسم مع الأيقونة والعنوان وزر عرض الكل */}
+      {/* رأس القسم مع الأيقونة والعنوان وزر التحديث */}
       <div className="flex items-center gap-3 mb-4">
         <div className="bg-blue-50 p-2 rounded-lg">
           <Zap className="w-5 h-5 text-blue-600" />
         </div>
         <h2 className="text-base font-semibold text-gray-800">الاشتراكات النشطة</h2>
         <motion.button
+          onClick={onRefreshClick}
+          disabled={isRefreshing}
           className="ml-auto text-blue-600 flex items-center text-sm font-medium"
-          whileHover={{ x: -2 }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
         >
-          عرض الكل
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </motion.button>
+          <RefreshCcw 
+            className={`w-4 h-4 ml-1 ${isRefreshing ? 'animate-spin' : ''}`} 
+          />
+          {isRefreshing ? 'جاري التحديث...' : ' تحديث البيانات'}
+        </motion.button>   
       </div>
 
       <AnimatePresence mode="popLayout">

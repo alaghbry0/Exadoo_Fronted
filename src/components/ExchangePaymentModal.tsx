@@ -1,11 +1,11 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiCopy, FiX, FiClock, FiAlertTriangle, FiCheck } from 'react-icons/fi'
+import { FiX, FiClock, FiAlertTriangle, FiCheck } from 'react-icons/fi'
 import { QrCode, CheckCircle2, Copy } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import { PaymentStatus } from '@/types/payment'
-import { useToast } from '@/hooks/use-toast'
+import toast from 'react-hot-toast'
 
 interface ExchangeDetails {
   depositAddress: string
@@ -32,7 +32,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
   const [timeLeft, setTimeLeft] = useState(1800)
   const [showAddressQR, setShowAddressQR] = useState(false)
   const [showMemoQR, setShowMemoQR] = useState(false)
-  const { toast } = useToast()
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,14 +43,10 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
 
   useEffect(() => {
     if (paymentStatus === 'success' && onSuccess) {
-      toast({
-        title: 'تم الدفع بنجاح!',
-        description: 'تم تجديد اشتراكك بنجاح',
-        variant: 'default',
-      })
+      toast.success('تم الدفع بنجاح! تم تجديد اشتراكك بنجاح')
       onSuccess()
     }
-  }, [paymentStatus, onSuccess, toast])
+  }, [paymentStatus, onSuccess])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -61,11 +57,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text)
     setCopied(type)
-    toast({
-      title: "تم النسخ",
-      description: `تم نسخ ${type === 'address' ? 'العنوان' : 'المذكرة'} بنجاح`,
-      variant: "default",
-    })
+      toast.success(`تم النسخ: تم نسخ ${type === 'address' ? 'العنوان' : 'المذكرة'} بنجاح`)
     setTimeout(() => setCopied(null), 2000)
   }
 

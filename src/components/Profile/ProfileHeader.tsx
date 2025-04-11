@@ -1,10 +1,7 @@
-
-// 2-ProfileHeader.tsx المحسن
-
 import React, { useMemo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Clock, User, FileText, Award } from 'lucide-react';
+import { Clock, User, FileText, Award, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -31,6 +28,8 @@ interface ProfileHeaderProps {
   profilePhoto?: string | null;
   joinDate?: string | null;
   onPaymentHistoryClick?: () => void;
+  onRefreshData?: () => void;
+  isRefreshing?: boolean;
 }
 
 // إعدادات تنسيق التاريخ لعرض تاريخ الانضمام
@@ -46,6 +45,8 @@ export default function ProfileHeader({
   profilePhoto,
   joinDate,
   onPaymentHistoryClick,
+  onRefreshData,
+  isRefreshing = false,
 }: ProfileHeaderProps) {
   // تنسيق التاريخ باستخدام useMemo لتقليل العمليات الحسابية
   const formattedJoinDate = useMemo(() => {
@@ -81,6 +82,31 @@ export default function ProfileHeader({
           aria-label="عرض سجل الدفعات"
         >
           <FileText className="w-6 h-6 text-white" />
+        </motion.button>
+      )}
+
+      {/* زر تحديث البيانات */}
+      {onRefreshData && (
+        <motion.button
+          onClick={onRefreshData}
+          disabled={isRefreshing}
+          className={cn(
+            "absolute top-5 right-20 p-3.5 backdrop-blur-sm rounded-full shadow-md transition-all active:scale-95 touch-manipulation",
+            isRefreshing ? "bg-white/25" : "bg-white/15 hover:bg-white/25"
+          )}
+          title="تحديث البيانات"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          aria-label="تحديث البيانات"
+          whileHover={{ scale: isRefreshing ? 1 : 1.05 }}
+        >
+          <RefreshCw 
+            className={cn(
+              "w-6 h-6 text-white",
+              isRefreshing && "animate-spin"
+            )} 
+          />
         </motion.button>
       )}
 

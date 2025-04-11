@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react'; // إضافة useState
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
@@ -10,11 +10,13 @@ import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { getUserSubscriptions } from '../services/api';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast'; // إضافة مكتبة Toast إذا كانت متاحة في مشروعك
 
 export default function Profile() {
   const { fullName, telegramUsername, photoUrl, telegramId } = useUserStore();
   const { subscriptions, setSubscriptions } = useProfileStore();
   const router = useRouter();
+  const [isRefreshing, setIsRefreshing] = useState(false); // إضافة حالة للتحديث
 
   const queryKey = ['subscriptions', telegramId?.toString() || ''];
 
@@ -54,6 +56,29 @@ export default function Profile() {
 
   const goToPaymentHistory = () => {
     router.push('/payment-history');
+  };
+
+  // إضافة وظيفة تحديث البيانات
+  const handleRefresh = async () => {
+    if (!telegramId) return;
+    
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      // إضافة إشعار بنجاح التحديث (اختياري)
+      toast?.success('تم تحديث البيانات بنجاح', {
+        
+      });
+    } catch (error) {
+      console.error('فشل تحديث البيانات:', error);
+      // إضافة إشعار بفشل التحديث (اختياري)
+      toast?.error('فشل تحديث البيانات، يرجى المحاولة مرة أخرى', {
+        duration: 3000,
+        position: 'bottom-center',
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   if (isLoading) {
@@ -108,13 +133,16 @@ export default function Profile() {
             profilePhoto={photoUrl}
             joinDate={null}
             onPaymentHistoryClick={goToPaymentHistory}
+            
           />
           <div className="px-4 pt-2">
-            <SubscriptionsSection
+          <SubscriptionsSection
               subscriptions={subscriptions || []}
               loadMore={loadMoreHandler}
               hasMore={!!hasNextPage}
               isLoadingMore={isFetchingNextPage}
+              onRefreshClick={handleRefresh}
+              isRefreshing={isRefreshing}
             />
           </div>
         </motion.div>
