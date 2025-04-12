@@ -51,6 +51,7 @@ const nextConfig: NextConfig = {
                 "https://*.render.com " +
                 "http://192.168.43.186:5000 " +
                 "https://tonapi.io " +
+                "https://vercel.live " +
                 "https://raw.githubusercontent.com " +
                 "https://bridge.tonapi.io;",
               "img-src * data:;",
