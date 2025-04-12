@@ -1,4 +1,3 @@
-// useSubscriptionPayment.ts
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useTelegramPayment } from '@/hooks/useTelegramPayment'
@@ -11,8 +10,6 @@ import { PaymentStatus } from '@/types/payment'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTariffStore } from '@/stores/zustand'
 import { showToast } from '@/components/ui/Toast'
-// استيراد دالتي registerPaymentCallback و unregisterPaymentCallback من _app.tsx
-import { registerPaymentCallback, unregisterPaymentCallback } from '@/pages/_app'
 
 interface ExchangeDetails {
   depositAddress: string
@@ -33,45 +30,45 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
   const [loading, setLoading] = useState(false)
   const [exchangeDetails, setExchangeDetails] = useState<ExchangeDetails | null>(null)
   const [isInitializing, setIsInitializing] = useState(false)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const paymentSessionRef = useRef<{
     paymentToken?: string
     planId?: string
   }>({})
 
-  // إعادة تعيين حالة الدفع
-  const resetPaymentStatus = useCallback(() => {
-    setPaymentStatus('idle')
-  }, [])
-
-  // عند نجاح الدفع: نقوم بإزالة بيانات الجلسة وتحديث الحالة
-  const handlePaymentSuccess = useCallback(() => {
-    localStorage.removeItem('paymentSession')
+  // تنظيف بيانات جلسة الدفع
+  const cleanupPaymentSession = useCallback(() => {
     localStorage.removeItem('paymentData')
     paymentSessionRef.current = {}
     setExchangeDetails(null)
-    setPaymentStatus('success') // تم تغييرها من 'idle' إلى 'success' لعرض نافذة النجاح
+  }, [])
+
+  // إعادة تعيين حالة الدفع
+  const resetPaymentStatus = useCallback(() => {
+    setPaymentStatus('idle')
+    cleanupPaymentSession()
+
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+  }, [cleanupPaymentSession])
+
+  // عند نجاح الدفع
+  const handlePaymentSuccess = useCallback(() => {
+    cleanupPaymentSession()
+    setPaymentStatus('success')
     queryClient.invalidateQueries({
       queryKey: ['subscriptions', telegramId || '']
     })
     onSuccess()
-  }, [queryClient, telegramId, onSuccess])
 
-  // تنظيف جلسات الدفع السابقة
-  const cleanupPreviousPaymentSessions = useCallback(() => {
-    // إلغاء تسجيل callback السابق إذا كان موجودًا
-    if (paymentSessionRef.current.paymentToken) {
-      unregisterPaymentCallback(paymentSessionRef.current.paymentToken)
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
     }
-    // مسح البيانات المخزنة محليًا
-    localStorage.removeItem('paymentData')
-    localStorage.removeItem('paymentSession')
-    // إعادة تعيين المرجع
-    paymentSessionRef.current = {}
-    // إعادة تعيين الحالة
-    setExchangeDetails(null)
-    setPaymentStatus('idle')
-  }, [])
+  }, [cleanupPaymentSession, queryClient, telegramId, onSuccess])
 
   // منع إغلاق الصفحة أثناء المعالجة
   useEffect(() => {
@@ -85,50 +82,65 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [paymentStatus])
 
-  // إزالة منطق SSE واستعادة الجلسة - تم تبسيطه
-  useEffect(() => {
-    const restoreSession = async () => {
-      if (plan && paymentStatus === 'idle') {
-        setIsInitializing(true)
-        try {
-          const savedData = localStorage.getItem('paymentData')
-          if (!savedData) {
-            setIsInitializing(false)
-            return
-          }
-          const { paymentToken, planId } = JSON.parse(savedData)
-          if (planId !== plan.selectedOption.id.toString()) {
-            localStorage.removeItem('paymentData')
-            setIsInitializing(false)
-            return
-          }
-          // تسجيل callback للـpaymentToken للتحديث عند استلام إشعار
-          registerPaymentCallback(paymentToken, (status) => {
-            if (status === 'success') {
-              handlePaymentSuccess()
-            } else {
-              showToast.error('فشلت عملية الدفع')
-              setPaymentStatus('failed')
-            }
-          })
-        } catch (error) {
-          console.error('فشل في استعادة الجلسة:', error)
-          showToast.error('تعذر استعادة جلسة الدفع، يرجى البدء من جديد')
-          localStorage.removeItem('paymentData')
-        } finally {
-          setIsInitializing(false)
-        }
+  // استعادة الجلسة مع التحقق من الصلاحية
+  const restoreSession = useCallback(async () => {
+    if (!plan || paymentStatus !== 'idle') return
+
+    setIsInitializing(true)
+    try {
+      const savedData = localStorage.getItem('paymentData')
+      if (!savedData) {
+        setIsInitializing(false)
+        return
       }
+
+      const { paymentToken, planId, timestamp } = JSON.parse(savedData)
+
+      // التحقق من انتهاء الصلاحية (30 دقيقة)
+      if (Date.now() - timestamp > 30 * 60 * 1000) {
+        localStorage.removeItem('paymentData')
+        setIsInitializing(false)
+        return
+      }
+
+      if (planId !== plan.selectedOption.id.toString()) {
+        localStorage.removeItem('paymentData')
+        setIsInitializing(false)
+        return
+      }
+
+      // إذا كانت حالة الدفع ناجحة من قبل
+      if (paymentToken) {
+        handlePaymentSuccess()
+      }
+    } catch (error) {
+      console.error('فشل في استعادة الجلسة:', error)
+      showToast.error('تعذر استعادة جلسة الدفع، يرجى البدء من جديد')
+      localStorage.removeItem('paymentData')
+    } finally {
+      setIsInitializing(false)
     }
-    restoreSession()
   }, [plan, paymentStatus, handlePaymentSuccess])
 
-  // إدارة عملية الدفع عبر TON – تم تعديلها لاستدعاء وظيفة التنظيف قبل بدء عملية جديدة
+  useEffect(() => {
+    restoreSession()
+  }, [restoreSession])
+
+  // معالجة نجاح الدفع
+  useEffect(() => {
+    if (paymentStatus === 'exchange_success') {
+      showToast.success('تم الدفع بنجاح!')
+      const timer = setTimeout(() => {
+        onSuccess()
+      }, 2000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [paymentStatus, onSuccess])
+
+  // عملية الدفع عبر TON
   const handleTonPaymentWrapper = async () => {
     if (!plan) return
-
-    // تنظيف جلسات الدفع السابقة
-    cleanupPreviousPaymentSessions()
 
     try {
       setLoading(true)
@@ -143,48 +155,57 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
       )
 
       if (payment_token) {
-        // تسجيل في نظام مراقبة الدفعات ثم انتظار إشعار WebSocket
-        registerPaymentCallback(payment_token, (status) => {
-          if (status === 'success') {
-            handlePaymentSuccess()
-          } else {
-            setPaymentStatus('failed')
-          }
-        })
-
-        // تخزين بيانات الجلسة في localStorage للاستعادة لاحقًا إذا لزم الأمر
-        localStorage.setItem(
-          'paymentData',
-          JSON.stringify({
-            paymentToken: payment_token,
-            planId: selectedPlanId
-          })
-        )
-
-        // تحديث الحالة إلى "processing" بدلاً من "success" – سننتظر الإشعار
-        setPaymentStatus('processing')
+        handlePaymentSuccess()
       } else {
         setPaymentStatus('failed')
       }
     } catch (error) {
       console.error('فشل الدفع:', error)
-      if (error instanceof Error) {
-        showToast.error(error.message)
-      } else {
-        showToast.error('فشلت عملية الدفع')
-      }
+      showToast.error(error instanceof Error ? error.message : 'فشلت عملية الدفع')
       setPaymentStatus('failed')
     } finally {
       setLoading(false)
     }
   }
 
-  // إدارة اختيار الدفع عبر USDT – تم تعديلها لاستدعاء وظيفة التنظيف قبل بدء العملية
+  // بدء استطلاع حالة الدفع
+  const startPollingPaymentStatus = useCallback((paymentToken: string) => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+    }
+
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/status?token=${paymentToken}`)
+        if (!response.ok) throw new Error(response.statusText)
+
+        const data = await response.json()
+        if (data.status === 'exchange_success') {
+          setPaymentStatus('exchange_success')
+          localStorage.setItem('paymentData', JSON.stringify({
+            paymentToken,
+            planId: plan?.selectedOption.id.toString(),
+            status: 'exchange_success',
+            timestamp: Date.now()
+          }))
+
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+            pollingIntervalRef.current = null
+          }
+        }
+      } catch (error) {
+        console.error('خطأ في استطلاع حالة الدفع:', error)
+      }
+    }
+
+    pollStatus()
+    pollingIntervalRef.current = setInterval(pollStatus, 3000)
+  }, [plan])
+
+  // اختيار طريقة الدفع USDT
   const handleUsdtPaymentChoice = async (method: 'wallet' | 'exchange') => {
     if (!plan) return
-
-    // تنظيف جلسات الدفع السابقة
-    cleanupPreviousPaymentSessions()
 
     try {
       setLoading(true)
@@ -197,8 +218,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-Telegram-Id': telegramId || 'unknown',
-              'Keep-Alive': 'timeout=3600'
+              'X-Telegram-Id': telegramId || 'unknown'
             },
             body: JSON.stringify({
               webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
@@ -210,7 +230,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
           })
 
           if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع')
-
           const data = await response.json()
           payment_token = data.payment_token
         }
@@ -220,42 +239,22 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
           planId: plan.selectedOption.id.toString()
         }
 
-        // تخزين معلومات الجلسة
-        localStorage.setItem(
-          'paymentData',
-          JSON.stringify({
-            paymentToken: payment_token,
-            planId: plan.selectedOption.id.toString()
-          })
-        )
+        localStorage.setItem('paymentData', JSON.stringify({
+          paymentToken: payment_token,
+          planId: plan.selectedOption.id.toString(),
+          timestamp: Date.now()
+        }))
 
-        // تسجيل callback للانتظار وتلقي إشعارات WebSocket
-        registerPaymentCallback(payment_token, (status) => {
-          if (status === 'success') {
-            handlePaymentSuccess()
-            // إذا كان هناك تفاصيل Exchange مفتوحة، نقوم بإغلاقها
-            if (exchangeDetails) {
-              setExchangeDetails(null)
-            }
-          } else {
-            setPaymentStatus('failed')
-          }
-        })
-
-        const selectedPlanPrice = plan.selectedOption.price.toString()
-        const depositAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress'
-
-        // إضافة اسم الخطة لتحسين تجربة المستخدم
         setExchangeDetails({
-          depositAddress,
-          amount: selectedPlanPrice,
+          depositAddress: useTariffStore.getState().walletAddress || '0xRecipientAddress',
+          amount: plan.selectedOption.price.toString(),
           network: 'TON Network',
           paymentToken: payment_token,
           planName: plan.name
         })
 
-        // تحديث الحالة إلى processing
         setPaymentStatus('processing')
+        startPollingPaymentStatus(payment_token)
       }
     } catch (error) {
       console.error('خطأ في عملية الدفع:', error)
@@ -266,12 +265,9 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     }
   }
 
-  // إدارة دفع Telegram Stars – تم تعديلها لاستدعاء وظيفة التنظيف قبل بدء العملية
+  // عملية الدفع عبر Telegram Stars
   const handleStarsPayment = async () => {
     if (!plan) return
-    // تنظيف جلسات الدفع السابقة
-    cleanupPreviousPaymentSessions()
-
     try {
       setLoading(true)
       const { paymentToken } = await handleTelegramStarsPayment(
@@ -280,26 +276,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
       )
 
       if (paymentToken) {
-        // تسجيل في نظام مراقبة الدفعات
-        registerPaymentCallback(paymentToken, (status) => {
-          if (status === 'success') {
-            handlePaymentSuccess()
-          } else {
-            setPaymentStatus('failed')
-          }
-        })
-
-        // تخزين معلومات الجلسة
-        localStorage.setItem(
-          'paymentData',
-          JSON.stringify({
-            paymentToken,
-            planId: plan.selectedOption.id.toString()
-          })
-        )
-
-        // تحديث الحالة إلى processing بدلاً من success – سننتظر الإشعار
-        setPaymentStatus('processing')
+        handlePaymentSuccess()
       } else {
         setPaymentStatus('failed')
       }
@@ -310,12 +287,21 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     }
   }
 
-  // إعادة تعيين حالة الدفع إذا لم تتوفر تفاصيل الدفع
+  // التأكد من صحة حالة الدفع
   useEffect(() => {
     if (!exchangeDetails && paymentStatus === 'processing') {
       setPaymentStatus('idle')
     }
   }, [exchangeDetails, paymentStatus])
+
+  // تنظيف المؤقتات عند تفكيك المكون
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+      }
+    }
+  }, [])
 
   return {
     paymentStatus,
@@ -326,6 +312,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     handleTonPaymentWrapper,
     handleUsdtPaymentChoice,
     handleStarsPayment,
-    resetPaymentStatus
+    resetPaymentStatus,
+    cleanupPaymentSession
   }
 }

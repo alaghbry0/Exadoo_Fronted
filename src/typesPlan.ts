@@ -1,6 +1,13 @@
 import React from 'react'
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'processing'
+export type NotificationType = 
+  | 'info'
+  | 'success' 
+  | 'warning'
+  | 'error'
+  | 'invite';
+
+export type PaymentStatus = 'idle' | 'processing' | 'success' | 'failed' | 'exchange_success';
 
 export interface ToastAction {
   text: string

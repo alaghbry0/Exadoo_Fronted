@@ -25,14 +25,46 @@ interface NotificationsContextProps {
   markAsRead: (notificationId: number | string) => void;
   invalidateNotifications: () => void;
   markAllAsRead: () => Promise<void>;
+  shouldConnectWS: boolean;
 }
 
 const NotificationsContext = createContext<NotificationsContextProps | undefined>(undefined);
 
+// دالة لفحص إذا كان الجهاز iOS وإصدار النظام أقل من 13
+const isOldIOSDevice = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const platform = navigator.platform || '';
+  const userAgent = navigator.userAgent || '';
+  const isiOS = /iP(hone|od|ad)/.test(platform);
+  if (!isiOS) return false;
+  const versionMatch = userAgent.match(/OS (\d+)_/);
+  if (versionMatch && versionMatch.length > 1) {
+    const version = parseInt(versionMatch[1], 10);
+    return version < 13;
+  }
+  return false;
+};
+
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [shouldConnectWS, setShouldConnectWS] = useState<boolean>(false);
   const { telegramId } = useTelegram();
   const queryClient = useQueryClient();
+
+  // آلية فحص الأجهزة القديمة لتأخير بدء الاتصال
+  useEffect(() => {
+    const checkDeviceCompatibility = async () => {
+      if (isOldIOSDevice()) {
+        // تأخير أطول للأجهزة القديمة (5 ثواني)
+        setTimeout(() => setShouldConnectWS(true), 5000);
+      } else {
+        // تأخير عادي للأجهزة الأحدث (2 ثانية)
+        setTimeout(() => setShouldConnectWS(true), 2000);
+      }
+    };
+
+    checkDeviceCompatibility();
+  }, []);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -195,13 +227,16 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   }, [telegramId, queryClient]);
 
   return (
-    <NotificationsContext.Provider value={{
-      unreadCount,
-      setUnreadCount: (count) => setUnreadCount(Math.max(0, count)),
-      markAsRead,
-      invalidateNotifications,
-      markAllAsRead
-    }}>
+    <NotificationsContext.Provider
+      value={{
+        unreadCount,
+        setUnreadCount: (count) => setUnreadCount(Math.max(0, count)),
+        markAsRead,
+        invalidateNotifications,
+        markAllAsRead,
+        shouldConnectWS
+      }}
+    >
       {children}
     </NotificationsContext.Provider>
   );

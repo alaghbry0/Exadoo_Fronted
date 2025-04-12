@@ -27,7 +27,7 @@ export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">تمت عملية الدفع بنجاح!</h2>
           <p className="text-gray-600 mb-6">
-            تم استلام المبلغ وتفعيل اشتراكك. يمكنك الآن الاستمتاع بخدماتنا.
+            تم ارسال المبلغ وجاري معالجه طلبك, سيتم تجديد اشتراكك خلال دقائق.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}

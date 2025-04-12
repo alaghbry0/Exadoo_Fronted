@@ -1,4 +1,4 @@
-// SubscriptionModal.tsx
+// تعديل SubscriptionModal.tsx
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -15,6 +15,7 @@ import { PaymentButtons } from '../components/SubscriptionModal/PaymentButtons'
 import { PlanFeaturesList } from '../components/SubscriptionModal/PlanFeaturesList'
 import { useSubscriptionPayment } from '../components/SubscriptionModal/useSubscriptionPayment'
 import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
+import { PaymentExchangeSuccess } from '../components/PaymentExchangeSuccess'
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { telegramId } = useTelegram()
@@ -40,9 +41,11 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [usdtPaymentMethod, setUsdtPaymentMethod] = useState<'choose' | null>(null)
 
   const handleSuccessModalClose = () => {
-    resetPaymentStatus()
-    onClose()
-  }
+  resetPaymentStatus();
+  onClose();
+};
+
+
 
   return (
     <>
@@ -137,20 +140,30 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       </AnimatePresence>
 
       <AnimatePresence>
-        {exchangeDetails && (
-          <ExchangePaymentModal
-            details={exchangeDetails}
-            onClose={() => setExchangeDetails(null)}
-            onSuccess={handlePaymentSuccess}
-            paymentStatus={paymentStatus}
-          />
-        )}
-      </AnimatePresence>
+  {exchangeDetails && (
+    <ExchangePaymentModal
+      details={exchangeDetails}
+      onClose={() => {
+        // إعادة تعيين حالة الدفع وتنظيف تفاصيل الدفع عند إغلاق مودال الدفع
+        resetPaymentStatus();
+        setExchangeDetails(null);
+      }}
+      onSuccess={handlePaymentSuccess}
+    />
+  )}
+</AnimatePresence>
 
       {/* مودال نجاح الدفع */}
       <AnimatePresence>
         {paymentStatus === 'success' && (
           <PaymentSuccessModal onClose={handleSuccessModalClose} />
+        )}
+      </AnimatePresence>
+
+      {/* مودال نجاح دفع Exchange */}
+      <AnimatePresence>
+        {paymentStatus === 'exchange_success' && (
+          <PaymentExchangeSuccess onClose={handleSuccessModalClose} planName={plan?.name} />
         )}
       </AnimatePresence>
     </>

@@ -354,13 +354,19 @@ export default function NotificationsPage() {
             <span className="font-semibold text-gray-700">الإشعارات غير المقروءة:</span>
           </div>
           <motion.span
-            className={`inline-flex items-center justify-center bg-${themeColors.primary}-500 text-white rounded-full px-3 py-1 text-sm font-medium`}
-            initial={{ scale: 1 }}
-            animate={{ scale: unreadCountData && unreadCountData > 0 ? [1, 1.1, 1] : 1 }}
-            transition={{ duration: 0.3, type: "spring" }}
-          >
-            {unreadCountData || 0}
-          </motion.span>
+  className={`inline-flex items-center justify-center bg-${themeColors.primary}-500 text-white rounded-full px-3 py-1 text-sm font-medium`}
+  initial={{ scale: 1 }}
+  animate={{
+    scale: unreadCountData && unreadCountData > 0 ? [1, 1.1] : 1
+  }}
+  transition={{
+    duration: 0.3,
+    repeat: unreadCountData && unreadCountData > 0 ? Infinity : 0,
+    repeatType: "mirror"
+  }}
+>
+  {unreadCountData || 0}
+</motion.span>
         </motion.div>
 
         {/* مكون التصفية المحسن */}

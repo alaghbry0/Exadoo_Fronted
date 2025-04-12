@@ -30,7 +30,6 @@ const PaymentExchange = () => {
   return <ExchangePaymentModal 
     details={details} 
     onClose={() => window.close()}
-    paymentStatus="pending"
   />
 }
 

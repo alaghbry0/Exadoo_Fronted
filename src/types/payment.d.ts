@@ -4,7 +4,8 @@ export type PaymentStatus =
   | 'pending'
   | 'processing'
   | 'success'
-  | 'failed';
+  | 'failed'
+  | 'exchange_success';
 
 export interface SubscriptionPlanExtended extends SubscriptionPlan {
   selectedOption: {
@@ -15,4 +16,3 @@ export interface SubscriptionPlanExtended extends SubscriptionPlan {
   };
   features: string[];
 }
-

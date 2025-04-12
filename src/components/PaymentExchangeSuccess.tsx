@@ -1,15 +1,15 @@
-// PaymentSuccessScreen.tsx
+// PaymentExchangeSuccess.tsx
 'use client'
 import React from 'react'
 import { motion } from 'framer-motion'
 import { FiCheck, FiX } from 'react-icons/fi'
 
-interface PaymentSuccessScreenProps {
+interface PaymentExchangeSuccessProps {
   onClose: () => void
   planName?: string
 }
 
-export const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({
+export const PaymentExchangeSuccess: React.FC<PaymentExchangeSuccessProps> = ({
   onClose,
   planName
 }) => {

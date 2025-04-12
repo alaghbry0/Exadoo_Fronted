@@ -17,68 +17,10 @@ import { NotificationsProvider, useNotificationsContext } from '@/context/Notifi
 import { showToast } from '@/components/ui/Toast'
 
 /* ================================
-   قسم آلية تسجيل callbacks الخاص بالدفع
-   سيتم تخزين callbacks الدفعات في كائن paymentCallbacks
-   ويُنشأ اتصال WebSocket جديد عند الحاجة.
-================================ */
-const paymentCallbacks: Record<string, (status: string) => void> = {}
-let websocketConnection: WebSocket | null = null
-
-export const registerPaymentCallback = (token: string, callback: (status: string) => void) => {
-  // تخزين الـ callback مع المفتاح payment_token
-  paymentCallbacks[token] = callback
-
-  // إذا كان اتصال الـ WebSocket موجودًا ومفتوحاً، لا داعي لإعادة الإنشاء
-  if (websocketConnection && websocketConnection.readyState === WebSocket.OPEN) {
-    return
-  }
-
-  // إغلاق الاتصال السابق إن وجد
-  if (websocketConnection) {
-    websocketConnection.close()
-  }
-
-  // إنشاء اتصال WebSocket جديد
-  websocketConnection = new WebSocket(process.env.NEXT_PUBLIC_wsBACKEND_URL || 'ws://your-websocket-server')
-
-  websocketConnection.onopen = () => {
-    console.log('WebSocket connection established')
-  }
-
-  websocketConnection.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data)
-      // نتوقع أن تحتوي الرسالة على payment_token و status
-      if (data.payment_token && data.status && paymentCallbacks[data.payment_token]) {
-        // استدعاء الدالة المناسبة وتمرير الحالة
-        paymentCallbacks[data.payment_token](data.status)
-      }
-    } catch (error) {
-      console.error('Error processing WebSocket message:', error)
-    }
-  }
-
-  websocketConnection.onerror = (error) => {
-    console.error('WebSocket error:', error)
-  }
-
-  websocketConnection.onclose = () => {
-    console.log('WebSocket connection closed')
-  }
-}
-
-export const unregisterPaymentCallback = (token: string) => {
-  if (paymentCallbacks[token]) {
-    delete paymentCallbacks[token]
-  }
-}
-
-/* ================================
-   باقي إعدادات التطبيق وإدارة WebSocket للإشعارات
+   إعدادات بيانات الإشعارات
 ================================ */
 
-// تحديث تعريف واجهات البيانات للإشعارات
-interface NotificationExtraData {
+export interface NotificationExtraData {
   invite_link?: string | null;
   subscription_type?: string;
   subscription_history_id?: number;
@@ -87,7 +29,7 @@ interface NotificationExtraData {
   payment_token?: string;
 }
 
-interface NotificationData {
+export interface NotificationData {
   id: number;
   type: string;
   title: string;
@@ -97,10 +39,9 @@ interface NotificationData {
   extra_data?: NotificationExtraData;
 }
 
-interface NotificationMessage {
+export interface NotificationMessage {
   type: string;
   data?: unknown;
-  // الحقول التالية جزء من الرسالة الأصلية
   id?: string;
   title?: string;
   message?: string;
@@ -108,7 +49,9 @@ interface NotificationMessage {
   read_status?: boolean;
 }
 
-// إنشاء QueryClient بإعدادات محسنة
+/* ================================
+   إنشاء QueryClient بإعدادات محسنة
+================================ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -129,22 +72,19 @@ const useWalletAddress = () => {
   })
 }
 
+/* ================================
+   تعديل AppContent لتحسين التعامل مع WebSocket
+================================ */
 function AppContent({ children }: { children: React.ReactNode }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false)
+  const [socketInitialized, setSocketInitialized] = useState(false)
   const { setSubscriptions } = useProfileStore()
   const { telegramId } = useTelegram()
   const { setWalletAddress } = useTariffStore()
   const { setUnreadCount } = useNotificationsContext()
   const router = useRouter()
 
-  const {
-    data: walletAddress,
-    isLoading: isWalletLoading,
-    isError: isWalletError,
-    error: walletError
-  } = useWalletAddress()
-
-  /* --- معالج رسائل WebSocket للإشعارات --- */
+  // تعريف معالج رسائل WebSocket للإشعارات
   const handleWebSocketMessage = useCallback((message: NotificationMessage) => {
     console.log("📩 WebSocket message received:", message)
 
@@ -177,14 +117,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
           : null
         toastMessage = `✅ تم تجديد اشتراكك في ${notificationData.extra_data.subscription_type} حتى ${expiryDate?.toLocaleDateString('ar-EG')}`
 
-        // التحقق من وجود رمز الدفع وتنفيذ callback الدفع
-        if (notificationData.extra_data.payment_token) {
-          if (paymentCallbacks[notificationData.extra_data.payment_token]) {
-            paymentCallbacks[notificationData.extra_data.payment_token]('success')
-            delete paymentCallbacks[notificationData.extra_data.payment_token]
-            console.log(`🔄 Payment callback executed for token: ${notificationData.extra_data.payment_token}`)
-          }
-        }
+        // تم إزالة منطق الدفع هنا
 
         // تحديث/إعادة تحميل بيانات الاشتراك
         queryClient.invalidateQueries({
@@ -216,26 +149,55 @@ function AppContent({ children }: { children: React.ReactNode }) {
     }
   }, [setUnreadCount, router, telegramId])
 
-  /* --- إدارة WebSocket للإشعارات باستخدام hook خاص --- */
-  const { connectionState } = useNotificationsSocket(
-    telegramId,
-    handleWebSocketMessage
-  )
+  // مكون تهيئة WebSocket (مكون خفي لا يُظهر واجهة)
+  const WebSocketInitializer = () => {
+    // يبدأ الاتصال فقط إذا socketInitialized صار true
+    const { connectionState } = useNotificationsSocket(
+      socketInitialized ? telegramId : null,
+      handleWebSocketMessage
+    )
 
-  // تسجيل حالة الاتصال للإشعارات
+    // تسجيل حالة الاتصال للإشعارات
+    useEffect(() => {
+      const logConnectionStatus = () => {
+        const status = {
+          'connected': "🟢 Connected to notification service",
+          'connecting': "🟠 Connecting to notification service...",
+          'disconnected': "🔴 Disconnected from notification service"
+        }[connectionState]
+
+        console.log(status || "⚪ Unknown connection state")
+      }
+
+      logConnectionStatus()
+    }, [connectionState])
+
+    return null
+  }
+
+  const {
+    data: walletAddress,
+    isLoading: isWalletLoading,
+    isError: isWalletError,
+    error: walletError
+  } = useWalletAddress()
+
+  /* --- تأخير لصورة البداية Splash Screen + تهيئة WebSocket بعد التحميل --- */
   useEffect(() => {
-    const logConnectionStatus = () => {
-      const status = {
-        'connected': "🟢 Connected to notification service",
-        'connecting': "🟠 Connecting to notification service...",
-        'disconnected': "🔴 Disconnected from notification service"
-      }[connectionState]
+    const timer = setTimeout(() => {
+      setMinDelayCompleted(true)
+      // بدء تهيئة WebSocket بعد انتهاء عرض Splash Screen بفاصل زمني إضافي
+      setTimeout(() => setSocketInitialized(true), 1000)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
-      console.log(status || "⚪ Unknown connection state")
+  /* --- تحديث عنوان المحفظة في الـ Store --- */
+  useEffect(() => {
+    if (walletAddress) {
+      setWalletAddress(walletAddress)
     }
-
-    logConnectionStatus()
-  }, [connectionState])
+  }, [walletAddress, setWalletAddress])
 
   /* --- تحسين جلب الاشتراكات مع التخزين المؤقت --- */
   useEffect(() => {
@@ -252,9 +214,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
             return
           }
         }
-
-        // منطق جلب البيانات سيتم إضافته هنا لاحقًا
-
+        // منطق جلب البيانات سيتم إضافته هنا لاحقاً
       } catch (error) {
         console.error('❌ Failed to fetch subscriptions:', error)
       }
@@ -262,7 +222,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
     fetchSubscriptions()
     const interval = setInterval(fetchSubscriptions, 5 * 60 * 1000) // تحديث كل 5 دقائق
-
     return () => clearInterval(interval)
   }, [telegramId, setSubscriptions])
 
@@ -280,19 +239,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
     prefetchPages()
   }, [router])
-
-  /* --- تأخير لصورة البداية Splash Screen --- */
-  useEffect(() => {
-    const timer = setTimeout(() => setMinDelayCompleted(true), 1500)
-    return () => clearTimeout(timer)
-  }, [])
-
-  /* --- تحديث عنوان المحفظة في الـ Store --- */
-  useEffect(() => {
-    if (walletAddress) {
-      setWalletAddress(walletAddress)
-    }
-  }, [walletAddress, setWalletAddress])
 
   const isDataLoaded = minDelayCompleted && !isWalletLoading
   const hasError = isWalletError
@@ -315,6 +261,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {socketInitialized && <WebSocketInitializer />}
       {children}
       <FooterNav />
       <NotificationToast />

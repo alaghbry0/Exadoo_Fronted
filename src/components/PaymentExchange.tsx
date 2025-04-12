@@ -68,7 +68,6 @@ const PaymentExchange: React.FC<PaymentExchangeProps> = ({
       }}
       onClose={handleClose}
       onSuccess={handleSuccess}
-      paymentStatus="pending"
     />
   );
 };

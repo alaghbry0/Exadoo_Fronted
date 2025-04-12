@@ -269,14 +269,13 @@ export const handleTonPayment = async (
 
     const transactionResponse = await tonConnectUI.sendTransaction(transaction);
     console.log('✅ تم الدفع بنجاح باستخدام USDT!');
-    showToast.error(' فشل الدفع. يرجى المحاولة مرة أخرى.');
+
     console.log('✅ استجابة المعاملة:', transactionResponse);
 
     setPaymentStatus('processing');
     return { payment_token: paymentToken };
   } catch (error: unknown) {
     console.error('❌ فشل الدفع:', error);
-    showToast.success('.تم الدفع بنجاح, سنقوم بمعالجه طلبك وتجديد اشتراك خلال دقائق');
     setPaymentStatus('failed');
     return {};
   }
