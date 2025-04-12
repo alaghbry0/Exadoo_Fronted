@@ -39,7 +39,7 @@ export const registerPaymentCallback = (token: string, callback: (status: string
   }
 
   // إنشاء اتصال WebSocket جديد
-  websocketConnection = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://your-websocket-server')
+  websocketConnection = new WebSocket(process.env.NEXT_PUBLIC_wsBACKEND_URL || 'ws://your-websocket-server')
 
   websocketConnection.onopen = () => {
     console.log('WebSocket connection established')
