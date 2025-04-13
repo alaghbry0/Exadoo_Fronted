@@ -14,7 +14,7 @@ declare global {
     interface InitDataUnsafe {
         user?: User;
         query_id?: string;
-        auth_date?: number;
+         auth_date?: number;
         hash?: string;
     }
 
