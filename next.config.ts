@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
 
+  // تكوين Babel للتوافق مع المتصفحات القديمة
+  transpilePackages: [
+    '@tanstack/react-query',
+    '@ton',
+    'ethers',
+    'framer-motion',
+    'zustand',
+    'lucide-react'
+  ],
+
   async headers() {
     return [
       {
@@ -40,7 +50,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               // السياسات الأساسية
-             "default-src 'self';",
+              "default-src 'self';",
               "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval';",
               "style-src 'self' 'unsafe-inline';",
               "connect-src 'self' " +
@@ -58,7 +68,6 @@ const nextConfig: NextConfig = {
               "font-src 'self';",
               "frame-src 'self' https://telegram.org https://wallet.tg;",
               "object-src 'self' data:;"
-
             ].join(" ").trim(),
           },
         ],
@@ -75,15 +84,41 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         net: false,
         tls: false
       };
+
+      // إضافة تكوين Target للمتصفحات القديمة
+      if (!dev) {
+        config.target = ['web', 'es5'];
+      }
     }
+
+    // تحسين معالجة الأخطاء التركيبية في JavaScript
+    if (config.optimization) {
+      if (config.optimization.minimizer) {
+        for (const minimizer of config.optimization.minimizer) {
+          if (minimizer.constructor.name === 'TerserPlugin') {
+            minimizer.options.terserOptions = {
+              ...minimizer.options.terserOptions,
+              ecma: 5, // ضمان توافق ES5
+              safari10: true, // إصلاحات خاصة بمتصفح Safari
+            };
+          }
+        }
+      }
+    }
+
     return config;
+  },
+
+  // إعدادات الوضع القديم للتوافق
+  experimental: {
+    legacyBrowsers: true,
   },
 
   env: {
