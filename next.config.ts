@@ -1,39 +1,26 @@
 import type { NextConfig } from "next";
-import type { Configuration } from "webpack";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
 
+  // إذا كنت لا تحتاج تحسين الصور من أي دومين، اكتفِ بـ unoptimized
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "api.telegram.org" },
-      { protocol: "https", hostname: "**" },
-    ],
-    minimumCacheTTL: 86400,
     unoptimized: true,
   },
 
-  // تكوين Babel للتوافق مع المتصفحات القديمة
-  transpilePackages: [
-    '@tanstack/react-query',
-    '@ton',
-    'ethers',
-    'framer-motion',
-    'zustand',
-    'lucide-react'
-  ],
-
   async headers() {
     return [
+      // CORS للـ API
       {
         source: "/api/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Origin",  value: "*" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "Content-Type" },
         ],
       },
+      // Cache للأصول الثابتة
       {
         source: "/_next/static/(.*)",
         headers: [
@@ -43,32 +30,32 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // سياسة CSP شاملة
       {
-        source: "/(.*)",
+        source: "/:path*",      // تطبق على جميع المسارات
         headers: [
           {
             key: "Content-Security-Policy",
             value: [
-              // السياسات الأساسية
+              // مصادر افتراضية
               "default-src 'self';",
-              "script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval';",
+              // جافاسكربت من self، telegram.org و GitHub Pages
+              "script-src 'self' https://telegram.org https://alaghbry0.github.io 'unsafe-inline' 'unsafe-eval';",
+              // تحديد تحميل السكربتات المُدرجة (<script> tags)
+              "script-src-elem 'self' https://telegram.org https://alaghbry0.github.io;",
+              // ستايلات
               "style-src 'self' 'unsafe-inline';",
-              "connect-src 'self' " +
-                "wss://exadoo-rxr9.onrender.com " +
-                "ws://192.168.0.96:5000 " +
-                "https://exadoo-rxr9.onrender.com " +
-                "wss://*.render.com " +
-                "https://*.render.com " +
-                "http://192.168.0.96:5000 " +
-                "https://tonapi.io " +
-                "https://vercel.live " +
-                "https://raw.githubusercontent.com " +
-                "https://bridge.tonapi.io;",
+              // اتصالات الـ XHR / WebSocket / fetch
+              "connect-src 'self' https://exadoo-rxr9.onrender.com wss://exadoo-rxr9.onrender.com https://tonapi.io https://vercel.live https://raw.githubusercontent.com;",
+              // الصور
               "img-src * data:;",
+              // خطوط
               "font-src 'self';",
+              // إذا كنت تضمِّن iframes من هذه الدومينات
               "frame-src 'self' https://telegram.org https://wallet.tg;",
-              "object-src 'self' data:;"
-            ].join(" ").trim(),
+              // لكائنات الوسائط
+              "object-src 'self';",
+            ].join(" "),
           },
         ],
       },
@@ -84,45 +71,19 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         net: false,
-        tls: false
+        tls: false,
       };
-
-      // إضافة تكوين Target للمتصفحات القديمة
-      if (!dev) {
-        config.target = ['web', 'es5'];
-      }
     }
-
-    // تحسين معالجة الأخطاء التركيبية في JavaScript
-    if (config.optimization) {
-      if (config.optimization.minimizer) {
-        for (const minimizer of config.optimization.minimizer) {
-          if (minimizer.constructor.name === 'TerserPlugin') {
-            minimizer.options.terserOptions = {
-              ...minimizer.options.terserOptions,
-              ecma: 5, // ضمان توافق ES5
-              safari10: true, // إصلاحات خاصة بمتصفح Safari
-            };
-          }
-        }
-      }
-    }
-
     return config;
   },
 
-  // إعدادات الوضع القديم للتوافق
-  experimental: {
-    legacyBrowsers: true,
-  },
-
   env: {
-    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || "",
+    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET ?? "",
   },
 };
 

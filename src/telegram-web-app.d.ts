@@ -33,8 +33,21 @@ declare global {
         WebApp: TelegramWebApp;
     }
 
+    interface ChatWidgetOptions {
+        projectId: string;
+        apiUrl: string;
+        theme: string;
+        position: string;
+        direction: string;
+    }
+
+    interface ChatWidget {
+        init: (options: ChatWidgetOptions) => void;
+    }
+
     interface Window {
         Telegram?: Telegram;
+        ChatWidget?: ChatWidget;
     }
 }
 

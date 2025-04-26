@@ -16,10 +16,6 @@ import { useNotificationsSocket } from '@/hooks/useNotificationsSocket'
 import { NotificationsProvider, useNotificationsContext } from '@/context/NotificationsContext'
 import { showToast } from '@/components/ui/Toast'
 
-/* ================================
-   إعدادات بيانات الإشعارات
-================================ */
-
 export interface NotificationExtraData {
   invite_link?: string | null;
   subscription_type?: string;
@@ -49,17 +45,14 @@ export interface NotificationMessage {
   read_status?: boolean;
 }
 
-/* ================================
-   إنشاء QueryClient بإعدادات محسنة
-================================ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 دقائق
+      staleTime: 5 * 60 * 1000,
       retry: 2,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
-      gcTime: 10 * 60 * 1000 // 10 دقائق
+      gcTime: 10 * 60 * 1000
     }
   }
 })
@@ -72,9 +65,6 @@ const useWalletAddress = () => {
   })
 }
 
-/* ================================
-   تعديل AppContent لتحسين التعامل مع WebSocket
-================================ */
 function AppContent({ children }: { children: React.ReactNode }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false)
   const [socketInitialized, setSocketInitialized] = useState(false)
@@ -149,32 +139,32 @@ function AppContent({ children }: { children: React.ReactNode }) {
     }
   }, [setUnreadCount, router, telegramId])
 
-  // مكون تهيئة WebSocket (مكون خفي لا يُظهر واجهة)
   const WebSocketInitializer = () => {
-    // يبدأ الاتصال فقط إذا socketInitialized صار true
     const { connectionState } = useNotificationsSocket(
       socketInitialized ? telegramId : null,
       handleWebSocketMessage
     )
-
-    // تسجيل حالة الاتصال للإشعارات
     useEffect(() => {
-      const logConnectionStatus = () => {
-        const status = {
-          'connected': "🟢 Connected to notification service",
-          'connecting': "🟠 Connecting to notification service...",
-          'disconnected': "🔴 Disconnected from notification service"
-        }[connectionState]
-
-        console.log(status || "⚪ Unknown connection state")
+      const statusMap = {
+        'connected': "🟢 Connected to notification service",
+        'connecting': "🟠 Connecting to notification service…",
+        'disconnected': "🔴 Disconnected from notification service"
       }
-
-      logConnectionStatus()
+      console.log(statusMap[connectionState] || '⚪ Unknown connection state')
     }, [connectionState])
-
     return null
   }
 
+  // 2) Splash + WebSocket delay (unchanged) …
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinDelayCompleted(true)
+      setTimeout(() => setSocketInitialized(true), 1000)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // 3) Wallet address fetch (unchanged) …
   const {
     data: walletAddress,
     isLoading: isWalletLoading,
@@ -182,22 +172,10 @@ function AppContent({ children }: { children: React.ReactNode }) {
     error: walletError
   } = useWalletAddress()
 
-  /* --- تأخير لصورة البداية Splash Screen + تهيئة WebSocket بعد التحميل --- */
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMinDelayCompleted(true)
-      // بدء تهيئة WebSocket بعد انتهاء عرض Splash Screen بفاصل زمني إضافي
-      setTimeout(() => setSocketInitialized(true), 1000)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [])
-
-  /* --- تحديث عنوان المحفظة في الـ Store --- */
-  useEffect(() => {
-    if (walletAddress) {
-      setWalletAddress(walletAddress)
-    }
+    if (walletAddress) setWalletAddress(walletAddress)
   }, [walletAddress, setWalletAddress])
+
 
   /* --- تحسين جلب الاشتراكات مع التخزين المؤقت --- */
   useEffect(() => {
@@ -240,12 +218,31 @@ function AppContent({ children }: { children: React.ReactNode }) {
     prefetchPages()
   }, [router])
 
+
+    useEffect(() => {
+    const script = document.createElement("script")
+    script.src = "https://alaghbry0.github.io/chat-widget/widget.min.js"
+    script.async = true
+    document.body.appendChild(script)
+
+    script.onload = () => {
+      window.ChatWidget?.init({
+        projectId: "Exaado mini app",
+        apiUrl:     "https://exadoo-rxr9.onrender.com/bot/chat/stream",
+        theme:      "light",
+        position:   "bottom-right",
+        direction:  "rtl"
+      })
+    }
+
+    return () => {
+      document.body.removeChild(script)
+    }
+  }, [])
+
   const isDataLoaded = minDelayCompleted && !isWalletLoading
-  const hasError = isWalletError
-
   if (!isDataLoaded) return <SplashScreen />
-
-  if (hasError) {
+  if (isWalletError) {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-red-500 text-center px-4">
         <p>❌ خطأ في تحميل البيانات: {walletError?.toString()}</p>
