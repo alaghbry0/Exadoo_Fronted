@@ -56,10 +56,10 @@ const LoadingPage = () => {
         exit={{ opacity: 0, transition: { duration: fadeDuration } }}
         className="fixed inset-0 min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-blue-900 to-blue-800 z-[9999]"
         style={{
-          // التأكد من تطبيق أعلى قيمة z-index
-          zIndex: 9999,
-          position: 'fixed'
-        }}
+    zIndex: 2147483643, // أعلى من ExchangePaymentModal
+    position: 'fixed',
+    isolation: 'isolate'
+  }}
       >
         {/* الخلفية مع الصورة الرئيسية */}
         <div className="absolute inset-0 w-full h-full overflow-hidden z-[9000]">
