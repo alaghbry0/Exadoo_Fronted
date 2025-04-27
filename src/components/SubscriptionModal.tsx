@@ -30,7 +30,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   }
     useEffect(() => {
   const handleWidget = () => {
-    const widgetContainer = document.querySelector('#chat-widget-container');
+    const widgetContainer = document.querySelector('#chat-widget-container') as HTMLElement | null;
     if (widgetContainer) {
       widgetContainer.style.display = 'none';
     }
@@ -38,7 +38,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
   handleWidget();
   return () => {
-    const widgetContainer = document.querySelector('#chat-widget-container');
+    const widgetContainer = document.querySelector('#chat-widget-container') as HTMLElement | null;
     if (widgetContainer) {
       widgetContainer.style.display = 'block';
     }
