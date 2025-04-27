@@ -166,7 +166,13 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-white z-[100] flex flex-col max-h-screen overflow-auto">
+      <div className="fixed inset-0 bg-white flex flex-col max-h-screen overflow-auto"
+  style={{
+    zIndex: 2147483642, // أعلى من UsdtPaymentMethodModal
+    position: 'fixed',
+    isolation: 'isolate'
+  }}
+>
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 z-10 shadow-sm">
           <div className="container max-w-md mx-auto px-4 py-4 flex justify-between items-center">
@@ -313,14 +319,18 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
 
         {/* Address QR modal */}
         <AnimatePresence>
-          {showAddressQR && (
-            <motion.div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex justify-center items-center p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAddressQR(false)}
-            >
+  {showAddressQR && (
+    <motion.div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
+      style={{
+        zIndex: 2147483645, // أعلى من جميع العناصر الأخرى
+        position: 'fixed'
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setShowAddressQR(false)}
+    >
               <motion.div
                 className="bg-white rounded-2xl w-full max-w-xs overflow-hidden p-4 flex flex-col items-center"
                 initial={{ scale: 0.9, y: 20 }}
@@ -389,14 +399,18 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
 
       {/* Confirmation modal */}
       <AnimatePresence>
-        {showConfirmation && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[300] flex justify-center items-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={cancelClose}
-          >
+  {showConfirmation && (
+    <motion.div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center p-4"
+      style={{
+        zIndex: 2147483645, // أعلى من جميع العناصر الأخرى
+        position: 'fixed'
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={cancelClose}
+    >
             <motion.div
               className="bg-white rounded-xl shadow-lg w-full max-w-sm p-6"
               initial={{ scale: 0.9 }}

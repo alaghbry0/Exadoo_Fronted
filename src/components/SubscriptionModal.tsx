@@ -1,4 +1,4 @@
-// تعديل SubscriptionModal.tsx
+// SubscriptionModal.tsx
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -78,7 +78,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   dir="rtl"
   className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-end md:items-center p-2 sm:p-4"
   style={{
-    zIndex: 2147483646, // أقل بمقدار 1 من شاشة الانتظار
+    zIndex: 2147483640, // أقل بمقدار 1 من شاشة الانتظار
     position: 'fixed',
     isolation: 'isolate'
   }}

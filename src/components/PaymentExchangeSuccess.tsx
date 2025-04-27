@@ -14,7 +14,13 @@ export const PaymentExchangeSuccess: React.FC<PaymentExchangeSuccessProps> = ({
   planName
 }) => {
   return (
-    <div className="fixed inset-0 bg-gradient-to-b from-blue-50 to-white z-[100] flex flex-col">
+    <div className="fixed inset-0 bg-gradient-to-b from-blue-50 to-white flex flex-col"
+  style={{
+    zIndex: 2147483644, // أعلى من PaymentSuccessModal
+    position: 'fixed',
+    isolation: 'isolate'
+  }}
+>
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-xl font-bold">{planName || 'دفع الاشتراك'}</h2>
         <button onClick={onClose} aria-label="إغلاق" className="p-2">
