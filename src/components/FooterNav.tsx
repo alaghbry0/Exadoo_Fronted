@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { FaHome, FaRegCreditCard, FaUserCircle } from 'react-icons/fa'
-import { useEffect, useState } from 'react'
 
 // تكوين قابل للتخصيص للشريط السفلي
 interface NavTheme {
@@ -61,117 +60,57 @@ const FooterNav: React.FC<FooterNavProps> = ({
   const pathname = usePathname()
   const theme: NavTheme = { ...DEFAULT_THEME, ...customTheme }
 
-  // حالة لتتبع ما إذا كان شريط التنقل مخفياً أثناء التمرير لأسفل
-  const [isVisible, setIsVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
-
-  // تتبع حركة التمرير لإخفاء الشريط عند التمرير لأسفل
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-
-      if (currentScrollY > lastScrollY && currentScrollY > theme.height) {
-        setIsVisible(false)
-      } else {
-        setIsVisible(true)
-      }
-
-      setLastScrollY(currentScrollY)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [lastScrollY, theme.height])
-
-  // حركات للشريط عند الظهور والاختفاء
-  const navVariants = {
-    visible: {
-      y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 500,
-        damping: 40
-      }
-    },
-    hidden: {
-      y: theme.height,
-      transition: {
-        type: 'spring',
-        stiffness: 500,
-        damping: 40
-      }
-    }
-  }
-
   // حركات لعناصر النقر
   const tabVariants = {
     active: {
       color: theme.activeColor,
       scale: 1.05,
       y: -4,
-      transition: {
-        type: 'spring',
-        stiffness: 500,
-        damping: 30
-      }
+      transition: { type: 'spring', stiffness: 500, damping: 30 }
     },
     inactive: {
       color: theme.inactiveColor,
       scale: 1,
       y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 500,
-        damping: 30
-      }
+      transition: { type: 'spring', stiffness: 500, damping: 30 }
     }
   }
 
   // حركات للمؤشر النشط
   const indicatorVariants = {
     dot: {
-      width: '6px',
-      height: '6px',
-      borderRadius: '50%',
-      backgroundColor: theme.activeColor,
-      marginTop: '4px',
+      width: '6px', height: '6px', borderRadius: '50%',
+      backgroundColor: theme.activeColor, marginTop: '4px'
     },
     pill: {
-      width: '20px',
-      height: '4px',
-      borderRadius: '10px',
-      backgroundColor: theme.activeColor,
-      marginTop: '4px',
+      width: '20px', height: '4px', borderRadius: '10px',
+      backgroundColor: theme.activeColor, marginTop: '4px'
     },
     underline: {
-      width: '100%',
-      height: '3px',
-      borderRadius: '2px',
-      backgroundColor: theme.activeColor,
-      marginTop: '6px',
-      maxWidth: '32px',
+      width: '100%', height: '3px', borderRadius: '2px',
+      backgroundColor: theme.activeColor, marginTop: '6px', maxWidth: '32px'
     }
   }
 
   return (
     <motion.nav
-  dir="rtl"
-  initial="visible"
-  animate={isVisible ? "visible" : "hidden"}
-  variants={navVariants}
-  className="fixed bottom-0 w-full z-10" // تغيير من z-50 إلى z-10
-  style={{
-    height: `${theme.height}px`,
-    backdropFilter: `blur(${theme.blurIntensity})`,
-    backgroundColor: `${theme.backgroundColor}${Math.round(theme.backgroundOpacity * 255).toString(16).padStart(2, '0')}`,
-    borderTop: `1px solid ${theme.borderColor}${Math.round(theme.borderOpacity * 255).toString(16).padStart(2, '0')}`,
-  }}
->
+      dir="rtl"
+      initial={{ y: 0 }}
+      animate={{ y: 0 }} // يظل ثابتًا دون حركة
+      className="fixed bottom-0 w-full z-10"
+      style={{
+        height: `${theme.height}px`,
+        backdropFilter: `blur(${theme.blurIntensity})`,
+        backgroundColor: `${theme.backgroundColor}${Math.round(theme.backgroundOpacity * 255)
+          .toString(16).padStart(2, '0')}`,
+        borderTop: `1px solid ${theme.borderColor}${Math.round(theme.borderOpacity * 255)
+          .toString(16).padStart(2, '0')}`
+      }}
+    >
       <div className="mx-auto h-full max-w-lg relative">
         <div className="flex justify-around items-center h-full w-full px-2">
           {items.map((item) => {
             const isActive = pathname === item.path
-
             return (
               <Link
                 href={item.path}
@@ -188,21 +127,14 @@ const FooterNav: React.FC<FooterNavProps> = ({
                 <motion.div
                   className="flex flex-col items-center justify-center h-full gap-1"
                   initial="inactive"
-                  animate={isActive ? "active" : "inactive"}
+                  animate={isActive ? 'active' : 'inactive'}
                   variants={tabVariants}
                   whileTap={{ scale: 0.92 }}
                 >
-                  <div className="relative">
-                    <item.icon size={theme.iconSize} />
-                  </div>
-
-                  <span
-                    style={{ fontSize: theme.textSize }}
-                    className="font-medium transition-colors"
-                  >
+                  <item.icon size={theme.iconSize} />
+                  <span style={{ fontSize: theme.textSize }} className="font-medium transition-colors">
                     {item.label}
                   </span>
-
                   {isActive && (
                     <motion.div
                       style={indicatorVariants[theme.indicatorStyle]}

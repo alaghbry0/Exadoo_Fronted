@@ -13,7 +13,6 @@ const LoadingPage = () => {
   const [loadingPercent, setLoadingPercent] = useState(0);
   const [loadingText, setLoadingText] = useState('جاري تحميل التطبيق');
 
-  // محاكاة تقدم التحميل مع تحديث نصوص الحالة
   useEffect(() => {
     const loadingTexts = [
       'جاري تحميل التطبيق',
@@ -55,10 +54,15 @@ const LoadingPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, transition: { duration: fadeDuration } }}
-        className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-blue-900 to-blue-800"
+        className="fixed inset-0 min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-blue-900 to-blue-800 z-[9999]"
+        style={{
+          // التأكد من تطبيق أعلى قيمة z-index
+          zIndex: 9999,
+          position: 'fixed'
+        }}
       >
         {/* الخلفية مع الصورة الرئيسية */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <div className="absolute inset-0 w-full h-full overflow-hidden z-[9000]">
           <Image
             src="/background.jpg"
             alt="Trading Background"
@@ -70,7 +74,7 @@ const LoadingPage = () => {
         </div>
 
         {/* تأثيرات الرسوم البيانية والحركة على الخلفية */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden z-[9100]">
           <div className="absolute inset-0 opacity-10">
             <motion.div
               className="absolute top-[10%] left-[5%] text-white/20"
@@ -100,34 +104,33 @@ const LoadingPage = () => {
             >
               <CandlestickChart size={110} strokeWidth={1} />
             </motion.div>
-            {/* خطوط الشبكة الأفقية */}
+
+            {/* خطوط الشبكة */}
             {Array.from({ length: 10 }).map((_, index) => (
-              <motion.div
-                key={`horizontal-${index}`}
-                className="absolute h-[1px] w-full bg-blue-400/10"
-                style={{ top: `${(index + 1) * 10}%` }}
-                animate={{ scaleX: [1, 1.05, 1], opacity: [0.05, 0.2, 0.05] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: index * 0.2 }}
-              />
-            ))}
-            {/* خطوط الشبكة العمودية */}
-            {Array.from({ length: 10 }).map((_, index) => (
-              <motion.div
-                key={`vertical-${index}`}
-                className="absolute w-[1px] h-full bg-blue-400/10"
-                style={{ left: `${(index + 1) * 10}%` }}
-                animate={{ scaleY: [1, 1.05, 1], opacity: [0.05, 0.15, 0.05] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
-              />
+              <>
+                <motion.div
+                  key={`horizontal-${index}`}
+                  className="absolute h-[1px] w-full bg-blue-400/10"
+                  style={{ top: `${(index + 1) * 10}%` }}
+                  animate={{ scaleX: [1, 1.05, 1], opacity: [0.05, 0.2, 0.05] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: index * 0.2 }}
+                />
+                <motion.div
+                  key={`vertical-${index}`}
+                  className="absolute w-[1px] h-full bg-blue-400/10"
+                  style={{ left: `${(index + 1) * 10}%` }}
+                  animate={{ scaleY: [1, 1.05, 1], opacity: [0.05, 0.15, 0.05] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
+                />
+              </>
             ))}
           </div>
-          {/* طبقة التراكب الضبابية */}
           <div className="absolute inset-0 bg-gradient-to-b from-blue-900/40 to-blue-800/60 backdrop-blur-sm" />
         </div>
 
-        {/* الحاوية الرئيسية للمحتوى */}
-        <div className="relative z-10 w-full max-w-md px-4 flex flex-col items-center">
-          {/* الشعار واسم التطبيق */}
+        {/* المحتوى الرئيسي */}
+        <div className="relative z-[9999] w-full max-w-md px-4 flex flex-col items-center">
+          {/* الشعار */}
           <motion.div
             initial={{ scale: 0.8, y: 10 }}
             animate={{ scale: 1, y: 0 }}
@@ -162,14 +165,12 @@ const LoadingPage = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
               className="text-3xl font-bold text-white tracking-tight"
-              role="heading"
-              aria-level={1}
             >
               Exaado
             </motion.h1>
           </motion.div>
 
-          {/* مؤشر التحميل مع تأثير دوار */}
+          {/* مؤشر التحميل */}
           <div className="relative h-40 mb-8 w-full flex items-center justify-center">
             <Spinner className="w-16 h-16 text-white" />
             {!shouldReduceMotion && (
@@ -181,7 +182,7 @@ const LoadingPage = () => {
             )}
           </div>
 
-          {/* نص الحالة ونسبة التقدم */}
+          {/* حالة التحميل */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -196,16 +197,13 @@ const LoadingPage = () => {
             </p>
           </motion.div>
 
-          {/* شريط التقدم المتحرك */}
+          {/* شريط التقدم */}
           <div className="mt-10 w-full">
             <motion.div
               className="w-full h-1.5 bg-blue-950/50 rounded-full overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
             >
               <motion.div
                 className="h-full bg-gradient-to-r from-blue-400 via-blue-300 to-blue-200 relative"
@@ -225,28 +223,23 @@ const LoadingPage = () => {
           </div>
         </div>
 
-        {/* تأثيرات خلفية ديناميكية إضافية */}
+        {/* تأثيرات خلفية */}
         {!shouldReduceMotion && (
           <>
             <motion.div
-              className="absolute top-1/4 left-1/4 w-40 h-40 bg-blue-400/20 blur-3xl rounded-full"
+              className="absolute top-1/4 left-1/4 w-40 h-40 bg-blue-400/20 blur-3xl rounded-full z-[8500]"
               animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
               transition={{ duration: 4, repeat: Infinity, delay: 0.2 }}
             />
             <motion.div
-              className="absolute bottom-1/3 right-1/4 w-32 h-32 bg-blue-200/20 blur-2xl rounded-full"
+              className="absolute bottom-1/3 right-1/4 w-32 h-32 bg-blue-200/20 blur-2xl rounded-full z-[8500]"
               animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.1, 0.3, 0.1] }}
               transition={{ duration: 3.5, repeat: Infinity, delay: 0.7 }}
-            />
-            <motion.div
-              className="absolute top-2/3 right-1/3 w-24 h-24 bg-blue-300/20 blur-xl rounded-full"
-              animate={{ scale: [1.1, 0.9, 1.1], opacity: [0.1, 0.2, 0.1] }}
-              transition={{ duration: 3, repeat: Infinity, delay: 1 }}
             />
           </>
         )}
 
-        {/* رسالة ARIA للقارئ الشاشي */}
+        {/* إمكانية الوصول */}
         <div role="status" aria-live="polite" className="sr-only">
           {loadingText} - {Math.round(loadingPercent)}%
         </div>
@@ -261,27 +254,7 @@ export default dynamic(() => Promise.resolve(LoadingPage), {
     <div className="min-h-screen flex items-center justify-center bg-blue-900">
       <div className="w-16 h-16 flex items-center justify-center">
         <svg className="w-full h-full animate-spin" viewBox="0 0 50 50">
-          <circle
-            className="opacity-25"
-            cx="25"
-            cy="25"
-            r="20"
-            stroke="#0077ff"
-            strokeWidth="4"
-            fill="none"
-          />
-          <circle
-            className="opacity-75"
-            cx="25"
-            cy="25"
-            r="20"
-            stroke="#0077ff"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray="31.4 31.4"
-            strokeDashoffset="0"
-          />
+          <circle cx="25" cy="25" r="20" stroke="#0077ff" strokeWidth="4" fill="none" />
         </svg>
       </div>
     </div>

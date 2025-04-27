@@ -17,6 +17,8 @@ import { useSubscriptionPayment } from '../components/SubscriptionModal/useSubsc
 import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
 import { PaymentExchangeSuccess } from '../components/PaymentExchangeSuccess'
 
+import { useEffect } from 'react'
+
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
   const { telegramId } = useTelegram()
   const queryClient = useQueryClient()
@@ -26,6 +28,23 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       queryKey: ['subscriptions', telegramId || '']
     })
   }
+    useEffect(() => {
+  const handleWidget = () => {
+    const widgetContainer = document.querySelector('#chat-widget-container');
+    if (widgetContainer) {
+      widgetContainer.style.display = 'none';
+    }
+  };
+
+  handleWidget();
+  return () => {
+    const widgetContainer = document.querySelector('#chat-widget-container');
+    if (widgetContainer) {
+      widgetContainer.style.display = 'block';
+    }
+  };
+}, []);
+
 
   const {
     paymentStatus,
@@ -50,26 +69,32 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   return (
     <>
       {isInitializing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Spinner className="w-12 h-12 text-white" />
-        </div>
-      )}
-      <motion.div
-        dir="rtl"
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-end md:items-center p-2 sm:p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]">
+    <Spinner className="w-12 h-12 text-white" />
+  </div>
+)}
+
+<motion.div
+  dir="rtl"
+  className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-end md:items-center p-2 sm:p-4"
+  style={{
+    zIndex: 2147483646, // أقل بمقدار 1 من شاشة الانتظار
+    position: 'fixed',
+    isolation: 'isolate'
+  }}
+>
         <motion.div
-          className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-400"
-          initial={{ y: '100%', scale: 0.95 }}
-          animate={{ y: 0, scale: 1 }}
-          exit={{ y: '100%', scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}
-        >
+  className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-400"
+  initial={{ y: '100%', scale: 0.95 }}
+  animate={{ y: 0, scale: 1 }}
+  exit={{ y: '100%', scale: 0.95 }}
+  transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+  onClick={(e) => e.stopPropagation()}
+  style={{
+    position: 'relative',
+    zIndex: 9999 // تأكيد قيمة z-index
+  }}
+>
           <div className="flex flex-col max-h-[100vh]">
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 flex justify-between items-center z-10 shadow-sm">
