@@ -129,7 +129,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
   // معالجة نجاح الدفع
   useEffect(() => {
     if (paymentStatus === 'exchange_success') {
-      showToast.success('تم الدفع بنجاح!')
+
       const timer = setTimeout(() => {
         onSuccess()
       }, 2000)

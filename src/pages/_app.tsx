@@ -102,18 +102,35 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
       // التعامل مع إشعارات تجديد الاشتراك
       if (notificationData.type === 'subscription_renewal' && notificationData.extra_data) {
-        const expiryDate = notificationData.extra_data.expiry_date
-          ? new Date(notificationData.extra_data.expiry_date)
-          : null
-        toastMessage = `✅ تم تجديد اشتراكك في ${notificationData.extra_data.subscription_type} حتى ${expiryDate?.toLocaleDateString('ar-EG')}`
+  const expiryDate = notificationData.extra_data.expiry_date
+    ? new Date(notificationData.extra_data.expiry_date)
+    : null;
 
-        // تم إزالة منطق الدفع هنا
+  // إضافة 3 ساعات لتحويل UTC+0 إلى UTC+3
+  if (expiryDate) {
+    expiryDate.setHours(expiryDate.getHours() + 3);
+  }
 
-        // تحديث/إعادة تحميل بيانات الاشتراك
-        queryClient.invalidateQueries({
-          queryKey: ['subscriptions', telegramId]
-        })
-      }
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZone: 'UTC'
+  };
+
+  const formattedDate = expiryDate?.toLocaleString('ar-EG', options) || 'تاريخ غير معروف';
+
+  toastMessage = `✅ تم تجديد اشتراكك في ${notificationData.extra_data.subscription_type} حتى ${formattedDate} UTC+3`;
+
+  // تحديث/إعادة تحميل بيانات الاشتراك
+  queryClient.invalidateQueries({
+    queryKey: ['subscriptions', telegramId]
+  });
+}
 
       // عرض Toast مع التعامل مع حدث النقر
       showToast.success({
