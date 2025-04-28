@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
 
-  // إذا كنت لا تحتاج تحسين الصور من أي دومين، اكتفِ بـ unoptimized
   images: {
     unoptimized: true,
   },
@@ -15,7 +14,7 @@ const nextConfig: NextConfig = {
       {
         source: "/api/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin",  value: "*" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "Content-Type" },
         ],
@@ -32,30 +31,29 @@ const nextConfig: NextConfig = {
       },
       // سياسة CSP شاملة
       {
-        source: "/:path*",      // تطبق على جميع المسارات
+        source: "/:path*",
         headers: [
           {
             key: "Content-Security-Policy",
             value: [
               // مصادر افتراضية
               "default-src 'self';",
-              // جافاسكربت من self، telegram.org و GitHub Pages
+              // جافاسكربت
               "script-src 'self' https://telegram.org https://alaghbry0.github.io 'unsafe-inline' 'unsafe-eval';",
-              // تحديد تحميل السكربتات المُدرجة (<script> tags)
               "script-src-elem 'self' https://telegram.org https://alaghbry0.github.io;",
               // ستايلات
               "style-src 'self' 'unsafe-inline';",
-              // اتصالات الـ XHR / WebSocket / fetch
-              "connect-src 'self' https://exadoo-rxr9.onrender.com wss://exadoo-rxr9.onrender.com https://tonapi.io https://vercel.live https://raw.githubusercontent.com;",
-              // الصور
+              // اتصالات
+              "connect-src 'self' https://exadoo-rxr9.onrender.com wss://exadoo-rxr9.onrender.com https://tonapi.io https://bridge.tonapi.io wss://*.tonapi.io https://vercel.live https://raw.githubusercontent.com;",
+              // صور
               "img-src * data:;",
               // خطوط
               "font-src 'self';",
-              // إذا كنت تضمِّن iframes من هذه الدومينات
-              "frame-src 'self' https://telegram.org https://wallet.tg;",
-              // لكائنات الوسائط
+              // iframes
+              "frame-src 'self' https://telegram.org https://wallet.tg https://connect.tonhubapi.com;",
+              // وسائط
               "object-src 'self';",
-            ].join(" "),
+            ].join(" ").replace(/\n/g, ' '),
           },
         ],
       },
