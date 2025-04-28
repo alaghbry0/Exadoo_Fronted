@@ -54,7 +54,7 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="border rounded-lg shadow-sm p-4 mb-4 bg-white hover:shadow-md transition-shadow"
-      
+
     >
       <div className="flex justify-between items-center">
         {/* القسم الأيسر: البيانات الأساسية */}

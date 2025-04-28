@@ -78,7 +78,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   dir="rtl"
   className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-end md:items-center p-2 sm:p-4"
   style={{
-    zIndex: 2147483640, // أقل بمقدار 1 من شاشة الانتظار
+    zIndex: 920, // أقل بمقدار 1 من شاشة الانتظار
     position: 'fixed',
     isolation: 'isolate'
   }}
@@ -92,7 +92,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   onClick={(e) => e.stopPropagation()}
   style={{
     position: 'relative',
-    zIndex: 9999 // تأكيد قيمة z-index
+    zIndex: 915 // تأكيد قيمة z-index
   }}
 >
           <div className="flex flex-col max-h-[100vh]">

@@ -17,7 +17,7 @@ export const UsdtPaymentMethodModal = ({
   dir="rtl"
   className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
   style={{
-    zIndex: 2147483641, // القيمة القصوى لـ z-index
+    zIndex: 921, // القيمة القصوى لـ z-index
     position: 'fixed',
     isolation: 'isolate'
   }}

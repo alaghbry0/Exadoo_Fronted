@@ -168,7 +168,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     <>
       <div className="fixed inset-0 bg-white flex flex-col max-h-screen overflow-auto"
   style={{
-    zIndex: 2147483642, // أعلى من UsdtPaymentMethodModal
+    zIndex: 922, // أعلى من UsdtPaymentMethodModal
     position: 'fixed',
     isolation: 'isolate'
   }}
@@ -323,7 +323,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     <motion.div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
       style={{
-        zIndex: 2147483645, // أعلى من جميع العناصر الأخرى
+        zIndex: 925, // أعلى من جميع العناصر الأخرى
         position: 'fixed'
       }}
       initial={{ opacity: 0 }}
@@ -403,7 +403,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     <motion.div
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center p-4"
       style={{
-        zIndex: 2147483645, // أعلى من جميع العناصر الأخرى
+        zIndex: 925, // أعلى من جميع العناصر الأخرى
         position: 'fixed'
       }}
       initial={{ opacity: 0 }}

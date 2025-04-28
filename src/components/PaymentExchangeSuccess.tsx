@@ -16,7 +16,7 @@ export const PaymentExchangeSuccess: React.FC<PaymentExchangeSuccessProps> = ({
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-blue-50 to-white flex flex-col"
   style={{
-    zIndex: 2147483644, // أعلى من PaymentSuccessModal
+    zIndex: 924,
     position: 'fixed',
     isolation: 'isolate'
   }}

@@ -12,7 +12,7 @@ export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
     <motion.div
   className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
   style={{
-    zIndex: 2147483643, // أعلى من ExchangePaymentModal
+    zIndex: 924, // أعلى من ExchangePaymentModal
     position: 'fixed',
     isolation: 'isolate'
   }}
