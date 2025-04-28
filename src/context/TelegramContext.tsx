@@ -17,7 +17,7 @@ const TelegramContext = createContext<TelegramContextType>({
 });
 
 // إضافة ثوابت للوضع التجريبي
-const TEST_MODE = true; // تفعيل الوضع التجريبي في التطوير فقط
+const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === 'development'
 const TEST_TELEGRAM_ID = "7382197778";
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
