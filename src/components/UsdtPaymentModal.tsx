@@ -67,7 +67,7 @@ const UsdtPaymentModal: React.FC<UsdtPaymentModalProps> = ({
       // إعادة التوجيه إلى صفحة PaymentExchangePage مع تمرير البيانات عبر معلمات URL
       const recipientAddress = useTariffStore.getState().walletAddress || '0xRecipientAddress';
       const amount = plan?.selectedOption.price || 'Unknown';
-      const network = 'Ton Network';
+      const network = 'The Open Network';
 
       router.push(
         `/payment-exchange?recipientAddress=${encodeURIComponent(
