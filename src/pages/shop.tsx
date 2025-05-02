@@ -246,13 +246,13 @@ const {
         >
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              اختر خطتك المثالية
+              اختر الاشتراك الأنسب لك!
               <span className="block text-blue-600 mt-2">واستثمر بذكاء مع خبرائنا</span>
             </h1>
             <div className="max-w-2xl mx-auto">
               <div className="h-1 bg-gradient-to-r from-blue-500 to-transparent w-1/3 mx-auto mb-6" />
               <p className="text-gray-600 text-lg leading-relaxed">
-                خطط مرنة تلبي جميع احتياجاتك الاستثمارية بأسعار تنافسية
+                مع إكسادو، أصبح التداول أسهل مما تتخيل – جرّب بنفسك الآن!
               </p>
             </div>
           </div>

@@ -12,18 +12,18 @@ const Home: React.FC = () => {
   const featuresData = [
     {
       icon: <HiOutlineChartBar className="w-12 h-12 text-[#0084ff]" />,
-      title: "تحليلات احترافية",
-      description: "تقارير مفصلة يومية وأسبوعية"
+      title: "تحليلات مباشرة للأسواق",
+      description: "تحليلات يومية وأسبوعية لأهم العملات الرقمية وأزواج سوق الفوركس."
     },
     {
       icon: <HiOutlineCash className="w-12 h-12 text-[#0084ff]" />,
-      title: "سهولة الدفع",
-      description: "دفع سلس باستخدام USDT (TON)"
+      title: "توصيات تداول رابحة",
+      description: "توصيات مدروسة المخاطرة وذات نسب نجاح عالية تضمن لك أرباحاً في نهاية كل شهر."
     },
     {
       icon: <HiOutlineCurrencyDollar className="w-12 h-12 text-[#0084ff]" />,
-      title: "مدفوعات فورية",
-      description: "إشعارات فورية بكل المعاملات"
+      title: "خدمة عملاء 24/7",
+      description: "دعم فوري وسريع للرد على أي استفسار أو لحل أي مشكلة على مدار اليوم."
     }
   ]
 
@@ -53,7 +53,7 @@ const Home: React.FC = () => {
                 transition={{ delay: 0.3 }}
                 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight"
               >
-                <span className="block text-blue-600 mt-2">استثمر بذكاء</span>
+                <span className="block text-blue-600 mt-2">تداول بذكاء</span>
                 <br />
                 مع توصيات خبرائنا في إكسادوا
               </motion.h1>
@@ -64,7 +64,7 @@ const Home: React.FC = () => {
                 transition={{ delay: 0.4 }}
                 className="text-gray-600 mb-8 max-w-xl mx-auto text-base leading-relaxed"
               >
-                وصول فوري إلى تحليلات دقيقة للأسواق وتوصيات استثمارية مدروسة
+احصل على وصول فوري إلى تحليلات مباشرة وتوصيات تداول بنسب نجاح عالية!
               </motion.p>
 
               {/* زر CTA في المنتصف مع تأثيرات محسنة */}
@@ -78,7 +78,7 @@ const Home: React.FC = () => {
                   <Button
                     className="bg-gradient-to-r from-[#0084ff] to-[#0066cc] text-white px-7 py-2.5 rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5"
                   >
-                    <span className="text-base font-semibold">ابدأ الآن</span>
+                    <span className="text-base font-semibold">اشترك معنا الآن</span>
                   </Button>
                 </Link>
               </motion.div>
@@ -119,13 +119,13 @@ const Home: React.FC = () => {
 
             <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-8 md:p-12 text-center shadow-xl">
               <h2 className="text-xl font-bold text-white mb-3">
-                انضم إلى قنواتنا المميزة
+                انضم إلينا اليوم وحقق دخل إضافي من التداول!
               </h2>
               <div className="flex justify-center gap-3">
                 <Link href="/shop">
                   <Button className="bg-white text-primary hover:bg-white/90 px-8 py-2 rounded-lg text-base font-semibold" size="sm">
 
-                    عرض جميع الخطط
+                   خطط الاشتراك في قنوات التوصيات
                   </Button>
                 </Link>
               </div>
