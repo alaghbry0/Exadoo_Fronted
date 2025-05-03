@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../components/SubscriptionModal'
-import { FaChartLine, FaLock, FaStar } from 'react-icons/fa'
+import { FaChartLine, FaLock, FaStar, FaPercent, FaClock } from 'react-icons/fa'
 import React from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
 import Navbar from '../components/Navbar'
@@ -35,6 +35,7 @@ interface ApiSubscriptionPlan {
   id: number;
   name: string;
   price: number;
+  original_price: number; // إضافة حقل السعر الأصلي
   duration_days: number;
   subscription_type_id: number;
   telegram_stars_price: number;
@@ -47,6 +48,9 @@ type SubscriptionOption = {
   duration: string;
   price: string;
   originalPrice?: number;
+  discountedPrice?: number; // سعر بعد الخصم
+  discountPercentage?: number; // نسبة الخصم
+  hasDiscount: boolean; // هل يوجد خصم؟
   savings?: string;
   telegramStarsPrice: number
 };
@@ -97,6 +101,29 @@ type SelectedPlan = SubscriptionCard & {
   selectedOption: SubscriptionOption;
   planId: number;};
 
+const DiscountBadge = ({ percentage }: { percentage: number }) => {
+  return (
+    <motion.div
+      initial={{ scale: 1, rotate: 0 }}
+      animate={{
+        scale: [1, 1.1, 1],
+        rotate: [0, -5, 5, -5, 0]
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        repeatDelay: 3
+      }}
+      className="absolute -top-3 -right-3 z-20 bg-red-600 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center transform rotate-12 shadow-lg"
+    >
+      <span className="text-xs font-bold">خصم</span>
+      <span className="text-xl font-extrabold">{percentage}%</span>
+    </motion.div>
+  );
+};
+
+
+
 const ShopComponent: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [cardId: number]: SubscriptionOption }>({});
@@ -120,18 +147,23 @@ const {
   queryFn: getSubscriptionPlans,
 });
 
-  const calculateSavings = (plans: ApiSubscriptionPlan[]) => {
-    const monthlyPlan = plans.find(p => p.name === 'شهري');
-    const annualPlan = plans.find(p => p.name === 'سنوي');
+ const calculateSavings = (plans: ApiSubscriptionPlan[]) => {
+  const monthlyPlan = plans.find(p => p.name === 'شهري');
+  const threeMonthPlan = plans.find(p => p.name === '3 شهور');
 
-    if (!monthlyPlan || !annualPlan) return null;
+  if (!monthlyPlan || !threeMonthPlan) return null;
 
-    const monthlyPrice = monthlyPlan.price;
-    const annualPrice = annualPlan.price;
-    const savings = ((monthlyPrice * 12 - annualPrice) / (monthlyPrice * 12)) * 100;
+  const monthlyPrice = monthlyPlan.price;
+  const threeMonthPrice = threeMonthPlan.price;
 
-    return savings.toFixed(0);
-  };
+  // التحقق من الشرط: إذا كان السعر الشهري * 3 <= سعر ال3 شهور
+  if (monthlyPrice * 3 <= threeMonthPrice) {
+    return null; // لا يوجد توفير
+  }
+
+  const savings = ((monthlyPrice * 3 - threeMonthPrice) / (monthlyPrice * 3)) * 100;
+  return savings.toFixed(0);
+};
 
   const mappedCards: SubscriptionCard[] = useMemo(() => {
   if (!typesData || !plansData) return [];
@@ -150,17 +182,26 @@ const {
     const savings = calculateSavings(typePlans);
 
     const options: SubscriptionOption[] = typePlans.map(plan => {
-  const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+      const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+      const originalPrice = typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price || price;
 
-  return {
-    id: plan.id,
-    duration: plan.name,
-    price: !isNaN(price) ? price.toFixed(0) + '$' : '0$',
-    originalPrice: price,
-    telegramStarsPrice: plan.telegram_stars_price, // أضف هذا السطر
-    savings: plan.name === 'سنوي' && savings ? `وفر ${savings}%` : undefined
-  };
-});
+      // حساب ما إذا كان هناك خصم
+      const hasDiscount = originalPrice > price;
+      // حساب نسبة الخصم إذا وُجد
+      const discountPercentage = hasDiscount ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+
+      return {
+        id: plan.id,
+        duration: plan.name,
+        price: !isNaN(price) ? price.toFixed(0) + '$' : '0$',
+        originalPrice: originalPrice,
+        discountedPrice: price,
+        discountPercentage,
+        hasDiscount,
+        telegramStarsPrice: plan.telegram_stars_price,
+        savings: plan.name === '3 شهور' && savings ? `وفر ${savings}%` : undefined
+      };
+    });
 
     return {
       id: type.id,
@@ -232,11 +273,9 @@ const {
 
   return (
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
-      <div dir="trl" className="min-h-screen bg-white safe-area-padding pb-32 font-inter">
+      <div dir="rtl" className="min-h-screen bg-white safe-area-padding pb-32 font-inter">
         {/* شريط التنقل المحدث */}
          <Navbar />
-
-
 
         {/* الهيدر المحدث */}
         <motion.div
@@ -303,6 +342,7 @@ const {
 
                       <div className="flex flex-col items-start mb-6">
                         <div className="flex items-baseline gap-2">
+                          {/* عرض السعر بعد الخصم */}
                           <span className="text-4xl font-extrabold text-gray-900">
                             {selectedOption?.price}
                           </span>
@@ -310,6 +350,30 @@ const {
                             / {selectedOption?.duration}
                           </span>
                         </div>
+
+                        {/* عرض نسبة الخصم والسعر الأصلي إذا كان هناك خصم */}
+                        {selectedOption?.hasDiscount && (
+    <div className="mt-2 flex flex-col items-start">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg text-red-500 line-through font-semibold">
+          {selectedOption.originalPrice?.toFixed(0)}$
+        </span>
+        <span className="bg-red-100 text-red-700 text-sm font-bold px-3 py-1 rounded-full flex items-center">
+          <FaPercent className="mr-1 text-xs" />
+          {selectedOption.discountPercentage} خصم
+        </span>
+      </div>
+
+      {/* إضافة شريط عد تنازلي مزيف للإلحاح */}
+      <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+        <div className="flex items-center gap-2 text-amber-800">
+          <FaClock className="text-amber-600" />
+          <span className="text-sm font-medium">عرض لفترة محدوده !</span>
+        </div>
+      </div>
+    </div>
+  )}
+
                         {selectedOption?.savings && (
                           <span className="text-sm text-green-600 mt-1">
                             {selectedOption.savings}
@@ -352,7 +416,7 @@ const {
                         className="w-full py-4 rounded-xl text-white font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg transition-all"
                         aria-label={`اشترك في خطة ${card.name}`}
                       >
-                        ابدأ الاشتراك
+                        اشترك معنا الان
                       </motion.button>
                     </div>
 

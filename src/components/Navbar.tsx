@@ -43,9 +43,10 @@ const Navbar: React.FC = () => {
   const formattedCount = validatedCount > 99 ? '99+' : validatedCount;
 
   return (
-    <FlowbiteNavbar className="bg-white border-b border-gray-100 sticky top-0 z-20">
+    <FlowbiteNavbar dir="rtl" className="bg-white border-b border-gray-100 sticky top-0 z-20">
+
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between w-full">
+        <div className="flex flex-row-reverse items-center justify-between w-full">
           <Link href="/" className="flex items-center gap-1.5">
             <Image
               src="/logo.png"

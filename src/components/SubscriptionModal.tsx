@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiClock } from 'react-icons/fi'
-
+import { FaPercent } from 'react-icons/fa'
 import type { SubscriptionPlan } from '@/typesPlan'
 import { useTelegram } from '../context/TelegramContext'
 
@@ -115,15 +115,26 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             {/* Content */}
             <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6">
               {/* بطاقة السعر */}
-              <div className="flex items-center justify-between bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+
+              <div className="flex items-center justify-between bg-blue-50/50  rounded-xl p-4 border border-blue-100 relative">
+                {plan?.selectedOption.hasDiscount && (
+    <div className="absolute -top-3 left-3.5 bg-red-500 text-white px-3 py-0.5 rounded-full text-sm flex items-center">
+      <FaPercent className="mr-1"/>
+       {plan.selectedOption.discountPercentage} خصم
+    </div>
+  )}
+
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="font-semibold">{plan?.selectedOption.price} </span>
                 </div>
+
+
                 <div className="flex items-center gap-2 text-blue-600">
                   <FiClock className="w-5 h-5" />
                   <span className="font-semibold">{plan?.selectedOption.duration}</span>
                 </div>
               </div>
+
 
               {/* قائمة الميزات */}
               <div className="max-h-[300px] overflow-y-auto pr-2 pb-9">
@@ -132,7 +143,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </div>
 
             {/* Payment Section */}
-            <div className="sticky bottom-11 bg-white border-t p-7 sm:p-6 space-y-7">
+            <div className="sticky bottom-1 bg-white border-t p-7 sm:p-6 space-y-7">
               <PaymentButtons
                 loading={loading}
                 paymentStatus={paymentStatus}
