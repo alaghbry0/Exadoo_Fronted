@@ -101,28 +101,6 @@ type SelectedPlan = SubscriptionCard & {
   selectedOption: SubscriptionOption;
   planId: number;};
 
-const DiscountBadge = ({ percentage }: { percentage: number }) => {
-  return (
-    <motion.div
-      initial={{ scale: 1, rotate: 0 }}
-      animate={{
-        scale: [1, 1.1, 1],
-        rotate: [0, -5, 5, -5, 0]
-      }}
-      transition={{
-        duration: 2,
-        repeat: Infinity,
-        repeatDelay: 3
-      }}
-      className="absolute -top-3 -right-3 z-20 bg-red-600 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center transform rotate-12 shadow-lg"
-    >
-      <span className="text-xs font-bold">خصم</span>
-      <span className="text-xl font-extrabold">{percentage}%</span>
-    </motion.div>
-  );
-};
-
-
 
 const ShopComponent: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);

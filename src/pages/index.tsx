@@ -5,8 +5,6 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
 import { Button, Footer } from 'flowbite-react'
-import { MdSupportAgent } from 'react-icons/md'
-
 import { HiOutlineCash, HiOutlineChartBar, HiOutlineChat } from 'react-icons/hi'
 import Navbar from '../components/Navbar'
 
@@ -33,7 +31,7 @@ const Home: React.FC = () => {
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <div dir="rtl" className="min-h-screen bg-white safe-area-padding pb-16 font-inter">
         {/* شريط التنقل */}
-        <Navbar dir="trl" />
+        <Navbar />
 
         {/* Hero Section */}
         <section className="w-full py-12 md:py-16 bg-gradient-to-br from-blue-50 to-white">

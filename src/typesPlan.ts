@@ -31,6 +31,9 @@ export interface SubscriptionOption {
   duration: string;
   price: number | string;
   originalPrice?: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  hasDiscount: boolean;
   savings?: string;
   telegramStarsPrice: number;
 }
