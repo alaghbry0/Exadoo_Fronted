@@ -331,32 +331,38 @@ const {
 
                         {/* عرض نسبة الخصم والسعر الأصلي إذا كان هناك خصم */}
                         {selectedOption?.hasDiscount && (
-    <div className="mt-2 flex flex-col items-start">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg text-red-500 line-through font-semibold">
-          {selectedOption.originalPrice?.toFixed(0)}$
-        </span>
+  <div className="mt-2 flex flex-col items-start">
+    <div className="flex items-center gap-2 mb-1">
+      <span className="text-lg text-red-500 line-through font-semibold">
+        {selectedOption.originalPrice?.toFixed(0)}$
+      </span>
+      <div className="flex items-center gap-2">
+        {/* خصم */}
         <span className="bg-red-100 text-red-700 text-sm font-bold px-3 py-1 rounded-full flex items-center">
           <FaPercent className="mr-1 text-xs" />
           {selectedOption.discountPercentage} خصم
         </span>
-      </div>
 
-      {/* إضافة شريط عد تنازلي مزيف للإلحاح */}
-      <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
-        <div className="flex items-center gap-2 text-amber-800">
-          <FaClock className="text-amber-600" />
-          <span className="text-sm font-medium">عرض لفترة محدوده !</span>
-        </div>
-      </div>
-    </div>
-  )}
-
-                        {selectedOption?.savings && (
-                          <span className="text-sm text-green-600 mt-1">
+        {/* توفير */}
+        {selectedOption.savings && (
+          <span className="text-sm text-green-600 mt-1">
                             {selectedOption.savings}
                           </span>
-                        )}
+        )}
+      </div>
+    </div>
+
+    {/* شريط العد التنازلي */}
+    <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+      <div className="flex items-center gap-2 text-amber-800">
+        <FaClock className="text-amber-600" />
+        <span className="text-sm font-medium">عرض لفترة محدودة!</span>
+      </div>
+    </div>
+  </div>
+)}
+
+
                       </div>
 
                       <ul className="space-y-3 mb-6">
