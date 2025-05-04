@@ -26,7 +26,6 @@ import { useNotificationsContext } from '@/context/NotificationsContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { NotificationType } from '@/types/notification';
-import { Badge } from '@/components/ui/badge';
 
 // دالة مساعدة لتنسيق التاريخ بالعربي
 const formatArabicDate = (dateString?: string) => {

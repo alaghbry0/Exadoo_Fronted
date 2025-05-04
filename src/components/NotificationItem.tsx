@@ -374,13 +374,13 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
               } font-medium`}>
                 {notification.extra_data.amount && notification.extra_data.expected_amount && (
                   <>
-                    <span>المبلغ المدفوع: {notification.extra_data.amount} TON</span>
+                    <span>المبلغ المدفوع: {notification.extra_data.amount} USDT</span>
                     {notification.extra_data.difference && (
                       <span className="block mt-1">
                         {notification.type === 'payment_warning'
-                          ? `(زيادة بمقدار ${notification.extra_data.difference} TON)`
+                          ? `(زيادة بمقدار ${notification.extra_data.difference} USDT)`
                           : notification.type === 'payment_failed'
-                          ? `(نقص بمقدار ${notification.extra_data.difference} TON)`
+                          ? `(نقص بمقدار ${notification.extra_data.difference} USDT)`
                           : ''}
                       </span>
                     )}
