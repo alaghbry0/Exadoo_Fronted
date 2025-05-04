@@ -481,3 +481,22 @@ a[target="_blank"] {
   animation-delay: 0.4s;
 }
 
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.notification-pulse-warning {
+  animation: pulse-warning 2s infinite;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.notification-shake {
+  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+}

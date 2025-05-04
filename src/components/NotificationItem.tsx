@@ -1,4 +1,3 @@
-// components/NotificationItem.tsx
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,7 +13,9 @@ import {
   Bell,
   Check,
   ChevronRight,
-  X
+  X,
+  AlertTriangle,
+  AlertOctagon
 } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -65,6 +66,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         return <Calendar className="w-5 h-5 text-emerald-500" strokeWidth={2} />;
       case 'payment_success':
         return <CreditCard className="w-5 h-5 text-emerald-500" strokeWidth={2} />;
+      case 'payment_warning':
+        return <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={2} />;
+      case 'payment_failed':
+        return <AlertOctagon className="w-5 h-5 text-red-500" strokeWidth={2} />;
       case 'subscription_expiry':
         return <Clock className="w-5 h-5 text-amber-500" strokeWidth={2} />;
       case 'system_notification':
@@ -192,6 +197,14 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         className += "bg-emerald-100 text-emerald-800";
         label = "دفع ناجح";
         break;
+      case 'payment_warning':
+        className += "bg-amber-100 text-amber-800";
+        label = "تحذير دفع";
+        break;
+      case 'payment_failed':
+        className += "bg-red-100 text-red-800";
+        label = "فشل عملية الدفع";
+        break;
       case 'subscription_expiry':
         className += "bg-amber-100 text-amber-800";
         label = "انتهاء اشتراك";
@@ -219,10 +232,58 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     return <span className={className}>{label}</span>;
   };
 
-  // تحديد لون الخلفية والحدود حسب حالة القراءة وإضافة تأثير الإشعار الجديد
-  const containerClasses = `rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ${
-    notification.read_status ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
-  } ${isNew ? 'notification-new-highlight' : ''}`;
+  // تحديد لون الخلفية والحدود حسب حالة القراءة والنوع
+  const getContainerClasses = () => {
+    // القاعدة الأساسية للإشعارات
+    let classes = "rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md overflow-hidden ";
+
+    // تحديد الألوان بناءً على نوع الإشعار
+    if (notification.type === 'payment_warning') {
+      classes += notification.read_status
+        ? 'bg-white border-amber-200'
+        : 'bg-amber-50 border-amber-300';
+    } else if (notification.type === 'payment_failed') {
+      classes += notification.read_status
+        ? 'bg-white border-red-200'
+        : 'bg-red-50 border-red-300';
+    } else {
+      classes += notification.read_status
+        ? 'bg-white border-gray-200'
+        : 'bg-blue-50 border-blue-200';
+    }
+
+    // إضافة تأثير الإشعار الجديد
+    if (isNew) {
+      classes += ' notification-new-highlight';
+    }
+
+    return classes;
+  };
+
+  // الحصول على الألوان الخاصة بكل نوع إشعار
+  const getNotificationColors = () => {
+    if (notification.type === 'payment_warning') {
+      return {
+        rippleBg: 'bg-amber-100',
+        iconBg: notification.read_status ? 'bg-amber-100' : 'bg-amber-200',
+        titleColor: !notification.read_status ? 'text-amber-700' : 'text-gray-900'
+      };
+    } else if (notification.type === 'payment_failed') {
+      return {
+        rippleBg: 'bg-red-100',
+        iconBg: notification.read_status ? 'bg-red-100' : 'bg-red-200',
+        titleColor: !notification.read_status ? 'text-red-700' : 'text-gray-900'
+      };
+    } else {
+      return {
+        rippleBg: 'bg-blue-100',
+        iconBg: notification.read_status ? 'bg-gray-100' : 'bg-blue-100',
+        titleColor: !notification.read_status ? 'text-blue-700' : 'text-gray-900'
+      };
+    }
+  };
+
+  const colors = getNotificationColors();
 
   return (
     <motion.div
@@ -234,7 +295,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           : { opacity: 1, x: showDismissButton ? 50 : 0, height: "auto" }
       }
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`${containerClasses} relative`}
+      className={`${getContainerClasses()} relative`}
       onClick={handleNotificationClick}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
@@ -270,7 +331,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       {/* مؤشر السحب يُظهر تقدم حركة السحب */}
       {!notification.read_status && (
         <motion.div
-          className="absolute inset-0 bg-blue-100"
+          className={`absolute inset-0 ${colors.rippleBg}`}
           style={{ opacity: swipeProgress / 100 }}
         />
       )}
@@ -283,7 +344,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             animate={{ scale: 1.2, opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="absolute inset-0 bg-blue-100 rounded-xl"
+            className={`absolute inset-0 ${colors.rippleBg} rounded-xl`}
           />
         )}
       </AnimatePresence>
@@ -291,9 +352,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       <div className="flex items-start gap-3 p-4">
         {/* أيقونة الإشعار مع خلفية دائرية */}
         <motion.div
-          className={`flex-shrink-0 p-2 rounded-full ${
-            notification.read_status ? 'bg-gray-100' : 'bg-blue-100'
-          }`}
+          className={`flex-shrink-0 p-2 rounded-full ${colors.iconBg}`}
           whileHover={{ scale: 1.1 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
         >
@@ -303,11 +362,32 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex flex-col">
             {/* عنوان الإشعار */}
-            <h3 className={`font-semibold truncate ${
-              !notification.read_status ? 'text-blue-700' : 'text-gray-900'
-            }`}>
+            <h3 className={`font-semibold truncate ${colors.titleColor}`}>
               {notification.title || notification.type.replace(/_/g, ' ')}
             </h3>
+
+            {/* عرض معلومات الدفع إذا كان الإشعار متعلق بالدفع */}
+            {(notification.type === 'payment_warning' || notification.type === 'payment_failed' || notification.type === 'payment_success') && notification.extra_data && (
+              <div className={`mt-1 text-sm ${
+                notification.type === 'payment_failed' ? 'text-red-600' :
+                notification.type === 'payment_warning' ? 'text-amber-600' : 'text-emerald-600'
+              } font-medium`}>
+                {notification.extra_data.amount && notification.extra_data.expected_amount && (
+                  <>
+                    <span>المبلغ المدفوع: {notification.extra_data.amount} TON</span>
+                    {notification.extra_data.difference && (
+                      <span className="block mt-1">
+                        {notification.type === 'payment_warning'
+                          ? `(زيادة بمقدار ${notification.extra_data.difference} TON)`
+                          : notification.type === 'payment_failed'
+                          ? `(نقص بمقدار ${notification.extra_data.difference} TON)`
+                          : ''}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* رسالة الإشعار مع تأثير الانزلاق */}
             <AnimatePresence initial={false} mode="wait">
@@ -366,6 +446,21 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                   <Info className="w-3 h-3 ml-1" />
                   معلومات الاشتراك
                 </motion.span>
+              )}
+              {/* إضافة رابط للدعم الفني في إشعارات الدفع المحددة */}
+              {notification.extra_data && notification.extra_data.invite_link && (
+                notification.type === 'payment_warning' || notification.type === 'payment_failed') && (
+                <motion.a
+                  href={notification.extra_data.invite_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center text-xs text-white bg-blue-600 px-2 py-1 rounded-full"
+                >
+                  <MessageSquare className="w-3 h-3 ml-1" />
+                  تواصل مع الدعم
+                </motion.a>
               )}
             </div>
           </div>

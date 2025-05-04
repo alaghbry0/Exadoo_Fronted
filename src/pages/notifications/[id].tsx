@@ -1,4 +1,3 @@
-// pages/notifications/[id].tsx
 'use client'
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -13,7 +12,11 @@ import {
   Clock,
   Link as LinkIcon,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  MessageSquare,
+  AlertTriangle,
+  AlertOctagon,
+  ExternalLink
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTelegram } from '@/context/TelegramContext';
@@ -23,6 +26,7 @@ import { useNotificationsContext } from '@/context/NotificationsContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { NotificationType } from '@/types/notification';
+import { Badge } from '@/components/ui/badge';
 
 // دالة مساعدة لتنسيق التاريخ بالعربي
 const formatArabicDate = (dateString?: string) => {
@@ -124,6 +128,10 @@ export default function NotificationDetail() {
         return <Calendar className="w-8 h-8 text-emerald-600" />;
       case 'payment_success':
         return <CreditCard className="w-8 h-8 text-emerald-600" />;
+      case 'payment_warning':
+        return <AlertTriangle className="w-8 h-8 text-amber-600" />;
+      case 'payment_failed':
+        return <AlertOctagon className="w-8 h-8 text-red-600" />;
       case 'subscription_expiry':
         return <Clock className="w-8 h-8 text-amber-600" />;
       case 'system_notification':
@@ -131,6 +139,96 @@ export default function NotificationDetail() {
       default:
         return <Bell className="w-8 h-8 text-blue-600" />;
     }
+  };
+
+  // تحديد لون وخلفية الإشعار بناءً على نوعه
+  const getNotificationTheme = () => {
+    if (!notification?.type) {
+      return {
+        bg: 'bg-blue-50',
+        title: 'text-blue-800',
+        icon: 'text-blue-600',
+        border: 'border-blue-200'
+      };
+    }
+    
+    switch (notification.type) {
+      case 'subscription_renewal':
+        return {
+          bg: 'bg-emerald-50',
+          title: 'text-emerald-800',
+          icon: 'text-emerald-600',
+          border: 'border-emerald-200'
+        };
+      case 'payment_success':
+        return {
+          bg: 'bg-emerald-50',
+          title: 'text-emerald-800',
+          icon: 'text-emerald-600',
+          border: 'border-emerald-200'
+        };
+      case 'payment_warning':
+        return {
+          bg: 'bg-amber-50',
+          title: 'text-amber-800',
+          icon: 'text-amber-600',
+          border: 'border-amber-200'
+        };
+      case 'payment_failed':
+        return {
+          bg: 'bg-red-50',
+          title: 'text-red-800',
+          icon: 'text-red-600',
+          border: 'border-red-200'
+        };
+      case 'subscription_expiry':
+        return {
+          bg: 'bg-amber-50',
+          title: 'text-amber-800',
+          icon: 'text-amber-600',
+          border: 'border-amber-200'
+        };
+      default:
+        return {
+          bg: 'bg-blue-50',
+          title: 'text-blue-800',
+          icon: 'text-blue-600',
+          border: 'border-blue-200'
+        };
+    }
+  };
+
+  // الحصول على شارة حالة الإشعار
+  const getStatusBadge = () => {
+    if (!notification?.extra_data?.severity) return null;
+    
+    const severity = notification.extra_data.severity;
+    let classes = "px-2 py-1 text-xs font-medium rounded-full ";
+    let label = "";
+    
+    switch (severity) {
+      case 'success':
+        classes += "bg-emerald-100 text-emerald-800";
+        label = "ناجح";
+        break;
+      case 'warning':
+        classes += "bg-amber-100 text-amber-800";
+        label = "تحذير";
+        break;
+      case 'error':
+        classes += "bg-red-100 text-red-800";
+        label = "فشل";
+        break;
+      case 'info':
+        classes += "bg-blue-100 text-blue-800";
+        label = "معلومات";
+        break;
+      default:
+        classes += "bg-gray-100 text-gray-800";
+        label = severity;
+    }
+    
+    return <span className={classes}>{label}</span>;
   };
 
   const handleGoBack = () => {
@@ -160,8 +258,6 @@ export default function NotificationDetail() {
       </div>
     );
   }
-
-
 
   // حالة التحميل
   if (isLoading) {
@@ -210,7 +306,6 @@ export default function NotificationDetail() {
   // حالة الخطأ أو عدم الحصول على بيانات الإشعار
   if (isError || !notification) {
     return (
-
       <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -238,15 +333,12 @@ export default function NotificationDetail() {
     );
   }
 
+  const theme = getNotificationTheme();
+
   return (
-
-
-
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen relative z-20">
       {/* رأس الصفحة مع z-index أعلى */}
       <div className="flex items-center mb-6 sticky top-0 bg-gray-50 z-30 py-2">
-
-
         <Button
           onClick={handleGoBack}
           variant="outline"
@@ -254,11 +346,10 @@ export default function NotificationDetail() {
         >
           <ArrowRight className="w-5 h-5" />
         </Button>
-
-
-        <h1 className="text-xl md:text-2xl font-bold flex-1 text-center">التفاصيل</h1>
+        <h1 className="text-xl md:text-2xl font-bold flex-1 text-center">تفاصيل الإشعار</h1>
         <div className="w-10"></div>
       </div>
+      
       {/* باقي المحتوى */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -266,21 +357,22 @@ export default function NotificationDetail() {
         transition={{ duration: 0.3 }}
         className="relative z-20"
       >
-
-
         {/* بطاقة تفاصيل الإشعار */}
-        <Card className="mb-6">
+        <Card className={`mb-6 ${theme.border}`}>
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-50 rounded-full">
+              <div className={`p-3 ${theme.bg} rounded-full`}>
                 {getNotificationIcon()}
               </div>
 
               <div className="flex-1">
                 <div className="flex justify-between items-start flex-wrap gap-2">
-                  <h2 className="text-xl font-semibold mb-2">
-                    {notification?.title || notification?.type?.replace(/_/g, ' ') || 'إشعار بدون عنوان'}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className={`text-xl font-semibold mb-2 ${theme.title}`}>
+                      {notification?.title || notification?.type?.replace(/_/g, ' ') || 'إشعار بدون عنوان'}
+                    </h2>
+                    {getStatusBadge()}
+                  </div>
                   <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                     {notification?.created_at ? getRelativeTime(notification.created_at) : 'تاريخ غير معروف'}
                   </span>
@@ -306,13 +398,117 @@ export default function NotificationDetail() {
           </CardContent>
         </Card>
 
-        {/* بطاقة تفاصيل الاشتراك/الدفع (إن وُجدت) */}
+        {/* بطاقة تفاصيل الدفع (للإشعارات المتعلقة بالدفع) */}
+        {(notification.type === 'payment_warning' || notification.type === 'payment_failed' || notification.type === 'payment_success') && 
+         notification.extra_data && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <Card className={`mb-6 ${theme.border}`}>
+              <CardHeader>
+                <CardTitle className={`text-lg font-semibold pb-2 border-b border-gray-200 ${theme.title}`}>
+                  {notification.type === 'payment_success' && "تفاصيل الدفع الناجح"}
+                  {notification.type === 'payment_warning' && "تحذير متعلق بالدفع"}
+                  {notification.type === 'payment_failed' && "فشل عملية الدفع"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`${theme.bg} p-4 rounded-lg mb-4`}>
+                  <div className="space-y-3">
+                    {notification.extra_data.payment_id && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">معرف عملية الدفع:</span>
+                        <span className="font-medium bg-white px-2 py-1 rounded text-sm break-all">
+                          {notification.extra_data.payment_id}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {notification.extra_data.amount && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">المبلغ المدفوع:</span>
+                        <span className={`font-bold ${
+                          notification.type === 'payment_failed' ? 'text-red-600' : 
+                          notification.type === 'payment_warning' ? 'text-amber-600' : 'text-emerald-600'
+                        }`}>
+                          {notification.extra_data.amount} TON
+                        </span>
+                      </div>
+                    )}
+                    
+                    {notification.extra_data.expected_amount && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">المبلغ المطلوب:</span>
+                        <span className="font-medium">
+                          {notification.extra_data.expected_amount} TON
+                        </span>
+                      </div>
+                    )}
+                    
+                    {notification.extra_data.difference && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">
+                          {notification.type === 'payment_warning' ? 'الزيادة في المبلغ:' : 'النقص في المبلغ:'}
+                        </span>
+                        <span className={`font-medium ${
+                          notification.type === 'payment_failed' ? 'text-red-600' : 
+                          notification.type === 'payment_warning' ? 'text-amber-600' : 'text-blue-600'
+                        }`}>
+                          {notification.extra_data.difference} TON
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* ملاحظات مهمة */}
+                {notification.extra_data.message && (
+                  <div className={`p-4 rounded-lg mb-4 ${
+                    notification.type === 'payment_failed' ? 'bg-red-50 border border-red-200' : 
+                    notification.type === 'payment_warning' ? 'bg-amber-50 border border-amber-200' : 
+                    'bg-emerald-50 border border-emerald-200'
+                  }`}>
+                    <h4 className={`font-medium mb-2 ${
+                      notification.type === 'payment_failed' ? 'text-red-700' : 
+                      notification.type === 'payment_warning' ? 'text-amber-700' : 'text-emerald-700'
+                    }`}>
+                      ملاحظة مهمة
+                    </h4>
+                    <p className="text-gray-700">{notification.extra_data.message}</p>
+                  </div>
+                )}
+                
+                {/* زر التواصل مع الدعم */}
+                {notification.extra_data.invite_link && (
+                  <div className="mt-4">
+                    <Button
+                      className={`w-full gap-2 py-6 text-base ${
+                        notification.type === 'payment_failed' ? 'bg-red-600 hover:bg-red-700' : 
+                        notification.type === 'payment_warning' ? 'bg-amber-600 hover:bg-amber-700' : 
+                        'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                      onClick={() => window.open(notification.extra_data?.invite_link || '#', '_blank')}
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                      <span>التواصل مع فريق الدعم</span>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* بطاقة تفاصيل الاشتراك (إن وُجدت) */}
         {notification.subscription_history && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold pb-2 border-b border-gray-200">
-                  تفاصيل الدفعة والاشتراك
+                  تفاصيل الاشتراك
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -391,6 +587,5 @@ export default function NotificationDetail() {
         )}
       </motion.div>
     </div>
-
   );
 }
