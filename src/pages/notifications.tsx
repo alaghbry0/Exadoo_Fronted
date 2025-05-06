@@ -143,7 +143,7 @@ export default function NotificationsPage() {
           if (filter === 'all' || (filter === 'unread' && !newNotification.read_status)) {
             queryClient.setQueryData(
               ['notifications', telegramId, filter],
-              (oldData: { pages: NotificationType[][], pageParams: any[] } | undefined) => {
+              (oldData: { pages: NotificationType[][], pageParams: (string | undefined)[] } | undefined) => {
                 if (!oldData || !oldData.pages) { // تبسيط الشرط قليلاً
                   return {
                     pages: [[newNotification]],

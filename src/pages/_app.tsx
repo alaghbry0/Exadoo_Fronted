@@ -1,6 +1,8 @@
 'use client'
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import type { AppProps } from 'next/app'
+
+// ChatWidget type is already defined in telegram-web-app.d.ts
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
@@ -240,7 +242,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
       if (document.body.contains(script)) {
          document.body.removeChild(script);
       }
-      if (window.ChatWidget && typeof window.ChatWidget.destroy === 'function') { // Check if destroy exists
+      if (window.ChatWidget && 'destroy' in window.ChatWidget && typeof window.ChatWidget.destroy === 'function') {
         // window.ChatWidget.destroy(); // Uncomment if needed and available
       }
     };
