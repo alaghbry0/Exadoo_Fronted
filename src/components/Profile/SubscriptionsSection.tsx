@@ -23,13 +23,13 @@ const statusColors: Record<StatusType, { bg: string; text: string; border: strin
   'unknown': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100' }
 };
 
-export default function SubscriptionsSection({ 
-  subscriptions, 
-  loadMore, 
-  hasMore, 
-  isLoadingMore, 
-  onRefreshClick, 
-  isRefreshing 
+export default function SubscriptionsSection({
+  subscriptions,
+  loadMore,
+  hasMore,
+  isLoadingMore,
+  onRefreshClick,
+  isRefreshing
 }: SubscriptionsSectionProps) {
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -58,11 +58,11 @@ export default function SubscriptionsSection({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
         >
-          <RefreshCcw 
-            className={`w-4 h-4 ml-1 ${isRefreshing ? 'animate-spin' : ''}`} 
+          <RefreshCcw
+            className={`w-4 h-4 ml-1 ${isRefreshing ? 'animate-spin' : ''}`}
           />
           {isRefreshing ? 'جاري التحديث...' : ' تحديث البيانات'}
-        </motion.button>   
+        </motion.button>
       </div>
 
       <AnimatePresence mode="popLayout">
@@ -112,13 +112,6 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
     return diffDays <= 3;
   };
 
-  const handleJoinClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (sub.invite_link) {
-      window.open(sub.invite_link, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   const showJoinButton = sub.status === 'نشط' && sub.invite_link;
 
   const handleRefundClick = (e: React.MouseEvent) => {
@@ -130,23 +123,29 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
 
   return (
     <motion.li
-      className={cn(
-        "rounded-lg p-4 border shadow-sm transition-all duration-200",
-        "group hover:shadow-md hover:border-blue-100"
-      )}
+  className={cn(
+    "rounded-xl p-4 border-2 shadow-sm transition-all duration-200",
+    "group hover:shadow-md hover:border-blue-100 bg-gradient-to-br from-white to-blue-50/50"
+  )}
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ delay: 0.5 + index * 0.1 }}
     >
       <div className="flex justify-between items-start gap-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-800 text-sm line-clamp-1 mb-1 group-hover:text-blue-700">
-            {sub.name}
-          </h3>
-          <p className="text-gray-500 text-xs line-clamp-1">{sub.expiry}</p>
-        </div>
-        <div>
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-800 text-sm line-clamp-1 group-hover:text-blue-700">
+                {sub.name}
+              </h3>
+              {isNewSubscription() && (
+                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full">
+                  جديد
+                </span>
+              )}
+            </div>
+            <p className="text-gray-500 text-xs line-clamp-1">{sub.expiry}</p>
+          </div>
           <span
             className={cn(
               "text-xs px-2.5 py-1 rounded-full transition-colors duration-200 inline-flex items-center",
@@ -158,62 +157,54 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
             {currentStatus !== 'unknown' ? sub.status : 'غير معروف'}
           </span>
         </div>
+
+        {/* Progress Bar */}
+        <div className="mt-3">
+          <Progress
+  value={sub.progress || 0}
+  className={cn(
+    "h-2.5 rounded-full",
+    sub.status === 'نشط' ? "bg-gray-100" : "bg-gray-50"
+  )}
+  indicatorClassName={cn(
+    sub.status === 'نشط'
+      ? "bg-gradient-to-r from-blue-400 to-blue-600"
+      : "bg-gradient-to-r from-orange-300 to-orange-400"
+  )}
+/>
       </div>
 
-      <div className="mt-3">
-        <Progress
-          value={sub.progress || 0}
-          className={cn(
-            "h-2",
-            sub.status === 'نشط' ? "bg-gray-100" : "bg-gray-50"
-          )}
-          indicatorClassName={cn(
-            sub.status === 'نشط'
-              ? "bg-gradient-to-r from-blue-400 to-blue-600"
-              : "bg-orange-300"
-          )}
-        />
-      </div>
+      {(showJoinButton || showRefundButton) && (
+  <div className="mt-3 flex justify-end gap-2">
+    {showRefundButton && (
+      <motion.button
+        onClick={handleRefundClick}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                 bg-red-50 text-red-600 hover:bg-red-100 transition-colors
+                 border border-red-200 shadow-sm"
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <RefreshCcw className="w-3.5 h-3.5" />
+        استرداد
+      </motion.button>
+    )}
 
-      {showJoinButton && (
-        <div className="mt-3 flex justify-end gap-2">
-          <motion.a
-            href={sub.invite_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleJoinClick}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5 + index * 0.1 + 0.3 }}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
-              "bg-green-50 text-green-700 hover:bg-green-100 ring-1 ring-green-200"
-            )}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <Zap className="w-3.5 h-3.5" />
-            الانضمام
-          </motion.a>
-        </div>
-      )}
-
-      {showRefundButton && (
-        <div className="mt-3 flex justify-end">
-          <motion.button
-            onClick={handleRefundClick}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5 + index * 0.1 + 0.3 }}
-            className="flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-red-100 transition-colors ring-1 ring-red-200"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <RefreshCcw className="w-3.5 h-3.5" />
-            استرداد
-          </motion.button>
-        </div>
-      )}
+    {showJoinButton && (
+      <motion.a
+        href={sub.invite_link}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                 bg-green-50 text-green-700 hover:bg-green-100 transition-colors
+                 border border-green-200 shadow-sm"
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <Zap className="w-3.5 h-3.5" />
+        الانضمام
+      </motion.a>
+    )}
+  </div>
+)}
     </motion.li>
   );
 };

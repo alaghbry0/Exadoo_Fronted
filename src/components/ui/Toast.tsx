@@ -144,7 +144,7 @@ export const showToast = {
                   content.action?.onClick()
                   toast.dismiss(t.id)
                 }}
-                className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                className="mt-1 inline-flex items-center gap-1 text-green-600 hover:text-green-800"
               >
                 <FiExternalLink className="w-4 h-4" />
                 <span>{content.action.text}</span>
@@ -152,17 +152,13 @@ export const showToast = {
             )}
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              toast.dismiss(t.id)
-            }}
+            onClick={() => toast.dismiss(t.id)}
             className="p-1 hover:bg-black/5 rounded-full"
           >
             <FiX className="w-4 h-4" />
           </button>
         </div>
       ), {
-        duration: 10000, // مدة أطول للإشعار حتى يتمكن المستخدم من النقر على الزر
         icon: <FiCheckCircle className="text-green-500 w-6 h-6" />
       })
     }
