@@ -1,3 +1,4 @@
+
 'use client';
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useUserStore } from "../stores/zustand/userStore";
@@ -15,11 +16,6 @@ const TelegramContext = createContext<TelegramContextType>({
   isTelegramApp: false,
   telegramId: null,
 });
-
-// إضافة ثوابت للوضع التجريبي
-const TEST_MODE = true; // تفعيل الوضع التجريبي في التطوير فقط
-const TEST_TELEGRAM_ID = "7382197778";
-
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const { setUserData, telegramId: contextTelegramId } = useUserStore();
@@ -51,36 +47,27 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
   // ✅ جلب بيانات المستخدم من Telegram
   const fetchTelegramUserData = useCallback(() => {
     console.log("Fetching Telegram User Data...");
+    console.log("isTelegramAppRef.current:", isTelegramAppRef.current);
 
-    if (TEST_MODE) {
-      console.log("🔥 TEST MODE ACTIVATED - Using predefined user data");
-      const userData = {
-        telegramId: TEST_TELEGRAM_ID,
-        telegramUsername: "test_user",
-        fullName: "Test User",
-        photoUrl: null,
-        joinDate: null,
-      };
-
-      setUserData(userData);
-      setIsTelegramReady(true);
+    if (!isTelegramAppRef.current) {
+      console.log("Not in Telegram WebApp, exiting...");
       setIsLoading(false);
       return;
     }
 
-    console.log("isTelegramAppRef.current:", isTelegramAppRef.current);
-
     const tg = window.Telegram?.WebApp;
+    console.log("Telegram WebApp instance:", tg);
+
     if (!tg) {
-      console.log("Telegram WebApp not available");
-      retryInitDataFetch();
+      console.warn("Telegram WebApp not available, exiting...");
+      setIsLoading(false);
       return;
     }
 
     tg.ready();
     tg.expand();
 
-    if (tg?.initDataUnsafe?.user) {
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
       const user = tg.initDataUnsafe.user;
       const userData = {
         telegramId: user.id?.toString() || null,
