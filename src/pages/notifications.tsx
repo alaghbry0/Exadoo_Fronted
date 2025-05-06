@@ -137,43 +137,52 @@ export default function NotificationsPage() {
           setUnreadCount(data.count)
         }
       } else if (message.type === 'new_notification' && message.data) {
-        // التحديث المحسن: إضافة الإشعار الجديد مباشرة إلى بداية القائمة
         const newNotification = message.data as NotificationType
 
         if (newNotification.id) {
-          // إضافة الإشعار الجديد إلى القائمة مباشرة إذا كان الفلتر "all" أو كان الإشعار غير مقروء
           if (filter === 'all' || (filter === 'unread' && !newNotification.read_status)) {
             queryClient.setQueryData(
               ['notifications', telegramId, filter],
-              (oldData: { pages: NotificationType[][] } | undefined) => {
-                if (!oldData?.pages?.length) return oldData
+              (oldData: { pages: NotificationType[][], pageParams: any[] } | undefined) => {
+                if (!oldData || !oldData.pages) { // تبسيط الشرط قليلاً
+                  return {
+                    pages: [[newNotification]],
+                    pageParams: [undefined]
+                  };
+                }
 
-                const updatedPages = [...oldData.pages]
-                updatedPages[0] = [newNotification, ...updatedPages[0]]
+                const updatedPages = [...oldData.pages]; // تهيئة updatedPages
+
+                // إذا لم تكن هناك صفحات على الإطلاق (حالة نادرة إذا مر الشرط الأول)
+                if (updatedPages.length === 0) {
+                    updatedPages.push([newNotification]);
+                } else {
+                    const firstPage = updatedPages[0] || [];
+                    // تحقق مما إذا كان الإشعار موجودًا بالفعل في الصفحة الأولى
+                    if (firstPage.some(n => n.id === newNotification.id)) {
+                      return oldData;
+                    }
+                    updatedPages[0] = [newNotification, ...firstPage];
+                }
 
                 return {
                   ...oldData,
                   pages: updatedPages
-                }
+                };
               }
-            )
+            );
           }
 
-          // تحديث عدد الإشعارات غير المقروءة
-          queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] })
-
-          // تأشير للإشعار الجديد
-          setNewNotificationIds(prev => [...prev, newNotification.id])
-
-          // إزالة التأشير بعد 5 ثواني
+          queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
+          setNewNotificationIds(prev => [...prev, newNotification.id]);
           setTimeout(() => {
-            setNewNotificationIds(prev => prev.filter(id => id !== newNotification.id))
-          }, 5000)
+            setNewNotificationIds(prev => prev.filter(id => id !== newNotification.id));
+          }, 5000);
         }
       }
     },
     [setUnreadCount, queryClient, telegramId, filter]
-  )
+  );
 
   // الاتصال بالويب سوكيت مع معالجة أفضل للاتصال
   const { isConnected, markAllAsRead } = useNotificationsSocket(telegramId, handleSocketMessage)

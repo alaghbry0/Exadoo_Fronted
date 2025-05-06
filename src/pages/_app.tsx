@@ -1,7 +1,7 @@
 'use client'
-import React, { useEffect, useState, useCallback, useRef } from 'react' // Added useRef
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import type { AppProps } from 'next/app'
-import { useRouter } from 'next/router' // useRouter will still be used for other parts
+import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
@@ -61,15 +61,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const { telegramId } = useTelegram()
   const { setWalletAddress } = useTariffStore()
   const { setUnreadCount } = useNotificationsContext()
-  const router = useRouter(); // Still can be used for other purposes in AppContent
+  const router = useRouter();
   const queryClient = useTanstackQueryClient()
 
-  // استخدام useRef لتخزين دالة معالجة الرسائل لتجنب إعادة إنشائها بشكل متكرر
-  // مما قد يؤدي إلى إعادة اتصال WebSocket
   const handleWebSocketMessageRef = useRef<((message: SocketNotificationMessage) => void) | null>(null);
 
   useEffect(() => {
-    // تعريف الدالة داخل useEffect أو useCallback مع اعتماديات مستقرة
     handleWebSocketMessageRef.current = (message: SocketNotificationMessage) => {
       console.log("📩 WebSocket message received in _app.tsx:", message);
 
@@ -77,7 +74,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
         const data = message.data as { count?: number };
         if (data?.count !== undefined) {
           console.log(`🔄 Updating unread count via Context to: ${data.count}`);
-          setUnreadCount(data.count); // setUnreadCount should be stable
+          setUnreadCount(data.count);
         }
         return;
       }
@@ -86,9 +83,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
         const notificationData = message.data as NotificationData;
         console.log("✨ New notification received in _app.tsx:", notificationData);
 
-        if (telegramId) { // telegramId comes from useTelegram, should be stable unless user logs out
+        if (telegramId) {
           console.log(`🔄 Invalidating notifications for telegramId: ${telegramId} due to new_notification`);
-          queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] }); // queryClient is stable
+          queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
         } else {
           console.warn("⚠️ telegramId is null, cannot invalidate notification queries for new_notification.");
         }
@@ -98,20 +95,31 @@ function AppContent({ children }: { children: React.ReactNode }) {
             ? new Date(notificationData.extra_data.expiry_date)
             : null;
 
-          // افتراض أن formattedDate يتم حسابه بطريقة ما
           const formattedDate = expiryDate ? expiryDate.toLocaleDateString('ar-EG', { month: 'long', day: 'numeric', year: 'numeric' }) : 'تاريخ غير محدد';
-
           const toastMessage = `✅ تم تجديد اشتراكك في ${notificationData.extra_data.subscription_type || 'الخدمة'} حتى ${formattedDate} UTC+3`;
           const inviteLink = notificationData.extra_data.invite_link;
+
+          const toastOnClick = () => {
+            router.push(`/notifications/${notificationData.id}`);
+            if (!notificationData.read_status && telegramId) { // Ensure telegramId is available
+              queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
+            }
+          };
 
           if (inviteLink) {
             showToast.success({
               message: toastMessage,
-              // فتح الرابط مباشرة، لا حاجة لـ router.push هنا
-              action: { text: 'انضم إلى القناة', onClick: () => { window.open(inviteLink, '_blank'); } }
+              action: {
+                text: 'انضم إلى القناة',
+                onClick: () => window.open(inviteLink, '_blank')
+              },
+              onClick: toastOnClick
             });
           } else {
-            showToast.success({ message: toastMessage });
+            showToast.success({
+              message: toastMessage,
+              onClick: toastOnClick
+            });
           }
 
           if (telegramId) {
@@ -134,19 +142,17 @@ function AppContent({ children }: { children: React.ReactNode }) {
         }
       }
     };
-  }, [setUnreadCount, telegramId, queryClient]); // router is removed from dependencies
+  }, [setUnreadCount, telegramId, queryClient, router]); // Added router to dependencies as it's used inside
 
-  // إنشاء دالة مغلفة مستقرة لتمريرها إلى useNotificationsSocket
   const stableWebSocketMessageHandler = useCallback((message: SocketNotificationMessage) => {
     if (handleWebSocketMessageRef.current) {
       handleWebSocketMessageRef.current(message);
     }
-  }, []); // لا توجد اعتماديات هنا، مما يجعلها مستقرة
+  }, []);
 
-  // WebSocket Hook integration
   const { connectionState } = useNotificationsSocket(
     telegramId,
-    stableWebSocketMessageHandler // استخدام الدالة المستقرة
+    stableWebSocketMessageHandler
   );
 
   useEffect(() => {
@@ -161,14 +167,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
     console.log(statusMap[connectionState] || `⚪ Unknown connection state: ${connectionState} (_app.tsx)`);
   }, [connectionState, telegramId]);
 
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinDelayCompleted(true);
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
-
 
   const {
     data: walletAddress,
@@ -207,7 +211,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
     const prefetchPages = async () => {
       try {
         const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications'];
-        await Promise.all(pagesToPrefetch.map(page => router.prefetch(page))); // router here is fine
+        await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
         console.log("🔄 Prefetched important pages");
       } catch (error) {
         console.error('⚠️ Error during prefetch:', error);
@@ -222,20 +226,23 @@ function AppContent({ children }: { children: React.ReactNode }) {
     script.async = true;
     document.body.appendChild(script);
     script.onload = () => {
-      window.ChatWidget?.init({
-        projectId: "Exaado mini app",
-        apiUrl: "https://exadoo-rxr9.onrender.com/bot/chat/stream",
-        theme: "light",
-        position: "bottom-right",
-        direction: "rtl"
-      });
+      if (window.ChatWidget) { // Check if ChatWidget is available
+        window.ChatWidget.init({
+          projectId: "Exaado mini app",
+          apiUrl: "https://exadoo-rxr9.onrender.com/bot/chat/stream",
+          theme: "light",
+          position: "bottom-right",
+          direction: "rtl"
+        });
+      }
     };
     return () => {
       if (document.body.contains(script)) {
          document.body.removeChild(script);
       }
-      // Consider also cleaning up ChatWidget if it has a destroy method
-      // window.ChatWidget?.destroy?.();
+      if (window.ChatWidget && typeof window.ChatWidget.destroy === 'function') { // Check if destroy exists
+        // window.ChatWidget.destroy(); // Uncomment if needed and available
+      }
     };
   }, []);
 
