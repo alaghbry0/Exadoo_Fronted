@@ -16,7 +16,12 @@ type CustomToastType = Toast & {
 /* مكون CustomToast يقوم بعرض جميع التوستات المُفعلة */
 export const CustomToast: React.FC = () => {
   return (
-    <Toaster position="top-center">
+    <Toaster
+      position="top-center"
+      toastOptions={{
+        duration: 10000, // الإعداد العام لجميع التوستات
+      }}
+    >
       {(t: CustomToastType) => {
         const { type, message, ariaProps } = t
         // استخراج role من ariaProps إن وُجد
