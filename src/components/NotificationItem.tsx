@@ -63,7 +63,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   const getNotificationIcon = () => {
     switch (notification.type) {
       case 'subscription_renewal':
-        return <Calendar className="w-5 h-5 text-emerald-500" strokeWidth={2} />;
+        return <Calendar className="w-5 h-5 text-blue-500" strokeWidth={2} />;
       case 'payment_success':
         return <CreditCard className="w-5 h-5 text-emerald-500" strokeWidth={2} />;
       case 'payment_warning':

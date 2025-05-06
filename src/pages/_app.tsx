@@ -1,18 +1,18 @@
 'use client'
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react' // Added useRef
 import type { AppProps } from 'next/app'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router' // useRouter will still be used for other parts
 import '../styles/globals.css'
 import FooterNav from '../components/FooterNav'
 import SplashScreen from '../components/SplashScreen'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useTariffStore } from '../stores/zustand'
 import { fetchBotWalletAddress } from '../services/api'
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient as useTanstackQueryClient } from '@tanstack/react-query'
 import { useProfileStore } from '../stores/profileStore'
 import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useNotificationsSocket } from '@/hooks/useNotificationsSocket'
+import { useNotificationsSocket, NotificationMessage as SocketNotificationMessage } from '@/hooks/useNotificationsSocket'
 import { NotificationsProvider, useNotificationsContext } from '@/context/NotificationsContext'
 import { showToast } from '@/components/ui/Toast'
 
@@ -35,17 +35,7 @@ export interface NotificationData {
   extra_data?: NotificationExtraData;
 }
 
-export interface NotificationMessage {
-  type: string;
-  data?: unknown;
-  id?: string;
-  title?: string;
-  message?: string;
-  created_at?: string;
-  read_status?: boolean;
-}
-
-const queryClient = new QueryClient({
+const globalQueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
@@ -67,198 +57,191 @@ const useWalletAddress = () => {
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false)
-  const [socketInitialized, setSocketInitialized] = useState(false)
   const { setSubscriptions } = useProfileStore()
   const { telegramId } = useTelegram()
   const { setWalletAddress } = useTariffStore()
   const { setUnreadCount } = useNotificationsContext()
-  const router = useRouter()
+  const router = useRouter(); // Still can be used for other purposes in AppContent
+  const queryClient = useTanstackQueryClient()
 
-  // تعريف معالج رسائل WebSocket للإشعارات
-  const handleWebSocketMessage = useCallback((message: NotificationMessage) => {
-    console.log("📩 WebSocket message received:", message)
+  // استخدام useRef لتخزين دالة معالجة الرسائل لتجنب إعادة إنشائها بشكل متكرر
+  // مما قد يؤدي إلى إعادة اتصال WebSocket
+  const handleWebSocketMessageRef = useRef<((message: SocketNotificationMessage) => void) | null>(null);
 
-    // تحديث عداد الإشعارات غير المقروءة
-    if (message.type === "unread_update") {
-      const data = message.data as { count?: number }
-      if (data?.count !== undefined) {
-        setUnreadCount(data.count)
+  useEffect(() => {
+    // تعريف الدالة داخل useEffect أو useCallback مع اعتماديات مستقرة
+    handleWebSocketMessageRef.current = (message: SocketNotificationMessage) => {
+      console.log("📩 WebSocket message received in _app.tsx:", message);
+
+      if (message.type === "unread_update") {
+        const data = message.data as { count?: number };
+        if (data?.count !== undefined) {
+          console.log(`🔄 Updating unread count via Context to: ${data.count}`);
+          setUnreadCount(data.count); // setUnreadCount should be stable
+        }
+        return;
       }
-      return
-    }
 
-    // التعامل مع إشعار جديد
-    if (message.type === "new_notification") {
-      const notificationData = message.data as NotificationData
+      if (message.type === "new_notification") {
+        const notificationData = message.data as NotificationData;
+        console.log("✨ New notification received in _app.tsx:", notificationData);
 
-      // إعادة تحميل قائمة الإشعارات
-      queryClient.invalidateQueries({
-        queryKey: ['notifications', telegramId]
-      })
+        if (telegramId) { // telegramId comes from useTelegram, should be stable unless user logs out
+          console.log(`🔄 Invalidating notifications for telegramId: ${telegramId} due to new_notification`);
+          queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] }); // queryClient is stable
+        } else {
+          console.warn("⚠️ telegramId is null, cannot invalidate notification queries for new_notification.");
+        }
 
-      // تحديد رسالة Toast بناءً على نوع الإشعار
-      let toastMessage = notificationData.message
-      const inviteLink = notificationData.extra_data?.invite_link
+        if (notificationData.type === 'subscription_renewal' && notificationData.extra_data) {
+          const expiryDate = notificationData.extra_data.expiry_date
+            ? new Date(notificationData.extra_data.expiry_date)
+            : null;
 
-      // التعامل مع إشعارات تجديد الاشتراك
-      if (notificationData.type === 'subscription_renewal' && notificationData.extra_data) {
-  const expiryDate = notificationData.extra_data.expiry_date
-    ? new Date(notificationData.extra_data.expiry_date)
-    : null;
+          // افتراض أن formattedDate يتم حسابه بطريقة ما
+          const formattedDate = expiryDate ? expiryDate.toLocaleDateString('ar-EG', { month: 'long', day: 'numeric', year: 'numeric' }) : 'تاريخ غير محدد';
 
-  // إضافة 3 ساعات لتحويل UTC+0 إلى UTC+3
-  if (expiryDate) {
-    expiryDate.setHours(expiryDate.getHours() + 3);
-  }
+          const toastMessage = `✅ تم تجديد اشتراكك في ${notificationData.extra_data.subscription_type || 'الخدمة'} حتى ${formattedDate} UTC+3`;
+          const inviteLink = notificationData.extra_data.invite_link;
 
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-    timeZone: 'UTC'
-  };
-
-  const formattedDate = expiryDate?.toLocaleString('ar-EG', options) || 'تاريخ غير معروف';
-
-  toastMessage = `✅ تم تجديد اشتراكك في ${notificationData.extra_data.subscription_type} حتى ${formattedDate} UTC+3`;
-
-  // تحديث/إعادة تحميل بيانات الاشتراك
-  queryClient.invalidateQueries({
-    queryKey: ['subscriptions', telegramId]
-  });
-}
-
-      // عرض Toast مع التعامل مع حدث النقر
-      showToast.success({
-        message: toastMessage,
-        onClick: () => {
           if (inviteLink) {
-            window.open(inviteLink, '_blank')
-          } else if (notificationData.id) {
-            router.push(`/notifications/${notificationData.id}`)
+            showToast.success({
+              message: toastMessage,
+              // فتح الرابط مباشرة، لا حاجة لـ router.push هنا
+              action: { text: 'انضم إلى القناة', onClick: () => { window.open(inviteLink, '_blank'); } }
+            });
+          } else {
+            showToast.success({ message: toastMessage });
+          }
+
+          if (telegramId) {
+            console.log(`🔄 Invalidating subscriptions for telegramId: ${telegramId} due to subscription_renewal`);
+            queryClient.invalidateQueries({ queryKey: ['subscriptions', telegramId] });
+          } else {
+            console.warn("⚠️ telegramId is null, cannot invalidate subscription queries for subscription_renewal.");
           }
         }
-      })
-    }
-
-    // إعادة تحميل الإشعارات عند تغيير حالة القراءة
-    if (message.type === "notification_read") {
-      queryClient.invalidateQueries({
-        queryKey: ['notifications', telegramId]
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['unreadNotificationsCount', telegramId]
-      })
-    }
-  }, [setUnreadCount, router, telegramId])
-
-  const WebSocketInitializer = () => {
-    const { connectionState } = useNotificationsSocket(
-      socketInitialized ? telegramId : null,
-      handleWebSocketMessage
-    )
-    useEffect(() => {
-      const statusMap = {
-        'connected': "🟢 Connected to notification service",
-        'connecting': "🟠 Connecting to notification service…",
-        'disconnected': "🔴 Disconnected from notification service"
       }
-      console.log(statusMap[connectionState] || '⚪ Unknown connection state')
-    }, [connectionState])
-    return null
-  }
 
-  // 2) Splash + WebSocket delay (unchanged) …
+      if (message.type === "notification_read") {
+        console.log("📖 Notification read message received in _app.tsx:", message.data);
+        if (telegramId) {
+          console.log(`🔄 Invalidating notifications and unread count for telegramId: ${telegramId} due to notification_read`);
+          queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
+          queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
+        } else {
+          console.warn("⚠️ telegramId is null, cannot invalidate queries for notification_read.");
+        }
+      }
+    };
+  }, [setUnreadCount, telegramId, queryClient]); // router is removed from dependencies
+
+  // إنشاء دالة مغلفة مستقرة لتمريرها إلى useNotificationsSocket
+  const stableWebSocketMessageHandler = useCallback((message: SocketNotificationMessage) => {
+    if (handleWebSocketMessageRef.current) {
+      handleWebSocketMessageRef.current(message);
+    }
+  }, []); // لا توجد اعتماديات هنا، مما يجعلها مستقرة
+
+  // WebSocket Hook integration
+  const { connectionState } = useNotificationsSocket(
+    telegramId,
+    stableWebSocketMessageHandler // استخدام الدالة المستقرة
+  );
+
+  useEffect(() => {
+    if (!telegramId && connectionState === 'disconnected') {
+      return;
+    }
+    const statusMap = {
+      'connected': "🟢 Connected to notification service (_app.tsx)",
+      'connecting': "🟠 Connecting to notification service… (_app.tsx)",
+      'disconnected': "🔴 Disconnected from notification service (_app.tsx)"
+    };
+    console.log(statusMap[connectionState] || `⚪ Unknown connection state: ${connectionState} (_app.tsx)`);
+  }, [connectionState, telegramId]);
+
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      setMinDelayCompleted(true)
-      setTimeout(() => setSocketInitialized(true), 1000)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [])
+      setMinDelayCompleted(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // 3) Wallet address fetch (unchanged) …
+
   const {
     data: walletAddress,
     isLoading: isWalletLoading,
     isError: isWalletError,
     error: walletError
-  } = useWalletAddress()
+  } = useWalletAddress();
 
   useEffect(() => {
-    if (walletAddress) setWalletAddress(walletAddress)
-  }, [walletAddress, setWalletAddress])
+    if (walletAddress) setWalletAddress(walletAddress);
+  }, [walletAddress, setWalletAddress]);
 
-
-  /* --- تحسين جلب الاشتراكات مع التخزين المؤقت --- */
   useEffect(() => {
     const fetchSubscriptions = async () => {
-      if (!telegramId) return
-
+      if (!telegramId) return;
       try {
-        const cached = localStorage.getItem(`subscriptions_${telegramId}`)
+        const cached = localStorage.getItem(`subscriptions_${telegramId}`);
         if (cached) {
-          const { data, timestamp } = JSON.parse(cached)
-          if (Date.now() - timestamp < 5 * 60 * 1000) { // تخزين لمدة 5 دقائق
-            console.log("📦 Using cached subscriptions")
-            setSubscriptions(data)
-            return
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            console.log("📦 Using cached subscriptions");
+            setSubscriptions(data);
+            return;
           }
         }
-        // منطق جلب البيانات سيتم إضافته هنا لاحقاً
       } catch (error) {
-        console.error('❌ Failed to fetch subscriptions:', error)
+        console.error('❌ Failed to fetch subscriptions:', error);
       }
-    }
+    };
+    fetchSubscriptions();
+    const interval = setInterval(fetchSubscriptions, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [telegramId, setSubscriptions]);
 
-    fetchSubscriptions()
-    const interval = setInterval(fetchSubscriptions, 5 * 60 * 1000) // تحديث كل 5 دقائق
-    return () => clearInterval(interval)
-  }, [telegramId, setSubscriptions])
-
-  /* --- Prefetch للصفحات المهمة لتحسين التنقل --- */
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications']
-        await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)))
-        console.log("🔄 Prefetched important pages")
+        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications'];
+        await Promise.all(pagesToPrefetch.map(page => router.prefetch(page))); // router here is fine
+        console.log("🔄 Prefetched important pages");
       } catch (error) {
-        console.error('⚠️ Error during prefetch:', error)
+        console.error('⚠️ Error during prefetch:', error);
       }
-    }
+    };
+    prefetchPages();
+  }, [router]);
 
-    prefetchPages()
-  }, [router])
-
-
-    useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "https://alaghbry0.github.io/chat-widget/widget.min.js"
-    script.async = true
-    document.body.appendChild(script)
-
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://alaghbry0.github.io/chat-widget/widget.min.js";
+    script.async = true;
+    document.body.appendChild(script);
     script.onload = () => {
       window.ChatWidget?.init({
         projectId: "Exaado mini app",
-        apiUrl:     "https://exadoo-rxr9.onrender.com/bot/chat/stream",
-        theme:      "light",
-        position:   "bottom-right",
-        direction:  "rtl"
-      })
-    }
-
+        apiUrl: "https://exadoo-rxr9.onrender.com/bot/chat/stream",
+        theme: "light",
+        position: "bottom-right",
+        direction: "rtl"
+      });
+    };
     return () => {
-      document.body.removeChild(script)
-    }
-  }, [])
+      if (document.body.contains(script)) {
+         document.body.removeChild(script);
+      }
+      // Consider also cleaning up ChatWidget if it has a destroy method
+      // window.ChatWidget?.destroy?.();
+    };
+  }, []);
 
-  const isDataLoaded = minDelayCompleted && !isWalletLoading
-  if (!isDataLoaded) return <SplashScreen />
+  const isDataLoaded = minDelayCompleted && !isWalletLoading;
+  if (!isDataLoaded) return <SplashScreen />;
+
   if (isWalletError) {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-red-500 text-center px-4">
@@ -270,23 +253,22 @@ function AppContent({ children }: { children: React.ReactNode }) {
           إعادة المحاولة
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <>
-      {socketInitialized && <WebSocketInitializer />}
       {children}
       <FooterNav />
       <NotificationToast />
     </>
-  )
+  );
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <TelegramProvider>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={globalQueryClient}>
         <NotificationsProvider>
           <AppContent>
             <Component {...pageProps} />
@@ -295,7 +277,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         </NotificationsProvider>
       </QueryClientProvider>
     </TelegramProvider>
-  )
+  );
 }
 
-export default MyApp
+export default MyApp;

@@ -12,11 +12,10 @@ type SubscriptionsSectionProps = {
   loadMore: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
-  onRefreshClick: () => void;  // إضافة دالة للتحديث
-  isRefreshing: boolean;  // إضافة حالة التحديث
+  onRefreshClick: () => void;
+  isRefreshing: boolean;
 };
 
-// تعريف حالات الاشتراك مع تخصيص ألوان الخلفية والنص والحد لكل حالة
 type StatusType = 'نشط' | 'منتهي' | 'unknown';
 const statusColors: Record<StatusType, { bg: string; text: string; border: string }> = {
   'نشط': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-100' },
@@ -47,7 +46,6 @@ export default function SubscriptionsSection({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
-      {/* رأس القسم مع الأيقونة والعنوان وزر التحديث */}
       <div className="flex items-center gap-3 mb-4">
         <div className="bg-blue-50 p-2 rounded-lg">
           <Zap className="w-5 h-5 text-blue-600" />
@@ -100,13 +98,11 @@ interface SubscriptionItemProps {
 }
 
 const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
-  // تحديد الحالة بين "نشط" أو "منتهي"، وإلا اعتبرها "unknown"
   const currentStatus: StatusType = (sub.status === 'نشط' || sub.status === 'منتهي')
     ? (sub.status as StatusType)
     : 'unknown';
   const colors = statusColors[currentStatus];
 
-  // التحقق مما إذا كان الاشتراك جديداً (أقل من 40 يوماً) ونشطاً
   const isNewSubscription = (): boolean => {
     if (!sub.start_date || sub.status !== 'نشط') return false;
     const startDate = new Date(sub.start_date);
@@ -116,7 +112,15 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
     return diffDays <= 3;
   };
 
-  // دالة للتعامل مع طلب الاسترداد
+  const handleJoinClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (sub.invite_link) {
+      window.open(sub.invite_link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const showJoinButton = sub.status === 'نشط' && sub.invite_link;
+
   const handleRefundClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     window.open('https://t.me/ExaadoSupport', '_blank');
@@ -171,6 +175,29 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
         />
       </div>
 
+      {showJoinButton && (
+        <div className="mt-3 flex justify-end gap-2">
+          <motion.a
+            href={sub.invite_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleJoinClick}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5 + index * 0.1 + 0.3 }}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
+              "bg-green-50 text-green-700 hover:bg-green-100 ring-1 ring-green-200"
+            )}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            الانضمام
+          </motion.a>
+        </div>
+      )}
+
       {showRefundButton && (
         <div className="mt-3 flex justify-end">
           <motion.button
@@ -183,7 +210,7 @@ const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
             whileTap={{ scale: 0.97 }}
           >
             <RefreshCcw className="w-3.5 h-3.5" />
-            طلب استرداد
+            استرداد
           </motion.button>
         </div>
       )}

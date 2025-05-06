@@ -500,3 +500,11 @@ a[target="_blank"] {
 .notification-shake {
   animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
 }
+
+.ring-1 {
+  box-shadow: 0 0 0 1px currentColor;
+}
+
+.hover\:shadow-md:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}

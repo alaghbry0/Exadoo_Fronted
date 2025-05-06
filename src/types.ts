@@ -20,6 +20,7 @@ export interface Subscription {
   color?: string
   expiry?: string
   start_date?: string
+  invite_link?: string
   progress?: number
   status: 'نشط' | 'منتهي' | 'unknown'
 }

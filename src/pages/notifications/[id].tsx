@@ -124,7 +124,7 @@ export default function NotificationDetail() {
     
     switch (notification.type) {
       case 'subscription_renewal':
-        return <Calendar className="w-8 h-8 text-emerald-600" />;
+        return <Calendar className="w-8 h-8 text-blue-500" />;
       case 'payment_success':
         return <CreditCard className="w-8 h-8 text-emerald-600" />;
       case 'payment_warning':
@@ -154,10 +154,10 @@ export default function NotificationDetail() {
     switch (notification.type) {
       case 'subscription_renewal':
         return {
-          bg: 'bg-emerald-50',
-          title: 'text-emerald-800',
-          icon: 'text-emerald-600',
-          border: 'border-emerald-200'
+          bg: 'bg-blue-50',
+          title: 'text-blue-600',
+          icon: 'text-blue-600',
+          border: 'border-blue-200'
         };
       case 'payment_success':
         return {
