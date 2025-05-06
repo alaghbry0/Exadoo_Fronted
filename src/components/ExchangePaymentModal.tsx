@@ -137,7 +137,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
   // Success notification effect
   useEffect(() => {
   if (localPaymentStatus === 'success') {
-      toast.success('تم الدفع بنجاح! تم تجديد اشتراكك بنجاح')
+
     }
   }, [localPaymentStatus])
 
