@@ -55,7 +55,7 @@ export const UsdtPaymentMethodModal = ({
             <Wallet className="w-5 h-5 text-blue-600" />
           </div>
           <div className="text-right">
-            <p className="font-medium text-gray-900">محفظة ويب 3</p>
+            <p className="font-medium text-gray-900">محفظة ويب 3 (tonkeeper, …etc)</p>
             <p className="text-sm text-gray-500">استخدم محفظتك الشخصية</p>
           </div>
         </motion.button>
@@ -71,7 +71,7 @@ export const UsdtPaymentMethodModal = ({
             <RefreshCcw className="w-5 h-5 text-purple-600" />
           </div>
           <div className="text-right">
-            <p className="font-medium text-gray-900">منصات التداول</p>
+            <p className="font-medium text-gray-900">منصات التداول (binance, Okx …etc)</p>
             <p className="text-sm text-gray-500">استخدم منصة تبادل العملات</p>
           </div>
         </motion.button>
