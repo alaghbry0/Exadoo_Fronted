@@ -14,7 +14,7 @@ const listItemVariants = {
 
 export const PlanFeaturesList = ({ features }: PlanFeaturesListProps) => (
   <div className="space-y-4">
-    <h3 className="text-lg font-semibold text-gray-800 mb-3">الميزات المتضمنة:</h3>
+    
     <ul className="space-y-3">
       {features?.map((feature, index) => (
         <motion.li

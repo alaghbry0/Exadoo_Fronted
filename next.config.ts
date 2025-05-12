@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
               // ستايلات
               "style-src 'self' 'unsafe-inline';",
               // اتصالات
-              "connect-src 'self' https://exadoo-rxr9.onrender.com wss://exadoo-rxr9.onrender.com https://tonapi.io https://bridge.tonapi.io wss://*.tonapi.io https://vercel.live https://raw.githubusercontent.com;",
+              "connect-src 'self' https://exadoo-rxr9.onrender.com wss://exadoo-rxr9.onrender.com http://192.168.0.96:5000 wss://192.168.0.96:5000 https://tonapi.io https://bridge.tonapi.io wss://*.tonapi.io https://vercel.live https://raw.githubusercontent.com;",
               // صور
               "img-src * data:;",
               // خطوط
