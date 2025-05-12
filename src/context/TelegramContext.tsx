@@ -27,7 +27,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
   // استخدام Refs لتجنب إعادة إنشاء الدوال أو الاعتماد عليها في useEffects بشكل غير ضروري
   const isTelegramAppRef = useRef(false); // لتخزين حالة isTelegramApp بشكل يمكن الوصول إليه داخل Callbacks
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); // لتخزين مؤقت إعادة المحاولة
+  const retryTimeoutRef = useRef<number | null>(null); // لتخزين مؤقت إعادة المحاولة
   const fetchTelegramUserDataRef = useRef<() => void>(() => {}); // لتخزين أحدث نسخة من دالة الجلب
 
   // useCallback لمسح مؤقت إعادة المحاولة بأمان

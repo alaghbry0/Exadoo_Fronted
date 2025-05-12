@@ -141,7 +141,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
           }
         } else {
           // يمكنك إظهار توست عام للإشعارات الأخرى إذا أردت
-           showToast.info({
+           showToast.success({
                message: `📬 إشعار جديد: ${notificationData.title}`,
                onClick: () => router.push(`/notifications/${notificationData.id}`)
            });
@@ -335,11 +335,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
-      // محاولة تدمير الويدجت إذا كانت الدالة موجودة
-      if (window.ChatWidget && typeof window.ChatWidget.destroy === 'function') {
-         console.log("💥 Destroying Chat Widget instance.");
-         // window.ChatWidget.destroy(); // قم بإلغاء التعليق إذا كانت هذه الدالة موجودة وتعمل بشكل صحيح
-      }
+      // تم إزالة التحقق من وجود window.ChatWidget.destroy لأن الدالة غير موجودة
        // حذف الـ Widget من window لمنع تكرار التهيئة عند التنقل السريع في Next.js (HMR)
        delete window.ChatWidget;
     };
