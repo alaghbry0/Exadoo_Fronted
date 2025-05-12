@@ -3,6 +3,8 @@ export type PaymentStatus =
   | 'idle'
   | 'pending'
   | 'processing'
+  | 'processing_usdt'
+  | 'processing_stars' 
   | 'success'
   | 'failed'
   | 'exchange_success';

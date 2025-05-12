@@ -96,9 +96,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             }
         }
         setTerms(parsedTerms);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to fetch terms and conditions:', error)
-        setTermsError(error.message || 'فشل في جلب الشروط والأحكام.')
+        setTermsError(error instanceof Error ? error.message : 'فشل في جلب الشروط والأحكام.')
       } finally {
         setTermsLoading(false)
       }
@@ -123,13 +123,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   
     if (!termsLoading) {
       const timer = setTimeout(checkScroll, 100); // امنح المحتوى وقتا للرسم
+      const currentContentRef = contentRef.current;
       window.addEventListener('resize', checkScroll);
       // استمع لتغييرات التمرير أيضاً
-      contentRef.current?.addEventListener('scroll', checkScroll);
+      currentContentRef?.addEventListener('scroll', checkScroll);
       return () => {
         clearTimeout(timer);
         window.removeEventListener('resize', checkScroll);
-        contentRef.current?.removeEventListener('scroll', checkScroll);
+        currentContentRef?.removeEventListener('scroll', checkScroll);
       };
     } else {
       setShowScrollIndicator(false);
