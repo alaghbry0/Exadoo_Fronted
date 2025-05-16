@@ -11,19 +11,17 @@ import { Spinner } from '../components/Spinner'
 import { useQueryClient } from '@tanstack/react-query'
 import { UsdtPaymentMethodModal } from '../components/UsdtPaymentMethodModal'
 import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
-import { PaymentButtons } from '../components/SubscriptionModal/PaymentButtons' // افترض أن هذا الملف موجود
+import { PaymentButtons } from '../components/SubscriptionModal/PaymentButtons'
 import { PlanFeaturesList } from '../components/SubscriptionModal/PlanFeaturesList'
 import { useSubscriptionPayment } from '../components/SubscriptionModal/useSubscriptionPayment'
 import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
 import { PaymentExchangeSuccess } from '../components/PaymentExchangeSuccess'
 
-// تعريف واجهة لبيانات الشروط والأحكام
 interface TermsAndConditionsData {
   terms_array: string[] | string;
   updated_at: string | null;
 }
 
-// تعريف نوع لعرض محتوى التبويبات
 type TabType = 'features' | 'terms';
 
 const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; onClose: () => void }) => {
@@ -36,10 +34,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
   const [termsLoading, setTermsLoading] = useState<boolean>(true)
   const [termsError, setTermsError] = useState<string | null>(null)
   const [showScrollIndicator, setShowScrollIndicator] = useState<boolean>(false)
-
-  // --- إضافة جديدة: حالة الموافقة على الشروط ---
   const [termsAgreed, setTermsAgreed] = useState<boolean>(false);
-  // ----------------------------------------------
 
   function handlePaymentSuccess() {
     queryClient.invalidateQueries({
@@ -75,7 +70,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         const data: TermsAndConditionsData = await response.json()
-        
+
         let parsedTerms: string[] = [];
         if (data && data.terms_array) {
             if (Array.isArray(data.terms_array)) {
@@ -112,20 +107,16 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
       if (contentRef.current) {
         const { scrollHeight, clientHeight } = contentRef.current;
         setShowScrollIndicator(scrollHeight > clientHeight);
-        // --- تعديل: إذا كان المستخدم في تبويب الشروط ولم يوافق بعد، ولم يكن هناك خطأ في تحميل الشروط ---
-        // --- ولم يكن المحتوى أقصر من النافذة، قم بالتمرير لأسفل تلقائيًا قليلاً لتنبيه المستخدم ---
-        // --- هذا اختياري ويمكنك تعديله أو إزالته ---
         if (activeTab === 'terms' && !termsAgreed && !termsError && scrollHeight > clientHeight && contentRef.current.scrollTop === 0) {
-            // contentRef.current.scrollTo({ top: 1, behavior: 'smooth' }); // لإظهار أن هناك محتوى للتمرير
+            // contentRef.current.scrollTo({ top: 1, behavior: 'smooth' });
         }
       }
     };
-  
+
     if (!termsLoading) {
-      const timer = setTimeout(checkScroll, 100); // امنح المحتوى وقتا للرسم
+      const timer = setTimeout(checkScroll, 100);
       const currentContentRef = contentRef.current;
       window.addEventListener('resize', checkScroll);
-      // استمع لتغييرات التمرير أيضاً
       currentContentRef?.addEventListener('scroll', checkScroll);
       return () => {
         clearTimeout(timer);
@@ -135,12 +126,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     } else {
       setShowScrollIndicator(false);
     }
-  }, [terms, termsLoading, activeTab, termsAgreed, termsError]); // أضف termsAgreed و termsError للمراقبة
+  }, [terms, termsLoading, activeTab, termsAgreed, termsError]);
 
   const scrollDown = () => {
     if (contentRef.current) {
       contentRef.current.scrollBy({
-        top: contentRef.current.clientHeight * 0.7, // تمرير بنسبة من ارتفاع النافذة
+        top: contentRef.current.clientHeight * 0.7,
         behavior: 'smooth'
       });
     }
@@ -164,17 +155,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
     onClose()
   }
 
-  // --- إضافة جديدة: دالة لتبديل التبويب وتمرير الشروط لأعلى إذا لم تكن مرئية ---
   const viewTermsAndConditions = () => {
     setActiveTab('terms');
-    // تأكد من أن محتوى الشروط مرئي
     setTimeout(() => {
         if (contentRef.current) {
             contentRef.current.scrollTop = 0;
         }
-    }, 50); // تأخير بسيط لضمان تحديث التبويب
+    }, 50);
   }
-  // ------------------------------------------------------------------
 
   return (
     <>
@@ -192,7 +180,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           position: 'fixed',
           isolation: 'isolate'
         }}
-        // onClick={onClose} // لا تغلق النافذة عند النقر على الخلفية إذا كان هناك تفاعل داخلها
       >
         <motion.div
           className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-400"
@@ -200,7 +187,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
           animate={{ y: 0, scale: 1 }}
           exit={{ y: '100%', scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-          onClick={(e) => e.stopPropagation()} // لمنع إغلاق النافذة عند النقر داخلها
+          onClick={(e) => e.stopPropagation()}
           style={{
             position: 'relative',
             zIndex: 915
@@ -243,34 +230,44 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </div>
 
             {/* تبويبات المحتوى */}
-            <div className="px-4 sm:px-6 border-b flex">
+            {/* --- تعديل: إضافة border-b هنا و items-center للمحاذاة العمودية للفاصل --- */}
+            <div className="px-4 sm:px-6 flex border-b border-gray-200 items-center">
               <button
                 onClick={() => setActiveTab('features')}
                 className={`py-2 px-4 font-medium text-sm transition-colors relative ${
-                  activeTab === 'features' 
-                    ? 'text-blue-600 font-semibold' 
+                  activeTab === 'features'
+                    ? 'text-blue-600 font-semibold'
                     : 'text-gray-500 hover:text-gray-800'
                 }`}
               >
                 الميزات
                 {activeTab === 'features' && (
-                  <motion.div 
+                  <motion.div
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"
                     layoutId="activeTabIndicator"
                   />
                 )}
               </button>
+
+              {/* --- تعديل: إضافة الخط الفاصل العمودي --- */}
+              <div className="h-4 w-px bg-gray-300 mx-1"></div>
+              {/* يمكنك تعديل:
+                  h-4: ارتفاع الخط (1rem). جرب h-5 (1.25rem) إذا كان النص أكبر.
+                  bg-gray-300: لون الخط.
+                  mx-1: مسافة أفقية صغيرة (0.25rem) على جانبي الخط. يمكنك زيادتها (mx-2) أو إزالتها.
+              */}
+
               <button
                 onClick={() => setActiveTab('terms')}
                 className={`py-2 px-4 font-medium text-sm transition-colors relative ${
-                  activeTab === 'terms' 
-                    ? 'text-blue-600 font-semibold' 
+                  activeTab === 'terms'
+                    ? 'text-blue-600 font-semibold'
                     : 'text-gray-500 hover:text-gray-800'
                 }`}
               >
                 الشروط والأحكام
                 {activeTab === 'terms' && (
-                  <motion.div 
+                  <motion.div
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"
                     layoutId="activeTabIndicator"
                   />
@@ -279,8 +276,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
             </div>
 
             {/* منطقة المحتوى القابلة للتمرير */}
-            <div 
-              ref={contentRef} 
+            {/* --- تعديل: إزالة border-y من هنا --- */}
+            <div
+              ref={contentRef}
               className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 relative"
             >
               <AnimatePresence mode="wait">
@@ -328,7 +326,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 )}
               </AnimatePresence>
 
-              {showScrollIndicator && activeTab === 'terms' && ( // أظهر مؤشر التمرير فقط لتبويب الشروط إذا كان هناك ما يمكن تمريره
+              {showScrollIndicator && activeTab === 'terms' && (
                 <div className="sticky bottom-0 left-0 right-0 flex justify-center pb-2 pt-1 bg-gradient-to-t from-white via-white/80 to-transparent">
                   <motion.button
                     onClick={scrollDown}
@@ -345,8 +343,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
 
             {/* Payment Section */}
             <div className="sticky bottom-0 bg-white border-t p-4 sm:p-5 space-y-3">
-              {/* --- إضافة جديدة: مربع الموافقة على الشروط --- */}
-              <div className="flex items-start space-x-2 mb-3" dir="rtl"> {/* استخدم space-x-2 لإعطاء مسافة لليسار (بسبب dir=rtl) */}
+              <div className="flex items-start gap-2 mb-3" dir="rtl">
                 <input
                   type="checkbox"
                   id="termsAgreement"
@@ -355,10 +352,10 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                   className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5 shrink-0"
                 />
                 <label htmlFor="termsAgreement" className="text-sm text-gray-700 select-none">
-                  أوافق على{' '}
-                  <button 
+                  أوافق على {' '}
+                  <button
                     type="button"
-                    onClick={viewTermsAndConditions} 
+                    onClick={viewTermsAndConditions}
                     className="text-blue-600 hover:text-blue-700 hover:underline font-medium focus:outline-none"
                   >
                     الشروط والأحكام
@@ -366,7 +363,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                   {' '}الخاصة بالخدمة.
                 </label>
               </div>
-              {/* ------------------------------------------------- */}
 
               <PaymentButtons
                 loading={loading}
@@ -374,18 +370,14 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
                 onUsdtSelect={() => setUsdtPaymentMethod('choose')}
                 onStarsSelect={handleStarsPayment}
                 telegramId={telegramId || undefined}
-                // --- تعديل: تعطيل الأزرار إذا لم يتم الموافقة على الشروط أو إذا كان هناك تحميل ---
                 disabled={!termsAgreed || loading || termsLoading || !!termsError}
-                // --------------------------------------------------------------------------------
               />
-              
-               {/* ------------------------------------------------------------------------------------ */}
             </div>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* مودال اختيار طريقة الدفع عبر USDT */}
+      {/* مودالات الدفع ... */}
       <AnimatePresence>
         {usdtPaymentMethod === 'choose' && (
           <motion.div
@@ -417,14 +409,12 @@ const SubscriptionModal = ({ plan, onClose }: { plan: SubscriptionPlan | null; o
         )}
       </AnimatePresence>
 
-      {/* مودال نجاح الدفع */}
       <AnimatePresence>
         {paymentStatus === 'success' && (
           <PaymentSuccessModal onClose={handleSuccessModalClose} />
         )}
       </AnimatePresence>
 
-      {/* مودال نجاح دفع Exchange */}
       <AnimatePresence>
         {paymentStatus === 'exchange_success' && (
           <PaymentExchangeSuccess onClose={handleSuccessModalClose} planName={plan?.name} />
