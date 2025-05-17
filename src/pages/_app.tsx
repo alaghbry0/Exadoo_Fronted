@@ -301,17 +301,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
     prefetchPages();
   }, [router]); // يعتمد على router
 
-    // تنظيف عند إلغاء تحميل المكون
-    return () => {
-      console.log("🧼 Cleaning up Chat Widget script...");
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-      // تم إزالة التحقق من وجود window.ChatWidget.destroy لأن الدالة غير موجودة
-       // حذف الـ Widget من window لمنع تكرار التهيئة عند التنقل السريع في Next.js (HMR)
-       delete window.ChatWidget;
-    };
-  }, []); // يعمل مرة واحدة عند التحميل
 
   // --- ✅ التعديل: إعادة تعريف شرط إظهار شاشة البداية ---
   // يجب الانتظار حتى:
