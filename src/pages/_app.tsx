@@ -301,29 +301,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
     prefetchPages();
   }, [router]); // يعتمد على router
 
-  // useEffect لتحميل وإعداد Chat Widget
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://alaghbry0.github.io/chat-widget/widget.min.js";
-    script.async = true;
-    document.body.appendChild(script);
-    console.log("💬 Loading Chat Widget script...");
-
-    script.onload = () => {
-      console.log("💬 Chat Widget script loaded.");
-      if (window.ChatWidget && typeof window.ChatWidget.init === 'function') {
-        console.log("💬 Initializing Chat Widget...");
-        window.ChatWidget.init({
-          projectId: "Exaado mini app",
-          apiUrl: "https://exadoo-rxr9.onrender.com/bot/chat/stream",
-          theme: "light", // أو 'dark'
-          position: "bottom-right",
-          direction: "rtl" // أو 'ltr'
-        });
-      } else {
-        console.warn("⚠️ Chat Widget script loaded, but window.ChatWidget.init is not available.");
-      }
-    };
 
     script.onerror = () => {
         console.error("❌ Failed to load Chat Widget script.");
