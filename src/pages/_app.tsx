@@ -301,11 +301,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
     prefetchPages();
   }, [router]); // يعتمد على router
 
-
-    script.onerror = () => {
-        console.error("❌ Failed to load Chat Widget script.");
-    };
-
     // تنظيف عند إلغاء تحميل المكون
     return () => {
       console.log("🧼 Cleaning up Chat Widget script...");
