@@ -4,7 +4,7 @@ export type UserProfile = {
   full_name?: string;
   username?: string | null;
   profile_photo?: string;
-  join_date?: string | null; // ✅ تم التعديل هنا ليصبح string | null
+  join_date?: string | null;
   subscriptions?: Subscription[];
 };
 
@@ -15,6 +15,7 @@ export interface Subscription {
   selectedOption?: string | null
   description?: string
   features?: string[]
+  terms_and_conditions: string[];
   animation?: object
   subscriptionOptions?: string[]
   color?: string

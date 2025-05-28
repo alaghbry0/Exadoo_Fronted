@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'; // إضافة useState
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
@@ -10,13 +10,13 @@ import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { getUserSubscriptions } from '../services/api';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast'; // إضافة مكتبة Toast إذا كانت متاحة في مشروعك
+import { toast } from 'react-hot-toast';
 
 export default function Profile() {
   const { fullName, telegramUsername, photoUrl, telegramId } = useUserStore();
   const { subscriptions, setSubscriptions } = useProfileStore();
   const router = useRouter();
-  const [isRefreshing, setIsRefreshing] = useState(false); // إضافة حالة للتحديث
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const queryKey = ['subscriptions', telegramId?.toString() || ''];
 
@@ -37,7 +37,7 @@ export default function Profile() {
     initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextPage ? lastPage.nextPage : undefined,
     enabled: !!telegramId,
-    staleTime: 300000,
+    staleTime: 300000, // 5 دقائق
   });
 
   useEffect(() => {
@@ -58,23 +58,17 @@ export default function Profile() {
     router.push('/payment-history');
   };
 
-  // إضافة وظيفة تحديث البيانات
   const handleRefresh = async () => {
     if (!telegramId) return;
     
     setIsRefreshing(true);
     try {
       await refetch();
-      // إضافة إشعار بنجاح التحديث (اختياري)
-      toast?.success('تم تحديث البيانات بنجاح', {
-        
-      });
+      toast.success('تم تحديث البيانات بنجاح');
     } catch (error) {
       console.error('فشل تحديث البيانات:', error);
-      // إضافة إشعار بفشل التحديث (اختياري)
-      toast?.error('فشل تحديث البيانات، يرجى المحاولة مرة أخرى', {
+      toast.error('فشل تحديث البيانات، يرجى المحاولة مرة أخرى', {
         duration: 3000,
-        position: 'bottom-center',
       });
     } finally {
       setIsRefreshing(false);
@@ -111,7 +105,7 @@ export default function Profile() {
   }
 
   const loadMoreHandler = () => {
-    if (hasNextPage) {
+    if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
@@ -131,17 +125,19 @@ export default function Profile() {
             fullName={fullName}
             username={telegramUsername}
             profilePhoto={photoUrl}
-            joinDate={null}
+            joinDate={null} // يمكنك تمرير تاريخ الانضمام الفعلي إذا كان متاحًا
+            telegramId={telegramId} // ⭐ تمرير معرف تيليجرام
             onPaymentHistoryClick={goToPaymentHistory}
-            
+            onRefreshData={handleRefresh} // ⭐ تمرير دالة التحديث للهيدر
+            isRefreshing={isRefreshing} // ⭐ تمرير حالة التحديث للهيدر
           />
           <div className="px-4 pt-2">
-          <SubscriptionsSection
+            <SubscriptionsSection
               subscriptions={subscriptions || []}
               loadMore={loadMoreHandler}
               hasMore={!!hasNextPage}
               isLoadingMore={isFetchingNextPage}
-              onRefreshClick={handleRefresh}
+              onRefreshClick={handleRefresh} // زر التحديث هنا أيضًا (يمكنك اختيار الإبقاء على واحد فقط)
               isRefreshing={isRefreshing}
             />
           </div>
