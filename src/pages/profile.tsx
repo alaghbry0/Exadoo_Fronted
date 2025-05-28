@@ -128,8 +128,6 @@ export default function Profile() {
             joinDate={null} // يمكنك تمرير تاريخ الانضمام الفعلي إذا كان متاحًا
             telegramId={telegramId} // ⭐ تمرير معرف تيليجرام
             onPaymentHistoryClick={goToPaymentHistory}
-            onRefreshData={handleRefresh} // ⭐ تمرير دالة التحديث للهيدر
-            isRefreshing={isRefreshing} // ⭐ تمرير حالة التحديث للهيدر
           />
           <div className="px-4 pt-2">
             <SubscriptionsSection
