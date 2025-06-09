@@ -1,19 +1,42 @@
 // services/api.js
 
-export const getSubscriptionTypes = async () => {
+export const getSubscriptionGroups = async () => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/subscription-types`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/subscription-groups`);
         if (!response.ok) {
-            // محاولة استخراج تفاصيل الخطأ من الاستجابة إن وُجدت
+            let errorMessage = `Error ${response.status}: Failed to fetch subscription groups.`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMessage += ` ${errorData.error}`;
+                }
+            } catch {}
+            throw new Error(errorMessage);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("getSubscriptionGroups failed:", error);
+        throw error;
+    }
+};
+
+// تعديل getSubscriptionTypes ليقبل group_id
+export const getSubscriptionTypes = async (groupId: number | null = null) => {
+    try {
+        let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/subscription-types`;
+        if (groupId !== null) {
+            url += `?group_id=${groupId}`; // <-- تعديل هنا
+        }
+        const response = await fetch(url);
+        if (!response.ok) {
             let errorMessage = `Error ${response.status}: Failed to fetch subscription types.`;
             try {
                 const errorData = await response.json();
                 if (errorData.error) {
                     errorMessage += ` ${errorData.error}`;
                 }
-            } catch { // تم حذف parseError غير المستخدم
-                // في حال تعذر تحليل الاستجابة، يتم الاحتفاظ برسالة الخطأ الافتراضية
-            }
+            } catch {}
             throw new Error(errorMessage);
         }
         const data = await response.json();
@@ -23,6 +46,7 @@ export const getSubscriptionTypes = async () => {
         throw error;
     }
 };
+
 
 export const getSubscriptionPlans = async () => {
     try {

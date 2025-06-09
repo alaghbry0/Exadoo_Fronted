@@ -1,81 +1,45 @@
+// src/pages/shop.tsx
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../components/SubscriptionModal'
-import { FaChartLine, FaLock, FaStar, FaPercent, FaClock } from 'react-icons/fa'
+import { FaLayerGroup, FaTags, FaStar as FaStarRecommended, FaClock } from 'react-icons/fa'
 import React from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
 import Navbar from '../components/Navbar'
 
-// ✅ استيراد Zustand Stores
-import { useTariffStore } from '../stores/zustand'
-import { useProfileStore } from '../stores/profileStore'
-import { useSessionStore } from '../stores/sessionStore'
-
-// استيراد React Query والدوال من API
 import { useQuery } from '@tanstack/react-query'
-import { getSubscriptionTypes, getSubscriptionPlans } from '../services/api'
+import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../services/api'
 
-// تعريف الواجهات المحدثة
-interface ApiSubscriptionType {
-  id: number;
-  name: string;
-  description: string;
-  features: string[];
-  channel_id: number;
-  image_url: string;
-  is_active: boolean;
-  created_at: string;
-  usp: string;
-  is_recommended?: boolean; // الحقل الجديد للخطة المميزة
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Star as StarFeature } from 'lucide-react';
+
+// --- [إضافة جديدة]: استيراد مكون التحميل الكسول ---
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css'; // تأثير ضبابي اختياري
+// --------------------------------------------------
+
+import type {
+  ApiSubscriptionType,
+  ApiSubscriptionPlan,
+  SubscriptionOption,
+  SubscriptionCard as OriginalSubscriptionCard,
+  ApiSubscriptionGroup
+} from '../typesPlan';
+
+interface SubscriptionCard extends OriginalSubscriptionCard {
+  group_id: number | null;
+  terms_and_conditions: string[];
+  image_url: string | null;
 }
-
-interface ApiSubscriptionPlan {
-  id: number;
-  name: string;
-  price: number;
-  original_price: number; // إضافة حقل السعر الأصلي
-  duration_days: number;
-  subscription_type_id: number;
-  telegram_stars_price: number;
-  created_at: string;
-  is_active: boolean;
-}
-
-type SubscriptionOption = {
-  id: number;
-  duration: string;
-  price: string;
-  originalPrice?: number;
-  discountedPrice?: number; // سعر بعد الخصم
-  discountPercentage?: number; // نسبة الخصم
-  hasDiscount: boolean; // هل يوجد خصم؟
-  savings?: string;
-  telegramStarsPrice: number
-};
-
-type SubscriptionCard = {
-  id: number;
-  name: string;
-  isRecommended: boolean;
-  tagline: string;
-  description: string;
-  features: string[];
-  primaryColor: string;
-  accentColor: string;
-  icon: React.FC;
-  backgroundPattern: string;
-  usp: string;
-  color: string;
-  subscriptionOptions: SubscriptionOption[];
-};
 
 const defaultStyles: { [key: number]: {
   tagline: string;
   primaryColor: string;
   accentColor: string;
-  icon: React.FC;
   backgroundPattern: string;
   color: string;
 } } = {
@@ -83,7 +47,6 @@ const defaultStyles: { [key: number]: {
     tagline: 'إشارات نخبة الفوركس لتحقيق أقصى قدر من الأرباح',
     primaryColor: '#2390f1',
     accentColor: '#eab308',
-    icon: FaChartLine,
     backgroundPattern: 'bg-none',
     color: '#2390f1'
   },
@@ -91,332 +54,462 @@ const defaultStyles: { [key: number]: {
     tagline: 'استثمر بذكاء في عالم الكريبتو المثير',
     primaryColor: '#2390f1',
     accentColor: '#eab308',
-    icon: FaLock,
     backgroundPattern: 'bg-none',
     color: '#2390f1'
-  }
+  },
 };
 
 type SelectedPlan = SubscriptionCard & {
   selectedOption: SubscriptionOption;
-  planId: number;};
-
+  planId: number;
+};
 
 const ShopComponent: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [cardId: number]: SubscriptionOption }>({});
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [initialGroupSelected, setInitialGroupSelected] = useState(false);
+
+  const subscriptionsSectionRef = useRef<HTMLElement>(null);
+  const groupTabsContainerRef = useRef<HTMLDivElement>(null);
 
   const {
-  data: typesData,
-  isLoading: typesLoading,
+    data: groupsData,
+    isLoading: groupsLoading,
+    error: groupsError,
+  } = useQuery<ApiSubscriptionGroup[]>({
+    queryKey: ['subscriptionGroups'],
+    queryFn: getSubscriptionGroups,
+    staleTime: 5 * 60 * 1000,
+  });
 
-} = useQuery<ApiSubscriptionType[]>({
-  queryKey: ['subscriptionTypes'],
-  queryFn: getSubscriptionTypes,
-});
+  const {
+    data: typesData,
+    isLoading: typesLoading,
+    error: typesError,
+  } = useQuery<ApiSubscriptionType[]>({
+    queryKey: ['subscriptionTypes', selectedGroupId],
+    queryFn: () => getSubscriptionTypes(selectedGroupId),
+    enabled: initialGroupSelected,
+    staleTime: 5 * 60 * 1000,
+  });
 
-const {
-  data: plansData,
-  isLoading: plansLoading,
+  const {
+    data: plansData,
+    isLoading: plansLoading,
+    error: plansError,
+  } = useQuery<ApiSubscriptionPlan[]>({
+    queryKey: ['subscriptionPlans'],
+    queryFn: getSubscriptionPlans,
+    staleTime: 5 * 60 * 1000,
+  });
 
-
-} = useQuery<ApiSubscriptionPlan[]>({
-  queryKey: ['subscriptionPlans'],
-  queryFn: getSubscriptionPlans,
-});
-
- const calculateSavings = (plans: ApiSubscriptionPlan[]) => {
-  const monthlyPlan = plans.find(p => p.name === 'شهري');
-  const threeMonthPlan = plans.find(p => p.name === '3 شهور');
-
-  if (!monthlyPlan || !threeMonthPlan) return null;
-
-  const monthlyPrice = monthlyPlan.price;
-  const threeMonthPrice = threeMonthPlan.price;
-
-  // التحقق من الشرط: إذا كان السعر الشهري * 3 <= سعر ال3 شهور
-  if (monthlyPrice * 3 <= threeMonthPrice) {
-    return null; // لا يوجد توفير
-  }
-
-  const savings = ((monthlyPrice * 3 - threeMonthPrice) / (monthlyPrice * 3)) * 100;
-  return savings.toFixed(0);
-};
+  const calculateSavings = (plans: ApiSubscriptionPlan[]) => {
+    const monthlyPlan = plans.find(p => p.name === 'شهري');
+    const threeMonthPlan = plans.find(p => p.name === '3 شهور');
+    if (!monthlyPlan || !threeMonthPlan) return null;
+    const monthlyPrice = Number(monthlyPlan.price);
+    const threeMonthPrice = Number(threeMonthPlan.price);
+    if (isNaN(monthlyPrice) || isNaN(threeMonthPrice) || monthlyPrice <= 0 || (monthlyPrice * 3 <= threeMonthPrice)) return null;
+    const savings = ((monthlyPrice * 3 - threeMonthPrice) / (monthlyPrice * 3)) * 100;
+    return savings > 0 ? savings.toFixed(0) : null;
+  };
 
   const mappedCards: SubscriptionCard[] = useMemo(() => {
   if (!typesData || !plansData) return [];
-
-  return typesData.map((type) => {
-    const style = defaultStyles[type.id] || {
-      tagline: '',
-      primaryColor: '#0084ff',
-      accentColor: '#0084ff',
-      icon: FaChartLine,
-      backgroundPattern: 'bg-none',
-      color: '#0084FF'
-    };
-
-    const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id);
-    const savings = calculateSavings(typePlans);
-
-    const options: SubscriptionOption[] = typePlans.map(plan => {
-      const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
-      const originalPrice = typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price || price;
-
-      // حساب ما إذا كان هناك خصم
-      const hasDiscount = originalPrice > price;
-      // حساب نسبة الخصم إذا وُجد
-      const discountPercentage = hasDiscount ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
-
+  return typesData
+    .filter(type => selectedGroupId === null || type.group_id === selectedGroupId)
+    .map((type) => {
+      const style = defaultStyles[type.id] || {
+        tagline: 'اكتشف مزايا هذا الاشتراك', primaryColor: '#4a90e2',
+        accentColor: '#f5a623', backgroundPattern: 'bg-none', color: '#4a90e2'
+      };
+      const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id).sort((a,b) => Number(a.price) - Number(b.price));
+      const savingsPercentage = calculateSavings(typePlans);
+      const options: SubscriptionOption[] = typePlans.map(plan => {
+        const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+        const originalPriceNum = plan.original_price ? (typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price) : null;
+        const hasDiscount = originalPriceNum !== null && originalPriceNum > price;
+        const discountPercentage = hasDiscount && originalPriceNum ? Math.round(((originalPriceNum - price) / originalPriceNum) * 100) : 0;
+        let savingsText: string | undefined = undefined;
+        if (plan.name === '3 شهور' && savingsPercentage && !hasDiscount) {
+          savingsText = `وفر ${savingsPercentage}%`;
+        }
+        return {
+          id: plan.id, duration: plan.name, price: !isNaN(price) ? price.toFixed(0) + '$' : 'N/A',
+          originalPrice: originalPriceNum,
+          discountedPrice: price, discountPercentage,
+          hasDiscount, telegramStarsPrice: plan.telegram_stars_price, savings: savingsText,
+        };
+      });
       return {
-        id: plan.id,
-        duration: plan.name,
-        price: !isNaN(price) ? price.toFixed(0) + '$' : '0$',
-        originalPrice: originalPrice,
-        discountedPrice: price,
-        discountPercentage,
-        hasDiscount,
-        telegramStarsPrice: plan.telegram_stars_price,
-        savings: plan.name === '3 شهور' && savings ? `وفر ${savings}%` : undefined
+        ...type,
+        id: type.id,
+        name: type.name,
+        isRecommended: type.is_recommended || false,
+        tagline: type.description || style.tagline,
+        primaryColor: style.primaryColor,
+        accentColor: style.accentColor,
+        backgroundPattern: style.backgroundPattern,
+        color: style.color,
+        subscriptionOptions: options,
+        icon: FaLayerGroup, // الحل النهائي: مكون React افتراضي
       };
     });
-
-    return {
-      id: type.id,
-      name: type.name,
-      isRecommended: type.is_recommended || false,
-      tagline: style.tagline,
-      description: type.description,
-      features: type.features,
-      primaryColor: style.primaryColor,
-      accentColor: style.accentColor,
-      icon: style.icon,
-      backgroundPattern: style.backgroundPattern,
-      usp: type.usp,
-      color: style.color,
-      subscriptionOptions: options
-    };
-  });
-}, [typesData, plansData]);
+}, [typesData, plansData, selectedGroupId]);
 
   useEffect(() => {
     if (mappedCards.length > 0) {
       const initialOptions = mappedCards.reduce((acc, card) => {
         if (card.subscriptionOptions.length > 0) {
-          acc[card.id] = card.subscriptionOptions[0];
+          const defaultOption = card.subscriptionOptions.find(opt => opt.duration === 'شهري') || card.subscriptionOptions[0];
+          acc[card.id] = defaultOption;
         }
         return acc;
       }, {} as { [key: number]: SubscriptionOption });
       setSelectedOptions(initialOptions);
+    } else {
+      setSelectedOptions({});
     }
   }, [mappedCards]);
 
   useEffect(() => {
-    // تحميل TelegramWebApp ديناميكيًا
-    import('@twa-dev/sdk')
-      .then((module) => {
-        const TelegramWebApp = module.default;
-        if (TelegramWebApp) {
-          console.log('Telegram.WebApp.initData:', TelegramWebApp.initData);
-          const telegramId = TelegramWebApp.initDataUnsafe?.user?.id;
-          if (telegramId) {
-            console.log('Telegram User ID:', telegramId);
-          } else {
-            console.log('⚠️ Telegram ID not found in Telegram.WebApp.initData');
-          }
-        } else {
-          console.log('⚠️ Telegram.WebApp is not defined (not in Telegram Web App)');
-        }
-      })
-      .catch((error) => {
-        console.error('Error loading TelegramWebApp:', error);
-      });
+    if (groupsData && !initialGroupSelected) {
+      if (groupsData.length > 0) {
+        setSelectedGroupId(groupsData[0].id);
+        setTimeout(() => {
+          const firstTab = groupTabsContainerRef.current?.querySelector(`button[data-group-id="${groupsData[0].id}"]`) as HTMLElement | null;
+          firstTab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }, 100);
+      } else {
+        setSelectedGroupId(null);
+      }
+      setInitialGroupSelected(true);
+    } else if (groupsData && groupsData.length === 0 && !initialGroupSelected) {
+        setSelectedGroupId(null);
+        setInitialGroupSelected(true);
+    }
+  }, [groupsData, initialGroupSelected]);
 
-    // عرض حالة Zustand Stores
-    console.log('Tariff Store:', JSON.stringify(useTariffStore.getState()));
-    console.log('Profile Store:', JSON.stringify(useProfileStore.getState()));
-    console.log('Session Store:', JSON.stringify(useSessionStore.getState()));
+  useEffect(() => {
+    import('@twa-dev/sdk').then(() => {}).catch(() => {});
   }, []);
 
-  // التعامل مع حالات التحميل والأخطاء
-  if (typesLoading || plansLoading) {
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <p>جاري التحميل...</p>
-    </div>
-  );
-}
+  const handleGroupSelect = (groupId: number | null, eventTarget: HTMLElement) => {
+    setSelectedGroupId(groupId);
+    eventTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  };
 
+  const isLoadingInitial = groupsLoading;
+  const isLoadingData = (typesLoading || plansLoading) && !groupsLoading;
+  const hasError = groupsError || typesError || plansError;
 
+  if (isLoadingInitial && !hasError) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+        <div className="w-16 h-16 border-4 border-t-blue-600 border-gray-300 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-700">جاري تحميل المجموعات...</p>
+      </div>
+    );
+  }
+  
+  if (hasError) {
+    let errorMsg = "حدث خطأ ما. يرجى المحاولة مرة أخرى.";
+    if (groupsError) errorMsg = `خطأ في تحميل المجموعات: ${(groupsError as Error).message}`;
+    else if (typesError) errorMsg = `خطأ في تحميل الاشتراكات: ${(typesError as Error).message}`;
+    else if (plansError) errorMsg = `خطأ في تحميل الخطط: ${(plansError as Error).message}`;
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 p-6 text-center">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">حدث خطأ</h3>
+        <p className="text-gray-600 mb-6 max-w-md">{errorMsg}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+          </svg>
+          إعادة تحميل الصفحة
+        </button>
+      </div>
+    );
+  }
+  
+  if (!initialGroupSelected) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+        <div className="w-16 h-16 border-4 border-t-blue-600 border-gray-300 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-700">جاري تهيئة البيانات...</p>
+      </div>
+    );
+  }
 
   return (
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
-      <div dir="rtl" className="min-h-screen bg-white safe-area-padding pb-32 font-inter">
-        {/* شريط التنقل المحدث */}
-         <Navbar />
-
-        {/* الهيدر المحدث */}
-        <motion.div
+      <div dir="rtl" className="min-h-screen bg-gray-50 safe-area-padding pb-32 font-inter">
+        <Navbar />
+        
+        <motion.div 
           className="w-full py-12 md:py-16 bg-gradient-to-br from-blue-50 to-white"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+           <div className="container mx-auto px-4 text-center">
+            <motion.h1 
+              className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
               اختر الاشتراك الأنسب لك!
               <span className="block text-blue-600 mt-2">واستثمر بذكاء مع خبرائنا</span>
-            </h1>
-            <div className="max-w-2xl mx-auto">
-              <div className="h-1 bg-gradient-to-r from-blue-500 to-transparent w-1/3 mx-auto mb-6" />
+            </motion.h1>
+            
+            <motion.div 
+              className="max-w-2xl mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="h-1.5 bg-gradient-to-r from-blue-500 to-transparent w-1/3 mx-auto mb-6 rounded-full"></div>
               <p className="text-gray-600 text-lg leading-relaxed">
                 مع إكسادو، أصبح التداول أسهل مما تتخيل – جرّب بنفسك الآن!
               </p>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
-        {/* قسم الخطط المحدث */}
+        {(groupsData && groupsData.length > 0) && (
+          <section className="sticky top-0 z-30 bg-white border-b shadow-sm pt-2 pb-1">
+            <div 
+              ref={groupTabsContainerRef}
+              className="container mx-auto px-4 flex overflow-x-auto gap-2 pb-4 scrollbar-hide"
+            >
+              <button onClick={(e) => handleGroupSelect(null, e.currentTarget)} data-group-id="all" className={` flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${selectedGroupId === null  ? 'text-blue-700 font-semibold'  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}>
+                <div className="flex items-center gap-2"> <FaLayerGroup size={16} /> الكل </div>
+                {selectedGroupId === null && ( <motion.div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" layoutId="activeTabIndicator" /> )}
+              </button>
+              {groupsData?.map((group) => (
+                <button key={group.id} data-group-id={group.id} onClick={(e) => handleGroupSelect(group.id, e.currentTarget)} className={` flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${selectedGroupId === group.id  ? 'text-blue-700 font-semibold'  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}>
+                  <div className="flex items-center gap-2"> <FaTags size={16} className="text-gray-500" /> {group.name} </div>
+                  {selectedGroupId === group.id && ( <motion.div  className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" layoutId="activeTabIndicator" /> )}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <style jsx global>{`
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        `}</style>
+
         <motion.section
-          className="container mx-auto px-4 py-12 md:py-16 lg:py-20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', stiffness: 60 }}
+          ref={subscriptionsSectionRef}
+          className="container mx-auto px-4 pb-12 md:pb-16 lg:pb-20 pt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-            {mappedCards.map((card, index) => {
-              const selectedOption = selectedOptions[card.id];
+          {isLoadingData && ( <div className="flex justify-center items-center py-10"> <div className="flex flex-col items-center"> <div className="w-12 h-12 border-4 border-t-blue-600 border-gray-300 rounded-full animate-spin mb-4"></div> <p className="text-gray-700">جاري تحميل الاشتراكات...</p> </div> </div> )}
+          {!isLoadingData && mappedCards.length === 0 && ( <div className="text-center py-16 bg-white rounded-xl shadow-sm"> <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> </div> <h3 className="text-xl font-semibold text-gray-800 mb-2"> {selectedGroupId !== null && groupsData && groupsData.length > 0 ? "لا توجد اشتراكات لهذه المجموعة" : "لا توجد اشتراكات متاحة حاليًا"} </h3> <p className="text-gray-600 max-w-md mx-auto"> {selectedGroupId !== null && groupsData && groupsData.length > 0 ? "لا توجد اشتراكات متاحة لهذه المجموعة في الوقت الحالي."  : "يرجى التحقق مرة أخرى في وقت لاحق أو اختيار مجموعة أخرى."} </p> </div> )}
 
-              return (
-                <motion.div
-                dir="rtl"
-                  key={card.id}
-                  className="relative"
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, type: 'spring' }}
-                >
-                  {card.isRecommended && (
-                    <div className="absolute top-0 right-0 z-20 bg-blue-600 text-white px-3 py-1 rounded-bl-xl text-sm flex items-center gap-1">
-                      <FaStar className="text-yellow-300" />
-                      الأكثر شيوعًا
-                    </div>
-                  )}
+          {mappedCards.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+              {mappedCards.map((cardData, index) => {
+                const selectedOption = selectedOptions[cardData.id];
+                if (!selectedOption) return null;
 
+                const hasImage = !!cardData.image_url;
+                
+                // --- [إضافة]: عنصر نائب بسيط ---
+                const placeholderHeight = "144px"; // h-36 is 144px
+                // -----------------------------
+
+                return (
                   <motion.div
-                    className={`relative rounded-xl border-2 ${
-                      card.isRecommended ? 'border-blue-600 shadow-xl' : 'border-gray-200 shadow-lg'
-                    } bg-white transition-all duration-200 hover:shadow-2xl`}
+                    key={`${cardData.id}-${selectedGroupId}-${selectedOption.id}`}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, type: 'spring', stiffness: 100, damping: 15 }}
                     whileHover={{ y: -5 }}
+                    className="flex flex-col h-full"
                   >
-                    <div className="pt-8 pb-6 px-6">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                        {card.name}
-                        {card.isRecommended && (
-                          <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            موصى به
-                          </span>
-                        )}
-                      </h2>
+                    <Card className={`
+                      w-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 
+                      flex flex-col flex-grow relative rounded-xl 
+                      ${hasImage ? 'border-0 overflow-hidden' : 'border border-gray-200'}
+                      ${cardData.isRecommended && !hasImage ? 'ring-2 ring-blue-500 ring-opacity-60' : ''} 
+                    `}>
+                      {/* --- [تعديل]: تم استبدال img بـ LazyLoadImage --- */}
+                      {hasImage && (
+                        <div 
+                          className="relative w-full group"
+                          style={{ 
+                            height: placeholderHeight, // تأكد من أن الحاوية لها ارتفاع ثابت
+                            backgroundColor: '#e0e0e0' // لون عنصر نائب خفيف
+                          }}
+                        >
+                          <LazyLoadImage
+                            alt={cardData.name}
+                            src={cardData.image_url!} // الـ URL مع التحويلات المضمنة
+                            effect="blur" // تأثير ضبابي عند التحميل
+                            wrapperClassName="w-full h-full"
+                            className="w-full h-full object-cover"
+                            style={{ display: 'block' }}
+                          />
+                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
 
-                      <div className="flex flex-col items-start mb-6">
-                        <div className="flex items-baseline gap-2">
-                          {/* عرض السعر بعد الخصم */}
-                          <span className="text-4xl font-extrabold text-gray-900">
-                            {selectedOption?.price}
-                          </span>
-                          <span className="text-gray-500 text-lg">
-                            / {selectedOption?.duration}
-                          </span>
+                          {cardData.isRecommended && (
+                            <div className="absolute top-3 left-3 z-10">
+                              <Badge className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg px-2.5 py-1 text-xs font-semibold flex items-center gap-1">
+                                <FaStarRecommended className="h-3 w-3" fill="currentColor" />
+                                الأكثر طلباً
+                              </Badge>
+                            </div>
+                          )}
+
+                          {(selectedOption?.hasDiscount && selectedOption.discountPercentage && selectedOption.discountPercentage > 0) && (
+                            <div className="absolute bottom-3 right-3 z-10">
+                              <Badge className="bg-yellow-500 hover:bg-yellow-500 text-black border-0 shadow-lg px-2.5 py-1 text-xs font-bold">
+                                خصم {selectedOption.discountPercentage}%
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* --- نهاية التعديل --- */}
+
+                      {!hasImage && cardData.isRecommended && (
+                        <div className="absolute top-4 right-4 z-10 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-md">
+                          <FaStarRecommended className="text-yellow-300" /> الأكثر شيوعًا
+                        </div>
+                      )}
+
+                      <CardHeader className={`text-center pb-4 ${hasImage ? 'pt-5' : 'pt-8 sm:pt-6'}`}>
+                        <CardTitle className="text-lg md:text-xl font-bold text-gray-900 mb-1 line-clamp-2">{cardData.name}</CardTitle>
+                        {cardData.tagline && <CardDescription className="mb-3 text-sm text-gray-600 line-clamp-2 h-12">{cardData.tagline}</CardDescription>}
+                        
+                        <div className="flex items-end justify-center gap-1 mb-1">
+                          <span className="text-3xl font-bold text-gray-900">{selectedOption?.price}</span>
+                          <span className="text-sm text-gray-500 mb-1">/ {selectedOption?.duration}</span>
                         </div>
 
-                        {/* عرض نسبة الخصم والسعر الأصلي إذا كان هناك خصم */}
-                        {selectedOption?.hasDiscount && (
-  <div className="mt-2 flex flex-col items-start">
-    <div className="flex items-center gap-2 mb-1">
-      <span className="text-lg text-red-500 line-through font-semibold">
-        {selectedOption.originalPrice?.toFixed(0)}$
-      </span>
-      <div className="flex items-center gap-2">
-        {/* خصم */}
-        <span className="bg-red-100 text-red-700 text-sm font-bold px-3 py-1 rounded-full flex items-center">
-          <FaPercent className="mr-1 text-xs" />
-          {selectedOption.discountPercentage} خصم
-        </span>
+                        {(selectedOption?.hasDiscount && selectedOption.originalPrice) && (
+                          <div className="flex items-center justify-center gap-2 mt-1">
+                            {!hasImage && selectedOption.discountPercentage && selectedOption.discountPercentage > 0 && (
+                                <Badge variant="destructive" className="bg-red-100 text-red-600 hover:bg-red-100 px-2.5 py-1 text-xs">
+                                  خصم {selectedOption.discountPercentage}%
+                                </Badge>
+                            )}
+                            <span className="text-sm text-gray-400 line-through">
+                              {selectedOption.originalPrice?.toFixed(0)}$
+                            </span>
+                          </div>
+                        )}
+                        
+                        {!selectedOption?.hasDiscount && selectedOption?.savings && (
+                          <div className="mt-2">
+                            <span className="text-sm text-green-700 bg-green-100 px-2.5 py-1 rounded-md font-medium">
+                              {selectedOption.savings}
+                            </span>
+                          </div>
+                        )}
+                      </CardHeader>
+                      
+                      <CardContent className="flex flex-col flex-grow pt-0">
+                        <div className="space-y-4 flex-grow mb-5">
+                            {(selectedOption?.hasDiscount || (cardData.isRecommended && !selectedOption?.hasDiscount)) && (
+                                <div className={`
+                                    border rounded-lg p-3 text-center
+                                    ${selectedOption?.hasDiscount 
+                                        ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200 text-red-600' 
+                                        : 'bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200 text-blue-600'}
+                                `}>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <FaClock className="h-4 w-4" />
+                                        <span className="text-sm font-medium">
+                                            {selectedOption?.hasDiscount ? "العرض ينتهي قريباً!" : "خيار رائع!"}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                          
+                          {cardData.features.length > 0 && (
+                            <div className="space-y-2 text-right">
+                              <h3 className="font-semibold text-gray-700 mb-2">المميزات الرئيسية:</h3>
+                              {cardData.features.slice(0, cardData.features.length > 3 ? 3 : 3).map((feature, idx) =>
+                                <div key={idx} className="flex items-start gap-2.5">
+                                    <StarFeature className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" fill="currentColor" />
+                                    <span className="text-sm text-gray-700 leading-relaxed line-clamp-2">{feature}</span>
+                                  </div>
+                              )}
+                              {cardData.features.length > (cardData.features.length > 3 ? 2 : 3) && (
+                                <button
+                                  onClick={() => {
+                                    if (selectedOption) {
+                                      setSelectedPlan({ ...cardData, selectedOption, planId: selectedOption.id });
+                                    }
+                                  }}
+                                  className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                                >
+                                  عرض كل المميزات ...
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="mt-auto">
+                          {cardData.subscriptionOptions.length > 1 && (
+                            <div className="flex flex-wrap gap-2 mb-5 justify-center">
+                              {cardData.subscriptionOptions.map((option) => (
+                                <button
+                                  key={option.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedOptions(prev => ({ ...prev, [cardData.id]: option }));
+                                  }}
+                                  className={`
+                                    px-3 py-1.5 rounded-lg text-xs transition-all border
+                                    ${selectedOption?.id === option.id
+                                      ? 'bg-blue-100 text-blue-700 font-semibold border-blue-300 ring-1 ring-blue-300'
+                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200'}
+                                  `}
+                                >
+                                  {option.duration}
+                                </button>
+                              ))}
+                            </div>
+                          )}
 
-        {/* توفير */}
-        {selectedOption.savings && (
-          <span className="text-sm text-green-600 mt-1">
-                            {selectedOption.savings}
-                          </span>
-        )}
-      </div>
-    </div>
-
-    {/* شريط العد التنازلي */}
-    <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
-      <div className="flex items-center gap-2 text-amber-800">
-        <FaClock className="text-amber-600" />
-        <span className="text-sm font-medium">عرض لفترة محدودة!</span>
-      </div>
-    </div>
-  </div>
-)}
-
-
-                      </div>
-
-                      <ul className="space-y-3 mb-6">
-                        {card.features.slice(0, 4).map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-3 text-gray-600">
-                            <FaStar className="text-blue-600 mt-1 flex-shrink-0" />
-                            <span className="leading-relaxed">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {card.subscriptionOptions.map((option) => (
-                          <button
-                            key={option.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedOptions(prev => ({ ...prev, [card.id]: option }));
-                            }}
-                            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                              selectedOption?.id === option.id
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
+                          <Button
+                            onClick={() => { if (selectedOption) setSelectedPlan({ ...cardData, selectedOption, planId: selectedOption.id })}}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                            size="lg"
+                            disabled={!selectedOption}
                           >
-                            {option.duration}
-                          </button>
-                        ))}
-                      </div>
-
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedPlan({ ...card, selectedOption, planId: selectedOption.id })}
-                        className="w-full py-4 rounded-xl text-white font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg transition-all"
-                        aria-label={`اشترك في خطة ${card.name}`}
-                      >
-                        اشترك معنا الان
-                      </motion.button>
-                    </div>
-
+                            اشترك معنا الآن
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </motion.div>
-                </motion.div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </motion.section>
 
         <AnimatePresence>
           {selectedPlan && (
-            <SubscriptionModal
-              plan={selectedPlan}
-              onClose={() => setSelectedPlan(null)}
-            />
+            <SubscriptionModal plan={selectedPlan} onClose={() => setSelectedPlan(null)} />
           )}
         </AnimatePresence>
       </div>
