@@ -2,6 +2,7 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useUserStore } from "../stores/zustand/userStore";
+import { syncUserData } from '../services/api';
 
 interface TelegramContextType {
   isTelegramReady: boolean;
@@ -79,11 +80,22 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         photoUrl: user.photo_url || null,
         joinDate: null,
       };
+
       console.log("✅ Telegram User Data Fetched Successfully:", userData);
-      setUserData(userData);
+
+      setUserData(userData);       // تحديث بيانات المستخدم في Zustand (للتفاعل الفوري في الواجهة)
       setIsTelegramReady(true);
       setIsLoading(false);
       clearRetryTimeout();
+
+      // 💡 2. استدعاء دالة المزامنة مع الخادم في الخلفية
+
+      syncUserData({
+        telegramId: userData.telegramId,
+        telegramUsername: userData.telegramUsername,
+        fullName: userData.fullName,
+      });
+
     } else {
       console.warn("⏳ Telegram initDataUnsafe.user or user.id is missing. Scheduling retry for initDataUnsafe.");
       console.log("ℹ️ Current initDataUnsafe:", JSON.stringify(tg.initDataUnsafe));

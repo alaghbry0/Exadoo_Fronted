@@ -105,9 +105,43 @@ export const fetchUserPayments = async (params: {
   startDate?: string
   endDate?: string
 }) => {
-  const response = await axios.get('${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/payments', { params })
+  const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/payments`, { params })
   return {
     data: response.data.results,
     pagination: response.data.pagination
   }
 }
+
+// واجهة لنوع بيانات المستخدم التي سنرسلها
+interface UserSyncData {
+  telegramId: string;
+  telegramUsername: string | null;
+  fullName: string | null;
+}
+
+/**
+ * يرسل بيانات المستخدم إلى الخادم لمزامنتها (إضافة/تحديث).
+ * @param userData بيانات المستخدم المراد مزامنتها.
+ */
+export const syncUserData = async (userData: UserSyncData): Promise<void> => {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/sync`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      // يمكنك معالجة الخطأ هنا إذا أردت، مثلاً إرساله إلى خدمة تتبع الأخطاء
+      const errorData = await response.json();
+      console.error('Failed to sync user data:', errorData.error || response.statusText);
+      // لا نلقي خطأ هنا لأن المزامنة عملية خلفية ولا يجب أن توقف التطبيق
+    } else {
+        console.log('✅ User data synced successfully with the backend.');
+    }
+  } catch (error) {
+    console.error('Network or other error during user sync:', error);
+  }
+};
