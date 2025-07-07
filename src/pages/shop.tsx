@@ -20,7 +20,9 @@ import { Star as StarFeature } from 'lucide-react';
 // --- [إضافة جديدة]: استيراد مكون التحميل الكسول ---
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css'; // تأثير ضبابي اختياري
-// --------------------------------------------------
+
+// ⭐ 1. استيراد useTelegram للحصول على معرف المستخدم
+import { useTelegram } from '../context/TelegramContext';
 
 import type {
   ApiSubscriptionType,
@@ -73,6 +75,9 @@ const ShopComponent: React.FC = () => {
   const subscriptionsSectionRef = useRef<HTMLElement>(null);
   const groupTabsContainerRef = useRef<HTMLDivElement>(null);
 
+  // ⭐ 2. الحصول على telegramId من الـ Context
+  const { telegramId } = useTelegram();
+
   const {
     data: groupsData,
     isLoading: groupsLoading,
@@ -99,8 +104,10 @@ const ShopComponent: React.FC = () => {
     isLoading: plansLoading,
     error: plansError,
   } = useQuery<ApiSubscriptionPlan[]>({
-    queryKey: ['subscriptionPlans'],
-    queryFn: getSubscriptionPlans,
+    // ⭐ 5. إضافة telegramId إلى مفتاح الاستعلام
+    queryKey: ['subscriptionPlans', telegramId],
+    // ⭐ 6. تمرير telegramId إلى دالة الجلب
+    queryFn: () => getSubscriptionPlans(telegramId),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -116,47 +123,47 @@ const ShopComponent: React.FC = () => {
   };
 
   const mappedCards: SubscriptionCard[] = useMemo(() => {
-  if (!typesData || !plansData) return [];
-  return typesData
-    .filter(type => selectedGroupId === null || type.group_id === selectedGroupId)
-    .map((type) => {
-      const style = defaultStyles[type.id] || {
-        tagline: 'اكتشف مزايا هذا الاشتراك', primaryColor: '#4a90e2',
-        accentColor: '#f5a623', backgroundPattern: 'bg-none', color: '#4a90e2'
-      };
-      const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id).sort((a,b) => Number(a.price) - Number(b.price));
-      const savingsPercentage = calculateSavings(typePlans);
-      const options: SubscriptionOption[] = typePlans.map(plan => {
-        const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
-        const originalPriceNum = plan.original_price ? (typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price) : null;
-        const hasDiscount = originalPriceNum !== null && originalPriceNum > price;
-        const discountPercentage = hasDiscount && originalPriceNum ? Math.round(((originalPriceNum - price) / originalPriceNum) * 100) : 0;
-        let savingsText: string | undefined = undefined;
-        if (plan.name === '3 شهور' && savingsPercentage && !hasDiscount) {
-          savingsText = `وفر ${savingsPercentage}%`;
-        }
+    if (!typesData || !plansData) return [];
+    return typesData
+      .filter(type => selectedGroupId === null || type.group_id === selectedGroupId)
+      .map((type) => {
+        const style = defaultStyles[type.id] || {
+          tagline: 'اكتشف مزايا هذا الاشتراك', primaryColor: '#4a90e2',
+          accentColor: '#f5a623', backgroundPattern: 'bg-none', color: '#4a90e2'
+        };
+        const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id).sort((a,b) => Number(a.price) - Number(b.price));
+        const savingsPercentage = calculateSavings(typePlans);
+        const options: SubscriptionOption[] = typePlans.map(plan => {
+          const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+          const originalPriceNum = plan.original_price ? (typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price) : null;
+          const hasDiscount = originalPriceNum !== null && originalPriceNum > price;
+          const discountPercentage = hasDiscount && originalPriceNum ? Math.round(((originalPriceNum - price) / originalPriceNum) * 100) : 0;
+          let savingsText: string | undefined = undefined;
+          if (plan.name === '3 شهور' && savingsPercentage && !hasDiscount) {
+            savingsText = `وفر ${savingsPercentage}%`;
+          }
+          return {
+            id: plan.id, duration: plan.name, price: !isNaN(price) ? price.toFixed(0) + '$' : 'N/A',
+            originalPrice: originalPriceNum,
+            discountedPrice: price, discountPercentage,
+            hasDiscount, telegramStarsPrice: plan.telegram_stars_price, savings: savingsText,
+          };
+        });
         return {
-          id: plan.id, duration: plan.name, price: !isNaN(price) ? price.toFixed(0) + '$' : 'N/A',
-          originalPrice: originalPriceNum,
-          discountedPrice: price, discountPercentage,
-          hasDiscount, telegramStarsPrice: plan.telegram_stars_price, savings: savingsText,
+          ...type,
+          id: type.id,
+          name: type.name,
+          isRecommended: type.is_recommended || false,
+          tagline: type.description || style.tagline,
+          primaryColor: style.primaryColor,
+          accentColor: style.accentColor,
+          backgroundPattern: style.backgroundPattern,
+          color: style.color,
+          subscriptionOptions: options,
+          icon: FaLayerGroup, // الحل النهائي: مكون React افتراضي
         };
       });
-      return {
-        ...type,
-        id: type.id,
-        name: type.name,
-        isRecommended: type.is_recommended || false,
-        tagline: type.description || style.tagline,
-        primaryColor: style.primaryColor,
-        accentColor: style.accentColor,
-        backgroundPattern: style.backgroundPattern,
-        color: style.color,
-        subscriptionOptions: options,
-        icon: FaLayerGroup, // الحل النهائي: مكون React افتراضي
-      };
-    });
-}, [typesData, plansData, selectedGroupId]);
+  }, [typesData, plansData, selectedGroupId]);
 
   useEffect(() => {
     if (mappedCards.length > 0) {

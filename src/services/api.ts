@@ -47,10 +47,17 @@ export const getSubscriptionTypes = async (groupId: number | null = null) => {
     }
 };
 
-
-export const getSubscriptionPlans = async () => {
+export const getSubscriptionPlans = async (telegramId: string | null) => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/subscription-plans`);
+        const url = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/subscription-plans`);
+        
+        if (telegramId) {
+            // TypeScript يعرف الآن أن telegramId هو string هنا
+            url.searchParams.append('telegram_id', telegramId);
+        }
+
+        const response = await fetch(url.toString());
+
         if (!response.ok) {
             let errorMessage = `Error ${response.status}: Failed to fetch subscription plans.`;
             try {
@@ -58,9 +65,7 @@ export const getSubscriptionPlans = async () => {
                 if (errorData.error) {
                     errorMessage += ` ${errorData.error}`;
                 }
-            } catch { // تم حذف parseError غير المستخدم
-                // في حال تعذر تحليل الاستجابة، يتم الاحتفاظ برسالة الخطأ الافتراضية
-            }
+            } catch {}
             throw new Error(errorMessage);
         }
         const data = await response.json();
