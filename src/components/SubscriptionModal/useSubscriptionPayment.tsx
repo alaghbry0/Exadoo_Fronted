@@ -265,27 +265,40 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     }
   }
 
-  // عملية الدفع عبر Telegram Stars
   const handleStarsPayment = async () => {
-    if (!plan) return
+    if (!plan || !plan.selectedOption.discountedPrice) return; // تأكد من وجود الخطة والسعر
+
     try {
-      setLoading(true)
+      setLoading(true);
+
+      // ✨ التعديل الأساسي هنا
+      // 1. احصل على السعر النهائي بالـ USDT (بعد الخصم).
+      const finalUsdtPrice = plan.selectedOption.discountedPrice;
+
+      // 2. احصل على معامل التحويل للنجوم.
+      const starsMultiplier = plan.selectedOption.telegramStarsPrice;
+
+      // 3. قم بعملية الضرب واحصل على السعر النهائي بالنجوم (XTR).
+      // نستخدم Math.round() للتأكد من أن القيمة عدد صحيح، لأن نجوم تليجرام لا تقبل الكسور.
+      const finalStarsPrice = Math.round(finalUsdtPrice * starsMultiplier);
+
+      // 4. مرّر السعر النهائي المحسوب إلى دالة الدفع.
       const { paymentToken } = await handleTelegramStarsPayment(
         plan.selectedOption.id,
-        plan.selectedOption.telegramStarsPrice
-      )
+        finalStarsPrice // ✅ تم استخدام السعر الصحيح الآن
+      );
 
       if (paymentToken) {
-        handlePaymentSuccess()
+        handlePaymentSuccess();
       } else {
-        setPaymentStatus('failed')
+        setPaymentStatus('failed');
       }
     } catch {
-      setPaymentStatus('failed')
+      setPaymentStatus('failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // التأكد من صحة حالة الدفع
   useEffect(() => {
