@@ -386,7 +386,7 @@ const ShopComponent: React.FC = () => {
 
                       {!hasImage && cardData.isRecommended && (
                         <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-md">
-                          <FaStarRecommended className="text-yellow-300" /> الأكثر شيوعًا
+                          <FaStarRecommended className="text-yellow-300" /> الأكثر طلبا
                         </div>
                       )}
 
