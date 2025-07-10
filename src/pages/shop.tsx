@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../components/SubscriptionModal'
-import { FaLayerGroup, FaTags, FaStar as FaStarRecommended, FaClock } from 'react-icons/fa'
+import { FaLayerGroup, FaTags } from 'react-icons/fa'
 import React from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
 import Navbar from '../components/Navbar'
@@ -12,16 +12,15 @@ import Navbar from '../components/Navbar'
 import { useQuery } from '@tanstack/react-query'
 import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../services/api'
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+// --- استيراد cn لتجميع الكلاسات ---
+import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star as StarFeature } from 'lucide-react';
 
-// --- [إضافة جديدة]: استيراد مكون التحميل الكسول ---
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css'; // تأثير ضبابي اختياري
+// --- استيراد أيقونات متنوعة من lucide-react لإعطاء هوية بصرية ---
+import { Crown, Zap, Gem, Star } from 'lucide-react';
 
-// ⭐ 1. استيراد useTelegram للحصول على معرف المستخدم
 import { useTelegram } from '../context/TelegramContext';
 
 import type {
@@ -36,30 +35,26 @@ interface SubscriptionCard extends OriginalSubscriptionCard {
   group_id: number | null;
   terms_and_conditions: string[];
   image_url: string | null;
+  icon: React.ElementType;
 }
 
+// --- تبسيط الأنماط والتركيز على اللون والأيقونة ---
 const defaultStyles: { [key: number]: {
-  tagline: string;
   primaryColor: string;
   accentColor: string;
-  backgroundPattern: string;
-  color: string;
 } } = {
-  1: {
-    tagline: 'إشارات نخبة الفوركس لتحقيق أقصى قدر من الأرباح',
-    primaryColor: '#2390f1',
-    accentColor: '#eab308',
-    backgroundPattern: 'bg-none',
-    color: '#2390f1'
-  },
-  2: {
-    tagline: 'استثمر بذكاء في عالم الكريبتو المثير',
-    primaryColor: '#2390f1',
-    accentColor: '#eab308',
-    backgroundPattern: 'bg-none',
-    color: '#2390f1'
-  },
+  1: { primaryColor: '#2563eb', accentColor: '#3b82f6' }, // Blue tones
+  2: { primaryColor: '#f97316', accentColor: '#fb923c' }, // Orange tones
 };
+
+// --- تعريف خريطة الأيقونات للاستخدام الديناميكي ---
+const iconMap: { [key: string]: React.ElementType } = {
+  'default': Star,
+  'forex': Zap,
+  'crypto': Gem,
+  'vip': Crown,
+};
+
 
 type SelectedPlan = SubscriptionCard & {
   selectedOption: SubscriptionOption;
@@ -74,39 +69,23 @@ const ShopComponent: React.FC = () => {
 
   const subscriptionsSectionRef = useRef<HTMLElement>(null);
   const groupTabsContainerRef = useRef<HTMLDivElement>(null);
-
-  // ⭐ 2. الحصول على telegramId من الـ Context
   const { telegramId } = useTelegram();
 
-  const {
-    data: groupsData,
-    isLoading: groupsLoading,
-    error: groupsError,
-  } = useQuery<ApiSubscriptionGroup[]>({
+  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useQuery<ApiSubscriptionGroup[]>({
     queryKey: ['subscriptionGroups'],
     queryFn: getSubscriptionGroups,
     staleTime: 5 * 60 * 1000,
   });
 
-  const {
-    data: typesData,
-    isLoading: typesLoading,
-    error: typesError,
-  } = useQuery<ApiSubscriptionType[]>({
+  const { data: typesData, isLoading: typesLoading, error: typesError } = useQuery<ApiSubscriptionType[]>({
     queryKey: ['subscriptionTypes', selectedGroupId],
     queryFn: () => getSubscriptionTypes(selectedGroupId),
     enabled: initialGroupSelected,
     staleTime: 5 * 60 * 1000,
   });
 
-  const {
-    data: plansData,
-    isLoading: plansLoading,
-    error: plansError,
-  } = useQuery<ApiSubscriptionPlan[]>({
-    // ⭐ 5. إضافة telegramId إلى مفتاح الاستعلام
+  const { data: plansData, isLoading: plansLoading, error: plansError } = useQuery<ApiSubscriptionPlan[]>({
     queryKey: ['subscriptionPlans', telegramId],
-    // ⭐ 6. تمرير telegramId إلى دالة الجلب
     queryFn: () => getSubscriptionPlans(telegramId),
     staleTime: 5 * 60 * 1000,
   });
@@ -119,7 +98,7 @@ const ShopComponent: React.FC = () => {
     const threeMonthPrice = Number(threeMonthPlan.price);
     if (isNaN(monthlyPrice) || isNaN(threeMonthPrice) || monthlyPrice <= 0 || (monthlyPrice * 3 <= threeMonthPrice)) return null;
     const savings = ((monthlyPrice * 3 - threeMonthPrice) / (monthlyPrice * 3)) * 100;
-    return savings > 0 ? savings.toFixed(0) : null;
+    return savings > 0 ? `وفر ${savings.toFixed(0)}%` : null;
   };
 
   const mappedCards: SubscriptionCard[] = useMemo(() => {
@@ -127,41 +106,46 @@ const ShopComponent: React.FC = () => {
     return typesData
       .filter(type => selectedGroupId === null || type.group_id === selectedGroupId)
       .map((type) => {
-        const style = defaultStyles[type.id] || {
-          tagline: 'اكتشف مزايا هذا الاشتراك', primaryColor: '#4a90e2',
-          accentColor: '#f5a623', backgroundPattern: 'bg-none', color: '#4a90e2'
-        };
-        const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id).sort((a,b) => Number(a.price) - Number(b.price));
-        const savingsPercentage = calculateSavings(typePlans);
+        const style = defaultStyles[type.id] || { primaryColor: '#6d28d9', accentColor: '#8b5cf6' };
+        const typePlans = plansData.filter(plan => plan.subscription_type_id === type.id).sort((a, b) => Number(a.price) - Number(b.price));
+
         const options: SubscriptionOption[] = typePlans.map(plan => {
           const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
           const originalPriceNum = plan.original_price ? (typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price) : null;
           const hasDiscount = originalPriceNum !== null && originalPriceNum > price;
           const discountPercentage = hasDiscount && originalPriceNum ? Math.round(((originalPriceNum - price) / originalPriceNum) * 100) : 0;
-          let savingsText: string | undefined = undefined;
-          if (plan.name === '3 شهور' && savingsPercentage && !hasDiscount) {
-            savingsText = `وفر ${savingsPercentage}%`;
-          }
+
           return {
-            id: plan.id, duration: plan.name, price: !isNaN(price) ? price.toFixed(0) + '$' : 'N/A',
+            id: plan.id,
+            duration: plan.name,
+            price: !isNaN(price) ? price.toFixed(0) + '$' : 'N/A',
             originalPrice: originalPriceNum,
-            discountedPrice: price, discountPercentage,
-            hasDiscount, telegramStarsPrice: plan.telegram_stars_price, savings: savingsText,
+            discountedPrice: price,
+            discountPercentage,
+            hasDiscount,
+            telegramStarsPrice: plan.telegram_stars_price,
+            savings: plan.name === '3 شهور' ? calculateSavings(typePlans) ?? undefined : undefined,
           };
         });
+
+        let CardIcon = iconMap['default'];
+        if (type.name.toLowerCase().includes('forex')) CardIcon = iconMap['forex'];
+        if (type.name.toLowerCase().includes('crypto')) CardIcon = iconMap['crypto'];
+        if (type.is_recommended) CardIcon = iconMap['vip'];
+
         return {
-          ...type,
-          id: type.id,
-          name: type.name,
-          isRecommended: type.is_recommended || false,
-          tagline: type.description || style.tagline,
-          primaryColor: style.primaryColor,
-          accentColor: style.accentColor,
-          backgroundPattern: style.backgroundPattern,
-          color: style.color,
-          subscriptionOptions: options,
-          icon: FaLayerGroup, // الحل النهائي: مكون React افتراضي
-        };
+  ...type,
+  id: type.id,
+  name: type.name,
+  isRecommended: type.is_recommended || false,
+  tagline: type.description || 'اكتشف مزايا هذا الاشتراك',
+  primaryColor: style.primaryColor,
+  accentColor: style.accentColor,
+  subscriptionOptions: options,
+  icon: CardIcon,
+  backgroundPattern: '', // أو أي قيمة افتراضية مناسبة
+  color: '', // أو أي قيمة افتراضية مناسبة
+};
       });
   }, [typesData, plansData, selectedGroupId]);
 
@@ -182,19 +166,15 @@ const ShopComponent: React.FC = () => {
 
   useEffect(() => {
     if (groupsData && !initialGroupSelected) {
-      if (groupsData.length > 0) {
-        setSelectedGroupId(groupsData[0].id);
+      const defaultGroupId = groupsData.length > 0 ? groupsData[0].id : null;
+      setSelectedGroupId(defaultGroupId);
+      if(defaultGroupId) {
         setTimeout(() => {
-          const firstTab = groupTabsContainerRef.current?.querySelector(`button[data-group-id="${groupsData[0].id}"]`) as HTMLElement | null;
+          const firstTab = groupTabsContainerRef.current?.querySelector(`button[data-group-id="${defaultGroupId}"]`) as HTMLElement | null;
           firstTab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }, 100);
-      } else {
-        setSelectedGroupId(null);
       }
       setInitialGroupSelected(true);
-    } else if (groupsData && groupsData.length === 0 && !initialGroupSelected) {
-        setSelectedGroupId(null);
-        setInitialGroupSelected(true);
     }
   }, [groupsData, initialGroupSelected]);
 
@@ -219,7 +199,7 @@ const ShopComponent: React.FC = () => {
       </div>
     );
   }
-  
+
   if (hasError) {
     let errorMsg = "حدث خطأ ما. يرجى المحاولة مرة أخرى.";
     if (groupsError) errorMsg = `خطأ في تحميل المجموعات: ${(groupsError as Error).message}`;
@@ -234,8 +214,8 @@ const ShopComponent: React.FC = () => {
         </div>
         <h3 className="text-xl font-bold text-gray-800 mb-2">حدث خطأ</h3>
         <p className="text-gray-600 mb-6 max-w-md">{errorMsg}</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -246,7 +226,7 @@ const ShopComponent: React.FC = () => {
       </div>
     );
   }
-  
+
   if (!initialGroupSelected) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
@@ -260,15 +240,15 @@ const ShopComponent: React.FC = () => {
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <div dir="rtl" className="min-h-screen bg-gray-50 safe-area-padding pb-32 font-inter">
         <Navbar />
-        
-        <motion.div 
+
+        <motion.div
           className="w-full py-12 md:py-16 bg-gradient-to-br from-blue-50 to-white"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
            <div className="container mx-auto px-4 text-center">
-            <motion.h1 
+            <motion.h1
               className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -277,8 +257,8 @@ const ShopComponent: React.FC = () => {
               اختر الاشتراك الأنسب لك!
               <span className="block text-blue-600 mt-2">واستثمر بذكاء مع خبرائنا</span>
             </motion.h1>
-            
-            <motion.div 
+
+            <motion.div
               className="max-w-2xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -293,8 +273,8 @@ const ShopComponent: React.FC = () => {
         </motion.div>
 
         {(groupsData && groupsData.length > 0) && (
-          <section className="sticky top-0 z-30 bg-white border-b shadow-sm pt-2 pb-1">
-            <div 
+          <section className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b shadow-sm pt-2 pb-1">
+            <div
               ref={groupTabsContainerRef}
               className="container mx-auto px-4 flex overflow-x-auto gap-2 pb-4 scrollbar-hide"
             >
@@ -317,183 +297,129 @@ const ShopComponent: React.FC = () => {
           .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
 
-        {/* [START] --- الكود المعدل --- */}
+        {/* --- بداية قسم البطاقات النهائي --- */}
         <motion.section
           ref={subscriptionsSectionRef}
-          className="container mx-auto px-4 pb-12 md:pb-16 lg:pb-20 pt-6 sm:pt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          className="container mx-auto px-4 pb-12 md:pb-16 lg:pb-20 pt-8 sm:pt-10"
         >
           {isLoadingData && ( <div className="flex justify-center items-center py-10"> <div className="flex flex-col items-center"> <div className="w-12 h-12 border-4 border-t-blue-600 border-gray-300 rounded-full animate-spin mb-4"></div> <p className="text-gray-700">جاري تحميل الاشتراكات...</p> </div> </div> )}
-          {!isLoadingData && mappedCards.length === 0 && ( <div className="text-center py-16 bg-white rounded-xl shadow-sm"> <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> </div> <h3 className="text-xl font-semibold text-gray-800 mb-2"> {selectedGroupId !== null && groupsData && groupsData.length > 0 ? "لا توجد اشتراكات لهذه المجموعة" : "لا توجد اشتراكات متاحة حاليًا"} </h3> <p className="text-gray-600 max-w-md mx-auto"> {selectedGroupId !== null && groupsData && groupsData.length > 0 ? "لا توجد اشتراكات متاحة لهذه المجموعة في الوقت الحالي."  : "يرجى التحقق مرة أخرى في وقت لاحق أو اختيار مجموعة أخرى."} </p> </div> )}
+          {!isLoadingData && mappedCards.length === 0 && ( <div className="text-center py-16 bg-white rounded-xl shadow-sm"> <h3 className="text-xl font-semibold text-gray-800 mb-2">لا توجد اشتراكات متاحة حاليًا</h3> <p className="text-gray-600 max-w-md mx-auto">يرجى التحقق مرة أخرى في وقت لاحق أو اختيار مجموعة أخرى.</p> </div> )}
 
           {mappedCards.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+            <div className="grid grid-cols-2 gap-4 sm:gap-5 max-w-2xl mx-auto">
               {mappedCards.map((cardData, index) => {
                 const selectedOption = selectedOptions[cardData.id];
+                const CardIcon = cardData.icon;
                 if (!selectedOption) return null;
-
-                const hasImage = !!cardData.image_url;
-                const placeholderHeight = "144px";
 
                 return (
                   <motion.div
                     key={`${cardData.id}-${selectedGroupId}-${selectedOption.id}`}
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, type: 'spring', stiffness: 100, damping: 15 }}
-                    whileHover={{ y: -5 }}
-                    className="flex flex-col h-full"
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    className="h-full"
                   >
-                    <Card className={`
-                      w-full bg-white shadow-lg hover:shadow-xl transition-all duration-300
-                      flex flex-col flex-grow relative rounded-xl
-                      ${hasImage ? 'border-0 overflow-hidden' : 'border border-gray-200'}
-                      ${cardData.isRecommended && !hasImage ? 'ring-2 ring-blue-500 ring-opacity-60' : ''}
-                    `}>
-                      {hasImage && (
-                        <div
-                          className="relative w-full group"
-                          style={{ height: placeholderHeight, backgroundColor: '#e0e0e0' }}
-                        >
-                          <LazyLoadImage
-                            alt={cardData.name}
-                            src={cardData.image_url!}
-                            effect="blur"
-                            wrapperClassName="w-full h-full"
-                            className="w-full h-full object-cover"
-                            style={{ display: 'block' }}
-                          />
-                          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
-                          {cardData.isRecommended && (
-                            <div className="absolute top-3 left-3 z-10">
-                              <Badge className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg px-2.5 py-1 text-xs font-semibold flex items-center gap-1">
-                                <FaStarRecommended className="h-3 w-3" fill="currentColor" />
-                                الأكثر طلباً
-                              </Badge>
-                            </div>
-                          )}
-                          {(selectedOption?.hasDiscount && selectedOption.discountPercentage && selectedOption.discountPercentage > 0) && (
-                            <div className="absolute bottom-3 right-3 z-10">
-                              <Badge className="bg-yellow-500 hover:bg-yellow-500 text-black border-0 shadow-lg px-2.5 py-1 text-xs font-bold">
-                                خصم {selectedOption.discountPercentage}%
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
+                    <Card
+                      className={cn(
+                        "h-full flex flex-col relative bg-white shadow-sm hover:shadow-md transition-all duration-300 rounded-xl border border-gray-200",
+                        cardData.isRecommended && "ring-2 ring-blue-500 ring-opacity-60"
                       )}
+                    >
+                      {/* رأس البطاقة المحسن */}
+                      <div
+                        className="relative h-16 flex items-center justify-center rounded-t-xl"
+                        style={{
+                          background: `linear-gradient(45deg, ${cardData.primaryColor}10, ${cardData.accentColor}10)`,
+                          borderBottom: `1px solid ${cardData.primaryColor}20`
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white opacity-20"></div>
+                        <CardIcon
+                          className="h-5 w-5 z-10"
+                          style={{ color: cardData.primaryColor }}
+                        />
 
-                      {!hasImage && cardData.isRecommended && (
-                        <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-md">
-                          <FaStarRecommended className="text-yellow-300" /> الأكثر طلبا
+                        {/* الشارات العلوية المحسنة */}
+                        <div className="absolute top-1.5 left-1.5 right-1.5 flex justify-between items-start">
+                          {cardData.isRecommended ? (
+                              <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white border-0 text-[10px] px-1.5 py-0.5 flex items-center gap-1 font-semibold shadow-sm">
+                                <Crown className="h-3 w-3" />
+                                موصى به
+                              </Badge>
+                            ) : <div></div>
+                          }
+
+                          {selectedOption?.hasDiscount && selectedOption.discountPercentage && (
+                            <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 text-[10px] px-1.5 py-0.5 shadow-sm font-semibold">
+                              خصم {selectedOption.discountPercentage}%
+                            </Badge>
+                          )}
                         </div>
-                      )}
+                      </div>
 
-                      <CardHeader className={`text-center p-4 sm:p-5 pb-3 sm:pb-4`}>
-                        <CardTitle className="text-lg md:text-xl font-bold text-gray-900 mb-1 line-clamp-2">{cardData.name}</CardTitle>
-
-                        {cardData.tagline && <CardDescription className="mb-2 sm:mb-3 text-sm text-gray-600 line-clamp-2 h-10">{cardData.tagline}</CardDescription>}
-
-                        <div className="flex items-end justify-center gap-1 mb-1">
-                          <span className="text-2xl sm:text-3xl font-bold text-gray-900">{selectedOption?.price}</span>
-                          <span className="text-sm text-gray-500 mb-1">/ {selectedOption?.duration}</span>
-                        </div>
-
-                        {(selectedOption?.hasDiscount && selectedOption.originalPrice) && (
-                          <div className="flex items-center justify-center gap-2 mt-1">
-                            {!hasImage && selectedOption.discountPercentage && selectedOption.discountPercentage > 0 && (
-                                <Badge variant="destructive" className="bg-red-100 text-red-600 hover:bg-red-100 px-2.5 py-1 text-xs">
-                                  خصم {selectedOption.discountPercentage}%
-                                </Badge>
-                            )}
-                            <span className="text-sm text-gray-400 line-through">
-                              {selectedOption.originalPrice?.toFixed(0)}$
-                            </span>
-                          </div>
-                        )}
-
-                        {!selectedOption?.hasDiscount && selectedOption?.savings && (
-                          <div className="mt-1">
-                            <span className="text-sm text-green-700 bg-green-100 px-2.5 py-1 rounded-md font-medium">
-                              {selectedOption.savings}
-                            </span>
-                          </div>
-                        )}
+                      <CardHeader className="pb-2 pt-4 px-4 text-center">
+                        <CardTitle className="text-lg font-bold text-gray-800">
+                          {cardData.name}
+                        </CardTitle>
                       </CardHeader>
 
-                      <CardContent className="flex flex-col flex-grow pt-0 px-4 sm:px-5 pb-4 sm:pb-5">
-                        <div className="space-y-3 flex-grow mb-4">
-                            {(selectedOption?.hasDiscount || (cardData.isRecommended && !selectedOption?.hasDiscount)) && (
-                                <div className={`
-                                    border rounded-lg p-2.5 text-center
-                                    ${selectedOption?.hasDiscount
-                                        ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200 text-red-600'
-                                        : 'bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200 text-blue-600'}
-                                `}>
-                                    <div className="flex items-center justify-center gap-2">
-                                        <FaClock className="h-4 w-4" />
-                                        <span className="text-xs sm:text-sm font-medium">
-                                            {selectedOption?.hasDiscount ? "العرض ينتهي قريباً!" : "خيار رائع!"}
-                                        </span>
-                                    </div>
-                                </div>
+                      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col justify-end">
+                        <div className="text-center mb-4">
+                          <div className="flex items-baseline justify-center gap-1">
+                            {selectedOption?.hasDiscount && selectedOption.originalPrice && (
+                                <span className="text-lg font-medium text-gray-400 line-through">{selectedOption.originalPrice.toFixed(0)}$</span>
                             )}
+                            <span className="text-3xl font-extrabold text-gray-900 tracking-tighter">
+                                {selectedOption?.price}
+                            </span>
+                          </div>
+                          <span className="text-sm text-gray-500">/ {selectedOption?.duration}</span>
 
-                          {cardData.features.length > 0 && (
-                            <div className="space-y-1.5 text-right pt-2">
-                              <h3 className="font-semibold text-gray-700 mb-2 text-sm">المميزات الرئيسية:</h3>
-                              {cardData.features.slice(0, 3).map((feature, idx) =>
-                                <div key={idx} className="flex items-start gap-2">
-                                    <StarFeature className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" />
-                                    <span className="text-sm text-gray-700 leading-relaxed line-clamp-2">{feature}</span>
-                                  </div>
-                              )}
-                              {cardData.features.length > 3 && (
-                                <button
-                                  onClick={() => {
-                                    if (selectedOption) {
-                                      setSelectedPlan({ ...cardData, selectedOption, planId: selectedOption.id });
-                                    }
-                                  }}
-                                  className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline"
-                                >
-                                  عرض كل المميزات ...
-                                </button>
-                              )}
-                            </div>
-                          )}
+                          <div className="h-6 flex items-center justify-center mt-1.5">
+                            {!selectedOption?.hasDiscount && selectedOption?.savings && (
+                                <Badge className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-md font-medium border-0">
+                                    {selectedOption.savings}
+                                </Badge>
+                            )}
+                          </div>
                         </div>
 
                         <div className="mt-auto">
                           {cardData.subscriptionOptions.length > 1 && (
-                            <div className="flex flex-wrap gap-2 mb-4 justify-center">
-                              {cardData.subscriptionOptions.map((option) => (
-                                <button
-                                  key={option.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedOptions(prev => ({ ...prev, [cardData.id]: option }));
-                                  }}
-                                  className={`
-                                    px-2.5 py-1 rounded-md text-xs transition-all border
-                                    ${selectedOption?.id === option.id
-                                      ? 'bg-blue-100 text-blue-700 font-semibold border-blue-300 ring-1 ring-blue-300'
-                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200'}
-                                  `}
-                                >
-                                  {option.duration}
-                                </button>
-                              ))}
+                            <div className="mb-3">
+                              <div className="flex w-full bg-gray-100 p-1 rounded-xl">
+                                {cardData.subscriptionOptions.map((option) => (
+                                  <button
+                                    key={option.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedOptions(prev => ({ ...prev, [cardData.id]: option }));
+                                    }}
+                                    className="relative flex-1 text-xs font-semibold py-2 rounded-lg transition-colors duration-200 focus:outline-none"
+                                  >
+                                    {selectedOption?.id === option.id && (
+                                      <motion.div
+                                        layoutId={`pill-switch-${cardData.id}`}
+                                        className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                      />
+                                    )}
+                                    <span className={`relative z-10 ${selectedOption?.id === option.id ? 'text-blue-600 font-bold' : 'text-gray-600'}`}>
+                                      {option.duration}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           )}
 
-                          <Button
-                            onClick={() => { if (selectedOption) setSelectedPlan({ ...cardData, selectedOption, planId: selectedOption.id })}}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 sm:h-12 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                            disabled={!selectedOption}
+                          <Button onClick={() => { if (selectedOption) setSelectedPlan({ ...cardData, selectedOption, planId: selectedOption.id })}}
+                              className="w-full h-11 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl shadow-md hover:shadow-lg transition-all text-white"
+                              disabled={!selectedOption}
                           >
-                            اشترك معنا الآن
+                              اشترك الآن
                           </Button>
                         </div>
                       </CardContent>
@@ -504,7 +430,7 @@ const ShopComponent: React.FC = () => {
             </div>
           )}
         </motion.section>
-        {/* [END] --- الكود المعدل --- */}
+        {/* --- نهاية قسم البطاقات النهائي --- */}
 
         <AnimatePresence>
           {selectedPlan && (

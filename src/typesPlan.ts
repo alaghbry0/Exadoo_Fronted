@@ -99,7 +99,7 @@ export interface SubscriptionCard {
   primaryColor: string;
   accentColor: string;
   image_url: string | null;
-  icon: React.FC; // أو string إذا كنت ستستخدم اسم الأيقونة من API
+  icon: React.ElementType;  // أو string إذا كنت ستستخدم اسم الأيقونة من API
   backgroundPattern: string;
   usp: string;
   color: string;
