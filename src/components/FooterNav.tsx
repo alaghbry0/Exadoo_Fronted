@@ -2,25 +2,16 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
-import { FaHome, FaRegCreditCard, FaUserCircle } from 'react-icons/fa'
+import { FaHome, FaRegCreditCard, FaUserCircle } from 'react-icons/fa' // ✨ تغيير: استخدام أيقونات Lucide
+import { cn } from '@/lib/utils' // ✨ إضافة: استيراد cn للمساعدة في تطبيق الفئات الشرطية
 
-// تكوين قابل للتخصيص للشريط السفلي
-interface NavTheme {
-  height: number;
-  iconSize: number;
-  textSize: string;
-  activeColor: string;
-  inactiveColor: string;
-  backgroundColor: string;
-  backgroundOpacity: number;
-  blurIntensity: string;
-  hitSlop: number;
-  borderColor: string;
-  borderOpacity: number;
-  indicatorStyle: 'dot' | 'pill' | 'underline';
-}
+// ✨ تحسين: قائمة العناصر تستخدم الآن أيقونات Lucide
 
-// نوع عنصر التنقل بدون ميزة الإشعارات
+const DEFAULT_NAV_ITEMS: NavItem[] = [
+  { path: '/', icon: FaHome, label: 'الرئيسية' },
+  { path: '/shop', icon: FaRegCreditCard, label: 'الاشتراكات' },
+  { path: '/profile', icon: FaUserCircle, label: 'الملف' },
+]
 interface NavItem {
   path: string;
   icon: React.ElementType;
@@ -28,127 +19,66 @@ interface NavItem {
 }
 
 interface FooterNavProps {
-  theme?: Partial<NavTheme>;
   items?: NavItem[];
 }
 
-const DEFAULT_THEME: NavTheme = {
-  height: 70,
-  iconSize: 26,
-  textSize: '0.75rem',
-  activeColor: '#2390f1',
-  inactiveColor: '#7a8999',
-  backgroundColor: '#f8faff',
-  backgroundOpacity: 0.95,
-  blurIntensity: '12px',
-  hitSlop: 24,
-  borderColor: '#2390f1',
-  borderOpacity: 0.12,
-  indicatorStyle: 'pill'
-}
-
-const DEFAULT_NAV_ITEMS: NavItem[] = [
-  { path: '/', icon: FaHome, label: 'الرئيسية' },
-  { path: '/shop', icon: FaRegCreditCard, label: 'الاشتراكات' },
-  { path: '/profile', icon: FaUserCircle, label: 'الملف' },
-]
-
-const FooterNav: React.FC<FooterNavProps> = ({
-  theme: customTheme = {},
-  items = DEFAULT_NAV_ITEMS
-}) => {
+const FooterNav: React.FC<FooterNavProps> = ({ items = DEFAULT_NAV_ITEMS }) => {
   const pathname = usePathname()
-  const theme: NavTheme = { ...DEFAULT_THEME, ...customTheme }
 
-  // حركات لعناصر النقر
+  // ✨ تحسين: حركات أنعم وأكثر تكاملاً
   const tabVariants = {
-    active: {
-      color: theme.activeColor,
-      scale: 1.05,
-      y: -4,
-      transition: { type: 'spring', stiffness: 500, damping: 30 }
-    },
-    inactive: {
-      color: theme.inactiveColor,
-      scale: 1,
-      y: 0,
-      transition: { type: 'spring', stiffness: 500, damping: 30 }
-    }
-  }
-
-  // حركات للمؤشر النشط
-  const indicatorVariants = {
-    dot: {
-      width: '6px', height: '6px', borderRadius: '50%',
-      backgroundColor: theme.activeColor, marginTop: '4px'
-    },
-    pill: {
-      width: '20px', height: '4px', borderRadius: '10px',
-      backgroundColor: theme.activeColor, marginTop: '4px'
-    },
-    underline: {
-      width: '100%', height: '3px', borderRadius: '2px',
-      backgroundColor: theme.activeColor, marginTop: '6px', maxWidth: '32px'
-    }
+    active: { y: -2, transition: { type: 'spring', stiffness: 400, damping: 25 } },
+    inactive: { y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } }
   }
 
   return (
-    <motion.nav
+    <nav
       dir="rtl"
-      initial={{ y: 0 }}
-      animate={{ y: 0 }} // يظل ثابتًا دون حركة
-      className="fixed bottom-0 w-full z-10"
-      style={{
-        height: `${theme.height}px`,
-        backdropFilter: `blur(${theme.blurIntensity})`,
-        backgroundColor: `${theme.backgroundColor}${Math.round(theme.backgroundOpacity * 255)
-          .toString(16).padStart(2, '0')}`,
-        borderTop: `1px solid ${theme.borderColor}${Math.round(theme.borderOpacity * 255)
-          .toString(16).padStart(2, '0')}`
-      }}
+      // ✨ تحسين: الاعتماد الكامل على فئات Tailwind للتصميم
+      className="fixed bottom-0 left-0 right-0 z-50 h-[70px] bg-gray-50/90 font-arabic backdrop-blur-lg border-t border-gray-200/80"
     >
-      <div className="mx-auto h-full max-w-lg relative">
-        <div className="flex justify-around items-center h-full w-full px-2">
-          {items.map((item) => {
-            const isActive = pathname === item.path
-            return (
-              <Link
-                href={item.path}
-                key={item.path}
-                className="relative flex-1 h-full"
-                aria-current={isActive ? 'page' : undefined}
-              >
-                {/* مساحة نقرة موسعة */}
-                <div
-                  className="absolute inset-0 -top-6 z-20 cursor-pointer"
-                  style={{ padding: theme.hitSlop }}
-                />
+      <div className="flex justify-around items-stretch h-full max-w-lg mx-auto">
+        {items.map((item) => {
+          const isActive = pathname === item.path
 
+          return (
+            <Link
+              href={item.path}
+              key={item.path}
+              className={cn(
+                "relative flex-1 flex flex-col items-center justify-center gap-1 transition-colors duration-300 ease-out",
+                // ✨ تحسين: استخدام ألوان Tailwind
+                isActive ? 'text-primary-500' : 'text-gray-500 hover:text-primary-500'
+              )}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <motion.div
+                className="flex flex-col items-center"
+                animate={isActive ? 'active' : 'inactive'}
+                variants={tabVariants}
+                whileTap={{ scale: 0.95 }}
+              >
+                {/* ✨ تحسين: حجم الأيقونة والنص باستخدام فئات Tailwind */}
+                <item.icon className="h-6 w-6" />
+                <span className="text-xs font-medium">
+                  {item.label}
+                </span>
+              </motion.div>
+
+              {/* ✨ إضافة إبداعية: مؤشر نشط ينتقل بسلاسة بين العناصر */}
+              {isActive && (
                 <motion.div
-                  className="flex flex-col items-center justify-center h-full gap-1"
-                  initial="inactive"
-                  animate={isActive ? 'active' : 'inactive'}
-                  variants={tabVariants}
-                  whileTap={{ scale: 0.92 }}
-                >
-                  <item.icon size={theme.iconSize} />
-                  <span style={{ fontSize: theme.textSize }} className="font-medium transition-colors">
-                    {item.label}
-                  </span>
-                  {isActive && (
-                    <motion.div
-                      style={indicatorVariants[theme.indicatorStyle]}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                    />
-                  )}
-                </motion.div>
-              </Link>
-            )
-          })}
-        </div>
+                  className="absolute bottom-1.5 w-5 h-1 rounded-full bg-primary-600"
+                  layoutId="active-indicator"
+                  initial={false}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              )}
+            </Link>
+          )
+        })}
       </div>
-    </motion.nav>
+    </nav>
   )
 }
 

@@ -1,9 +1,13 @@
+// SubscriptionsSection.tsx
 'use client'
 import React, { useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, RefreshCcw, Star } from 'lucide-react';
+import { Zap, RefreshCcw, Star, Package } from 'lucide-react';
 import { Subscription } from '@/types';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress-custom';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 
@@ -17,11 +21,12 @@ type SubscriptionsSectionProps = {
 };
 
 type StatusType = 'نشط' | 'منتهي' | 'unknown';
-const statusColors: Record<StatusType, { bg: string; text: string; border: string }> = {
-  'نشط': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-100' },
-  'منتهي': { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-100' },
-  'unknown': { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100' }
+const statusStyles: Record<StatusType, { bg: string; text: string; border: string }> = {
+  'نشط': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+  'منتهي': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
+  'unknown': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' }
 };
+
 
 export default function SubscriptionsSection({
   subscriptions,
@@ -44,179 +49,141 @@ export default function SubscriptionsSection({
     if (node) observer.current.observe(node);
   }, [isLoadingMore, hasMore, loadMore]);
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="bg-blue-50 p-2 rounded-lg">
-          <Zap className="w-5 h-5 text-blue-600" />
-        </div>
-        <h2 className="text-base font-semibold text-gray-800">الاشتراكات النشطة</h2>
-        <motion.button
-          onClick={onRefreshClick}
-          disabled={isRefreshing}
-          className="ml-auto text-blue-600 flex items-center text-sm font-medium"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <RefreshCcw
-            className={`w-4 h-4 ml-1 ${isRefreshing ? 'animate-spin' : ''}`}
-          />
-          {isRefreshing ? 'جاري التحديث...' : ' تحديث البيانات'}
-        </motion.button>
-      </div>
-
-      <AnimatePresence mode="popLayout">
-        {subscriptions.length > 0 ? (
-          <ul className="space-y-3.5">
-            {subscriptions.map((sub, index) => {
-              if (index === subscriptions.length - 1) {
-                return (
-                  <div ref={lastSubscriptionRef} key={sub.id}>
-                    <SubscriptionItem sub={sub} index={index} />
-                  </div>
-                );
-              }
-              return <SubscriptionItem key={sub.id} sub={sub} index={index} />;
-            })}
-          </ul>
-        ) : (
-          <NoSubscriptionsMessage />
-        )}
-      </AnimatePresence>
-      {isLoadingMore && (
-        <div className="mt-4">
-          <SkeletonLoader />
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface SubscriptionItemProps {
-  sub: Subscription;
-  index: number;
-}
-
-const SubscriptionItem = ({ sub, index }: SubscriptionItemProps) => {
-  const currentStatus: StatusType = (sub.status === 'نشط' || sub.status === 'منتهي')
-    ? (sub.status as StatusType)
-    : 'unknown';
-  const colors = statusColors[currentStatus];
-
-  const isNewSubscription = (): boolean => {
-    if (!sub.start_date || sub.status !== 'نشط') return false;
-    const startDate = new Date(sub.start_date);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 3;
-  };
-
-  const showJoinButton = sub.status === 'نشط' && sub.invite_link;
-
-  const handleRefundClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    window.open('https://t.me/ExaadoSupport', '_blank');
-  };
-
-  const showRefundButton = isNewSubscription();
 
   return (
-    <motion.li
-  className={cn(
-    "rounded-xl p-4 border-2 shadow-sm transition-all duration-200",
-    "group hover:shadow-md hover:border-blue-100 bg-gradient-to-br from-white to-blue-50/50"
-  )}
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ delay: 0.5 + index * 0.1 }}
-    >
-      <div className="flex justify-between items-start gap-3">
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-800 text-sm line-clamp-1 group-hover:text-blue-700">
-                {sub.name}
-              </h3>
-              {isNewSubscription() && (
-                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full">
-                  جديد
-                </span>
-              )}
+    <Card className="w-full shadow-lg border-gray-200/80 bg-white/70 backdrop-blur-sm rounded-2xl">
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center shadow-md">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <CardTitle className="text-xl font-bold text-gray-800 font-arabic">
+                اشتراكاتي
+              </CardTitle>
             </div>
-            <p className="text-gray-500 text-xs line-clamp-1">{sub.expiry}</p>
+            <Button variant="ghost" size="sm" onClick={onRefreshClick} disabled={isRefreshing}>
+              <RefreshCcw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
+              {isRefreshing ? 'جارٍ التحديث' : 'تحديث'}
+            </Button>
+        </CardHeader>
+        <CardContent>
+            <AnimatePresence mode="popLayout">
+              {subscriptions.length > 0 ? (
+                <ul className="space-y-4">
+                  {subscriptions.map((sub, index) => {
+                    const ref = index === subscriptions.length - 1 ? lastSubscriptionRef : null;
+                    return (
+                      <div ref={ref} key={sub.id}>
+                        <SubscriptionItem sub={sub} index={index} />
+                      </div>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <NoSubscriptionsMessage />
+              )}
+            </AnimatePresence>
+            {isLoadingMore && <div className="mt-4"><SkeletonLoader /></div>}
+        </CardContent>
+    </Card>
+  );
+}
+
+const SubscriptionItem = ({ sub, index }: { sub: Subscription; index: number }) => {
+    const currentStatus: StatusType = (sub.status === 'نشط' || sub.status === 'منتهي') ? (sub.status as StatusType) : 'unknown';
+    const styles = statusStyles[currentStatus];
+
+    // شرط إظهار زر الدعم (للاشتراكات الجديدة والنشطة)
+    const showSupportButton = sub.status === 'نشط' && Math.ceil(Math.abs(new Date().getTime() - new Date(sub.start_date).getTime()) / (1000 * 60 * 60 * 24)) <= 3;
+
+    // شرط إظهار زر الانضمام
+    const showJoinButton = sub.status === 'نشط' && sub.invite_link;
+
+    // دالة التعامل مع النقر على زر الدعم
+    const handleSupportClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        window.open('https://t.me/ExaadoSupport', '_blank', 'noopener,noreferrer');
+    };
+
+    return (
+      <motion.li
+        className="bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-md"
+        variants={{
+          hidden: { opacity: 0, y: 20 },
+          visible: { opacity: 1, y: 0, transition: { delay: index * 0.07 } }
+        }}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        layout
+      >
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-800 text-base line-clamp-1 font-arabic">
+              {sub.name}
+            </h3>
+            <p className="text-gray-500 text-sm mt-1">{sub.expiry}</p>
           </div>
-          <span
-            className={cn(
-              "text-xs px-2.5 py-1 rounded-full transition-colors duration-200 inline-flex items-center",
-              colors.bg,
-              colors.text,
-              colors.border
+          <div className="flex flex-col items-end gap-2">
+            <span className={cn("text-xs px-3 py-1 rounded-full font-medium", styles.bg, styles.text, styles.border)}>
+              {sub.status}
+            </span>
+            {showSupportButton && (
+                <span className="bg-primary-100 text-primary-800 text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                    جديد
+                </span>
             )}
-          >
-            {currentStatus !== 'unknown' ? sub.status : 'غير معروف'}
-          </span>
+          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mt-3">
-          <Progress
-  value={sub.progress || 0}
-  className={cn(
-    "h-2.5 rounded-full",
-    sub.status === 'نشط' ? "bg-gray-100" : "bg-gray-50"
-  )}
-  indicatorClassName={cn(
-    sub.status === 'نشط'
-      ? "bg-gradient-to-r from-blue-400 to-blue-600"
-      : "bg-gradient-to-r from-orange-300 to-orange-400"
-  )}
-/>
-      </div>
+        <div className="mt-4 space-y-2">
+            <div className="flex justify-between text-xs text-gray-500">
+                <span>التقدم</span>
+                <span>{Math.round(sub.progress || 0)}%</span>
+            </div>
+            <Progress
+              value={sub.progress || 0}
+              className="h-2"
+              indicatorClassName={sub.status === 'نشط' ? "bg-primary-500" : "bg-amber-400"}
+            />
+        </div>
 
-      {(showJoinButton || showRefundButton) && (
-  <div className="mt-3 flex justify-end gap-2">
-    {showRefundButton && (
-      <motion.button
-        onClick={handleRefundClick}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                 bg-red-50 text-red-600 hover:bg-red-100 transition-colors
-                 border border-red-200 shadow-sm"
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-      >
-        <RefreshCcw className="w-3.5 h-3.5" />
-        استرداد
-      </motion.button>
-    )}
+        {(showJoinButton || showSupportButton) && (
+          <div className="mt-4 border-t border-gray-200/80 pt-4 flex items-center justify-end gap-3">
+            {showSupportButton && (
+              <Button variant="outline" size="sm" onClick={handleSupportClick}>
+                <RefreshCcw className="w-4 h-4 mr-2" />
+                طلب دعم
+              </Button>
+            )}
 
-    {showJoinButton && (
-      <motion.a
-        href={sub.invite_link}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                 bg-green-50 text-green-700 hover:bg-green-100 transition-colors
-                 border border-green-200 shadow-sm"
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-      >
-        <Zap className="w-3.5 h-3.5" />
-        الانضمام
-      </motion.a>
-    )}
-  </div>
-)}
-    </motion.li>
-  );
+            {showJoinButton && (
+              <Button asChild size="sm" className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm hover:shadow-lg transition-shadow">
+                  <a href={sub.invite_link} target="_blank" rel="noopener noreferrer">
+                      <Zap className="w-4 h-4 mr-2" />
+                      الانضمام
+                  </a>
+              </Button>
+            )}
+          </div>
+        )}
+      </motion.li>
+    );
 };
 
 const NoSubscriptionsMessage = () => (
-  <div className="text-center py-8">
-    <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-full mb-4 shadow-sm">
-      <Star className="w-6 h-6 text-blue-500" />
+  <div className="text-center py-10 px-4 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl mb-5 shadow-lg">
+      <Star className="w-8 h-8 text-white" />
     </div>
-    <p className="text-gray-600 text-sm">لا توجد اشتراكات نشطة حالياً</p>
-    <p className="text-gray-400 text-xs mt-2">
-      يمكنك الاشتراك في أحد باقاتنا للوصول إلى المحتوى المميز
+    <h3 className="text-lg font-bold text-gray-800 font-arabic">لا توجد لديك اشتراكات</h3>
+    <p className="text-gray-500 mt-2 mb-6 max-w-xs mx-auto">
+      يبدو أنك لم تشترك في أي باقة بعد. تصفح باقاتنا وابدأ رحلتك في التداول!
     </p>
+    <Button asChild className="bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:shadow-primary-500/30">
+      <Link href="/shop">
+        استعراض الباقات
+      </Link>
+    </Button>
   </div>
 );

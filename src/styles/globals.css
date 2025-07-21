@@ -1,3 +1,4 @@
+
 /* استيراد Tailwind CSS الأساسي */
 @tailwind base;
 @tailwind components;
@@ -5,36 +6,65 @@
 
 /*@import "flowbite/dist/flowbite.css";
 
-/* استيراد خطوط Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;600;700&display=swap');
-
-/* تخصيص المتغيرات (Theme Customization) */
-:root {
-  /* لوحة الألوان */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #0077ff;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-
-  /* إعداد الخطوط */
-  --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif';
-  --font-body: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif';
-
-  /* تخصيص المسافات */
-  --spacing-custom: 10px;
+/* --- استيراد الخطوط المحلية --- */
+@font-face {
+  font-family: 'Almarai';
+  font-weight: 300;
+  src: url('/fonts/Almarai-Light.ttf') format('truetype');
 }
+@font-face {
+  font-family: 'Almarai';
+  font-weight: 400;
+  src: url('/fonts/Almarai-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Almarai';
+  font-weight: 700;
+  src: url('/fonts/Almarai-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Almarai';
+  font-weight: 800;
+  src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-weight: 400;
+  src: url('/fonts/Outfit-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-weight: 500;
+  src: url('/fonts/Outfit-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Orlean';
+  font-weight: 400;
+  src: url('/fonts/Orlean-Regular.otf') format('opentype');
+}
+
+/* اختياري: SF Arabic */
+/*
+@font-face {
+  font-family: 'SFArabic';
+  font-weight: 400;
+  src: url('/fonts/SF-Arabic-font.ttf') format('truetype');
+}
+*/
 
 /* تحسين تجربة الوضع الداكن */
 .dark-mode {
   background-color: #1a1a1a;
   color: #f5f5f5;
 }
+
+html {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
 
 /* تحسين تصميم المكونات المخصصة */
 @layer components {

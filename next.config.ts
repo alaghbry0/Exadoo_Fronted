@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
-      // CORS للـ API
+
       {
         source: "/api/:path*",
         headers: [
@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
           { key: "Access-Control-Allow-Headers", value: "Content-Type" },
         ],
       },
-      // Cache للأصول الثابتة
       {
         source: "/_next/static/(.*)",
         headers: [
@@ -36,22 +35,16 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-              // مصادر افتراضية
               "default-src 'self';",
-              // جافاسكربت
               "script-src 'self' https://telegram.org https://alaghbry0.github.io 'unsafe-inline' 'unsafe-eval';",
               "script-src-elem 'self' https://telegram.org https://alaghbry0.github.io;",
-              // ستايلات
               "style-src 'self' 'unsafe-inline';",
-              // اتصالات
-              "connect-src 'self' https://exadoo-rxr9.onrender.com wss://exadoo-rxr9.onrender.com http://192.168.0.96:5000 wss://192.168.0.96:5000 https://tonapi.io https://bridge.tonapi.io wss://*.tonapi.io https://vercel.live https://raw.githubusercontent.com;",
-              // صور
-              "img-src * data:;",
-              // خطوط
+              // <-- تم التحديث هنا: إضافة نطاقات الاتصال الضرورية
+              "connect-src 'self' https://exadoo-rxr9.onrender.com  http://172.30.160.1:5000 http://localhost:5002 https://hasanbot-backend-sse-service.onrender.com  https://bridge.tonapi.io https://cdn.echooo.xyz https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://toncenter.com https://*.toncdn.io https://vercel.live https://raw.githubusercontent.com https://walletbot.me;",
+              // <-- تم التحديث هنا بشكل كبير: إضافة جميع نطاقات الصور المعروفة
+              "img-src 'self' data: blob: https: *.githubusercontent.com *.bnbstatic.com *.okx.com *.tonhub.com *.mytonwallet.io *.tonkeeper.com *.tg *.tobiwallet.app *.bitgetimg.com *.gatedataimg.com *.delab-team;",
               "font-src 'self';",
-              // iframes
               "frame-src 'self' https://telegram.org https://wallet.tg https://connect.tonhubapi.com;",
-              // وسائط
               "object-src 'self';",
             ].join(" ").replace(/\n/g, ' '),
           },
@@ -59,6 +52,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
 
   async rewrites() {
     return [

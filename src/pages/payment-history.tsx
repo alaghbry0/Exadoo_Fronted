@@ -3,7 +3,7 @@ import InfiniteScroll from 'react-infinite-scroll-component'
 import { PaymentHistoryItem } from '@/components/PaymentHistoryItem'
 import axios from 'axios'
 import { useTelegram } from '../context/TelegramContext'
-import { Button } from 'flowbite-react'
+import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/router'
 import { FiArrowLeft } from 'react-icons/fi'
 
