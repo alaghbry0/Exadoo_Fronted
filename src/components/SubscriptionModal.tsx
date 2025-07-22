@@ -1,258 +1,182 @@
-// src/components/SubscriptionModal.tsx
 'use client'
 
-// --- استيرادات أساسية ---
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { FiX, FiClock, FiCheckCircle, FiFileText, FiChevronDown } from 'react-icons/fi'
-import { FaPercent } from 'react-icons/fa'
+// --- استيرادات (لا تغيير) ---
+import React, { useState, useEffect, useRef } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
-
-// --- استيراد الأنواع والـ Hooks المعدلة ---
-import type { ModalPlanData } from '@/types/modalPlanData';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { X, Loader2, CheckCircle, ShieldCheck, ScrollText, Sparkles } from 'lucide-react'
+import type { ModalPlanData } from '@/types/modalPlanData'
 import { useTelegram } from '../context/TelegramContext'
 import { useSubscriptionPayment } from '../components/SubscriptionModal/useSubscriptionPayment'
-
-// --- استيراد المكونات الفرعية ---
-import { Spinner } from '../components/Spinner'
 import { UsdtPaymentMethodModal } from '../components/UsdtPaymentMethodModal'
 import { ExchangePaymentModal } from '../components/ExchangePaymentModal'
 import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
 import { PaymentExchangeSuccess } from '../components/PaymentExchangeSuccess'
-import { PaymentButtons } from '../components/SubscriptionModal/PaymentButtons'
 
-type TabType = 'features' | 'terms';
-
+// ====================================================================
+// المكون الرئيسي للمودال (مع لمسات إبداعية)
+// ====================================================================
 const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onClose: () => void }) => {
+  // --- Hooks والحالات (لا تغيير في المنطق) ---
   const { telegramId } = useTelegram()
   const queryClient = useQueryClient()
-  const contentRef = useRef<HTMLDivElement>(null)
-
-  // اعتماد "آلة الحالات" الجديدة
-  const [activeTab, setActiveTab] = useState<TabType>('features');
-  const [termsAgreed, setTermsAgreed] = useState<boolean>(false);
+  const [termsAgreed, setTermsAgreed] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'details' | 'choose_method' | 'show_exchange'>('details');
-
-  // useEffect لإعادة تعيين الحالة عند تغيير الخطة
-  useEffect(() => {
-    if (plan) {
-      setPaymentStep('details');
-      setActiveTab('features');
-      setTermsAgreed(false);
-    }
-  }, [plan]);
-
-  // دالة تُستدعى عند نجاح الدفع
-  function handlePaymentSuccess() {
-    queryClient.invalidateQueries({ queryKey: ['subscriptions', telegramId || ''] });
-    queryClient.invalidateQueries({ queryKey: ['subscriptionPlans', telegramId] });
-  }
-
-  // تهيئة `useSubscriptionPayment` بالهيكل الجديد
-  const {
-    paymentStatus,
-    loading,
-    exchangeDetails,
-    setExchangeDetails,
-    isInitializing,
-    handleUsdtPaymentChoice,
-    handleStarsPayment,
-    resetPaymentStatus,
-  } = useSubscriptionPayment(plan, handlePaymentSuccess);
-
-  // دوال التحكم في خطوات الدفع
-  const resetAllModals = () => {
-      resetPaymentStatus();
-      setExchangeDetails(null);
-  }
-
-  const handleCloseAll = () => {
-    resetAllModals();
-    onClose();
-  };
-
+  const termsSectionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (plan) { setPaymentStep('details'); setTermsAgreed(false); } }, [plan]);
+  function handlePaymentSuccess() { queryClient.invalidateQueries({ queryKey: ['allSubscriptions', telegramId] }); }
+  const { paymentStatus, loading, exchangeDetails, setExchangeDetails, isInitializing, handleUsdtPaymentChoice, handleStarsPayment, resetPaymentStatus } = useSubscriptionPayment(plan, handlePaymentSuccess);
+  const resetAllModals = () => { resetPaymentStatus(); setExchangeDetails(null); }
+  const handleCloseAll = () => { resetAllModals(); onClose(); };
   const goToChooseMethod = () => setPaymentStep('choose_method');
   const goBackToDetails = () => setPaymentStep('details');
-
-  const selectExchangePayment = async () => {
-    const success = await handleUsdtPaymentChoice('exchange');
-    if (success) setPaymentStep('show_exchange');
-  };
-
-  const selectWalletPayment = async () => {
-    await handleUsdtPaymentChoice('wallet');
-  };
-
-  const handleExchangeModalClose = () => {
-    resetAllModals();
-    goBackToDetails();
-  }
-
-  const handleSuccessAndCloseAll = () => {
-    resetAllModals();
-    onClose();
-  };
-
-  const viewTermsAndConditions = () => {
-    setActiveTab('terms');
-    setTimeout(() => {
-        contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 50);
-  }
-
+  const selectExchangePayment = async () => { const success = await handleUsdtPaymentChoice('exchange'); if (success) setPaymentStep('show_exchange'); };
+  const selectWalletPayment = async () => { await handleUsdtPaymentChoice('wallet'); };
+  const handleExchangeModalClose = () => { resetAllModals(); goBackToDetails(); }
+  const handleSuccessAndCloseAll = () => { resetAllModals(); onClose(); };
+  const scrollToTerms = () => { termsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   const hasTerms = plan && plan.termsAndConditions && plan.termsAndConditions.length > 0;
-  const isButtonsDisabled = loading || (hasTerms && !termsAgreed);
 
   if (!plan) return null;
 
   return (
     <>
       {isInitializing && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]">
-          <Spinner className="w-12 h-12 text-white" />
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+          <Loader2 className="w-12 h-12 text-white animate-spin" />
         </div>
       )}
 
-      {/* عرض المودال الرئيسي فقط عندما تكون الخطوة `details` */}
-      <AnimatePresence>
-        {paymentStep === 'details' && (
-          <motion.div
-            dir="rtl"
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-end md:items-center p-2 sm:p-4 z-[920]"
-            onClick={handleCloseAll}
-          >
-            <motion.div
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-neutral-300"
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex flex-col max-h-[90vh] sm:max-h-[85vh]">
-                {/* --- الهيدر --- */}
-                <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-500 px-4 py-3 flex justify-between items-center z-10 shadow-sm">
-                  <h2 className="text-lg font-semibold text-white truncate font-arabic">{plan.name}</h2>
-                  <button onClick={handleCloseAll} className="text-white/90 hover:text-white p-1 rounded-full transition-colors">
-                    <FiX className="w-6 h-6" />
-                  </button>
-                </div>
+      <Sheet open={paymentStep === 'details'} onOpenChange={(isOpen) => !isOpen && handleCloseAll()}>
+        <SheetContent
+          side="bottom"
+          className="h-[90vh] md:h-[85vh] rounded-t-3xl border-0 bg-gray-50 p-0 flex flex-col"
+          dir="rtl"
+        >
+          {/* تحسين 1: إضافة مقبض بصري للسحب */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full z-20"></div>
 
-                {/* --- بطاقة السعر --- */}
-                <div className="px-4 py-3 sm:px-6 sm:py-4">
-                  <div className="flex items-center justify-between bg-primary-50 rounded-xl p-4 border border-primary-100 relative">
-                    {plan.selectedOption.hasDiscount && (
-                       <div className="absolute -top-3 left-3.5 bg-error-500 text-white px-3 py-0.5 rounded-full text-sm flex items-center shadow-md">
-                         <FaPercent className="mr-1" />
-                         {plan.selectedOption.discountPercentage}% خصم
-                       </div>
-                    )}
-                     <span className="font-bold text-2xl text-primary-700">{Number(plan.selectedOption.price).toFixed(0)}$</span>
-                     <div className="flex items-center gap-2 text-primary-600">
-                       <FiClock className="w-5 h-5" />
-                       <span className="font-semibold">{plan.selectedOption.duration}</span>
-                     </div>
-                  </div>
-                </div>
+          {/* تحسين 2: فصل الهيدر ليعطي إحساسًا بالعمق */}
+          <SheetHeader className="p-4 pt-8 text-center border-b border-gray-200">
+            <SheetTitle className="text-xl font-bold text-gray-800 font-arabic">{plan.name}</SheetTitle>
+            <button onClick={handleCloseAll} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </SheetHeader>
 
-                {/* --- التبويبات --- */}
-                <div className="px-4 sm:px-6 flex border-b border-neutral-200 items-center">
-                   <button onClick={() => setActiveTab('features')} className={`py-2 px-4 font-medium text-sm transition-colors relative ${ activeTab === 'features' ? 'text-primary-600 font-semibold' : 'text-neutral-500 hover:text-neutral-800' }`}>
-                     الميزات
-                     {activeTab === 'features' && (<motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" layoutId="activeTabIndicator" />)}
-                   </button>
-                   <div className="h-4 w-px bg-neutral-300 mx-1"></div>
-                   <button onClick={() => setActiveTab('terms')} className={`py-2 px-4 font-medium text-sm transition-colors relative ${ activeTab === 'terms' ? 'text-primary-600 font-semibold' : 'text-neutral-500 hover:text-neutral-800' }`}>
-                     الشروط والأحكام
-                     {activeTab === 'terms' && (<motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" layoutId="activeTabIndicator" />)}
-                   </button>
-                </div>
+          <ScrollArea className="flex-1">
+            <div className="space-y-8 p-4 pt-6 pb-24">
 
-                {/* --- المحتوى --- */}
-                <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 relative">
-                  <AnimatePresence mode="wait">
-                    {activeTab === 'features' && (
-                      <motion.div key="features" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <h3 className="text-md font-semibold text-neutral-700 mb-3 flex items-center gap-2 font-arabic"><FiCheckCircle className="text-primary-500"/> ميزات الاشتراك:</h3>
-                        <ul className="space-y-3 text-sm text-neutral-600 list-disc list-inside pr-1">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="leading-relaxed">{feature}</li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    )}
-                    {activeTab === 'terms' && (
-                      <motion.div key="terms" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <h3 className="text-md font-semibold text-neutral-700 mb-3 flex items-center gap-2 font-arabic"><FiFileText className="text-neutral-500"/> الشروط والأحكام:</h3>
-                        {!hasTerms ? (
-                           <p className="text-sm text-neutral-500 text-center py-6">لا توجد شروط وأحكام متاحة حاليًا.</p>
-                        ) : (
-                          <ul className="space-y-3 text-sm text-neutral-600 list-disc list-inside pr-1">
-                            {plan.termsAndConditions.map((term, index) => (
-                              <li key={index} className="leading-relaxed">{term}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              {/* تحسين 3: بطاقة سعر أكثر حيوية وتفاعلية */}
+              <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg text-center relative overflow-hidden">
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                <div className="absolute -bottom-8 -left-2 w-32 h-32 bg-white/10 rounded-full"></div>
 
-                {/* --- قسم الدفع --- */}
-                <div className="sticky bottom-0 bg-white border-t border-neutral-200 p-4 sm:p-5 space-y-3">
-                  {hasTerms && (
-                    <div className="flex items-start gap-2 mb-3" dir="rtl">
-                      <input
-                        type="checkbox" id="termsAgreement" checked={termsAgreed}
-                        onChange={(e) => setTermsAgreed(e.target.checked)}
-                        className="form-checkbox h-5 w-5 text-primary-600 border-neutral-300 rounded focus:ring-primary-500 mt-0.5 shrink-0"
-                      />
-                      <label htmlFor="termsAgreement" className="text-sm text-neutral-700 select-none">
-                        أوافق على <button onClick={viewTermsAndConditions} className="text-primary-600 hover:underline font-medium">الشروط والأحكام</button> الخاصة بالخدمة.
-                      </label>
-                    </div>
+                <p className="font-medium text-white/80 mb-1 z-10 relative">السعر لخطة {plan.selectedOption.duration}</p>
+                <div className="flex items-baseline justify-center gap-2 z-10 relative">
+                  {plan.selectedOption.hasDiscount && plan.selectedOption.originalPrice && (
+                    <span className="text-2xl font-medium text-white/60 line-through">
+                      {Number(plan.selectedOption.originalPrice).toFixed(0)}$
+                    </span>
                   )}
-
-                  <PaymentButtons
-                    loading={loading}
-                    paymentStatus={paymentStatus}
-                    onUsdtSelect={goToChooseMethod}
-                    onStarsSelect={handleStarsPayment}
-                    plan={plan}
-                    disabled={isButtonsDisabled}
-                  />
+                  <span className="text-5xl font-extrabold tracking-tight">
+                    {Number(plan.selectedOption.price).toFixed(0)}$
+                  </span>
                 </div>
+                {plan.selectedOption.hasDiscount && (
+                  <div className="mt-3 inline-block bg-white text-primary-600 px-3 py-1 rounded-full text-sm font-bold shadow z-10 relative">
+                    وفر {plan.selectedOption.discountPercentage}% الآن!
+                  </div>
+                )}
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* عرض مودالات الدفع بناءً على `paymentStep` */}
-      <AnimatePresence>
-        {paymentStep === 'choose_method' && (
-            <UsdtPaymentMethodModal
-              loading={loading}
-              onClose={goBackToDetails} // العودة للخطوة السابقة
-              onWalletSelect={selectWalletPayment}
-              onExchangeSelect={selectExchangePayment}
-            />
-        )}
-      </AnimatePresence>
+              {/* تحسين 4: هيكل أقسام أكثر وضوحًا */}
+              <div className="space-y-6">
+                {/* قسم الميزات */}
+                <div className="bg-white p-5 rounded-2xl border">
+                  <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-start font-arabic">
+                    <ShieldCheck className="w-5 h-5 ml-2 text-primary-600" />
+                    ماذا ستحصل عليه؟
+                  </h4>
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-600 leading-relaxed text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-      {paymentStep === 'show_exchange' && exchangeDetails && (
-        <ExchangePaymentModal
-          details={exchangeDetails}
-          onClose={handleExchangeModalClose} // دالة إغلاق مخصصة
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
+                {/* قسم الشروط والأحكام */}
+                {hasTerms && (
+                  <div ref={termsSectionRef} className="bg-white p-5 rounded-2xl border">
+                    <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-start font-arabic">
+                      <ScrollText className="w-5 h-5 ml-2 text-gray-500" />
+                      الشروط والأحكام
+                    </h4>
+                    <ul className="space-y-2.5 text-sm text-gray-500 list-disc list-inside pr-2">
+                      {plan.termsAndConditions.map((term: string, index: number) => (
+                        <li key={index} className="leading-relaxed">{term}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
 
-      {/* مودالات النجاح */}
+          {/* تحسين 5: قسم دفع أكثر تنظيمًا وجاذبية */}
+          <div className="bg-white/90 backdrop-blur-sm border-t-2 border-primary-100 p-4 shadow-top-strong z-10">
+            {hasTerms && (
+              <div className="flex items-start gap-3 mb-4">
+                <Checkbox id="termsAgreementModal" checked={termsAgreed} onCheckedChange={(checked) => setTermsAgreed(!!checked)} className="mt-0.5" />
+                <label htmlFor="termsAgreementModal" className="text-sm text-gray-600 select-none">
+                  أوافق على <span className="font-bold text-primary-600 hover:underline cursor-pointer" onClick={scrollToTerms}>الشروط والأحكام</span> المذكورة أعلاه.
+                </label>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3">
+              <Button
+                onClick={goToChooseMethod}
+                size="lg"
+                className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-base font-bold shadow-lg hover:shadow-primary-500/40 transition-shadow duration-300"
+                disabled={!!loading || (hasTerms && !termsAgreed)}
+              >
+                {loading && paymentStatus === 'processing_usdt' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'الدفع باستخدام USDT'}
+              </Button>
+              {plan.selectedOption.telegramStarsPrice != null && (
+                 <Button
+                    onClick={handleStarsPayment}
+                    size="lg"
+                    className="w-full h-14 bg-sky-500 text-white text-base font-bold shadow-lg hover:shadow-sky-500/40 transition-shadow duration-300"
+                    disabled={!!loading || (hasTerms && !termsAgreed)}
+                 >
+                    {loading && paymentStatus === 'processing_stars' ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                      <>
+                        <Sparkles className="w-5 h-5 ml-2" />
+                        الدفع بـ Telegram Stars
+                      </>
+                    )}
+                 </Button>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* باقي المودالات (لا تغيير) */}
       <AnimatePresence>
-        {paymentStatus === 'success' && <PaymentSuccessModal onClose={handleSuccessAndCloseAll} />}
+        {paymentStep === 'choose_method' && <UsdtPaymentMethodModal loading={!!loading} onClose={goBackToDetails} onWalletSelect={selectWalletPayment} onExchangeSelect={selectExchangePayment} />}
       </AnimatePresence>
-      <AnimatePresence>
-        {paymentStatus === 'exchange_success' && <PaymentExchangeSuccess onClose={handleSuccessAndCloseAll} planName={plan.name} />}
-      </AnimatePresence>
+      {paymentStep === 'show_exchange' && exchangeDetails && <ExchangePaymentModal details={exchangeDetails} onClose={handleExchangeModalClose} onSuccess={handlePaymentSuccess} />}
+      {paymentStatus === 'success' && <PaymentSuccessModal onClose={handleSuccessAndCloseAll} />}
+      {paymentStatus === 'exchange_success' && <PaymentExchangeSuccess onClose={handleSuccessAndCloseAll} planName={plan.name} />}
     </>
   )
 }

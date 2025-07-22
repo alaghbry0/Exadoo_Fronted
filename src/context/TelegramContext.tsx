@@ -18,7 +18,7 @@ const TelegramContext = createContext<TelegramContextType>({
 
 // إضافة ثوابت للوضع التجريبي
 const TEST_MODE = true; // تفعيل الوضع التجريبي في التطوير فقط
-const TEST_TELEGRAM_ID = "7382197778";
+const TEST_TELEGRAM_ID = "5113997414";
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const { setUserData, telegramId: contextTelegramId } = useUserStore();

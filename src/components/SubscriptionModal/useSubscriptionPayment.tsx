@@ -5,7 +5,7 @@ import { useTonConnectUI } from '@tonconnect/ui-react'
 import { useUserStore } from '@/stores/zustand/userStore'
 import { handleTonPayment } from '@/utils/tonPayment'
 import { useTelegram } from '@/context/TelegramContext'
-import type { SubscriptionPlan } from '@/typesPlan'
+import type { ModalPlanData } from '@/types/modalPlanData';
 import { PaymentStatus } from '@/types/payment'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTariffStore } from '@/stores/zustand'
@@ -19,7 +19,8 @@ interface ExchangeDetails {
   planName?: string
 }
 
-export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess: () => void) => {
+// عدّل هذه الدالة لترجع Promise<boolean>
+export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: () => void) => {
   const { handleTelegramStarsPayment } = useTelegramPayment()
   const { telegramId } = useTelegram()
   const { telegramUsername, fullName } = useUserStore()
@@ -27,7 +28,7 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
   const queryClient = useQueryClient()
 
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<boolean>(false)
   const [exchangeDetails, setExchangeDetails] = useState<ExchangeDetails | null>(null)
   const [isInitializing, setIsInitializing] = useState(false)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -37,14 +38,12 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     planId?: string
   }>({})
 
-  // تنظيف بيانات جلسة الدفع
   const cleanupPaymentSession = useCallback(() => {
     localStorage.removeItem('paymentData')
     paymentSessionRef.current = {}
     setExchangeDetails(null)
   }, [])
 
-  // إعادة تعيين حالة الدفع
   const resetPaymentStatus = useCallback(() => {
     setPaymentStatus('idle')
     cleanupPaymentSession()
@@ -55,7 +54,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     }
   }, [cleanupPaymentSession])
 
-  // عند نجاح الدفع
   const handlePaymentSuccess = useCallback(() => {
     cleanupPaymentSession()
     setPaymentStatus('success')
@@ -70,7 +68,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     }
   }, [cleanupPaymentSession, queryClient, telegramId, onSuccess])
 
-  // منع إغلاق الصفحة أثناء المعالجة
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (paymentStatus === 'processing') {
@@ -82,7 +79,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [paymentStatus])
 
-  // استعادة الجلسة مع التحقق من الصلاحية
   const restoreSession = useCallback(async () => {
     if (!plan || paymentStatus !== 'idle') return
 
@@ -96,7 +92,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
 
       const { paymentToken, planId, timestamp } = JSON.parse(savedData)
 
-      // التحقق من انتهاء الصلاحية (30 دقيقة)
       if (Date.now() - timestamp > 30 * 60 * 1000) {
         localStorage.removeItem('paymentData')
         setIsInitializing(false)
@@ -109,7 +104,6 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
         return
       }
 
-      // إذا كانت حالة الدفع ناجحة من قبل
       if (paymentToken) {
         handlePaymentSuccess()
       }
@@ -126,20 +120,16 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     restoreSession()
   }, [restoreSession])
 
-  // معالجة نجاح الدفع
   useEffect(() => {
     if (paymentStatus === 'exchange_success') {
-
       const timer = setTimeout(() => {
         onSuccess()
       }, 2000)
-
       return () => clearTimeout(timer)
     }
   }, [paymentStatus, onSuccess])
 
-  // عملية الدفع عبر TON
-  const handleTonPaymentWrapper = async () => {
+  const handleTonPaymentWrapper = useCallback(async () => {
     if (!plan) return
 
     try {
@@ -166,9 +156,8 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     } finally {
       setLoading(false)
     }
-  }
+  }, [plan, tonConnectUI, telegramId, telegramUsername, fullName, handlePaymentSuccess, setPaymentStatus])
 
-  // بدء استطلاع حالة الدفع
   const startPollingPaymentStatus = useCallback((paymentToken: string) => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
@@ -203,16 +192,19 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
     pollingIntervalRef.current = setInterval(pollStatus, 3000)
   }, [plan])
 
-  // اختيار طريقة الدفع USDT
-  const handleUsdtPaymentChoice = async (method: 'wallet' | 'exchange') => {
-    if (!plan) return
+  // 👇 --- التعديل يبدأ هنا --- 👇
+  const handleUsdtPaymentChoice = useCallback(async (method: 'wallet' | 'exchange'): Promise<boolean> => {
+    if (!plan) return false;
 
+    setLoading(true);
     try {
-      setLoading(true)
       if (method === 'wallet') {
-        await handleTonPaymentWrapper()
+        // منطق المحفظة يبقى كما هو، لكن نرجع true عند البدء
+        await handleTonPaymentWrapper();
+        return true;
       } else {
-        let payment_token = paymentSessionRef.current.paymentToken || ''
+        // منطق منصات التداول
+        let payment_token = paymentSessionRef.current.paymentToken || '';
         if (!payment_token) {
           const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
             method: 'POST',
@@ -227,23 +219,23 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
               telegramUsername,
               fullName
             }),
-          })
+          });
 
-          if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع')
-          const data = await response.json()
-          payment_token = data.payment_token
+          if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع');
+          const data = await response.json();
+          payment_token = data.payment_token;
         }
 
         paymentSessionRef.current = {
           paymentToken: payment_token,
           planId: plan.selectedOption.id.toString()
-        }
+        };
 
         localStorage.setItem('paymentData', JSON.stringify({
           paymentToken: payment_token,
           planId: plan.selectedOption.id.toString(),
           timestamp: Date.now()
-        }))
+        }));
 
         setExchangeDetails({
           depositAddress: useTariffStore.getState().walletAddress || '0xRecipientAddress',
@@ -251,63 +243,75 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
           network: 'TON Network',
           paymentToken: payment_token,
           planName: plan.name
-        })
+        });
 
-        setPaymentStatus('processing')
-        startPollingPaymentStatus(payment_token)
+        setPaymentStatus('processing');
+        startPollingPaymentStatus(payment_token);
+        return true; // ✅ مهم جداً: أرجع true عند النجاح
       }
     } catch (error) {
-      console.error('خطأ في عملية الدفع:', error)
-      setPaymentStatus('failed')
-      showToast.error('فشلت عملية الدفع، يرجى المحاولة مرة أخرى')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleStarsPayment = async () => {
-    if (!plan || !plan.selectedOption.discountedPrice) return; // تأكد من وجود الخطة والسعر
-
-    try {
-      setLoading(true);
-
-      // ✨ التعديل الأساسي هنا
-      // 1. احصل على السعر النهائي بالـ USDT (بعد الخصم).
-      const finalUsdtPrice = plan.selectedOption.discountedPrice;
-
-      // 2. احصل على معامل التحويل للنجوم.
-      const starsMultiplier = plan.selectedOption.telegramStarsPrice;
-
-      // 3. قم بعملية الضرب واحصل على السعر النهائي بالنجوم (XTR).
-      // نستخدم Math.round() للتأكد من أن القيمة عدد صحيح، لأن نجوم تليجرام لا تقبل الكسور.
-      const finalStarsPrice = Math.round(finalUsdtPrice * starsMultiplier);
-
-      // 4. مرّر السعر النهائي المحسوب إلى دالة الدفع.
-      const { paymentToken } = await handleTelegramStarsPayment(
-        plan.selectedOption.id,
-        finalStarsPrice // ✅ تم استخدام السعر الصحيح الآن
-      );
-
-      if (paymentToken) {
-        handlePaymentSuccess();
-      } else {
-        setPaymentStatus('failed');
-      }
-    } catch {
+      console.error('خطأ في عملية الدفع:', error);
       setPaymentStatus('failed');
+      showToast.error('فشلت عملية الدفع، يرجى المحاولة مرة أخرى');
+      return false; // ✅ مهم جداً: أرجع false عند الفشل
     } finally {
       setLoading(false);
     }
+  }, [plan, telegramId, telegramUsername, fullName, startPollingPaymentStatus, handleTonPaymentWrapper]);
+  // 👆 --- التعديل ينتهي هنا --- 👆
+
+  const handleStarsPayment = async () => {
+    // 👇 --- بداية التعديل --- 👇
+
+    // 1. التحقق من البيانات بالطريقة الصحيحة
+    // يجب أن نتأكد من وجود السعر ومعامل التحويل في `selectedOption`
+    if (!plan || !plan.selectedOption.price || plan.selectedOption.telegramStarsPrice == null) {
+        console.error("Missing plan data for Stars payment:", { plan });
+        showToast.error("بيانات الخطة غير مكتملة للدفع بالنجوم.");
+        return;
+    }
+
+    try {
+        setLoading(true);
+        // 2. تعيين حالة الدفع الصحيحة لإظهار Spinner على زر النجوم
+        setPaymentStatus('processing_stars');
+
+        // 3. الوصول إلى السعر النهائي من المسار الصحيح
+        const finalUsdtPrice = plan.selectedOption.price;
+    const starsMultiplier = plan.selectedOption.telegramStarsPrice;
+
+    // لم تعد هناك حاجة لـ Number()
+    const finalStarsPrice = Math.round(Number(finalUsdtPrice) * Number(starsMultiplier));
+
+        // استدعاء دالة الدفع بالقيم الصحيحة
+        const { paymentToken } = await handleTelegramStarsPayment(
+            plan.selectedOption.id,
+            finalStarsPrice
+        );
+
+        if (paymentToken) {
+            handlePaymentSuccess();
+        } else {
+            // في حالة فشل الدفع (مثل إغلاق المستخدم للنافذة)
+            setPaymentStatus('failed');
+        }
+    } catch (error) {
+        // في حالة حدوث خطأ أثناء العملية
+        console.error("Stars payment failed:", error);
+        setPaymentStatus('failed');
+        showToast.error("فشلت عملية الدفع بالنجوم.");
+    } finally {
+        // إيقاف التحميل في جميع الحالات
+        setLoading(false);
+    }
   };
 
-  // التأكد من صحة حالة الدفع
   useEffect(() => {
     if (!exchangeDetails && paymentStatus === 'processing') {
       setPaymentStatus('idle')
     }
   }, [exchangeDetails, paymentStatus])
 
-  // تنظيف المؤقتات عند تفكيك المكون
   useEffect(() => {
     return () => {
       if (pollingIntervalRef.current) {
@@ -318,11 +322,10 @@ export const useSubscriptionPayment = (plan: SubscriptionPlan | null, onSuccess:
 
   return {
     paymentStatus,
-    loading,
+    loading: !!loading,
     exchangeDetails,
     setExchangeDetails,
     isInitializing,
-    handleTonPaymentWrapper,
     handleUsdtPaymentChoice,
     handleStarsPayment,
     resetPaymentStatus,

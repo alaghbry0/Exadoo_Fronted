@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
               "script-src-elem 'self' https://telegram.org https://alaghbry0.github.io;",
               "style-src 'self' 'unsafe-inline';",
               // <-- تم التحديث هنا: إضافة نطاقات الاتصال الضرورية
-              "connect-src 'self' https://exadoo-rxr9.onrender.com  http://172.30.160.1:5000 http://localhost:5002 https://hasanbot-backend-sse-service.onrender.com  https://bridge.tonapi.io https://cdn.echooo.xyz https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://toncenter.com https://*.toncdn.io https://vercel.live https://raw.githubusercontent.com https://walletbot.me;",
+              "connect-src 'self' https://exadoo-rxr9.onrender.com  http://172.30.160.1:5000 http://localhost:5002 https://exadoo-sse-server.onrender.com https://tonapi.io https://bridge.tonapi.io https://cdn.echooo.xyz https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://toncenter.com https://*.toncdn.io https://vercel.live https://raw.githubusercontent.com https://walletbot.me;",
               // <-- تم التحديث هنا بشكل كبير: إضافة جميع نطاقات الصور المعروفة
               "img-src 'self' data: blob: https: *.githubusercontent.com *.bnbstatic.com *.okx.com *.tonhub.com *.mytonwallet.io *.tonkeeper.com *.tg *.tobiwallet.app *.bitgetimg.com *.gatedataimg.com *.delab-team;",
               "font-src 'self';",

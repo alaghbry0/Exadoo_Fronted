@@ -50,7 +50,7 @@ const SubscriptionDetailsCard: React.FC<SubscriptionDetailsCardProps> = ({ extra
         </div>
 
         {extraData.main_invite_link && (
-          <Button onClick={handleJoinClick} className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-base">
+          <Button onClick={handleJoinClick} className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-white">
             <ExternalLink className="w-5 h-5 ml-2" />
             الانضمام إلى القناة
           </Button>

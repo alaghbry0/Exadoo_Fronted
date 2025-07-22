@@ -1,86 +1,92 @@
 'use client'
+
 import { motion } from 'framer-motion'
-import { Wallet, RefreshCcw, X } from 'lucide-react'
+import { Wallet, ArrowRightLeft, X, Loader2 } from 'lucide-react'
 
-
+// --- تعريف Props المكون ---
+interface UsdtPaymentMethodModal {
+  loading: boolean;
+  onClose: () => void;
+  onWalletSelect: () => void;
+  onExchangeSelect: () => void;
+}
 
 export const UsdtPaymentMethodModal = ({
+  loading,
   onClose,
   onWalletSelect,
-  onExchangeSelect
-}: {
-  onClose: () => void
-  onWalletSelect: () => void
-  onExchangeSelect: () => void
-}) => (
+  onExchangeSelect,
+}: UsdtPaymentMethodModal) => (
   <motion.div
-  dir="rtl"
-  className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
-  style={{
-    zIndex: 921, // القيمة القصوى لـ z-index
-    position: 'fixed',
-    isolation: 'isolate'
-  }}
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
-  onClick={onClose}
->
+    dir="rtl"
+    className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 z-[99]"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    onClick={onClose}
+  >
     <motion.div
-
-
-      className="bg-white rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden"
-      initial={{ scale: 0.9, y: 20 }}
-      animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.9, y: 20 }}
+      // تعديل 1: استخدام خلفية رمادية فاتحة جدًا لإبراز البطاقات البيضاء
+      className="bg-gray-50 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-200/50"
+      initial={{ scale: 0.95, opacity: 0, y: 20 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      exit={{ scale: 0.95, opacity: 0, y: 20 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 className="font-bold text-lg">اختر طريقة الدفع</h3>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
+      {/* الهيدر: يبقى نظيفًا */}
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h3 className="font-bold text-lg text-gray-900">إتمام الدفع بـ USDT</h3>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-900 transition-colors p-1 rounded-full disabled:opacity-50"
+          disabled={loading}
+        >
           <X className="w-5 h-5" />
         </button>
       </div>
 
       <div className="p-4 space-y-3">
+        {/* ========================================================= */}
+        {/* تعديل 2: زر محفظة ويب 3 بتصميم جذاب وممتلئ بالتدرج اللوني */}
+        {/* ========================================================= */}
         <motion.button
-
-          className="w-full p-4 bg-blue-50 hover:bg-blue-100 transition-colors rounded-xl flex items-center gap-3"
+          className="relative w-full p-3 bg-gradient-to-br from-primary-500 to-primary-600 hover:shadow-primary-500/40 text-white transition-all duration-300 rounded-xl flex items-center gap-4 text-right disabled:opacity-70 disabled:cursor-wait shadow-lg"
           onClick={onWalletSelect}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          disabled={loading}
+          whileHover={{ scale: loading ? 1 : 1.03, y: loading ? 0 : -3 }}
+          whileTap={{ scale: loading ? 1 : 0.98 }}
         >
-          <div className="bg-blue-100 p-2 rounded-full">
-            <Wallet className="w-5 h-5 text-blue-600" />
+          {/* دائرة الأيقونة تبقى بيضاء لتبرز */}
+           <div className="w-12 h-12 bg-white/20 flex-shrink-0 rounded-lg flex items-center justify-center border border-white/30">
+            {loading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : <Wallet className="w-7 h-7 text-white" />}
           </div>
-          <div className="text-right">
-            <p className="font-medium text-gray-900">محفظة ويب 3 (tonkeeper, …etc)</p>
-            <p className="text-sm text-gray-500">استخدم محفظتك الشخصية</p>
+          <div>
+            <p className="font-semibold">محفظة ويب 3</p>
+            <p className="text-sm text-primary-100">مثل Tonkeeper, MyTonWallet</p>
           </div>
+          {/* اقتراح إضافي: شارة "موصى به" */}
+
         </motion.button>
 
+        {/* ========================================================= */}
+        {/* تعديل 3: زر منصات التداول بتصميم "شبح" (outline) ليكون الخيار الثانوي */}
+        {/* ========================================================= */}
         <motion.button
-
-          className="w-full p-4 bg-purple-50 hover:bg-purple-100 transition-colors rounded-xl flex items-center gap-3"
+          className="w-full p-3 bg-white hover:bg-gray-100 border border-gray-300 transition-all duration-300 rounded-xl flex items-center gap-4 text-right disabled:opacity-60 disabled:cursor-wait"
           onClick={onExchangeSelect}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          disabled={loading}
+          whileHover={{ scale: loading ? 1 : 1.03, y: loading ? 0 : -3 }}
+          whileTap={{ scale: loading ? 1 : 0.98 }}
         >
-          <div className="bg-purple-100 p-2 rounded-full">
-            <RefreshCcw className="w-5 h-5 text-purple-600" />
+          <div className="w-12 h-12 bg-gray-100 flex-shrink-0 rounded-lg flex items-center justify-center border">
+            {loading ? <Loader2 className="w-6 h-6 animate-spin text-gray-500" /> : <ArrowRightLeft className="w-6 h-6 text-gray-600" />}
           </div>
-          <div className="text-right">
-            <p className="font-medium text-gray-900">منصات التداول (binance, Okx …etc)</p>
-            <p className="text-sm text-gray-500">استخدم منصة تبادل العملات</p>
+          <div>
+            <p className="font-semibold text-gray-800">منصة تداول</p>
+            <p className="text-sm text-gray-500">مثل Binance, OKX, Bybit</p>
           </div>
         </motion.button>
-      </div>
-
-      <div className="p-4 bg-gray-50">
-        <p className="text-xs text-gray-500 text-center">
-          اختر الطريقة المناسبة لك للدفع باستخدام USDT
-        </p>
       </div>
     </motion.div>
   </motion.div>

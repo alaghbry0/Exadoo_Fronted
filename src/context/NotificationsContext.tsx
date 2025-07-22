@@ -94,10 +94,13 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
-      queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
-    },
-  });
+    // 🚫 قم بإزالة أو التعليق على هذا السطر أيضًا.
+    // queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
+
+    // ✅ احتفظ بهذا السطر لتحديث الإشعار المحدد في القائمة.
+    queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
+  },
+});
 
   // --- Mutation لتحديد كل الإشعارات كمقروءة (مع تحديث متفائل) ---
   const markAllAsReadMutation = useMutation({
@@ -151,10 +154,15 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
-      queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
-    },
-  });
+    // 🚫 قم بإزالة أو التعليق على هذا السطر.
+    // queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', telegramId] });
+
+    // ✅ احتفظ بهذا السطر. هو ضروري لتحديث حالة الإشعارات في القائمة الرئيسية.
+    // عندما يتم تحديث قائمة 'notifications'، سيعرف React Query كيفية تحديث العرض
+    // لقائمة 'all' وقائمة 'unread' بشكل صحيح.
+    queryClient.invalidateQueries({ queryKey: ['notifications', telegramId] });
+  },
+});
 
   // =============================================================
   // 🔽🔽🔽 بداية التعديلات المدمجة 🔽🔽🔽

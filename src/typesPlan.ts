@@ -107,3 +107,5 @@ export interface SubscriptionCard {
   group_id: number | null; // <-- إضافة مهمة
   terms_and_conditions: string[]; // أضفت هذا هنا لأنه منطقي أن يكون لكل نوع اشتراك شروطه
 }
+
+

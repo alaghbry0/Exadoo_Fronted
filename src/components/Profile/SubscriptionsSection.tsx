@@ -94,7 +94,7 @@ const SubscriptionItem = ({ sub, index }: { sub: Subscription; index: number }) 
     const styles = statusStyles[currentStatus];
 
     // شرط إظهار زر الدعم (للاشتراكات الجديدة والنشطة)
-    const showSupportButton = sub.status === 'نشط' && Math.ceil(Math.abs(new Date().getTime() - new Date(sub.start_date).getTime()) / (1000 * 60 * 60 * 24)) <= 3;
+    const showSupportButton = sub.status === 'نشط' && sub.start_date && Math.ceil(Math.abs(new Date().getTime() - new Date(sub.start_date).getTime()) / (1000 * 60 * 60 * 24)) <= 3;
 
     // شرط إظهار زر الانضمام
     const showJoinButton = sub.status === 'نشط' && sub.invite_link;

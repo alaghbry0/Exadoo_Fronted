@@ -50,7 +50,7 @@ export const getSubscriptionTypes = async (groupId: number | null = null) => {
 export const getSubscriptionPlans = async (telegramId: string | null) => {
     try {
         const url = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/subscription-plans`);
-        
+
         if (telegramId) {
             // TypeScript يعرف الآن أن telegramId هو string هنا
             url.searchParams.append('telegram_id', telegramId);

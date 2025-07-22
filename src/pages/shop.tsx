@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTelegram } from '../context/TelegramContext'
 
 // --- استيراد أنواع البيانات الجديدة لتوافق المودال ---
@@ -47,9 +47,6 @@ const iconMap: { [key: string]: React.ElementType } = {
   'vip': Crown,
 };
 
-// ====================================================================
-// اقتراح 3: تبسيط منطق تحديد الأيقونة
-// ====================================================================
 const getCardIcon = (type: ApiSubscriptionType): React.ElementType => {
     if (type.is_recommended) return iconMap['vip'];
     if (type.name.toLowerCase().includes('forex')) return iconMap['forex'];
@@ -58,8 +55,27 @@ const getCardIcon = (type: ApiSubscriptionType): React.ElementType => {
 };
 
 // ====================================================================
-// اقتراح 2: مركزية إدارة حالات التحميل والخطأ
+// تعديل 1: إنشاء مكون بطاقة التحميل (Skeleton Card)
+// هذا المكون سيمثل شكل البطاقة أثناء جلب البيانات.
 // ====================================================================
+const CardSkeleton = () => (
+    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-md animate-pulse">
+        <div className="flex flex-col items-center">
+            <div className="w-16 h-16 bg-gray-300 rounded-xl mb-5"></div>
+            <div className="h-7 w-3/4 bg-gray-300 rounded-md mb-3"></div>
+            <div className="h-4 w-1/2 bg-gray-200 rounded-md mb-8"></div>
+        </div>
+        <div className="mb-6">
+            <div className="h-10 bg-gray-200 rounded-full mb-8"></div>
+        </div>
+        <div className="flex items-baseline justify-center gap-2 mb-8">
+            <div className="h-10 w-24 bg-gray-300 rounded-md"></div>
+        </div>
+        <div className="h-12 w-full bg-gray-300 rounded-xl"></div>
+    </div>
+);
+
+
 interface QueryBoundaryProps {
     isLoading: boolean;
     isError: boolean;
@@ -71,7 +87,7 @@ const QueryBoundary: React.FC<QueryBoundaryProps> = ({ isLoading, isError, child
         return (
             <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
                 <Loader2 className="w-16 h-16 text-primary-600 animate-spin" />
-                <p className="text-gray-700 font-arabic mt-4 text-lg">جاري تحميل الباقات...</p>
+                <p className="text-gray-700 font-arabic mt-4 text-lg">جاري تحميل البيانات...</p>
             </div>
         );
     }
@@ -95,10 +111,6 @@ const QueryBoundary: React.FC<QueryBoundaryProps> = ({ isLoading, isError, child
     return <>{children}</>;
 };
 
-
-// ====================================================================
-// المكون الرئيسي للصفحة (مع إزالة React.FC)
-// ====================================================================
 const ShopComponent = () => {
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<ModalPlanData | null>(null);
   const [selectedPlanIds, setSelectedPlanIds] = useState<{ [key: number]: number }>({});
@@ -106,14 +118,24 @@ const ShopComponent = () => {
   const [initialGroupSelected, setInitialGroupSelected] = useState(false);
   const { telegramId } = useTelegram();
 
-  // --- اقتراح 1: تحسين تبويبات المجموعات ---
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButtons, setShowScrollButtons] = useState({ left: false, right: false });
 
-  // --- استعلامات البيانات (Data Queries) ---
-  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useQuery<ApiSubscriptionGroup[]>({ queryKey: ['subscriptionGroups'], queryFn: getSubscriptionGroups, staleTime: 5 * 60 * 1000 });
-  const { data: typesData, isLoading: typesLoading, error: typesError } = useQuery<ApiSubscriptionType[]>({ queryKey: ['subscriptionTypes', selectedGroupId], queryFn: () => getSubscriptionTypes(selectedGroupId), enabled: initialGroupSelected, staleTime: 5 * 60 * 1000 });
-  const { data: plansData, isLoading: plansLoading, error: plansError } = useQuery<ApiSubscriptionPlan[]>({ queryKey: ['subscriptionPlans', telegramId], queryFn: () => getSubscriptionPlans(telegramId), staleTime: 5 * 60 * 1000 });
+  // استعلامات البيانات
+  const { data: groupsData, isLoading: groupsLoading, isError: groupsError } = useQuery<ApiSubscriptionGroup[]>({ queryKey: ['subscriptionGroups'], queryFn: getSubscriptionGroups, staleTime: 5 * 60 * 1000 });
+
+  // ====================================================================
+  // تعديل 2: تحديث منطق استعلام الأنواع (Types) مع keepPreviousData
+  // ====================================================================
+  const { data: typesData, isLoading: typesLoading, isError: typesError } = useQuery<ApiSubscriptionType[]>({
+    queryKey: ['subscriptionTypes', selectedGroupId],
+    queryFn: () => getSubscriptionTypes(selectedGroupId),
+    enabled: !!initialGroupSelected,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const { data: plansData, isLoading: plansLoading, isError: plansError } = useQuery<ApiSubscriptionPlan[]>({ queryKey: ['subscriptionPlans', telegramId], queryFn: () => getSubscriptionPlans(telegramId), staleTime: 5 * 60 * 1000 });
 
   const subscriptions: Subscription[] = useMemo(() => {
     if (!typesData || !plansData) return [];
@@ -122,25 +144,18 @@ const ShopComponent = () => {
       .filter(type => selectedGroupId === null || type.group_id === selectedGroupId)
       .map(type => {
         const associatedPlans = plansData.filter(plan => plan.subscription_type_id === type.id).sort((a, b) => Number(a.price) - Number(b.price));
+        if (associatedPlans.length === 0) return null;
 
-        const planOptions: ModalPlanOption[] = associatedPlans.map(plan => {
-          const price = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
-          const originalPrice = plan.original_price ? (typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price) : null;
-          const hasDiscount = originalPrice != null && originalPrice > price;
-          const discountPercentage = hasDiscount && originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+        const planOptions: ModalPlanOption[] = associatedPlans.map(plan => ({
+          id: plan.id,
+          duration: plan.name,
+          price: plan.price.toString(),
+          originalPrice: plan.original_price,
+          hasDiscount: plan.original_price != null && Number(plan.original_price) > Number(plan.price),
+          discountPercentage: plan.original_price ? `${Math.round(((Number(plan.original_price) - Number(plan.price)) / Number(plan.original_price)) * 100)}%` : undefined,
+          telegramStarsPrice: plan.telegram_stars_price,
+        }));
 
-          return {
-            id: plan.id,
-            duration: plan.name,
-            price: price.toString(),
-            originalPrice,
-            hasDiscount,
-            discountPercentage,
-            telegramStarsPrice: plan.telegram_stars_price,
-          };
-        });
-
-        // استخدام الدالة الجديدة المبسطة
         const CardIcon = getCardIcon(type);
 
         return {
@@ -154,24 +169,26 @@ const ShopComponent = () => {
           group_id: type.group_id,
           plans: planOptions,
         };
-      }).filter(sub => sub.plans.length > 0);
+      }).filter((sub): sub is Subscription => sub !== null);
   }, [typesData, plansData, selectedGroupId]);
 
-  // useEffect لاختيار الخطة الافتراضية
   useEffect(() => {
     if (subscriptions.length > 0) {
       const initialPlanIds = subscriptions.reduce((acc, sub) => {
-        const defaultPlan = sub.plans.find(p => p.duration === 'شهري') || sub.plans[0];
-        if (defaultPlan) {
-          acc[sub.id] = defaultPlan.id;
+        if (!selectedPlanIds[sub.id]) {
+            const defaultPlan = sub.plans.find(p => p.duration === 'شهري') || sub.plans[0];
+            if (defaultPlan) {
+              acc[sub.id] = defaultPlan.id;
+            }
         }
         return acc;
       }, {} as { [key: number]: number });
-      setSelectedPlanIds(initialPlanIds);
+      if(Object.keys(initialPlanIds).length > 0) {
+        setSelectedPlanIds(prev => ({...prev, ...initialPlanIds}));
+      }
     }
-  }, [subscriptions]);
+  }, [subscriptions, selectedPlanIds]);
 
-  // useEffect لاختيار المجموعة الافتراضية
   useEffect(() => {
     if (groupsData && !initialGroupSelected) {
       const defaultGroupId = groupsData.length > 0 ? groupsData[0].id : null;
@@ -180,7 +197,7 @@ const ShopComponent = () => {
     }
   }, [groupsData, initialGroupSelected]);
 
-  // --- اقتراح 1: منطق مؤشرات التمرير ---
+  // منطق مؤشرات التمرير
   useEffect(() => {
     const checkScroll = () => {
       const el = tabsContainerRef.current;
@@ -200,8 +217,7 @@ const ShopComponent = () => {
       el?.removeEventListener('scroll', checkScroll);
       window.removeEventListener('resize', checkScroll);
     };
-  }, [groupsData]); // إعادة التحقق عند تغير بيانات المجموعات
-
+  }, [groupsData]);
 
   const handleSubscribeClick = (subscription: Subscription, selectedPlan: ModalPlanOption) => {
       const modalData: ModalPlanData = {
@@ -225,13 +241,16 @@ const ShopComponent = () => {
       });
   };
 
-  const isLoading = groupsLoading || ((typesLoading || plansLoading) && initialGroupSelected);
+  // ====================================================================
+  // تعديل 3: تحديث منطق تحديد حالات التحميل والخطأ
+  // `initialLoading` للتحميل الأولي الكامل للصفحة فقط.
+  // ====================================================================
+  const initialLoading = groupsLoading || (plansLoading && !plansData);
   const hasError = !!(groupsError || typesError || plansError);
-
 
   return (
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
-        <QueryBoundary isLoading={isLoading && !subscriptions.length} isError={hasError}>
+        <QueryBoundary isLoading={initialLoading} isError={hasError}>
             <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col">
                 <Navbar />
 
@@ -252,12 +271,13 @@ const ShopComponent = () => {
                         </div>
                     </section>
 
+                    {/* فاصل */}
                     <div className="relative my-12 md:my-16 px-4">
                         <div className="absolute inset-0 flex items-center" aria-hidden="true"><div className="w-full border-t border-gray-200" /></div>
                         <div className="relative flex justify-center"><span className="bg-gray-50 px-4 text-primary-600"><Gem className="h-7 w-7" /></span></div>
                     </div>
 
-                    {/* ألسنة تبويب المجموعات مع مؤشرات التمرير */}
+                    {/* ألسنة تبويب المجموعات */}
                     {(groupsData && groupsData.length > 1) && (
                         <section className="sticky top-[60px] z-30 bg-gray-50/80 backdrop-blur-sm pt-4 pb-3 -mt-12 mb-8">
                             <div className="container mx-auto px-4 relative">
@@ -289,66 +309,75 @@ const ShopComponent = () => {
 
                     {/* قسم عرض البطاقات */}
                     <section className="max-w-7xl mx-auto">
-                        {!isLoading && subscriptions.length === 0 && (
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 bg-white rounded-2xl shadow-sm border">
-                                <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">لا توجد باقات متاحة حاليًا</h3>
-                                <p className="text-gray-600 max-w-md mx-auto font-arabic">يرجى التحقق مرة أخرى في وقت لاحق أو اختيار فئة أخرى.</p>
-                            </motion.div>
-                        )}
-
+                        {/* ==================================================================== */}
+                        {/* تعديل 4: منطق عرض البطاقات أو هياكل التحميل (Skeletons) */}
+                        {/* ==================================================================== */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {subscriptions.map((sub, index) => {
-                                const selectedPlan = sub.plans.find(p => p.id === selectedPlanIds[sub.id]);
-                                if (!selectedPlan) return null;
+                            {typesLoading ? (
+                                // عند التحميل، اعرض 3 بطاقات هيكلية
+                                Array.from({ length: 3 }).map((_, index) => <CardSkeleton key={index} />)
+                            ) : subscriptions.length === 0 ? (
+                                // إذا لم يكن هناك تحميل ولا توجد اشتراكات، اعرض رسالة "لا توجد باقات"
+                                <div className="md:col-span-2 lg:col-span-3">
+                                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 bg-white rounded-2xl shadow-sm border">
+                                        <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">لا توجد باقات متاحة حاليًا</h3>
+                                        <p className="text-gray-600 max-w-md mx-auto font-arabic">يرجى التحقق مرة أخرى في وقت لاحق أو اختيار فئة أخرى.</p>
+                                    </motion.div>
+                                </div>
+                            ) : (
+                                // في الحالة الطبيعية، اعرض بطاقات الاشتراكات
+                                subscriptions.map((sub, index) => {
+                                    const selectedPlan = sub.plans.find(p => p.id === selectedPlanIds[sub.id]);
+                                    if (!selectedPlan) return null;
+                                    const CardIcon = sub.icon;
 
-                                const CardIcon = sub.icon;
-
-                                return (
-                                    <motion.div key={`${sub.id}-${selectedGroupId}`} layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, type: 'spring', stiffness: 200, damping: 25 }}>
-                                        <Card className={cn("h-full flex flex-col border-gray-200/80 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 bg-white/70 backdrop-blur-sm rounded-2xl text-center", sub.isRecommended && "ring-2 ring-primary-500")}>
-                                            <CardHeader className="flex flex-col items-center pt-8">
-                                                {sub.isRecommended && (<Badge variant="secondary" className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 px-2 py-1 text-xs font-bold shadow-lg"><Crown className="w-3.5 h-3.5 ml-1" /> موصى به</Badge>)}
-                                                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <CardIcon className="w-8 h-8 text-white" />
-                                                </div>
-                                                <h3 className="text-2xl font-bold text-gray-900">{sub.name}</h3>
-                                                <p className="text-gray-500 text-sm h-10 px-2">{sub.tagline}</p>
-                                            </CardHeader>
-                                            <CardContent className="p-6 flex-1 flex flex-col justify-between">
-                                                <div>
-                                                    {sub.plans.length > 1 && (
-                                                        <div className="mb-6">
-                                                            <div className="flex w-full bg-gray-200/70 p-1 rounded-full">
-                                                                {sub.plans.map((option) => (
-                                                                    <button key={option.id} onClick={() => setSelectedPlanIds(prev => ({ ...prev, [sub.id]: option.id }))} className="relative flex-1 text-xs font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
-                                                                        {selectedPlan.id === option.id && (<motion.div layoutId={`pill-switch-${sub.id}`} className="absolute inset-0 bg-white rounded-full shadow" transition={{ type: "spring", stiffness: 300, damping: 30 }} />)}
-                                                                        <span className={cn('relative z-10', {'text-primary-600': selectedPlan.id === option.id, 'text-gray-600 hover:text-gray-900': selectedPlan.id !== option.id})}>{option.duration}</span>
-                                                                    </button>
-                                                                ))}
+                                    return (
+                                        <motion.div key={`${sub.id}-${selectedGroupId}`} layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, type: 'spring', stiffness: 200, damping: 25 }}>
+                                            <Card className={cn("h-full flex flex-col border-gray-200/80 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 bg-white/70 backdrop-blur-sm rounded-2xl text-center", sub.isRecommended && "ring-2 ring-primary-500")}>
+                                                <CardHeader className="flex flex-col items-center pt-8">
+                                                    {sub.isRecommended && (<Badge variant="secondary" className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 px-2 py-1 text-xs font-bold shadow-lg"><Crown className="w-3.5 h-3.5 ml-1" /> موصى به</Badge>)}
+                                                    <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                        <CardIcon className="w-8 h-8 text-white" />
+                                                    </div>
+                                                    <h3 className="text-2xl font-bold text-gray-900">{sub.name}</h3>
+                                                    <p className="text-gray-500 text-sm h-10 px-2">{sub.tagline}</p>
+                                                </CardHeader>
+                                                <CardContent className="p-6 flex-1 flex flex-col justify-between">
+                                                    <div>
+                                                        {sub.plans.length > 1 && (
+                                                            <div className="mb-6">
+                                                                <div className="flex w-full bg-gray-200/70 p-1 rounded-full">
+                                                                    {sub.plans.map((option) => (
+                                                                        <button key={option.id} onClick={() => setSelectedPlanIds(prev => ({ ...prev, [sub.id]: option.id }))} className="relative flex-1 text-xs font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                                                                            {selectedPlan.id === option.id && (<motion.div layoutId={`pill-switch-${sub.id}`} className="absolute inset-0 bg-white rounded-full shadow" transition={{ type: "spring", stiffness: 300, damping: 30 }} />)}
+                                                                            <span className={cn('relative z-10', {'text-primary-600': selectedPlan.id === option.id, 'text-gray-600 hover:text-gray-900': selectedPlan.id !== option.id})}>{option.duration}</span>
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        <div className="text-center mb-6">
+                                                            <div className="flex items-baseline justify-center gap-2">
+                                                                {selectedPlan.hasDiscount && selectedPlan.originalPrice && (<span className="text-xl font-medium text-gray-400 line-through">{Number(selectedPlan.originalPrice).toFixed(0)}$</span>)}
+                                                                <span className="text-4xl font-extrabold text-gray-900 tracking-tight">{Number(selectedPlan.price).toFixed(0)}$</span>
+                                                            </div>
+                                                            <span className="text-sm text-gray-500">/ {selectedPlan.duration}</span>
+                                                            <div className="h-6 flex items-center justify-center mt-2">
+                                                                {selectedPlan.hasDiscount && selectedPlan.discountPercentage && (<Badge variant="destructive" className="font-bold">خصم {selectedPlan.discountPercentage}%</Badge>)}
                                                             </div>
                                                         </div>
-                                                    )}
-                                                    <div className="text-center mb-6">
-                                                        <div className="flex items-baseline justify-center gap-2">
-                                                            {selectedPlan.hasDiscount && selectedPlan.originalPrice && (<span className="text-xl font-medium text-gray-400 line-through">{Number(selectedPlan.originalPrice).toFixed(0)}$</span>)}
-                                                            <span className="text-4xl font-extrabold text-gray-900 tracking-tight">{Number(selectedPlan.price).toFixed(0)}$</span>
-                                                        </div>
-                                                        <span className="text-sm text-gray-500">/ {selectedPlan.duration}</span>
-                                                        <div className="h-6 flex items-center justify-center mt-2">
-                                                            {selectedPlan.hasDiscount && selectedPlan.discountPercentage && (<Badge variant="destructive" className="font-bold">خصم {selectedPlan.discountPercentage}%</Badge>)}
-                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                <Button onClick={() => handleSubscribeClick(sub, selectedPlan)} size="lg" className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:-translate-y-1" disabled={!selectedPlan}>
-                                                    اشترك الآن
-                                                    <ArrowLeft className="w-5 h-5 mr-2" />
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
-                                    </motion.div>
-                                );
-                            })}
+                                                    <Button onClick={() => handleSubscribeClick(sub, selectedPlan)} size="lg" className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:-translate-y-1" disabled={!selectedPlan}>
+                                                        اشترك الآن
+                                                        <ArrowLeft className="w-5 h-5 mr-2" />
+                                                    </Button>
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    );
+                                })
+                            )}
                         </div>
                     </section>
                 </main>

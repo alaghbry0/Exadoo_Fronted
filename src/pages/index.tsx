@@ -3,7 +3,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { TonConnectButton, TonConnectUIProvider, THEME } from '@tonconnect/ui-react'
+import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
 import { Activity, BadgePercent, MessagesSquare, ArrowLeft, Target } from 'lucide-react'
 import Navbar from '../components/Navbar'
 // استيراد المكونات الرئيسية من نظام التصميم الخاص بك
@@ -129,7 +129,7 @@ const Home: React.FC = () => {
                 <div className="relative z-10">
                   <Target className="w-16 h-16 mx-auto mb-6 text-white/80" />
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    انضم إلينا اليوم وحقق أهدافك المالية!
+                    انضم إلينا اليوم وحقق دخل إضافي من التداول!
                   </h2>
                   <p className="text-lg mb-8 opacity-90 max-w-xl mx-auto">
                     ابدأ رحلتك نحو دخل إضافي من التداول مع خطط اشتراك مرنة ومناسبة للجميع.
