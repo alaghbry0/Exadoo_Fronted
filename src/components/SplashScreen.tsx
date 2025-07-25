@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence, useSpring, useTransform, useMotionValue } from 'framer-motion';
+import { motion, AnimatePresence, useSpring, useTransform, useMotionValue, Variants, MotionValue } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
@@ -25,12 +25,11 @@ const useLoadingSimulator = () => {
 
 // مكون الخلفية المتموجة (لا تغيير هنا)
 const WavyBackground = () => {
-    const waveVariants = {
+    const waveVariants: Variants = {
       initial: { d: "M0 50 C 150 150, 250 -50, 400 50" },
       animate: {
         d: "M0 50 C 150 -50, 250 150, 400 50",
         transition: { duration: 6, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
-
       },
     };
     return (
@@ -71,7 +70,7 @@ const SplashScreen = () => {
       setMessageIndex(prev => (prev + 1) % loadingMessages.length);
     }, CONFIG.MESSAGE_INTERVAL_MS); // <-- استخدام الثابت
     return () => clearInterval(messageInterval);
-  }, [CONFIG.MESSAGE_INTERVAL_MS]);
+  }, [CONFIG.MESSAGE_INTERVAL_MS, loadingMessages.length]);
 
   useEffect(() => {
     const unsubscribe = percent.on("change", (latest) => {
@@ -83,13 +82,13 @@ const SplashScreen = () => {
     return () => unsubscribe();
   }, [percent, CONFIG.EXIT_DELAY_MS]);
 
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const rotateX = useTransform(mouseY, [-150, 150], [7, -7]);
   const rotateY = useTransform(mouseX, [-150, 150], [-7, 7]);
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     mouseX.set(e.clientX - rect.left - rect.width / 2);
@@ -116,7 +115,7 @@ const SplashScreen = () => {
 
   const progressBarWidth = useTransform(percent, value => `${value}%`);
   // <-- التحسين 2: تحويل النسبة لقيمة صحيحة لاستخدامها في سمات الوصولية
-  const percentAsInt = useTransform(percent, value => Math.round(value));
+  const percentAsInt: MotionValue<number> = useTransform(percent, value => Math.round(value));
 
 
   return (
@@ -140,8 +139,8 @@ const SplashScreen = () => {
               style={{ width: progressBarWidth }}
               role="progressbar"
               aria-label="Loading progress"
-              aria-valuemin="0"
-              aria-valuemax="100"
+              aria-valuemin={0}
+              aria-valuemax={100}
               aria-valuenow={percentAsInt.get()}
             />
           </div>

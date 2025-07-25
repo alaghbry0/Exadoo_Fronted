@@ -130,7 +130,6 @@ const ShopComponent = () => {
   const {
   data: typesData,
   isFetching: isFetchingTypes, // <-- أضفنا هذه
-  isLoading: isInitialTypesLoading, // <-- أعدنا تسمية isLoading للتوضيح (اختياري)
   isError: typesError
 } = useQuery<ApiSubscriptionType[]>({
     queryKey: ['subscriptionTypes', selectedGroupId],
