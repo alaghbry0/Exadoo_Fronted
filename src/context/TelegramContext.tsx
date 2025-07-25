@@ -61,7 +61,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         }
         return;
       }
-      
+
       // --- الخطوة 2: تم العثور على SDK، الآن انتظر بيانات المستخدم ---
       if (isMounted) {
         console.log("✅ Telegram WebApp SDK found!");
@@ -86,7 +86,7 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         }
         return;
       }
-      
+
       // --- الخطوة 3: تم العثور على كل شيء، قم بتحديث الحالة ---
       if (isMounted) {
         console.log("✅ Telegram User Data Fetched Successfully:", user);

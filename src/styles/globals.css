@@ -35,26 +35,31 @@
   font-family: 'Almarai';
   font-weight: 300;
   src: url('/fonts/Almarai-Light.ttf') format('truetype');
+  font-display: swap;
 }
 @font-face {
   font-family: 'Almarai';
   font-weight: 400;
   src: url('/fonts/Almarai-Regular.ttf') format('truetype');
+  font-display: swap;
 }
 @font-face {
   font-family: 'Almarai';
   font-weight: 700;
   src: url('/fonts/Almarai-Bold.ttf') format('truetype');
+  font-display: swap;
 }
 @font-face {
   font-family: 'Almarai';
   font-weight: 800;
   src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype');
+  font-display: swap;
 }
 @font-face {
   font-family: 'Outfit';
   font-weight: 400;
   src: url('/fonts/Outfit-Regular.ttf') format('truetype');
+  font-display: swap;
 }
 @font-face {
   font-family: 'Outfit';
@@ -65,6 +70,7 @@
   font-family: 'Orlean';
   font-weight: 400;
   src: url('/fonts/Orlean-Regular.otf') format('opentype');
+  font-display: swap;
 }
 
 /* 4. مكونات مخصصة (Custom Components Layer) */
@@ -85,6 +91,11 @@
     background-origin: padding-box, border-box;
     border: 2px solid transparent;
   }
+
+  .bg-grid-pattern {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
 
   /* كلاسات الأزرار والإشعارات التي تستخدم @apply */
   .close-btn {

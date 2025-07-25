@@ -127,13 +127,20 @@ const ShopComponent = () => {
   // ====================================================================
   // تعديل 2: تحديث منطق استعلام الأنواع (Types) مع keepPreviousData
   // ====================================================================
-  const { data: typesData, isLoading: typesLoading, isError: typesError } = useQuery<ApiSubscriptionType[]>({
+  const {
+  data: typesData,
+  isFetching: isFetchingTypes, // <-- أضفنا هذه
+  isLoading: isInitialTypesLoading, // <-- أعدنا تسمية isLoading للتوضيح (اختياري)
+  isError: typesError
+} = useQuery<ApiSubscriptionType[]>({
     queryKey: ['subscriptionTypes', selectedGroupId],
     queryFn: () => getSubscriptionTypes(selectedGroupId),
     enabled: !!initialGroupSelected,
     staleTime: 5 * 60 * 1000,
+    // هذا الخيار يحافظ على البيانات القديمة ظاهرة حتى تصل الجديدة
+    // وهو ما يسبب المشكلة إذا لم نستخدم isFetching
     placeholderData: (previousData) => previousData,
-  });
+});
 
   const { data: plansData, isLoading: plansLoading, isError: plansError } = useQuery<ApiSubscriptionPlan[]>({ queryKey: ['subscriptionPlans', telegramId], queryFn: () => getSubscriptionPlans(telegramId), staleTime: 5 * 60 * 1000 });
 
@@ -313,10 +320,10 @@ const ShopComponent = () => {
                         {/* تعديل 4: منطق عرض البطاقات أو هياكل التحميل (Skeletons) */}
                         {/* ==================================================================== */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {typesLoading ? (
-                                // عند التحميل، اعرض 3 بطاقات هيكلية
-                                Array.from({ length: 3 }).map((_, index) => <CardSkeleton key={index} />)
-                            ) : subscriptions.length === 0 ? (
+                            {isFetchingTypes ? ( // <-- تصحيح: استخدم isFetchingTypes هنا
+        // أثناء جلب البيانات (أول مرة أو عند التبديل)، اعرض هياكل التحميل
+        Array.from({ length: 3 }).map((_, index) => <CardSkeleton key={index} />)
+    ) : subscriptions.length === 0 ? (
                                 // إذا لم يكن هناك تحميل ولا توجد اشتراكات، اعرض رسالة "لا توجد باقات"
                                 <div className="md:col-span-2 lg:col-span-3">
                                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 bg-white rounded-2xl shadow-sm border">

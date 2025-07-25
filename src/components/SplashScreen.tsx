@@ -1,262 +1,215 @@
 'use client';
 
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useSpring, useTransform, useMotionValue } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
-import { Spinner } from '../components/Spinner1';
-import { TrendingUp, BarChart3, LineChart, CandlestickChart } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 
-const LoadingPage = () => {
-  const shouldReduceMotion = useReducedMotion() ?? false;
-  const fadeDuration = shouldReduceMotion ? 1 : 3;
-  const [loadingPercent, setLoadingPercent] = useState(0);
-  const [loadingText, setLoadingText] = useState('جاري تحميل التطبيق');
+// الخطاف المساعد لمحاكاة التحميل (لا تغيير هنا)
+const useLoadingSimulator = () => {
+    const [percent, setPercent] = useState(0);
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setPercent(prev => {
+          if (prev >= 100) { clearInterval(interval); return 100; }
+          const remaining = 100 - prev;
+          const increment = prev < 70 ? 1 : Math.max(2, remaining * 0.05);
+          return Math.min(prev + increment, 100);
+        });
+      }, 70);
+      return () => clearInterval(interval);
+    }, []);
+    const smoothPercent = useSpring(percent, { stiffness: 120, damping: 40 });
+    return { percent: smoothPercent };
+};
+
+// مكون الخلفية المتموجة (لا تغيير هنا)
+const WavyBackground = () => {
+    const waveVariants = {
+      initial: { d: "M0 50 C 150 150, 250 -50, 400 50" },
+      animate: {
+        d: "M0 50 C 150 -50, 250 150, 400 50",
+        transition: { duration: 6, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
+
+      },
+    };
+    return (
+      <div className="absolute inset-0 z-[-1] flex items-center justify-center overflow-hidden">
+        <svg className="w-full h-[300px]" viewBox="0 0 400 100" preserveAspectRatio="none">
+          <motion.path fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary-700/10" variants={waveVariants} initial="initial" animate="animate" />
+          <motion.path fill="none" stroke="currentColor" strokeWidth="1.5" className="text-secondary-500/10" variants={waveVariants} initial="animate" animate="initial" />
+        </svg>
+      </div>
+    );
+};
+
+// ====================================================================
+//  مكون شاشة التحميل النهائي (مع كل التحسينات)
+// ====================================================================
+const SplashScreen = () => {
+  // <-- التحسين 1: تنظيم الثوابت
+  const CONFIG = {
+    MESSAGE_INTERVAL_MS: 2500,
+    EXIT_DELAY_MS: 800,
+    LOGO_PERSPECTIVE: '1000px',
+  };
+
+  const { percent } = useLoadingSimulator();
+  const [isDone, setIsDone] = useState(false);
+
+  const loadingMessages = [
+    'جارٍ بدء الاتصال بالخوادم...',
+    'تحميل بيانات المستخدم...',
+    'صقل وحدات البكسل النهائية...',
+    'نوشك على الانتهاء...',
+  ];
+
+  const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
-    const loadingTexts = [
-      'جاري تحميل التطبيق',
-      'إعداد الواجهة',
-      'تحميل البيانات',
-      'جاري تجهيز المحتوى',
-      'اكتمل التحميل'
-    ];
+    const messageInterval = setInterval(() => {
+      setMessageIndex(prev => (prev + 1) % loadingMessages.length);
+    }, CONFIG.MESSAGE_INTERVAL_MS); // <-- استخدام الثابت
+    return () => clearInterval(messageInterval);
+  }, [CONFIG.MESSAGE_INTERVAL_MS]);
 
-    const timer = setTimeout(() => {
-      const interval = setInterval(() => {
-        setLoadingPercent(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          const newPercent = prev + (100 - prev) * 0.1;
-          const textIndex = Math.min(
-            Math.floor(newPercent / 25),
-            loadingTexts.length - 1
-          );
-          setLoadingText(loadingTexts[textIndex]);
-          return newPercent;
-        });
-      }, 300);
+  useEffect(() => {
+    const unsubscribe = percent.on("change", (latest) => {
+      if (latest >= 100) {
+        const timer = setTimeout(() => setIsDone(true), CONFIG.EXIT_DELAY_MS); // <-- استخدام الثابت
+        return () => { clearTimeout(timer); unsubscribe(); }
+      }
+    });
+    return () => unsubscribe();
+  }, [percent, CONFIG.EXIT_DELAY_MS]);
 
-      return () => {
-        clearInterval(interval);
-        clearTimeout(timer);
-      };
-    }, 500);
+  const ref = useRef(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useTransform(mouseY, [-150, 150], [7, -7]);
+  const rotateY = useTransform(mouseX, [-150, 150], [-7, 7]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left - rect.width / 2);
+    mouseY.set(e.clientY - rect.top - rect.height / 2);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  // <-- التحسين 4: إضافة حركة خروج أفضل
+  const containerVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { staggerChildren: 0.25, delayChildren: 0.2 } },
+    exit: { opacity: 0, transition: { duration: 0.6, ease: 'easeOut', when: "afterChildren" } }
+  };
+
+  const itemVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.4, ease: [0.87, 0, 0.13, 1] } },
+  };
+
+  const progressBarWidth = useTransform(percent, value => `${value}%`);
+  // <-- التحسين 2: تحويل النسبة لقيمة صحيحة لاستخدامها في سمات الوصولية
+  const percentAsInt = useTransform(percent, value => Math.round(value));
+
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0, transition: { duration: fadeDuration } }}
-        className="fixed inset-0 min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-blue-900 to-blue-800 z-[9999]"
-        style={{
-    zIndex: 2147483643, // أعلى من ExchangePaymentModal
-    position: 'fixed',
-    isolation: 'isolate'
-  }}
-      >
-        {/* الخلفية مع الصورة الرئيسية */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden z-[9000]">
-          <Image
-            src="/background.jpg"
-            alt="Trading Background"
-            layout="fill"
-            objectFit="cover"
-            loading="eager"
-            priority
-          />
-        </div>
+      {!isDone && (
+        <motion.div
+          variants={containerVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="fixed inset-0 z-[100] flex h-screen w-screen flex-col items-center justify-center bg-slate-50"
+        >
+          <div className="absolute inset-0 z-[-1] bg-gradient-to-b from-white to-slate-50" />
+          <WavyBackground />
+          <div className="absolute inset-0 z-[-1] bg-gradient-radial from-transparent to-white" />
 
-        {/* تأثيرات الرسوم البيانية والحركة على الخلفية */}
-        <div className="absolute inset-0 overflow-hidden z-[9100]">
-          <div className="absolute inset-0 opacity-10">
+          {/* <-- التحسين 2: شريط التقدم الآن مع سمات الوصولية */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-primary-500/10">
             <motion.div
-              className="absolute top-[10%] left-[5%] text-white/20"
-              animate={{ y: [0, -10, 0], opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <LineChart size={120} strokeWidth={1} />
-            </motion.div>
-            <motion.div
-              className="absolute top-[40%] right-[15%] text-white/20"
-              animate={{ y: [0, 10, 0], opacity: [0.2, 0.3, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            >
-              <BarChart3 size={100} strokeWidth={1} />
-            </motion.div>
-            <motion.div
-              className="absolute bottom-[20%] left-[20%] text-white/20"
-              animate={{ y: [0, -5, 0], opacity: [0.1, 0.3, 0.1] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            >
-              <TrendingUp size={130} strokeWidth={1} />
-            </motion.div>
-            <motion.div
-              className="absolute bottom-[30%] right-[8%] text-white/20"
-              animate={{ y: [0, 8, 0], opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-            >
-              <CandlestickChart size={110} strokeWidth={1} />
-            </motion.div>
-
-            {/* خطوط الشبكة */}
-            {Array.from({ length: 10 }).map((_, index) => (
-              <>
-                <motion.div
-                  key={`horizontal-${index}`}
-                  className="absolute h-[1px] w-full bg-blue-400/10"
-                  style={{ top: `${(index + 1) * 10}%` }}
-                  animate={{ scaleX: [1, 1.05, 1], opacity: [0.05, 0.2, 0.05] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: index * 0.2 }}
-                />
-                <motion.div
-                  key={`vertical-${index}`}
-                  className="absolute w-[1px] h-full bg-blue-400/10"
-                  style={{ left: `${(index + 1) * 10}%` }}
-                  animate={{ scaleY: [1, 1.05, 1], opacity: [0.05, 0.15, 0.05] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
-                />
-              </>
-            ))}
+              className="h-1 bg-gradient-to-r from-primary-400 to-secondary-400"
+              style={{ width: progressBarWidth }}
+              role="progressbar"
+              aria-label="Loading progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={percentAsInt.get()}
+            />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-900/40 to-blue-800/60 backdrop-blur-sm" />
-        </div>
 
-        {/* المحتوى الرئيسي */}
-        <div className="relative z-[9999] w-full max-w-md px-4 flex flex-col items-center">
-          {/* الشعار */}
-          <motion.div
-            initial={{ scale: 0.8, y: 10 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 120, damping: 15 }}
-            className="mb-8 flex flex-col items-center gap-4"
-          >
-            <div className="relative">
+          <div className="flex flex-col items-center">
+            {/* <-- التحسين 3: إضافة حركة تنفس للشعار */}
+            <motion.div
+              ref={ref}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+              style={{ rotateX, rotateY, perspective: CONFIG.LOGO_PERSPECTIVE }}
+              variants={itemVariants}
+              animate={{
+                ...itemVariants.animate,
+                scale: [1, 1.03, 1],
+              }}
+              transition={{
+                  ...itemVariants.animate.transition,
+                  scale: { duration: 4, repeat: Infinity, ease: 'easeInOut' }
+              }}
+              className="relative w-36 h-36 flex items-center justify-center bg-white shadow-2xl shadow-primary-500/10 rounded-full overflow-hidden"
+            >
+              <Image src="/logo px_512px.png" alt="Exaado Logo" width={144} height={144} className="object-contain" priority />
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="relative w-24 h-24 flex items-center justify-center"
-              >
-                <Image
-                  src="/logo px_512px.png"
-                  alt="Exaado"
-                  width={96}
-                  height={96}
-                  className="object-contain drop-shadow-lg"
-                />
-                {!shouldReduceMotion && (
-                  <motion.div
-                    className="absolute inset-0 bg-blue-400/30 blur-xl rounded-full"
-                    animate={{ opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  />
-                )}
-              </motion.div>
-            </div>
+                className="absolute inset-0"
+                initial={{ x: '-130%' }}
+                animate={{ x: '130%' }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+                style={{
+                  background: 'linear-gradient(to right, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%)'
+                }}
+              />
+            </motion.div>
+
             <motion.h1
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-3xl font-bold text-white tracking-tight"
+              variants={itemVariants}
+              className="mt-8 text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-slate-800 to-slate-500"
             >
               Exaado
             </motion.h1>
-          </motion.div>
 
-          {/* مؤشر التحميل */}
-          <div className="relative h-40 mb-8 w-full flex items-center justify-center">
-            <Spinner className="w-16 h-16 text-white" />
-            {!shouldReduceMotion && (
-              <motion.div
-                className="absolute inset-0 bg-gradient-radial from-blue-400/20 to-transparent"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              />
-            )}
+            {/* <-- التحسين 2: إضافة سمات الوصولية للرسائل المتغيرة */}
+            <div className="relative mt-4 h-6 w-full max-w-xs text-center" aria-live="polite" aria-atomic="true">
+                <AnimatePresence mode="wait">
+                    <motion.p
+                        key={messageIndex}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.4 }}
+                        className="absolute inset-0 text-sm text-slate-500"
+                    >
+                        {loadingMessages[messageIndex]}
+                    </motion.p>
+                </AnimatePresence>
+            </div>
           </div>
 
-          {/* حالة التحميل */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="text-center space-y-4 w-full"
+          <motion.footer
+            variants={itemVariants}
+            className="absolute bottom-8 text-sm text-slate-400"
           >
-            <h2 className="text-xl font-semibold text-white leading-tight" dir="rtl">
-              {loadingText}
-            </h2>
-            <p className="text-blue-200 text-sm font-medium" dir="rtl">
-              {Math.round(loadingPercent)}%
-            </p>
-          </motion.div>
-
-          {/* شريط التقدم */}
-          <div className="mt-10 w-full">
-            <motion.div
-              className="w-full h-1.5 bg-blue-950/50 rounded-full overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-            >
-              <motion.div
-                className="h-full bg-gradient-to-r from-blue-400 via-blue-300 to-blue-200 relative"
-                initial={{ width: '0%' }}
-                animate={{ width: `${loadingPercent}%` }}
-                transition={{ duration: 3.5, ease: 'easeInOut' }}
-              >
-                {!shouldReduceMotion && (
-                  <motion.div
-                    className="absolute inset-0 bg-white/40"
-                    animate={{ left: ['-100%', '100%'] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                )}
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* تأثيرات خلفية */}
-        {!shouldReduceMotion && (
-          <>
-            <motion.div
-              className="absolute top-1/4 left-1/4 w-40 h-40 bg-blue-400/20 blur-3xl rounded-full z-[8500]"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity, delay: 0.2 }}
-            />
-            <motion.div
-              className="absolute bottom-1/3 right-1/4 w-32 h-32 bg-blue-200/20 blur-2xl rounded-full z-[8500]"
-              animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.1, 0.3, 0.1] }}
-              transition={{ duration: 3.5, repeat: Infinity, delay: 0.7 }}
-            />
-          </>
-        )}
-
-        {/* إمكانية الوصول */}
-        <div role="status" aria-live="polite" className="sr-only">
-          {loadingText} - {Math.round(loadingPercent)}%
-        </div>
-      </motion.div>
+            © {new Date().getFullYear()} Exaado
+          </motion.footer>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 };
 
-export default dynamic(() => Promise.resolve(LoadingPage), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-blue-900">
-      <div className="w-16 h-16 flex items-center justify-center">
-        <svg className="w-full h-full animate-spin" viewBox="0 0 50 50">
-          <circle cx="25" cy="25" r="20" stroke="#0077ff" strokeWidth="4" fill="none" />
-        </svg>
-      </div>
-    </div>
-  )
-});
+export default dynamic(() => Promise.resolve(SplashScreen), { ssr: false });
