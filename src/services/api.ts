@@ -78,8 +78,8 @@ export const getSubscriptionPlans = async (telegramId: string | null) => {
 
 
 
-export const getUserSubscriptions = async (telegramId: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/subscriptions?telegram_id=${telegramId}`);
+export const getUserSubscriptions = async (telegramId: string, page: number = 1) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/subscriptions?telegram_id=${telegramId}&page=${page}`);
     if (!res.ok) throw new Error('فشل في جلب الاشتراكات');
     return res.json();
 };

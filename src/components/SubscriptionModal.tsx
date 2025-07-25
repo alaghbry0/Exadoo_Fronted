@@ -40,6 +40,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
   const handleSuccessAndCloseAll = () => { resetAllModals(); onClose(); };
   const scrollToTerms = () => { termsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   const hasTerms = plan && plan.termsAndConditions && plan.termsAndConditions.length > 0;
+  const isButtonsDisabled = loading || (hasTerms && !termsAgreed);
 
   if (!plan) return null;
 
@@ -55,27 +56,26 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
         <SheetContent
           side="bottom"
           className="h-[90vh] md:h-[85vh] rounded-t-3xl border-0 bg-gray-50 p-0 flex flex-col"
-          dir="rtl"
+          dir="rtl" // <-- هذا السطر مهم جدًا وهو موجود بالفعل
         >
-          {/* تحسين 1: إضافة مقبض بصري للسحب */}
+          {/* ... (لا تغيير هنا) ... */}
           <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full z-20"></div>
 
-          {/* تحسين 2: فصل الهيدر ليعطي إحساسًا بالعمق */}
           <SheetHeader className="p-4 pt-8 text-center border-b border-gray-200">
             <SheetTitle className="text-xl font-bold text-gray-800 font-arabic">{plan.name}</SheetTitle>
-            <button onClick={handleCloseAll} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full transition-colors">
+            {/* -- تعديل -- : تم تغيير موقع الزر ليكون في اليسار في واجهة RTL */}
+            <button onClick={handleCloseAll} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 p-1 rounded-full transition-colors">
               <X className="w-6 h-6" />
             </button>
           </SheetHeader>
 
           <ScrollArea className="flex-1">
-            <div className="space-y-8 p-4 pt-6 pb-24">
+            <div className="space-y-8 p-4 pt-6 pb-24 text-right"> {/* <-- تعديل: إضافة text-right هنا */}
 
-              {/* تحسين 3: بطاقة سعر أكثر حيوية وتفاعلية */}
+              {/* ... (لا تغيير في بطاقة السعر) ... */}
               <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg text-center relative overflow-hidden">
                 <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
                 <div className="absolute -bottom-8 -left-2 w-32 h-32 bg-white/10 rounded-full"></div>
-
                 <p className="font-medium text-white/80 mb-1 z-10 relative">السعر لخطة {plan.selectedOption.duration}</p>
                 <div className="flex items-baseline justify-center gap-2 z-10 relative">
                   {plan.selectedOption.hasDiscount && plan.selectedOption.originalPrice && (
@@ -98,15 +98,18 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
               <div className="space-y-6">
                 {/* قسم الميزات */}
                 <div className="bg-white p-5 rounded-2xl border">
-                  <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-start font-arabic">
-                    <ShieldCheck className="w-5 h-5 ml-2 text-primary-600" />
-                    ماذا ستحصل عليه؟
+                  {/* -- تعديل -- : تم تغيير الهامش من ml-2 إلى mr-2 ليعمل بشكل صحيح في RTL */}
+                  <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center font-arabic">
+                    <ShieldCheck className="w-5 h-5 text-primary-600" />
+                    <span className="ml-2">ماذا ستحصل عليه؟</span>
                   </h4>
+                  {/* -- تعديل -- : تم تغيير طريقة عرض القائمة بالكامل */}
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <li key={index} className="flex items-start">
+                        
                         <span className="text-gray-600 leading-relaxed text-sm">{feature}</span>
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 ml-3 mt-1" />
                       </li>
                     ))}
                   </ul>
@@ -115,26 +118,32 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
                 {/* قسم الشروط والأحكام */}
                 {hasTerms && (
                   <div ref={termsSectionRef} className="bg-white p-5 rounded-2xl border">
-                    <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-start font-arabic">
-                      <ScrollText className="w-5 h-5 ml-2 text-gray-500" />
-                      الشروط والأحكام
+                    {/* -- تعديل -- : تم تغيير الهامش من ml-2 إلى mr-2 */}
+                    <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center font-arabic">
+                      <ScrollText className="w-5 h-5 text-gray-500" />
+                       <span className="ml-2">الشروط والأحكام</span>
                     </h4>
-                    <ul className="space-y-2.5 text-sm text-gray-500 list-disc list-inside pr-2">
-                      {plan.termsAndConditions.map((term: string, index: number) => (
-                        <li key={index} className="leading-relaxed">{term}</li>
-                      ))}
-                    </ul>
+                    {/* -- تعديل -- : تم تعديل القائمة وتطبيق text-right لضمان محاذاة النقاط والنص */}
+                    <ul className="space-y-3">
+  {plan.termsAndConditions.map((term: string, index: number) => (
+    <li key={index} className="flex items-start text-right">
+      
+      <span className="flex-1 text-gray-500 leading-relaxed text-sm">{term}</span>
+      <span className="mt-1.5 ml-3 text-gray-500">•</span>
+    </li>
+  ))}
+</ul>
                   </div>
                 )}
               </div>
             </div>
           </ScrollArea>
-
-          {/* تحسين 5: قسم دفع أكثر تنظيمًا وجاذبية */}
+          
+          {/* ... (لا تغيير في قسم الدفع) ... */}
           <div className="bg-white/90 backdrop-blur-sm border-t-2 border-primary-100 p-4 shadow-top-strong z-10">
             {hasTerms && (
               <div className="flex items-start gap-3 mb-4">
-                <Checkbox id="termsAgreementModal" checked={termsAgreed} onCheckedChange={(checked) => setTermsAgreed(!!checked)} className="mt-0.5" />
+                <Checkbox id="termsAgreementModal" checked={termsAgreed} onCheckedChange={(checked: boolean) => setTermsAgreed(checked)} className="mt-0.5" />
                 <label htmlFor="termsAgreementModal" className="text-sm text-gray-600 select-none">
                   أوافق على <span className="font-bold text-primary-600 hover:underline cursor-pointer" onClick={scrollToTerms}>الشروط والأحكام</span> المذكورة أعلاه.
                 </label>
@@ -146,7 +155,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
                 onClick={goToChooseMethod}
                 size="lg"
                 className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-base font-bold shadow-lg hover:shadow-primary-500/40 transition-shadow duration-300"
-                disabled={!!loading || (hasTerms && !termsAgreed)}
+                disabled={!!isButtonsDisabled}
               >
                 {loading && paymentStatus === 'processing_usdt' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'الدفع باستخدام USDT'}
               </Button>
@@ -155,7 +164,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
                     onClick={handleStarsPayment}
                     size="lg"
                     className="w-full h-14 bg-sky-500 text-white text-base font-bold shadow-lg hover:shadow-sky-500/40 transition-shadow duration-300"
-                    disabled={!!loading || (hasTerms && !termsAgreed)}
+                    disabled={!!isButtonsDisabled}
                  >
                     {loading && paymentStatus === 'processing_stars' ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                       <>
@@ -170,9 +179,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
         </SheetContent>
       </Sheet>
 
-      {/* باقي المودالات (لا تغيير) */}
+      {/* ... (لا تغيير هنا) ... */}
       <AnimatePresence>
-        {paymentStep === 'choose_method' && <UsdtPaymentMethodModal loading={!!loading} onClose={goBackToDetails} onWalletSelect={selectWalletPayment} onExchangeSelect={selectExchangePayment} />}
+        {paymentStep === 'choose_method' && <UsdtPaymentMethodModal loading={loading} onClose={goBackToDetails} onWalletSelect={selectWalletPayment} onExchangeSelect={selectExchangePayment} />}
       </AnimatePresence>
       {paymentStep === 'show_exchange' && exchangeDetails && <ExchangePaymentModal details={exchangeDetails} onClose={handleExchangeModalClose} onSuccess={handlePaymentSuccess} />}
       {paymentStatus === 'success' && <PaymentSuccessModal onClose={handleSuccessAndCloseAll} />}

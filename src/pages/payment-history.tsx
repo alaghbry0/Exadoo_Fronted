@@ -89,7 +89,7 @@ export default function PaymentHistory() {
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
       <div className="flex items-center mb-6">
-        <Button onClick={handleGoBack} color="gray" pill>
+        <Button onClick={handleGoBack} variant="ghost" size="icon" className="rounded-full">
           <FiArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>

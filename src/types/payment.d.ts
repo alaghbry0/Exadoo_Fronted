@@ -2,6 +2,8 @@
 export type PaymentStatus =
   | 'idle'
   | 'pending'
+  | 'usdt_pending'
+  | 'stars_pending'
   | 'processing'
   | 'processing_usdt'
   | 'processing_stars' 

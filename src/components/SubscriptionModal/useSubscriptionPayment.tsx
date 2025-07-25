@@ -322,7 +322,7 @@ export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: ()
 
   return {
     paymentStatus,
-    loading: !!loading,
+    loading,
     exchangeDetails,
     setExchangeDetails,
     isInitializing,
