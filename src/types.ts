@@ -17,6 +17,8 @@ export type UserProfile = {
 export interface SubChannelLink {
   name: string;
   link: string;
+  views?: number;
+  last_accessed?: string;
 }
 
 // ==================================================================

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useCallback, useRef, forwardRef, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useRef, forwardRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, RefreshCcw, Star, Package, ArrowUpRight, ChevronDown, Link as LinkIcon } from 'lucide-react';
 import { Subscription, SubChannelLink } from '@/types';
@@ -155,10 +155,10 @@ const SubscriptionItem = ({ sub, index }: { sub: Subscription; index: number }) 
     const sortedLinks = useMemo(() => {
         if (!sub.sub_channel_links) return [];
         try {
-            const parsed = typeof sub.sub_channel_links === 'string'
+            const parsed: SubChannelLink[] = typeof sub.sub_channel_links === 'string'
                 ? JSON.parse(sub.sub_channel_links)
                 : Array.isArray(sub.sub_channel_links) ? sub.sub_channel_links : [];
-            return parsed.sort((a, b) => calculateLinkRelevance(b) - calculateLinkRelevance(a));
+            return parsed.sort((a: SubChannelLink, b: SubChannelLink) => calculateLinkRelevance(b) - calculateLinkRelevance(a));
         } catch (error) {
             console.error("فشل في تحليل روابط القنوات الفرعية:", error);
             return [];

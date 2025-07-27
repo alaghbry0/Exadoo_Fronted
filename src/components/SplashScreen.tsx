@@ -1,5 +1,5 @@
 'use client';
-import { motion, AnimatePresence, useSpring, useTransform, useMotionValue, Variants, MotionValue } from 'framer-motion';
+import { motion, AnimatePresence, useSpring, useTransform, useMotionValue, Variants } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useState, useEffect, useRef, MouseEvent as ReactMouseEvent } from 'react';
@@ -104,7 +104,6 @@ const SplashScreen = () => {
   };
 
   const progressBarWidth = useTransform(percent, value => `${value}%`);
-  const percentAsInt: MotionValue<number> = useTransform(percent, value => Math.round(value));
 
   return (
     <AnimatePresence>
