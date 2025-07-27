@@ -131,9 +131,6 @@ const LinkCard = ({ channel }: { channel: SubChannelLink }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-gray-800 truncate">{channel.name}</h4>
-            <p className="text-xs text-gray-500 mt-1">
-              آخر دخول: {channel.last_accessed ? new Date(channel.last_accessed).toLocaleDateString('ar-EG') : 'غير معروف'}
-            </p>
           </div>
           <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
         </div>
