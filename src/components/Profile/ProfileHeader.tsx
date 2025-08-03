@@ -2,8 +2,7 @@
 import React, { useMemo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Clock, FileText, Award, Copy, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { User, FileText, Award, Copy, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 // --- دالة مساعدة للتحقق من رابط الصورة ---
@@ -30,26 +29,14 @@ interface ProfileHeaderProps {
   onPaymentHistoryClick?: () => void;
 }
 
-const DATE_OPTIONS: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
 
 export default function ProfileHeader({
   fullName = 'مستخدم بدون اسم',
   username = 'بدون معرف',
   profilePhoto,
-  joinDate,
   telegramId,
   onPaymentHistoryClick,
 }: ProfileHeaderProps) {
-
-    const formattedJoinDate = useMemo(() => {
-        if (!joinDate) return 'غير معروف';
-        try {
-          return new Date(joinDate).toLocaleDateString('ar-EG', DATE_OPTIONS);
-        } catch (error) {
-          console.error('Error formatting date:', error);
-          return 'تاريخ غير صالح';
-        }
-    }, [joinDate]);
 
     const avatarSrc = useMemo(
         () => getValidPhotoUrl(profilePhoto ?? null, '/logo.png'),
@@ -74,11 +61,11 @@ export default function ProfileHeader({
 
   return (
     // --- استخدام تدرج لوني حيوي مع نمط بصري خفيف ---
-    <div className="w-full bg-gradient-to-r from-primary-600 to-primary-500 rounded-b-3xl shadow-lg overflow-hidden relative font-arabic">
-      {/* خلفية بنمط بصري لإضافة عمق */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.07%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50 mix-blend-soft-light"></div>
+    <div className="w-full bg-gradient-to-br from-primary-900 to-primary-500 rounded-b-3xl shadow-lg overflow-hidden relative">
+      {/* طبقة نمط زخرفي (اختياري، يمكنك استبدال الرابط أو حذفه) */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSIxMDAiPgo8cmVjdCB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDAwMCI+PC9yZWN0Pgo8cGF0aCBkPSJNMjggNjZMMCA1MEwwIDMzTDI4IDE3TDU2IDMzTDU2IDUwTDI4IDY2TDI4IDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+CjxwYXRoIGQ9Ik0yOCAwTDI4IDM0TDAgNTBMMCA2M0wyOCA3OUw1NiA2M0w1NiA1MEwyOCAzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-10 pointer-events-none" />
 
-      <div className="relative pt-5 px-4 pb-6">
+      <div className="relative pt-5 px-4">
         {/* أزرار الإجراءات في الأعلى */}
         <div className="flex justify-between items-start">
             {/* إضافة حركة بسيطة للزر مع التحقق من وجود الدالة */}
@@ -109,54 +96,46 @@ export default function ProfileHeader({
         </div>
 
         {/* معلومات المستخدم الأساسية */}
-        <div className="mt-2 text-center">
-            {/* إضافة خلفية متدرجة للصورة الشخصية لجذب الانتباه */}
-            <div className="relative inline-block p-1 bg-gradient-to-tr from-white/30 to-white/10 rounded-full">
-              <div className={cn(
-                "w-24 h-24 rounded-full border-2 border-white/50 shadow-lg overflow-hidden",
-                "bg-primary-300" // لون احتياطي في حال عدم تحميل الصورة
-              )}>
-                <Image
-                  src={avatarSrc}
-                  alt={`صورة ${fullName || 'المستخدم'}`}
-                  width={96}
-                  height={96}
-                  className="object-cover w-full h-full"
-                  priority
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
-                />
+        <div className="px-4 pb-6 pt-2 text-center">
+        {/* الصورة الشخصية */}
+        <div className="relative inline-block">
+          <div className="w-24 h-24 rounded-full border-4 border-white/80 shadow-lg overflow-hidden bg-slate-700">
+            <Image
+              src={avatarSrc}
+              alt={`صورة ${fullName}`}
+              width={96}
+              height={96}
+              className="object-cover w-full h-full"
+              priority
+              onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
+            />
+          </div>
+        </div>
+
+        {/* معلومات المستخدم */}
+        <div className="mt-3 space-y-2">
+          <h1 className="text-2xl font-bold text-white text-shadow-sm">{fullName}</h1>
+          <div className="flex flex-col items-center justify-center gap-2 text-sm">
+            {username && (
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+                <User className="w-4 h-4 text-slate-300" />
+                <span className="text-slate-200 truncate max-w-[180px] text-sm">@{username}</span>
               </div>
-            </div>
-
-            <div className="mt-4">
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                {fullName || 'مستخدم'}
-              </h1>
-              <p className="text-primary-200">@{username || 'غير محدد'}</p>
-            </div>
-
-            <div className="mt-4 flex flex-col items-center justify-center gap-3">
-              {telegramId && (
-                <button
-                  onClick={handleCopyId}
-                  className="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-black/30 transition-colors group cursor-pointer active:scale-95"
-                  title="اضغط لنسخ المعرف"
-                >
-                  <span className="text-white/80 text-sm font-mono tracking-wider">
-                    ID: {telegramId}
-                  </span>
-                  <Copy className="w-4 h-4 text-primary-200 group-hover:text-white transition-colors" />
-                </button>
-              )}
-              {joinDate && (
-                <div className="flex items-center gap-1.5 text-white/70 text-xs">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>عضو منذ {formattedJoinDate}</span>
-                </div>
-              )}
-            </div>
+            )}
+            {telegramId && (
+              <button
+                onClick={handleCopyId}
+                className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors group cursor-pointer active:scale-95"
+                title="اضغط لنسخ المعرف"
+              >
+                <span className="text-slate-300 text-xs font-mono">ID: {telegramId}</span>
+                <Copy className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
+     </div>
   );
 }
