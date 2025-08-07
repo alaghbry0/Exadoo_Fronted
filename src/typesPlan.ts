@@ -92,7 +92,7 @@ export interface ApiSubscriptionPlan {
   telegram_stars_price: number;
   created_at: string;
   is_active: boolean;
-  discount_details: DiscountDetails | {};
+  discount_details: DiscountDetails | object;
 }
 
 // تعديل SubscriptionCard ليشمل group_id
@@ -114,5 +114,3 @@ export interface SubscriptionCard {
   group_id: number | null; // <-- إضافة مهمة
   terms_and_conditions: string[]; // أضفت هذا هنا لأنه منطقي أن يكون لكل نوع اشتراك شروطه
 }
-
-

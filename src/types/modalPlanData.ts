@@ -1,4 +1,5 @@
 // types/modalPlanData.ts
+import type { DiscountDetails } from '../typesPlan';
 
 export interface PlanOption {
   id: number;
@@ -8,6 +9,7 @@ export interface PlanOption {
   hasDiscount: boolean;
   telegramStarsPrice?: number;
   discountPercentage?: string;
+  discountDetails?: DiscountDetails;
 }
 
 export interface ModalPlanData {

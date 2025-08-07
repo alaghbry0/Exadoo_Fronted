@@ -150,7 +150,7 @@ const ShopComponent = () => {
           id: plan.id,
           duration: plan.name,
           price: plan.price.toString(),
-          originalPrice: plan.original_price,
+          originalPrice: plan.original_price ? Number(plan.original_price) : null,
           hasDiscount: plan.original_price != null && Number(plan.original_price) > Number(plan.price),
           discountPercentage: plan.original_price ? `${Math.round(((Number(plan.original_price) - Number(plan.price)) / Number(plan.original_price)) * 100)}` : undefined,
           telegramStarsPrice: plan.telegram_stars_price,
