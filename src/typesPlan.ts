@@ -75,17 +75,24 @@ export interface ApiSubscriptionType {
   sort_order: number; // <-- إضافة مهمة
 }
 
+export interface DiscountDetails {
+  discount_id: number;
+  discount_name: string | null;
+  has_limited_slots: boolean;
+  remaining_slots: number | null;
+}
 
 export interface ApiSubscriptionPlan {
   id: number;
   name: string;
   price: number;
-  original_price: number; // إضافة حقل السعر الأصلي
+  original_price: string | null;
   duration_days: number;
   subscription_type_id: number;
   telegram_stars_price: number;
   created_at: string;
   is_active: boolean;
+  discount_details: DiscountDetails | {};
 }
 
 // تعديل SubscriptionCard ليشمل group_id

@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+// ⭐ إضافة أيقونة جديدة
+import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight, Flame } from 'lucide-react'
 import { useTelegram } from '../context/TelegramContext'
 
 // --- استيراد أنواع البيانات الجديدة لتوافق المودال ---
@@ -23,7 +24,8 @@ import type { ModalPlanData, PlanOption as ModalPlanOption } from '@/types/modal
 import type {
   ApiSubscriptionType,
   ApiSubscriptionPlan,
-  ApiSubscriptionGroup
+  ApiSubscriptionGroup,
+  DiscountDetails // <-- استيراد النوع الجديد
 } from '../typesPlan'
 
 // --- تعريف هيكل البيانات الجديد للبطاقات داخل المكون ---
@@ -54,10 +56,6 @@ const getCardIcon = (type: ApiSubscriptionType): React.ElementType => {
     return iconMap['default'];
 };
 
-// ====================================================================
-// تعديل 1: إنشاء مكون بطاقة التحميل (Skeleton Card)
-// هذا المكون سيمثل شكل البطاقة أثناء جلب البيانات.
-// ====================================================================
 const CardSkeleton = () => (
     <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-md animate-pulse">
         <div className="flex flex-col items-center">
@@ -124,25 +122,21 @@ const ShopComponent = () => {
   // استعلامات البيانات
   const { data: groupsData, isLoading: groupsLoading, isError: groupsError } = useQuery<ApiSubscriptionGroup[]>({ queryKey: ['subscriptionGroups'], queryFn: getSubscriptionGroups, staleTime: 5 * 60 * 1000 });
 
-  // ====================================================================
-  // تعديل 2: تحديث منطق استعلام الأنواع (Types) مع keepPreviousData
-  // ====================================================================
   const {
   data: typesData,
-  isFetching: isFetchingTypes, // <-- أضفنا هذه
+  isFetching: isFetchingTypes,
   isError: typesError
 } = useQuery<ApiSubscriptionType[]>({
     queryKey: ['subscriptionTypes', selectedGroupId],
     queryFn: () => getSubscriptionTypes(selectedGroupId),
     enabled: !!initialGroupSelected,
     staleTime: 5 * 60 * 1000,
-    // هذا الخيار يحافظ على البيانات القديمة ظاهرة حتى تصل الجديدة
-    // وهو ما يسبب المشكلة إذا لم نستخدم isFetching
     placeholderData: (previousData) => previousData,
 });
 
   const { data: plansData, isLoading: plansLoading, isError: plansError } = useQuery<ApiSubscriptionPlan[]>({ queryKey: ['subscriptionPlans', telegramId], queryFn: () => getSubscriptionPlans(telegramId), staleTime: 5 * 60 * 1000 });
 
+  // ⭐ تعديل منطق useMemo لتمرير تفاصيل الخصم
   const subscriptions: Subscription[] = useMemo(() => {
     if (!typesData || !plansData) return [];
 
@@ -160,6 +154,10 @@ const ShopComponent = () => {
           hasDiscount: plan.original_price != null && Number(plan.original_price) > Number(plan.price),
           discountPercentage: plan.original_price ? `${Math.round(((Number(plan.original_price) - Number(plan.price)) / Number(plan.original_price)) * 100)}` : undefined,
           telegramStarsPrice: plan.telegram_stars_price,
+          // ⭐ تمرير تفاصيل الخصم إذا كانت موجودة
+          discountDetails: (plan.discount_details as DiscountDetails)?.has_limited_slots 
+                            ? (plan.discount_details as DiscountDetails) 
+                            : undefined,
         }));
 
         const CardIcon = getCardIcon(type);
@@ -247,10 +245,6 @@ const ShopComponent = () => {
       });
   };
 
-  // ====================================================================
-  // تعديل 3: تحديث منطق تحديد حالات التحميل والخطأ
-  // `initialLoading` للتحميل الأولي الكامل للصفحة فقط.
-  // ====================================================================
   const initialLoading = groupsLoading || (plansLoading && !plansData);
   const hasError = !!(groupsError || typesError || plansError);
 
@@ -261,7 +255,6 @@ const ShopComponent = () => {
                 <Navbar />
 
                 <main className="px-4 pb-20 flex-grow">
-                    {/* قسم Hero */}
                     <section className="pt-20 pb-16 text-center">
                         <div className="relative z-10 max-w-4xl mx-auto px-6">
                             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }} className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
@@ -277,13 +270,11 @@ const ShopComponent = () => {
                         </div>
                     </section>
 
-                    {/* فاصل */}
                     <div className="relative my-12 md:my-16 px-4">
                         <div className="absolute inset-0 flex items-center" aria-hidden="true"><div className="w-full border-t border-gray-200" /></div>
                         <div className="relative flex justify-center"><span className="bg-gray-50 px-4 text-primary-600"><Gem className="h-7 w-7" /></span></div>
                     </div>
 
-                    {/* ألسنة تبويب المجموعات */}
                     {(groupsData && groupsData.length > 1) && (
                         <section className="sticky top-[60px] z-30 bg-gray-50/80 backdrop-blur-sm pt-4 pb-3 -mt-12 mb-8">
                             <div className="container mx-auto px-4 relative">
@@ -313,17 +304,11 @@ const ShopComponent = () => {
                         </section>
                     )}
 
-                    {/* قسم عرض البطاقات */}
                     <section className="max-w-7xl mx-auto">
-                        {/* ==================================================================== */}
-                        {/* تعديل 4: منطق عرض البطاقات أو هياكل التحميل (Skeletons) */}
-                        {/* ==================================================================== */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {isFetchingTypes ? ( // <-- تصحيح: استخدم isFetchingTypes هنا
-        // أثناء جلب البيانات (أول مرة أو عند التبديل)، اعرض هياكل التحميل
-        Array.from({ length: 3 }).map((_, index) => <CardSkeleton key={index} />)
-    ) : subscriptions.length === 0 ? (
-                                // إذا لم يكن هناك تحميل ولا توجد اشتراكات، اعرض رسالة "لا توجد باقات"
+                            {isFetchingTypes ? (
+                                Array.from({ length: 3 }).map((_, index) => <CardSkeleton key={index} />)
+                            ) : subscriptions.length === 0 ? (
                                 <div className="md:col-span-2 lg:col-span-3">
                                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 bg-white rounded-2xl shadow-sm border">
                                         <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">لا توجد باقات متاحة حاليًا</h3>
@@ -331,7 +316,6 @@ const ShopComponent = () => {
                                     </motion.div>
                                 </div>
                             ) : (
-                                // في الحالة الطبيعية، اعرض بطاقات الاشتراكات
                                 subscriptions.map((sub, index) => {
                                     const selectedPlan = sub.plans.find(p => p.id === selectedPlanIds[sub.id]);
                                     if (!selectedPlan) return null;
@@ -371,6 +355,23 @@ const ShopComponent = () => {
                                                             <div className="h-6 flex items-center justify-center mt-2">
                                                                 {selectedPlan.hasDiscount && selectedPlan.discountPercentage && (<Badge variant="destructive" className="font-bold">خصم {selectedPlan.discountPercentage}%</Badge>)}
                                                             </div>
+
+                                                            {/* ⭐⭐⭐ إضافة عنصر الندرة هنا ⭐⭐⭐ */}
+                                                            <AnimatePresence>
+                                                              {selectedPlan.discountDetails && selectedPlan.discountDetails.remaining_slots !== null && selectedPlan.discountDetails.remaining_slots > 0 && (
+                                                                <motion.div
+                                                                  initial={{ opacity: 0, y: 10 }}
+                                                                  animate={{ opacity: 1, y: 0 }}
+                                                                  exit={{ opacity: 0, y: -10 }}
+                                                                  className="flex items-center justify-center gap-2 mt-3 text-amber-600"
+                                                                >
+                                                                  <Flame className="w-4 h-4" />
+                                                                  <p className="text-sm font-semibold">
+                                                                    فقط {selectedPlan.discountDetails.remaining_slots} مقاعد متبقية بهذا السعر!
+                                                                  </p>
+                                                                </motion.div>
+                                                              )}
+                                                            </AnimatePresence>
                                                         </div>
                                                     </div>
 
@@ -388,7 +389,6 @@ const ShopComponent = () => {
                     </section>
                 </main>
 
-                {/* المودال */}
                 <AnimatePresence>
                     {selectedPlanForModal && (
                         <SubscriptionModal
