@@ -36,7 +36,7 @@ const Home: React.FC = () => {
       <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic">
         <Navbar />
 
-        <main className="px-4 pb-20">
+        <main className="px-4 pb-8">
           {/* Hero Section */}
           <section className="relative pt-20 pb-24 text-center">
             <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-primary-50/50 to-transparent rounded-3xl mx-4"></div>

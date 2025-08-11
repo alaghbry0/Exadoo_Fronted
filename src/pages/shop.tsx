@@ -299,7 +299,7 @@ const ShopComponent = () => {
                                                       <CardIcon className="w-8 h-8 text-white" />
                                                     </div>
                                                     <h3 className="text-2xl font-bold text-gray-900">{sub.name}</h3>
-                                                    <p className="text-gray-500 text-sm h-10 px-2">{sub.tagline}</p>
+                                                     <p className="text-gray-500 text-sm min-h-10 px-2">{sub.tagline}</p>
                                                   </CardHeader>
                                                   <CardContent className="p-6 flex-1 flex flex-col justify-between">
                                                     <div>
@@ -317,7 +317,7 @@ const ShopComponent = () => {
                                                           </div>
                                                         </div>
                                                       )}
-                                                      <div className="text-center mb-6">
+                                                      <div className="text-center mb-3">
                                                         <div className="flex items-baseline justify-center gap-2">
                                                           {selectedPlan.hasDiscount && !isTieredDiscount && selectedPlan.originalPrice && ( <span className="text-xl font-medium text-gray-500 line-through"> ${Number(selectedPlan.originalPrice).toFixed(0)} </span> )}
                                                           <motion.div key={selectedPlan.price} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} >
@@ -332,7 +332,7 @@ const ShopComponent = () => {
                                                       {/* ================================================================= */}
                                                       {/* ============= 🔽🔽🔽 بداية التصحيح الرئيسي هنا 🔽🔽🔽 ============ */}
                                                       {/* ================================================================= */}
-                                                      <div className="h-auto min-h-[70px] flex flex-col items-center justify-center">
+                                                      <div className="h-auto  flex flex-col items-center justify-center">
                                                         <AnimatePresence mode="wait">
                                                           {isTieredDiscount ? (
                                                             <motion.div
@@ -402,11 +402,11 @@ const ShopComponent = () => {
 
                                                     </div>
                                                     {isTieredDiscount && ( <div className="mt-4 text-center"> <span className="inline-block px-3 py-1 text-xs font-bold text-orange-700 bg-orange-100 rounded-full"> عرض محدود </span> </div> )}
-                                                    <Button onClick={() => handleSubscribeClick(sub, selectedPlan)} size="lg" className={cn( "w-full relative overflow-hidden group mt-4", "bg-gradient-to-r from-primary-600 to-primary-700", "text-white px-8 py-4 rounded-2xl", "font-semibold text-lg", "shadow-xl shadow-primary-500/25", "transition-all duration-300", "hover:shadow-2xl hover:shadow-primary-500/30", "hover:-translate-y-1", "disabled:opacity-50 disabled:cursor-not-allowed" )} disabled={!selectedPlan}>
-                                                      <span className="absolute inset-0 bg-gradient-to-r from-primary-700 to-primary-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                    <Button onClick={() => handleSubscribeClick(sub, selectedPlan)} size="lg" className={cn( "w-full relative overflow-hidden group mt-4", "bg-gradient-to-r from-primary-500 to-primary-700", "text-white px-4 py-4 rounded-2xl", "font-semibold text-lg", "shadow-xl shadow-primary-300/25", "transition-all duration-300", "hover:shadow-2xl hover:shadow-primary-500/30", "hover:-translate-y-1", "disabled:opacity-50 disabled:cursor-not-allowed" )} disabled={!selectedPlan}>
+                                                      <span className="absolute inset-0 bg-gradient-to-r from-primary-300 to-primary-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                                       <span className="relative flex items-center justify-center gap-3">
                                                         <span>اشترك الآن</span>
-                                                        <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                                                        <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
                                                       </span>
                                                     </Button>
                                                   </CardContent>
