@@ -214,7 +214,7 @@ const ShopComponent = () => {
                     <Navbar />
 
                     <main className="px-4 pb-20 flex-grow">
-                    <section className="pt-20 pb-16 text-center">
+                    <section className="pt-20 pb- text-center">
                         <div className="relative z-10 max-w-4xl mx-auto px-6">
                             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }} className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                                 <span className="block text-primary-600">اختر الاشتراك الأنسب لك!</span>
@@ -362,7 +362,7 @@ const ShopComponent = () => {
                                                                     <div className="flex items-center gap-1 text-red-600">
                                                                       <TrendingUp className="w-4 h-4" />
                                                                       <span>
-                                                                        السعر بعد ذلك{" "}
+                                                                        بعد ذلك سيكون السعر {" "}
                                                                         <span className="font-bold text-lg">
                                                                           ${nextPrice.toFixed(0)}
                                                                         </span>
@@ -375,9 +375,9 @@ const ShopComponent = () => {
                                                               {/* ⭐ 2. منطق تثبيت السعر (مستقل) */}
                                                               {selectedPlan.discountDetails?.lock_in_price && (
                                                                 <div className="flex items-center justify-center gap-2 text-green-700 pt-2 border-t border-orange-200/60 mt-2">
-                                                                  <ShieldCheck className="w-4 h-4 text-green-600" />
+                                                                  <ShieldCheck className="w-4 h-4 text-green-600 animate-bounce" />
                                                                   <p className="text-sm font-medium">
-                                                                    سيتم تثبيت سعر اشتراكك
+                                                                   سيتم تثبيت سعر اشتراكك للشهور القادمة
                                                                   </p>
                                                                 </div>
                                                               )}
@@ -403,7 +403,7 @@ const ShopComponent = () => {
                                                     </div>
                                                     {isTieredDiscount && ( <div className="mt-4 text-center"> <span className="inline-block px-3 py-1 text-xs font-bold text-orange-700 bg-orange-100 rounded-full"> عرض محدود </span> </div> )}
                                                     <Button onClick={() => handleSubscribeClick(sub, selectedPlan)} size="lg" className={cn( "w-full relative overflow-hidden group mt-4", "bg-gradient-to-r from-primary-500 to-primary-700", "text-white px-4 py-4 rounded-2xl", "font-semibold text-lg", "shadow-xl shadow-primary-300/25", "transition-all duration-300", "hover:shadow-2xl hover:shadow-primary-500/30", "hover:-translate-y-1", "disabled:opacity-50 disabled:cursor-not-allowed" )} disabled={!selectedPlan}>
-                                                      <span className="absolute inset-0 bg-gradient-to-r from-primary-300 to-primary-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                      <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                                       <span className="relative flex items-center justify-center gap-3">
                                                         <span>اشترك الآن</span>
                                                         <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
