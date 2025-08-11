@@ -1,7 +1,5 @@
-// TelegramContext.tsx (النسخة المبسطة والمحسّنة)
 'use client';
-
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useUserStore } from "../stores/zustand/userStore";
 
 interface TelegramContextType {
@@ -18,99 +16,115 @@ const TelegramContext = createContext<TelegramContextType>({
   telegramId: null,
 });
 
+// إضافة ثوابت للوضع التجريبي
+const TEST_MODE = true; // تفعيل الوضع التجريبي في التطوير فقط
+const TEST_TELEGRAM_ID = "5113997418";
+
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const { setUserData, telegramId: contextTelegramId } = useUserStore();
+
+  const [isTelegramReady, setIsTelegramReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isTelegramApp, setIsTelegramApp] = useState(false);
-  const [isTelegramReady, setIsTelegramReady] = useState(false);
+  const isTelegramAppRef = useRef(false);
+  const retryTimeoutRef = useRef<number | null>(null);
+  const fetchTelegramUserDataRef = useRef<() => void>(() => {});
 
-  useEffect(() => {
-    // إذا كنا في بيئة الخادم، لا تفعل شيئًا
-    if (typeof window === 'undefined') {
-      console.log("🚫 Running on server, skipping Telegram SDK initialization.");
+  // ✅ مسح الـ timeout عند الحاجة
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      console.log("Clearing retry timeout...");
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
+
+  // ✅ آلية إعادة المحاولة
+  const retryInitDataFetch = useCallback(() => {
+    console.log("Retrying fetch in 1 second...");
+    retryTimeoutRef.current = window.setTimeout(() => {
+      fetchTelegramUserDataRef.current();
+    }, 1000);
+  }, []);
+
+  // ✅ جلب بيانات المستخدم من Telegram
+  const fetchTelegramUserData = useCallback(() => {
+    console.log("Fetching Telegram User Data...");
+
+    if (TEST_MODE) {
+      console.log("🔥 TEST MODE ACTIVATED - Using predefined user data");
+      const userData = {
+        telegramId: TEST_TELEGRAM_ID,
+        telegramUsername: "test_user",
+        fullName: "Test User",
+        photoUrl: null,
+        joinDate: null,
+      };
+
+      setUserData(userData);
+      setIsTelegramReady(true);
       setIsLoading(false);
       return;
     }
 
-    // متغير للتحقق مما إذا كان المكون لا يزال محملاً، لمنع تحديث الحالة بعد إلغاء التحميل
-    let isMounted = true;
+    console.log("isTelegramAppRef.current:", isTelegramAppRef.current);
 
-    const initializeTelegram = async () => {
-      console.log("🚀 Starting Telegram initialization process...");
+    const tg = window.Telegram?.WebApp;
+    if (!tg) {
+      console.log("Telegram WebApp not available");
+      retryInitDataFetch();
+      return;
+    }
 
-      const MAX_ATTEMPTS = 8;
-      const RETRY_DELAY_MS = 300;
-      let tg: TelegramWebApp | undefined;
+    tg.ready();
+    tg.expand();
 
-      // --- الخطوة 1: انتظار توفر Telegram SDK ---
-      for (let i = 0; i < MAX_ATTEMPTS; i++) {
-        if (window.Telegram?.WebApp) {
-          tg = window.Telegram.WebApp;
-          break;
-        }
-        // انتظر قليلاً قبل المحاولة مرة أخرى
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-      }
+    if (tg?.initDataUnsafe?.user) {
+      const user = tg.initDataUnsafe.user;
+      const userData = {
+        telegramId: user.id?.toString() || null,
+        telegramUsername: user.username || null,
+        fullName: `${user.first_name || ""} ${user.last_name || ""}`.trim() || null,
+        photoUrl: user.photo_url || null,
+        joinDate: null,
+      };
 
-      // إذا لم يتم العثور على SDK بعد كل المحاولات
-      if (!tg) {
-        if (isMounted) {
-          console.error("❌ Telegram SDK not found after multiple attempts. Assuming not in Telegram environment.");
-          setIsTelegramApp(false);
-          setIsLoading(false);
-        }
-        return;
-      }
-      
-      // --- الخطوة 2: تم العثور على SDK، الآن انتظر بيانات المستخدم ---
-      if (isMounted) {
-        console.log("✅ Telegram WebApp SDK found!");
-        setIsTelegramApp(true);
-        tg.ready(); // إخبار تيليجرام بأن التطبيق جاهز
-      }
+      console.log("✅ Telegram User Data Fetched:", userData);
 
-      let user;
-      for (let i = 0; i < MAX_ATTEMPTS; i++) {
-        if (tg.initDataUnsafe?.user?.id) {
-            user = tg.initDataUnsafe.user;
-            break;
-        }
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-      }
+      setUserData(userData);
+      setIsTelegramReady(true);
+      setIsLoading(false);
+      clearRetryTimeout();
+      return;
+    } else {
+      console.log("Telegram initDataUnsafe is missing user data.");
+    }
 
-      // إذا لم يتم العثور على بيانات المستخدم
-      if (!user) {
-        if (isMounted) {
-            console.error("❌ Failed to get user data from Telegram SDK after multiple attempts.");
-            setIsLoading(false); // توقف عن التحميل لأننا لا نستطيع المتابعة
-        }
-        return;
-      }
-      
-      // --- الخطوة 3: تم العثور على كل شيء، قم بتحديث الحالة ---
-      if (isMounted) {
-        console.log("✅ Telegram User Data Fetched Successfully:", user);
-        setUserData({
-          telegramId: user.id.toString(),
-          telegramUsername: user.username || null,
-          fullName: `${user.first_name || ""} ${user.last_name || ""}`.trim() || null,
-          photoUrl: user.photo_url || null,
-          joinDate: null,
-        });
-        setIsTelegramReady(true);
-        setIsLoading(false); // انتهت عملية التحميل بنجاح
-        tg.expand();
-      }
-    };
+    retryInitDataFetch();
+  }, [setUserData, clearRetryTimeout, retryInitDataFetch, setIsLoading, setIsTelegramReady]);
 
-    initializeTelegram();
+  // ✅ تحديث المرجع ليشير إلى الدالة الصحيحة
+  useEffect(() => {
+    fetchTelegramUserDataRef.current = fetchTelegramUserData;
+  }, [fetchTelegramUserData]);
 
-    // دالة التنظيف: تعمل عند إلغاء تحميل المكون
+  // ✅ تنفيذ عند تحميل المكون
+  useEffect(() => {
+    setTimeout(() => {
+      const isClientSideTelegramApp = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
+      setIsTelegramApp(isClientSideTelegramApp);
+      isTelegramAppRef.current = isClientSideTelegramApp;
+
+      console.log("Detected Telegram WebApp:", isClientSideTelegramApp);
+
+      fetchTelegramUserData();
+    }, 200);
+
     return () => {
-      isMounted = false;
-      console.log("🧹 TelegramProvider unmounted. Cleanup complete.");
+      console.log("Component unmounted, clearing retry timeout...");
+      clearRetryTimeout();
     };
-  }, [setUserData]); // setUserData من Zustand مستقرة ولا تتغير
+  }, [fetchTelegramUserData, clearRetryTimeout]);
 
   const value: TelegramContextType = {
     isTelegramReady,
@@ -133,3 +147,4 @@ export const useTelegram = () => {
   }
   return context;
 };
+

@@ -1,4 +1,3 @@
-// src/typesPlan.ts
 import React from 'react'
 
 export type NotificationType = 
@@ -27,16 +26,19 @@ export interface Notification {
   action?: ToastAction
 }
 
+// ⭐ --- التعديل الأول ---
+// سنجعل السعر نصًا ليتوافق مع الخادم والمكونات الأخرى
+// وسنعدل نوع نسبة الخصم إلى رقم
 export interface SubscriptionOption {
   id: number;
   duration: string;
-  price: number | string;
+  price: string; // تم التغيير إلى نص ليتوافق مع الخادم
   originalPrice?: number | null;
-  discountedPrice?: number;
-  discountPercentage?: number;
+  discountPercentage?: string; // تم التأكيد على أنه رقم
   hasDiscount: boolean;
   savings?: string;
   telegramStarsPrice: number;
+  discountDetails?: DiscountDetails;
 }
 
 
@@ -58,7 +60,6 @@ export interface ApiSubscriptionGroup {
   updated_at: string;
 }
 
-// تعديل ApiSubscriptionType ليشمل group_id
 export interface ApiSubscriptionType {
   id: number;
   name: string;
@@ -70,32 +71,42 @@ export interface ApiSubscriptionType {
   created_at: string;
   usp: string;
   is_recommended?: boolean;
-  terms_and_conditions: string[]; // تأكد أن هذا موجود، يبدو أنه مفقود من تعريفك الحالي
-  group_id: number | null; // <-- إضافة مهمة
-  sort_order: number; // <-- إضافة مهمة
+  terms_and_conditions: string[];
+  group_id: number | null;
+  sort_order: number;
+}
+
+// ⭐ --- التعديل الثاني ---
+// إضافة خاصية next_price التي كانت مفقودة
+export interface NextTierInfo {
+  message: string;
+  next_price?: string; // إضافة الخاصية المفقودة
 }
 
 export interface DiscountDetails {
   discount_id: number;
   discount_name: string | null;
-  has_limited_slots: boolean;
-  remaining_slots: number | null;
+  lock_in_price: boolean;
+  is_tiered: boolean;
+  has_limited_slots?: boolean;
+  remaining_slots?: number | null;
+  price_lock_duration_months?: number | null;
+  next_tier_info?: NextTierInfo | null;
 }
 
 export interface ApiSubscriptionPlan {
   id: number;
   name: string;
-  price: number;
+  price: string; 
   original_price: string | null;
   duration_days: number;
   subscription_type_id: number;
   telegram_stars_price: number;
   created_at: string;
   is_active: boolean;
-  discount_details: DiscountDetails | object;
+  discount_details: DiscountDetails | null; 
 }
 
-// تعديل SubscriptionCard ليشمل group_id
 export interface SubscriptionCard {
   id: number;
   name: string;
@@ -106,11 +117,11 @@ export interface SubscriptionCard {
   primaryColor: string;
   accentColor: string;
   image_url: string | null;
-  icon: React.ElementType;  // أو string إذا كنت ستستخدم اسم الأيقونة من API
+  icon: React.ElementType;
   backgroundPattern: string;
   usp: string;
   color: string;
   subscriptionOptions: SubscriptionOption[];
-  group_id: number | null; // <-- إضافة مهمة
-  terms_and_conditions: string[]; // أضفت هذا هنا لأنه منطقي أن يكون لكل نوع اشتراك شروطه
+  group_id: number | null;
+  terms_and_conditions: string[];
 }
