@@ -39,27 +39,38 @@ const AuthPrompt: React.FC = () => {
   const stopPolling = () => { if (pollTimerRef.current) { clearTimeout(pollTimerRef.current); pollTimerRef.current = null; } setPolling(false); pollDeadlineRef.current = null; };
   const startShortPolling = () => { if (polling) return; setPolling(true); pollDeadlineRef.current = Date.now() + POLL_TIMEOUT_MS; const tick = async () => { const data = await checkLinkStatus(); if (data && data.linked) { setToast('تم الربط بنجاح 🎉'); stopPolling(); setSheetOpen(false); return; } if (Date.now() > (pollDeadlineRef.current ?? 0)) { setToast('لم يصل تأكيد الربط بعد.'); stopPolling(); return; } pollTimerRef.current = window.setTimeout(tick, POLL_INTERVAL_MS) as unknown as number; }; pollTimerRef.current = window.setTimeout(tick, POLL_INTERVAL_MS) as unknown as number; };
   const handleLink = () => {
-    if (!telegramId) {
-      setToast('لم نتمكن من الحصول على معرف تيليجرام.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const redirect = encodeURIComponent(window.location.href);
-      const uname = encodeURIComponent(telegramUsername || '');
-      const deepLink = `https://app.exaado.com/link_telegram?id=${encodeURIComponent(telegramId)}&uname=${uname}&redirect_url=${redirect}`;
+  if (!telegramId) {
+    setToast('لم نتمكن من الحصول على معرف تيليجرام.');
+    return;
+  }
 
-      // ✨ تغيير: فتح الرابط في صفحة جديدة بدلاً من الصفحة الحالية
-      window.open(deepLink, '_blank', 'noopener,noreferrer');
+  setLoading(true);
+  try {
+    // 1) لا تستخدم redirect_url هنا إذا كان سيؤدي إلى redirect لاحق
+    // 2) IMPORTANT: هذه يجب أن تكون Universal/App Link تعمل مباشرة بدون تحويلات
+    const uname = encodeURIComponent(telegramUsername || '');
+    const universalDeepLink =
+      `https://your-app-linked-domain.com/link_telegram` +
+      `?id=${encodeURIComponent(telegramId)}` +
+      `&uname=${uname}`;
 
-      setTimeout(startShortPolling, 2000);
-    } catch {
-      setToast('حدث خطأ أثناء إنشاء الرابط.');
-    } finally {
-      // بما أن المستخدم لم يغادر الصفحة، يمكننا إيقاف التحميل بسرعة أكبر
-      setTimeout(() => setLoading(false), 1000);
+    // استخدم واجهة تيليجرام المخصّصة
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.openLink) {
+      tg.openLink(universalDeepLink); // ⟵ يسمح للنظام بتحويل الرابط إلى التطبيق الأصلي
+    } else {
+      // fallback
+      window.location.href = universalDeepLink;
     }
-  };
+
+    // ابدأ الـ polling بعد قليل
+    setTimeout(startShortPolling, 1500);
+  } catch {
+    setToast('حدث خطأ أثناء إنشاء الرابط.');
+  } finally {
+    setTimeout(() => setLoading(false), 800);
+  }
+};
   useEffect(() => { return () => stopPolling(); }, []);
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(null), 4000); return () => clearTimeout(id); }, [toast]);
 
