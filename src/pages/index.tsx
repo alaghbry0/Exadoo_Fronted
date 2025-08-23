@@ -36,6 +36,8 @@ const Home: React.FC = () => {
       <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic">
         <Navbar />
 
+
+
         <main className="px-4 pb-8">
           {/* Hero Section */}
           <section className="relative pt-20 pb-24 text-center">
@@ -49,6 +51,7 @@ const Home: React.FC = () => {
                 className="mb-8 flex justify-center">
                  <TonConnectButton className="!px-6 !py-2 !text-sm !rounded-xl" />
               </motion.div>
+
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -145,6 +148,7 @@ const Home: React.FC = () => {
             </div>
           </section>
         </main>
+
 
         {/* Footer */}
         <footer className="border-t border-gray-200 bg-white">

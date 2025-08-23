@@ -48,6 +48,7 @@ const Navbar: React.FC = () => {
         <span className="text-xl font-bold text-slate-800">Exaado</span>
       </Link>
 
+
       {/* القسم الأيمن: زر الإشعارات */}
       <div className="flex items-center gap-2">
         <button
