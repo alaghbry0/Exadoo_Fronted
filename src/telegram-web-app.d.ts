@@ -16,10 +16,15 @@ declare global {
         query_id?: string;
         auth_date?: number;
         hash?: string;
+        start_param?: string;
+        startapp?: string;
     }
 
     interface TelegramWebApp {
         initDataUnsafe?: InitDataUnsafe;
+        initData?: {
+            start_param?: string;
+        };
         showAlert?: (message: string, callback?: (() => void) | undefined) => void;
         ready: () => void;
         expand: () => void;
