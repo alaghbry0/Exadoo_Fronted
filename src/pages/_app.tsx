@@ -14,53 +14,7 @@ import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
 import { useNotificationStream } from '@/hooks/useNotificationStream'
-
-// ===================== startapp helpers =====================
-type StartAppParam = string | null;
-
-// خريطة الأسماء المختصرة -> مسارات داخل التطبيق
-const ROUTE_MAP: Record<string, string> = {
-  shop: '/shop',
-  plans: '/plans',
-  profile: '/profile',
-  notifications: '/notifications',
-};
-
-function readStartAppParam(): StartAppParam {
-  // من تيليجرام
-  const tg = window.Telegram?.WebApp;
-  const tgParam =
-    tg?.initDataUnsafe?.start_param ||
-    tg?.initDataUnsafe?.startapp ||
-    tg?.initData?.start_param;
-  if (tgParam && typeof tgParam === 'string') return tgParam;
-
-  // من المتصفح (للاختبار)
-  try {
-    const sp = new URLSearchParams(globalThis.location?.search || '');
-    return sp.get('startapp') || sp.get('tgWebAppStartParam') || sp.get('start_param');
-  } catch {
-    return null;
-  }
-}
-
-function resolveTargetRoute(startParam: string): string | null {
-  // شكل مباشر: startapp=shop
-  if (ROUTE_MAP[startParam]) return ROUTE_MAP[startParam];
-
-  // شكل route:/path?x=1 (معاملات مركّبة، مشفّرة)
-  if (startParam.startsWith('route:')) {
-    const raw = decodeURIComponent(startParam.slice('route:'.length));
-    if (raw.startsWith('/')) return raw; // أمان بسيط
-  }
-
-  // شكل namespaced: shop?plan=pro
-  const [name, qs] = startParam.split('?');
-  if (ROUTE_MAP[name]) return qs ? `${ROUTE_MAP[name]}?${qs}` : ROUTE_MAP[name];
-
-  return null;
-}
-// ============================================================
+import { readStartAppParam, resolveTargetRoute } from '@/lib/startapp'
 
 export interface NotificationExtraData {
   invite_link?: string | null;
