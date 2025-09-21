@@ -60,6 +60,20 @@ const consultationSlotSchema = z
 // Zod v4: record يحتاج keyType + valueType
 const JsonRecord = z.record(z.string(), z.unknown())
 
+type UnknownRecord = Record<string, unknown>
+
+const isRecord = (value: unknown): value is UnknownRecord =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const ensureArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : [])
+
+const wrapIfTruthy = (value: unknown): unknown[] => (value ? [value] : [])
+
+const getRecord = (value: unknown): UnknownRecord | undefined => (isRecord(value) ? value : undefined)
+
+const hasDataProperty = <T>(value: unknown): value is { data?: T } & UnknownRecord =>
+  isRecord(value) && 'data' in value
+
 const baseServiceSchema = z
   .object({
     id: z.union([z.string(), z.number()]).optional(),
@@ -151,8 +165,6 @@ const indicatorSchema = baseServiceSchema
     access_expires_at: z.string().optional(),
   })
   .passthrough()
-
-type UnknownRecord = Record<string, unknown>
 
 const WRAPPER_COLLECTION_KEYS = [
   'nodes',
@@ -273,13 +285,13 @@ const aggregatorPayloadSchema = z
 
 // لاحظ: سنستخدم payload مباشرة في استعلام aggregator بعد التحويل
 // بدل union {payload | {data: payload} }
-type MiniAppAggregatorPayload = z.infer<typeof aggregatorPayloadSchema>
-type MiniAppConsultation   = z.infer<typeof consultationSchema>
-type MiniAppCourse         = z.infer<typeof academyCourseSchema>
-type MiniAppEnrollment     = z.infer<typeof enrollmentSchema>
-type MiniAppTradingPanel   = z.infer<typeof tradingPanelSchema>
-type MiniAppSignalPack     = z.infer<typeof signalPackSchema>
-type MiniAppIndicator      = z.infer<typeof indicatorSchema>
+export type MiniAppAggregatorPayload = z.infer<typeof aggregatorPayloadSchema>
+export type MiniAppConsultation = z.infer<typeof consultationSchema>
+export type MiniAppCourse = z.infer<typeof academyCourseSchema>
+export type MiniAppEnrollment = z.infer<typeof enrollmentSchema>
+export type MiniAppTradingPanel = z.infer<typeof tradingPanelSchema>
+export type MiniAppSignalPack = z.infer<typeof signalPackSchema>
+export type MiniAppIndicator = z.infer<typeof indicatorSchema>
 
 interface FetchOptions {
   endpoint: string
@@ -322,15 +334,12 @@ async function miniAppFetch<T>(
     }
 
     // فحص آمن لحالة التغليف { data: ... }
-    const maybeWrapped = parsed.data as unknown
-    if (isPlainObject(maybeWrapped) && 'data' in maybeWrapped) {
-      const inner = maybeWrapped.data
-      if (typeof inner !== 'undefined') {
-        return inner as T
-      }
+    const maybeWrapped = parsed.data
+    if (hasDataProperty<T>(maybeWrapped) && typeof maybeWrapped.data !== 'undefined') {
+      return maybeWrapped.data
     }
 
-    return parsed.data as T
+    return parsed.data
   } finally {
     clearTimeout(timeout)
   }
@@ -455,7 +464,7 @@ function buildSnapshot(data: Partial<MiniAppAggregatorPayload>) {
       title: item.title ?? item.name,
       price: item.price ?? item.amount,
       duration_days: item.duration_days ?? item.duration ?? null,
-      expires_at: item.access_expires_at ?? item.expiry_date ?? null,
+      expires_at: item.access_expires_at ?? item.expiry_date ?? item.expires_at ?? null,
     })) ?? []
 
   return {

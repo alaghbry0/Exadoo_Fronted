@@ -3,6 +3,7 @@ import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
+import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
 const ToastProvider = ToastPrimitives.Provider
@@ -114,6 +115,39 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
+type ToastContent =
+  | string
+  | {
+      message: string
+      title?: string
+      duration?: number
+      action?: ToastActionElement
+    }
+
+const buildToastOptions = (
+  content: ToastContent,
+  variant: "default" | "destructive" = "default"
+) => {
+  if (typeof content === "string") {
+    return { description: content, variant }
+  }
+
+  const { message, title, duration, action } = content
+  return {
+    title,
+    description: message,
+    duration,
+    action,
+    variant,
+  }
+}
+
+const showToast = {
+  success: (content: ToastContent) => toast(buildToastOptions(content, "default")),
+  error: (content: ToastContent) => toast(buildToastOptions(content, "destructive")),
+  info: (content: ToastContent) => toast(buildToastOptions(content, "default")),
+}
+
 export {
   type ToastProps,
   type ToastActionElement,
@@ -124,4 +158,5 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
+  showToast,
 }
