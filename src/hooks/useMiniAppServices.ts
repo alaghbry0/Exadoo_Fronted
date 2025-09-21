@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { useQuery, UseQueryResult } from '@tanstack/react-query'
+import { useQuery, UseQueryResult, UseQueryOptions } from '@tanstack/react-query'
 import { z, ZodIssue } from 'zod'
 import { FEATURE_FLAG_NEW_SERVICES, TEST_MODE_ENABLED } from '@/utils/getIsLinked'
 import { useUserStore } from '@/stores/zustand/userStore'
@@ -16,7 +16,6 @@ export class MiniAppEnvError extends Error {
 
 export class MiniAppFetchError extends Error {
   public readonly status?: number
-
   constructor(message: string, status?: number) {
     super(message)
     this.name = 'MiniAppFetchError'
@@ -27,7 +26,6 @@ export class MiniAppFetchError extends Error {
 export class MiniAppValidationError extends Error {
   public readonly issues: ZodIssue[]
   public readonly endpoint: string
-
   constructor(endpoint: string, issues: ZodIssue[]) {
     super(`MiniApp service validation failed for ${endpoint}`)
     this.name = 'MiniAppValidationError'
@@ -41,9 +39,7 @@ const priceSchema = z.union([z.string(), z.number()]).transform((value) => {
     const trimmed = value.trim()
     return trimmed.length ? trimmed : undefined
   }
-  if (typeof value === 'number' && !Number.isNaN(value)) {
-    return value
-  }
+  if (typeof value === 'number' && !Number.isNaN(value)) return value
   return undefined
 })
 
@@ -60,6 +56,9 @@ const consultationSlotSchema = z
     status: z.string().optional(),
   })
   .passthrough()
+
+// Zod v4: record يحتاج keyType + valueType
+const JsonRecord = z.record(z.string(), z.unknown())
 
 const baseServiceSchema = z
   .object({
@@ -80,12 +79,12 @@ const baseServiceSchema = z
     end_date: z.string().optional(),
     expiry_date: z.string().optional(),
     expires_at: z.string().optional(),
-    promotion: z.union([z.string(), z.record(z.unknown())]).optional(),
-    promotions: z.array(z.union([z.string(), z.record(z.unknown())])).optional(),
-    tags: z.array(z.union([z.string(), z.record(z.unknown())])).optional(),
+    promotion: z.union([z.string(), JsonRecord]).optional(),
+    promotions: z.array(z.union([z.string(), JsonRecord])).optional(),
+    tags: z.array(z.union([z.string(), JsonRecord])).optional(),
     badge: z.string().optional(),
     badges: z.array(z.string()).optional(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: JsonRecord.optional(),
   })
   .passthrough()
 
@@ -164,83 +163,68 @@ const aggregatorPayloadSchema = z
   })
   .passthrough()
 
-const aggregatorResponseSchema = z.union([
-  aggregatorPayloadSchema,
-  z
-    .object({
-      data: aggregatorPayloadSchema,
-    })
-    .passthrough(),
-])
-
-export type MiniAppAggregatorPayload = z.infer<typeof aggregatorPayloadSchema>
-export type MiniAppConsultation = z.infer<typeof consultationSchema>
-export type MiniAppCourse = z.infer<typeof academyCourseSchema>
-export type MiniAppEnrollment = z.infer<typeof enrollmentSchema>
-export type MiniAppTradingPanel = z.infer<typeof tradingPanelSchema>
-export type MiniAppSignalPack = z.infer<typeof signalPackSchema>
-export type MiniAppIndicator = z.infer<typeof indicatorSchema>
+// لاحظ: سنستخدم payload مباشرة في استعلام aggregator بعد التحويل
+// بدل union {payload | {data: payload} }
+type MiniAppAggregatorPayload = z.infer<typeof aggregatorPayloadSchema>
+type MiniAppConsultation   = z.infer<typeof consultationSchema>
+type MiniAppCourse         = z.infer<typeof academyCourseSchema>
+type MiniAppEnrollment     = z.infer<typeof enrollmentSchema>
+type MiniAppTradingPanel   = z.infer<typeof tradingPanelSchema>
+type MiniAppSignalPack     = z.infer<typeof signalPackSchema>
+type MiniAppIndicator      = z.infer<typeof indicatorSchema>
 
 interface FetchOptions {
   endpoint: string
   path: string
   signal?: AbortSignal
+  transform?: (json: unknown) => unknown
 }
 
-async function miniAppFetch<T>(schema: z.ZodType<T>, { endpoint, path, signal }: FetchOptions): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_APPLICATION_URL
-  const secret = process.env.NEXT_PUBLIC_APPLICATION_SECRET
-
-  if (!baseUrl || !secret) {
-    throw new MiniAppEnvError('Mini app services require NEXT_PUBLIC_APPLICATION_URL and NEXT_PUBLIC_APPLICATION_SECRET env vars')
-  }
-
+/**
+ * fetch داخلي عبر proxy:
+ * - بدون متغيرات بيئة وهيدرز خاصة
+ * - يسمح بتمرير transform كي نطابق شكل الـ schema قبل التحقق
+ */
+async function miniAppFetch<T>(
+  schema: z.ZodType<T>,
+  { endpoint, path, signal, transform }: FetchOptions,
+): Promise<T> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => {
-    controller.abort()
-  }, 15_000)
+  const timeout = setTimeout(() => controller.abort(), 15_000)
 
   if (signal) {
-    if (signal.aborted) {
-      controller.abort()
-    } else {
-      signal.addEventListener(
-        'abort',
-        () => {
-          controller.abort()
-        },
-        { once: true },
-      )
-    }
+    if (signal.aborted) controller.abort()
+    else signal.addEventListener('abort', () => controller.abort(), { once: true })
   }
 
   try {
-    const target = new URL(path, baseUrl).toString()
-    const response = await fetch(target, {
-      method: 'GET',
-      headers: {
-        APPLICATION_URL: baseUrl,
-        secret: `Bearer ${secret}`,
-      },
-      signal: controller.signal,
-    })
-
+    const response = await fetch(path, { method: 'GET', signal: controller.signal })
     if (!response.ok) {
       throw new MiniAppFetchError(`Mini app services request failed for ${endpoint}`, response.status)
     }
 
     const json = await response.json()
-    const parsed = schema.safeParse(json)
+    // طبّق التحويل إن وُجد
+    const dataToParse = transform ? transform(json) : json
 
+    const parsed = schema.safeParse(dataToParse)
     if (!parsed.success) {
+      console.error(`[VALIDATION ERROR] Endpoint: ${endpoint}`, parsed.error.issues)
       throw new MiniAppValidationError(endpoint, parsed.error.issues)
     }
 
-    if ('data' in parsed.data && parsed.data?.data) {
-      return parsed.data.data as T
+    // فحص آمن لحالة التغليف { data: ... }
+    const maybeWrapped = parsed.data as unknown
+    if (
+      typeof maybeWrapped === 'object' &&
+      maybeWrapped !== null &&
+      'data' in (maybeWrapped as Record<string, unknown>) &&
+      (maybeWrapped as any).data
+    ) {
+      return (maybeWrapped as any).data as T
     }
 
-    return parsed.data
+    return parsed.data as T
   } finally {
     clearTimeout(timeout)
   }
@@ -283,14 +267,10 @@ async function persistSnapshot(data: Partial<MiniAppAggregatorPayload>) {
   try {
     const response = await fetch('/api/miniapp-snapshot', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date: snapshotDate, data: trimmed }),
     })
-    if (!response.ok) {
-      throw new Error(`Snapshot endpoint responded with ${response.status}`)
-    }
+    if (!response.ok) throw new Error(`Snapshot endpoint responded with ${response.status}`)
     persistedSnapshotDates.add(snapshotDate)
   } catch (error) {
     console.warn('[miniapp] Failed to persist snapshot', error)
@@ -317,7 +297,7 @@ function buildSnapshot(data: Partial<MiniAppAggregatorPayload>) {
       title: item.title ?? item.name,
       price: item.price ?? item.amount,
       duration: item.duration ?? item.period ?? null,
-      promotion: item.promotion ?? item.promotion_label ?? null,
+      promotion: (item as any).promotion ?? (item as any).promotion_label ?? null,
     })) ?? []
 
   const sanitizeEnrollments = (items?: MiniAppEnrollment[]) =>
@@ -345,22 +325,22 @@ function buildSnapshot(data: Partial<MiniAppAggregatorPayload>) {
     items?.map((item) => ({
       id: item.id ?? item.pack_id,
       title: item.title ?? item.name,
-      duration_days: item.duration_days ?? item.duration ?? null,
+      duration_days: (item as any).duration_days ?? (item as any).duration ?? null,
       subscription: item.subscription
         ? {
             status: item.subscription.status ?? null,
-            expiry_date: item.subscription.expiry_date ?? item.subscription.expires_at ?? null,
+            expiry_date: (item.subscription as any).expiry_date ?? (item.subscription as any).expires_at ?? null,
           }
         : null,
     })) ?? []
 
   const sanitizeIndicators = (items?: MiniAppIndicator[]) =>
     items?.map((item) => ({
-      id: item.id ?? item.indicator_id,
+      id: item.id ?? (item as any).indicator_id,
       title: item.title ?? item.name,
       price: item.price ?? item.amount,
-      duration_days: item.duration_days ?? item.duration ?? null,
-      expires_at: item.access_expires_at ?? item.expiry_date ?? null,
+      duration_days: (item as any).duration_days ?? (item as any).duration ?? null,
+      expires_at: (item as any).access_expires_at ?? (item as any).expiry_date ?? null,
     })) ?? []
 
   return {
@@ -381,24 +361,39 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
   }, [telegramId])
 
   const shouldFetch = FEATURE_FLAG_NEW_SERVICES && isLinked && enabled && Boolean(resolvedTelegramId)
+  const basePath = resolvedTelegramId ? `/api/services/${resolvedTelegramId}/` : null
 
-  const basePath = resolvedTelegramId ? `/api/getAllServicesForMiniApp/${resolvedTelegramId}/` : null
-
-  const aggregator = useQuery({
+  // ✅ عرّف النوع على useQuery مباشرةً — بدون casts
+  const aggregator = useQuery<MiniAppAggregatorPayload>({
     queryKey: ['miniapp', 'aggregator', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,
     queryFn: ({ signal }) =>
-      miniAppFetch(aggregatorResponseSchema, {
+      miniAppFetch(aggregatorPayloadSchema, {
         endpoint: 'aggregator',
         path: `${basePath}`,
         signal,
+        // شكّل Payload نهائي متوافق مع aggregatorPayloadSchema
+        transform: (json) => ({
+          consultancy: [((json as any)?.consultancy?.details)].filter(Boolean),
+          academy: [
+            ...(((json as any)?.academy?.all_courses) ?? []),
+            ...(((json as any)?.academy?.all_bundles) ?? []),
+          ],
+          my_enrollments: [
+            ...(((json as any)?.academy?.my_enrollments?.courses) ?? []),
+            ...(((json as any)?.academy?.my_enrollments?.bundles) ?? []),
+          ],
+          utility_trading_panels: ((json as any)?.utility_trading_panels?.subscriptions) ?? [],
+          signals: ((json as any)?.signals?.subscriptions) ?? [],
+          buy_indicators: ((json as any)?.buy_indicators?.subscriptions) ?? [],
+        }),
       }),
-  }) as UseQueryResult<MiniAppAggregatorPayload>
+  })
 
-  const consultancy = useQuery({
+  const consultancy = useQuery<MiniAppConsultation[]>({
     queryKey: ['miniapp', 'consultancy', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
@@ -409,10 +404,11 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'consultancy',
         path: `${basePath}consultancy`,
         signal,
+        transform: (json) => [((json as any)?.consultancy?.details)].filter(Boolean),
       }),
-  }) as UseQueryResult<MiniAppConsultation[]>
+  })
 
-  const enrollments = useQuery({
+  const enrollments = useQuery<MiniAppEnrollment[]>({
     queryKey: ['miniapp', 'enrollments', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
@@ -423,10 +419,14 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'my_enrollments',
         path: `${basePath}my_enrollments`,
         signal,
+        transform: (json) => [
+          ...(((json as any)?.academy?.my_enrollments?.courses) ?? []),
+          ...(((json as any)?.academy?.my_enrollments?.bundles) ?? []),
+        ],
       }),
-  }) as UseQueryResult<MiniAppEnrollment[]>
+  })
 
-  const academy = useQuery({
+  const academy = useQuery<MiniAppCourse[]>({
     queryKey: ['miniapp', 'academy', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
@@ -437,10 +437,14 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'academy',
         path: `${basePath}academy`,
         signal,
+        transform: (json) => [
+          ...(((json as any)?.academy?.all_courses) ?? []),
+          ...(((json as any)?.academy?.all_bundles) ?? []),
+        ],
       }),
-  }) as UseQueryResult<MiniAppCourse[]>
+  })
 
-  const tradingPanels = useQuery({
+  const tradingPanels = useQuery<MiniAppTradingPanel[]>({
     queryKey: ['miniapp', 'utility_trading_panels', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
@@ -451,10 +455,11 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'utility_trading_panels',
         path: `${basePath}utility_trading_panels`,
         signal,
+        transform: (json) => ((json as any)?.utility_trading_panels?.subscriptions) ?? [],
       }),
-  }) as UseQueryResult<MiniAppTradingPanel[]>
+  })
 
-  const signals = useQuery({
+  const signals = useQuery<MiniAppSignalPack[]>({
     queryKey: ['miniapp', 'signals', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
@@ -465,10 +470,11 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'signals',
         path: `${basePath}signals`,
         signal,
+        transform: (json) => ((json as any)?.signals?.subscriptions) ?? [],
       }),
-  }) as UseQueryResult<MiniAppSignalPack[]>
+  })
 
-  const indicators = useQuery({
+  const indicators = useQuery<MiniAppIndicator[]>({
     queryKey: ['miniapp', 'buy_indicators', resolvedTelegramId],
     enabled: shouldFetch && Boolean(basePath),
     staleTime: 4 * 60 * 1000,
@@ -479,19 +485,18 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'buy_indicators',
         path: `${basePath}buy_indicators`,
         signal,
+        transform: (json) => ((json as any)?.buy_indicators?.subscriptions) ?? [],
       }),
-  }) as UseQueryResult<MiniAppIndicator[]>
+  })
 
   const validationIssues = useMemo(() => {
     const issues: MiniAppValidationIssueSummary[] = []
-
     for (const query of [aggregator, consultancy, academy, enrollments, tradingPanels, signals, indicators]) {
       const error = query.error
       if (error instanceof MiniAppValidationError) {
         issues.push({ endpoint: error.endpoint, issues: error.issues.slice(0, 3) })
       }
     }
-
     return issues
   }, [aggregator, consultancy, academy, enrollments, tradingPanels, signals, indicators])
 
@@ -500,7 +505,15 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
   useEffect(() => {
     if (!shouldFetch) return
     if (snapshotRef.current) return
-    if (!aggregator.data && !consultancy.data && !academy.data && !enrollments.data && !tradingPanels.data && !signals.data && !indicators.data) {
+    if (
+      !aggregator.data &&
+      !consultancy.data &&
+      !academy.data &&
+      !enrollments.data &&
+      !tradingPanels.data &&
+      !signals.data &&
+      !indicators.data
+    ) {
       return
     }
     const payload: Partial<MiniAppAggregatorPayload> = {
@@ -513,7 +526,16 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
     }
     snapshotRef.current = true
     persistSnapshot(payload)
-  }, [shouldFetch, aggregator.data, consultancy.data, academy.data, enrollments.data, tradingPanels.data, signals.data, indicators.data])
+  }, [
+    shouldFetch,
+    aggregator.data,
+    consultancy.data,
+    academy.data,
+    enrollments.data,
+    tradingPanels.data,
+    signals.data,
+    indicators.data,
+  ])
 
   return {
     aggregator,

@@ -1,0 +1,9 @@
+# Ignore build output and node modules
+.next/
+node_modules/
+dist/
+build/
+
+# Ignore configuration files in the root
+*.js
+*.mjs
