@@ -17,6 +17,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
 import { useTelegram } from '../context/TelegramContext'
+import { MiniAppServicesHub } from '@/components/miniapp/MiniAppServicesHub'
+import { useMiniAppIsLinked } from '@/hooks/useMiniAppServices'
 
 import type { ModalPlanData } from '@/types/modalPlanData';
 import type {
@@ -105,6 +107,7 @@ const ShopComponent = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [initialGroupSelected, setInitialGroupSelected] = useState(false);
   const { telegramId } = useTelegram();
+  const isMiniAppLinked = useMiniAppIsLinked();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButtons, setShowScrollButtons] = useState({ left: false, right: false });
   const { data: groupsData, isLoading: groupsLoading, isError: groupsError } = useQuery<ApiSubscriptionGroup[]>({ queryKey: ['subscriptionGroups'], queryFn: getSubscriptionGroups, staleTime: 5 * 60 * 1000 });
@@ -229,6 +232,7 @@ const ShopComponent = () => {
                             </motion.div>
                         </div>
                     </section>
+                    <MiniAppServicesHub telegramId={telegramId} isLinked={isMiniAppLinked} />
                     <div className="max-w-7xl mx-auto">
                             <AuthPrompt />
                         </div>
