@@ -5,7 +5,7 @@ import { Cpu, RefreshCcw, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionCard } from './SectionCard'
-import { coerceDescription, coerceTitle, formatDate, formatPrice } from './utils'
+import { coerceDescription, coerceTitle, extractServiceLabels, formatDate, formatPrice } from './utils'
 import type { MiniAppTradingPanel } from '@/hooks/useMiniAppServices'
 
 interface TradingPanelsSectionProps {
@@ -84,6 +84,7 @@ export function TradingPanelsSection({ panels, isLoading, error, onRetry }: Trad
           const price = formatPrice(panel.price ?? panel.amount, panel.currency)
           const status = panel.subscription?.status ?? panel.status
           const expiry = formatDate(panel.subscription?.expiry_date ?? panel.subscription?.expires_at ?? panel.expiry_date ?? null)
+          const labels = extractServiceLabels(panel)
 
           return (
             <div key={`${panel.id ?? panel.plan_id ?? index}-${title}`} className="rounded-xl border border-slate-200/70 p-4">
@@ -95,11 +96,21 @@ export function TradingPanelsSection({ panels, isLoading, error, onRetry }: Trad
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600">
                 {price ? <span className="font-semibold text-primary-600">{price}</span> : <span>سعر مخصص</span>}
                 {status ? (
-                  <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">
-                    {status}
-                  </span>
+                  <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">{status}</span>
                 ) : null}
               </div>
+              {labels.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {labels.map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>تاريخ الانتهاء: {expiry ?? 'غير متوفر'}</span>

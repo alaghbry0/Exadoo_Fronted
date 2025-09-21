@@ -44,10 +44,18 @@ export function MiniAppServicesHub({ telegramId, isLinked }: MiniAppServicesHubP
   const counts = useMemo(() => {
     const consultationsCount = (consultancy.data ?? aggregator.data?.consultancy ?? []).length
     const coursesCount = (academy.data ?? aggregator.data?.academy ?? []).length
+    const panelsCount = (tradingPanels.data ?? aggregator.data?.utility_trading_panels ?? []).length
     const signalsCount = (signals.data ?? aggregator.data?.signals ?? []).length
     const indicatorsCount = (indicators.data ?? aggregator.data?.buy_indicators ?? []).length
-    return { consultationsCount, coursesCount, signalsCount, indicatorsCount }
-  }, [aggregator.data, consultancy.data, academy.data, signals.data, indicators.data])
+    return { consultationsCount, coursesCount, panelsCount, signalsCount, indicatorsCount }
+  }, [
+    aggregator.data,
+    consultancy.data,
+    academy.data,
+    tradingPanels.data,
+    signals.data,
+    indicators.data,
+  ])
 
   if (!services.featureEnabled) {
     return null
@@ -58,11 +66,11 @@ export function MiniAppServicesHub({ telegramId, isLinked }: MiniAppServicesHubP
   }
 
   const hasLoadedSomething =
-    Boolean(consultancy.data?.length) ||
-    Boolean(academy.data?.length) ||
-    Boolean(signals.data?.length) ||
-    Boolean(indicators.data?.length) ||
-    Boolean(tradingPanels.data?.length)
+    Boolean(consultancy.data?.length || aggregator.data?.consultancy?.length) ||
+    Boolean(academy.data?.length || aggregator.data?.academy?.length) ||
+    Boolean(signals.data?.length || aggregator.data?.signals?.length) ||
+    Boolean(indicators.data?.length || aggregator.data?.buy_indicators?.length) ||
+    Boolean(tradingPanels.data?.length || aggregator.data?.utility_trading_panels?.length)
 
   const aggregatedError = aggregator.error
   const envError = aggregatedError instanceof MiniAppEnvError ? aggregatedError : undefined
@@ -96,6 +104,9 @@ export function MiniAppServicesHub({ telegramId, isLinked }: MiniAppServicesHubP
                 </Badge>
                 <Badge variant="secondary" className="bg-primary-100 text-primary-700">
                   دورات: {counts.coursesCount}
+                </Badge>
+                <Badge variant="secondary" className="bg-primary-100 text-primary-700">
+                  منصات: {counts.panelsCount}
                 </Badge>
                 <Badge variant="secondary" className="bg-primary-100 text-primary-700">
                   إشارات: {counts.signalsCount}

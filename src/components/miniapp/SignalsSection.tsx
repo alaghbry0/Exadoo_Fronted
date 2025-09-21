@@ -5,7 +5,7 @@ import { RadioTower, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionCard } from './SectionCard'
-import { coerceDescription, coerceTitle, formatDate, formatPrice } from './utils'
+import { coerceDescription, coerceTitle, extractServiceLabels, formatDate, formatPrice } from './utils'
 import type { MiniAppSignalPack } from '@/hooks/useMiniAppServices'
 
 interface SignalsSectionProps {
@@ -97,6 +97,8 @@ export function SignalsSection({ signals, isLoading, error, onRetry }: SignalsSe
           const price = formatPrice(pack.price ?? pack.amount, pack.currency)
           const duration = getDuration(pack)
           const expiry = formatDate(pack.subscription?.expiry_date ?? pack.subscription?.expires_at ?? null)
+          const labels = extractServiceLabels(pack)
+          const status = pack.subscription?.status ?? pack.status
 
           return (
             <div key={`${pack.id ?? pack.pack_id ?? index}-${title}`} className="rounded-xl border border-slate-200/70 p-4">
@@ -109,6 +111,23 @@ export function SignalsSection({ signals, isLoading, error, onRetry }: SignalsSe
                 {price ? <span className="font-semibold text-primary-600">{price}</span> : <span>سعر متغير</span>}
                 <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-600">{duration}</span>
               </div>
+              {(status || labels.length) ? (
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                  {status ? (
+                    <span className="rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 font-semibold text-primary-700">
+                      {status}
+                    </span>
+                  ) : null}
+                  {labels.map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-600"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               <div className="mt-2 text-xs text-slate-500">
                 تاريخ انتهاء اشتراكك: {expiry ?? 'غير محدد'}
               </div>

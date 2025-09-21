@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { SectionCard } from './SectionCard'
-import { coerceDescription, coerceTitle, formatDate, formatPrice } from './utils'
+import { coerceDescription, coerceTitle, extractServiceLabels, formatDate, formatPrice } from './utils'
 import type { MiniAppCourse, MiniAppEnrollment } from '@/hooks/useMiniAppServices'
 
 interface CoursesSectionProps {
@@ -79,6 +79,8 @@ export function CoursesSection({ courses, enrollments, isLoading, error, onRetry
     const expiry = formatDate(enrollment.expiry_date ?? enrollment.end_date ?? null)
     const description =
       coerceDescription(enrollment.description ?? enrollment.summary) ?? 'استكمل تعلمك وابقَ على اطلاع بالمحتوى الجديد.'
+    const labels = extractServiceLabels(enrollment)
+    const status = enrollment.status ?? enrollment.enrollment_status
 
     return (
       <div key={`${enrollment.id ?? index}-${title}`} className="rounded-xl border border-slate-200/70 p-4">
@@ -89,6 +91,20 @@ export function CoursesSection({ courses, enrollments, isLoading, error, onRetry
           </div>
           {price ? <span className="text-sm font-semibold text-primary-600">{price}</span> : null}
         </div>
+        {(status || labels.length) ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {status ? (
+              <Badge variant="outline" className="border-primary-200 bg-primary-50 text-xs font-semibold text-primary-700">
+                {status}
+              </Badge>
+            ) : null}
+            {labels.map((label) => (
+              <Badge key={label} variant="secondary" className="bg-slate-100 text-xs text-slate-700">
+                {label}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
         <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
           <LibraryBig className="h-4 w-4" />
           <span>تاريخ الانتهاء: {expiry ?? 'غير محدد'}</span>
@@ -143,6 +159,8 @@ export function CoursesSection({ courses, enrollments, isLoading, error, onRetry
                   coerceDescription(course.description ?? course.summary) ?? 'اكتشف مهارات جديدة وطور من مستواك.'
                 const price = formatPrice(course.price ?? course.amount, course.currency)
                 const promotion = getPromotionLabel(course)
+                const labels = extractServiceLabels(course)
+                const status = course.status ?? course.enrollment_status
 
                 return (
                   <div key={`${course.id ?? course.course_id ?? index}-${title}`} className="rounded-xl border border-slate-200/70 p-4">
@@ -153,6 +171,23 @@ export function CoursesSection({ courses, enrollments, isLoading, error, onRetry
                       </div>
                       {price ? <span className="text-sm font-semibold text-primary-600">{price}</span> : null}
                     </div>
+                    {(status || labels.length) ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {status ? (
+                          <Badge
+                            variant="outline"
+                            className="border-primary-200 bg-primary-50 text-xs font-semibold text-primary-700"
+                          >
+                            {status}
+                          </Badge>
+                        ) : null}
+                        {labels.map((label) => (
+                          <Badge key={label} variant="secondary" className="bg-slate-100 text-xs text-slate-700">
+                            {label}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
                     {promotion ? (
                       <Badge variant="outline" className="mt-3 inline-flex items-center gap-1 text-xs">
                         <Sparkles className="h-3 w-3 text-primary-500" />

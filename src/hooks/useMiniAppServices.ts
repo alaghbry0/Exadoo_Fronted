@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { useQuery, UseQueryResult, UseQueryOptions } from '@tanstack/react-query'
+import { useQuery, UseQueryResult } from '@tanstack/react-query'
 import { z, ZodIssue } from 'zod'
 import { FEATURE_FLAG_NEW_SERVICES, TEST_MODE_ENABLED } from '@/utils/getIsLinked'
 import { useUserStore } from '@/stores/zustand/userStore'
@@ -152,6 +152,114 @@ const indicatorSchema = baseServiceSchema
   })
   .passthrough()
 
+type UnknownRecord = Record<string, unknown>
+
+const WRAPPER_COLLECTION_KEYS = [
+  'nodes',
+  'edges',
+  'items',
+  'list',
+  'values',
+  'results',
+  'entries',
+  'data',
+] as const
+
+const DEFAULT_UNWRAP_KEYS = [
+  'node',
+  'details',
+  'plan',
+  'service',
+  'course',
+  'bundle',
+  'pack',
+  'indicator',
+  'consultation',
+  'signal',
+] as const
+
+function isPlainObject(value: unknown): value is UnknownRecord {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function toRecord(value: unknown): UnknownRecord | undefined {
+  return isPlainObject(value) ? value : undefined
+}
+
+function normalizePricing(record: UnknownRecord): UnknownRecord {
+  const result: Record<string, unknown> = { ...record }
+  const pricing = result.pricing
+  if (isPlainObject(pricing)) {
+    const pricingRecord = pricing as Record<string, unknown>
+    if (result.amount == null && pricingRecord.amount != null) {
+      result.amount = pricingRecord.amount
+    }
+    if (result.price == null && pricingRecord.price != null) {
+      result.price = pricingRecord.price
+    }
+    if (result.currency == null && pricingRecord.currency != null) {
+      result.currency = pricingRecord.currency
+    }
+  }
+  return result
+}
+
+function mergePreferred(record: UnknownRecord, additionalKeys: string[] = []): UnknownRecord {
+  const result = normalizePricing(record)
+  const unwrapKeys = new Set<string>([...DEFAULT_UNWRAP_KEYS, ...additionalKeys])
+
+  for (const key of unwrapKeys) {
+    const value = result[key]
+    if (isPlainObject(value)) {
+      Object.assign(result, value)
+    }
+  }
+
+  for (const key of WRAPPER_COLLECTION_KEYS) {
+    if (key in result && (isPlainObject(result[key]) || Array.isArray(result[key]))) {
+      delete result[key]
+    }
+  }
+
+  return normalizePricing(result)
+}
+
+function flattenServiceCollection(value: unknown, additionalKeys: string[] = []): UnknownRecord[] {
+  if (value == null) return []
+
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => flattenServiceCollection(entry, additionalKeys))
+  }
+
+  if (!isPlainObject(value)) {
+    return []
+  }
+
+  const base: Record<string, unknown> = { ...value }
+  const nestedResults: UnknownRecord[] = []
+
+  for (const key of WRAPPER_COLLECTION_KEYS) {
+    const nested = value[key]
+    if (!nested) continue
+    const flattened = flattenServiceCollection(nested, additionalKeys)
+    if (!flattened.length) continue
+    for (const entry of flattened) {
+      nestedResults.push(mergePreferred({ ...base, ...entry }, additionalKeys))
+    }
+  }
+
+  if (nestedResults.length) {
+    return nestedResults
+  }
+
+  return [mergePreferred(base, additionalKeys)]
+}
+
+function extractServices<T>(value: unknown, options?: { preferKeys?: string[] }): T[] {
+  const preferKeys = options?.preferKeys ?? []
+  return flattenServiceCollection(value, preferKeys).map((item) => item as T)
+}
+
 const aggregatorPayloadSchema = z
   .object({
     consultancy: z.array(consultationSchema).optional(),
@@ -215,13 +323,11 @@ async function miniAppFetch<T>(
 
     // فحص آمن لحالة التغليف { data: ... }
     const maybeWrapped = parsed.data as unknown
-    if (
-      typeof maybeWrapped === 'object' &&
-      maybeWrapped !== null &&
-      'data' in (maybeWrapped as Record<string, unknown>) &&
-      (maybeWrapped as any).data
-    ) {
-      return (maybeWrapped as any).data as T
+    if (isPlainObject(maybeWrapped) && 'data' in maybeWrapped) {
+      const inner = maybeWrapped.data
+      if (typeof inner !== 'undefined') {
+        return inner as T
+      }
     }
 
     return parsed.data as T
@@ -297,7 +403,16 @@ function buildSnapshot(data: Partial<MiniAppAggregatorPayload>) {
       title: item.title ?? item.name,
       price: item.price ?? item.amount,
       duration: item.duration ?? item.period ?? null,
-      promotion: (item as any).promotion ?? (item as any).promotion_label ?? null,
+      promotion: (() => {
+        if (typeof item.promotion === 'string' && item.promotion.trim()) return item.promotion
+        if (typeof item.promotion_label === 'string' && item.promotion_label.trim()) return item.promotion_label
+        if (Array.isArray(item.promotions) && item.promotions.length) {
+          const first = item.promotions[0]
+          if (typeof first === 'string' && first.trim()) return first
+          if (isPlainObject(first) && typeof first.label === 'string' && first.label.trim()) return first.label
+        }
+        return null
+      })(),
     })) ?? []
 
   const sanitizeEnrollments = (items?: MiniAppEnrollment[]) =>
@@ -325,22 +440,22 @@ function buildSnapshot(data: Partial<MiniAppAggregatorPayload>) {
     items?.map((item) => ({
       id: item.id ?? item.pack_id,
       title: item.title ?? item.name,
-      duration_days: (item as any).duration_days ?? (item as any).duration ?? null,
+      duration_days: item.duration_days ?? item.duration ?? null,
       subscription: item.subscription
         ? {
             status: item.subscription.status ?? null,
-            expiry_date: (item.subscription as any).expiry_date ?? (item.subscription as any).expires_at ?? null,
+            expiry_date: item.subscription.expiry_date ?? item.subscription.expires_at ?? null,
           }
         : null,
     })) ?? []
 
   const sanitizeIndicators = (items?: MiniAppIndicator[]) =>
     items?.map((item) => ({
-      id: item.id ?? (item as any).indicator_id,
+      id: item.id ?? item.indicator_id,
       title: item.title ?? item.name,
       price: item.price ?? item.amount,
-      duration_days: (item as any).duration_days ?? (item as any).duration ?? null,
-      expires_at: (item as any).access_expires_at ?? (item as any).expiry_date ?? null,
+      duration_days: item.duration_days ?? item.duration ?? null,
+      expires_at: item.access_expires_at ?? item.expiry_date ?? null,
     })) ?? []
 
   return {
@@ -376,20 +491,43 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         path: `${basePath}`,
         signal,
         // شكّل Payload نهائي متوافق مع aggregatorPayloadSchema
-        transform: (json) => ({
-          consultancy: [((json as any)?.consultancy?.details)].filter(Boolean),
-          academy: [
-            ...(((json as any)?.academy?.all_courses) ?? []),
-            ...(((json as any)?.academy?.all_bundles) ?? []),
-          ],
-          my_enrollments: [
-            ...(((json as any)?.academy?.my_enrollments?.courses) ?? []),
-            ...(((json as any)?.academy?.my_enrollments?.bundles) ?? []),
-          ],
-          utility_trading_panels: ((json as any)?.utility_trading_panels?.subscriptions) ?? [],
-          signals: ((json as any)?.signals?.subscriptions) ?? [],
-          buy_indicators: ((json as any)?.buy_indicators?.subscriptions) ?? [],
-        }),
+        transform: (json) => {
+          const data = toRecord(json) ?? {}
+          const academyValue = data['academy']
+          const academyData = toRecord(academyValue) ?? {}
+          const myEnrollmentsValue = academyData['my_enrollments']
+          const myEnrollmentsData = toRecord(myEnrollmentsValue) ?? {}
+          const tradingPanelsValue = data['utility_trading_panels']
+          const tradingPanelsData = toRecord(tradingPanelsValue)
+          const signalsValue = data['signals']
+          const signalsData = toRecord(signalsValue)
+          const indicatorsValue = data['buy_indicators']
+          const indicatorsData = toRecord(indicatorsValue)
+
+          return {
+            consultancy: extractServices(data['consultancy'], { preferKeys: ['details'] }),
+            academy: [
+              ...extractServices(academyData['all_courses'] ?? academyValue, { preferKeys: ['details', 'course'] }),
+              ...extractServices(academyData['all_bundles'], { preferKeys: ['details', 'bundle'] }),
+            ],
+            my_enrollments: [
+              ...extractServices(myEnrollmentsData['courses'] ?? myEnrollmentsValue, {
+                preferKeys: ['details', 'course'],
+              }),
+              ...extractServices(myEnrollmentsData['bundles'], { preferKeys: ['details', 'bundle'] }),
+            ],
+            utility_trading_panels: extractServices(
+              tradingPanelsData?.['subscriptions'] ?? tradingPanelsValue,
+              { preferKeys: ['details', 'plan'] },
+            ),
+            signals: extractServices(signalsData?.['subscriptions'] ?? signalsValue, {
+              preferKeys: ['details', 'service', 'signal'],
+            }),
+            buy_indicators: extractServices(indicatorsData?.['subscriptions'] ?? indicatorsValue, {
+              preferKeys: ['details', 'indicator'],
+            }),
+          }
+        },
       }),
   })
 
@@ -404,7 +542,10 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'consultancy',
         path: `${basePath}consultancy`,
         signal,
-        transform: (json) => [((json as any)?.consultancy?.details)].filter(Boolean),
+        transform: (json) => {
+          const root = toRecord(json) ?? {}
+          return extractServices(root['consultancy'] ?? json, { preferKeys: ['details'] })
+        },
       }),
   })
 
@@ -419,10 +560,18 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'my_enrollments',
         path: `${basePath}my_enrollments`,
         signal,
-        transform: (json) => [
-          ...(((json as any)?.academy?.my_enrollments?.courses) ?? []),
-          ...(((json as any)?.academy?.my_enrollments?.bundles) ?? []),
-        ],
+        transform: (json) => {
+          const rootRecord = toRecord(json)
+          if (!rootRecord) {
+            return extractServices(json, { preferKeys: ['details', 'course'] })
+          }
+          const academy = toRecord(rootRecord['academy']) ?? {}
+          const enrollmentsRoot = toRecord(academy['my_enrollments']) ?? {}
+          return [
+            ...extractServices(enrollmentsRoot['courses'], { preferKeys: ['details', 'course'] }),
+            ...extractServices(enrollmentsRoot['bundles'], { preferKeys: ['details', 'bundle'] }),
+          ]
+        },
       }),
   })
 
@@ -437,10 +586,17 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'academy',
         path: `${basePath}academy`,
         signal,
-        transform: (json) => [
-          ...(((json as any)?.academy?.all_courses) ?? []),
-          ...(((json as any)?.academy?.all_bundles) ?? []),
-        ],
+        transform: (json) => {
+          const rootRecord = toRecord(json)
+          if (!rootRecord) {
+            return extractServices(json, { preferKeys: ['details', 'course'] })
+          }
+          const academy = toRecord(rootRecord['academy']) ?? {}
+          return [
+            ...extractServices(academy['all_courses'] ?? academy, { preferKeys: ['details', 'course'] }),
+            ...extractServices(academy['all_bundles'], { preferKeys: ['details', 'bundle'] }),
+          ]
+        },
       }),
   })
 
@@ -455,7 +611,16 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'utility_trading_panels',
         path: `${basePath}utility_trading_panels`,
         signal,
-        transform: (json) => ((json as any)?.utility_trading_panels?.subscriptions) ?? [],
+        transform: (json) => {
+          const rootRecord = toRecord(json)
+          if (!rootRecord) {
+            return extractServices(json, { preferKeys: ['details', 'plan'] })
+          }
+          const panelsRoot = toRecord(rootRecord['utility_trading_panels']) ?? rootRecord
+          return extractServices(panelsRoot['subscriptions'] ?? panelsRoot, {
+            preferKeys: ['details', 'plan'],
+          })
+        },
       }),
   })
 
@@ -470,7 +635,16 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'signals',
         path: `${basePath}signals`,
         signal,
-        transform: (json) => ((json as any)?.signals?.subscriptions) ?? [],
+        transform: (json) => {
+          const rootRecord = toRecord(json)
+          if (!rootRecord) {
+            return extractServices(json, { preferKeys: ['details', 'service', 'signal'] })
+          }
+          const signalsRoot = toRecord(rootRecord['signals']) ?? rootRecord
+          return extractServices(signalsRoot['subscriptions'] ?? signalsRoot, {
+            preferKeys: ['details', 'service', 'signal'],
+          })
+        },
       }),
   })
 
@@ -485,7 +659,16 @@ export function useMiniAppServices({ telegramId, isLinked, enabled = true }: Use
         endpoint: 'buy_indicators',
         path: `${basePath}buy_indicators`,
         signal,
-        transform: (json) => ((json as any)?.buy_indicators?.subscriptions) ?? [],
+        transform: (json) => {
+          const rootRecord = toRecord(json)
+          if (!rootRecord) {
+            return extractServices(json, { preferKeys: ['details', 'indicator'] })
+          }
+          const indicatorsRoot = toRecord(rootRecord['buy_indicators']) ?? rootRecord
+          return extractServices(indicatorsRoot['subscriptions'] ?? indicatorsRoot, {
+            preferKeys: ['details', 'indicator'],
+          })
+        },
       }),
   })
 

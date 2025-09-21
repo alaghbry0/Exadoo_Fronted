@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { SectionCard } from './SectionCard'
-import { coerceDescription, coerceTitle, formatPrice, formatTimeRange } from './utils'
+import { coerceDescription, coerceTitle, extractServiceLabels, formatPrice, formatTimeRange } from './utils'
 import type { MiniAppConsultation } from '@/hooks/useMiniAppServices'
 
 interface ConsultationsSectionProps {
@@ -114,6 +114,8 @@ export function ConsultationsSection({ consultations, isLoading, error, onRetry 
           const description =
             coerceDescription(consultation.description ?? consultation.summary) ?? 'استكشف خبرات مستشارينا في جلسة مخصصة لك.'
           const price = formatPrice(consultation.price ?? consultation.amount, consultation.currency)
+          const labels = extractServiceLabels(consultation)
+          const status = consultation.status ?? consultation.enrollment_status
 
           return (
             <div key={`${consultation.id ?? index}-${title}`} className="rounded-xl border border-slate-200/70 p-4">
@@ -124,6 +126,20 @@ export function ConsultationsSection({ consultations, isLoading, error, onRetry 
                 </div>
                 {price ? <span className="text-base font-semibold text-primary-600">{price}</span> : null}
               </div>
+              {(status || labels.length) ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {status ? (
+                    <Badge variant="outline" className="border-primary-200 bg-primary-50 text-xs font-semibold text-primary-700">
+                      {status}
+                    </Badge>
+                  ) : null}
+                  {labels.map((label) => (
+                    <Badge key={label} variant="secondary" className="bg-slate-100 text-xs text-slate-700">
+                      {label}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
               <Separator className="my-3" />
               {renderSlots(consultation)}
             </div>

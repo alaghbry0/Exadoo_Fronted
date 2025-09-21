@@ -53,3 +53,48 @@ export function coerceDescription(value?: unknown): string | null {
   if (typeof value === 'string' && value.trim()) return value
   return null
 }
+
+function toArray<T>(value: T | T[] | null | undefined): T[] {
+  if (value == null) return []
+  return Array.isArray(value) ? value : [value]
+}
+
+function extractLabelFromUnknown(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (!value || typeof value !== 'object') return null
+  const record = value as Record<string, unknown>
+  if (typeof record.label === 'string' && record.label.trim()) return record.label.trim()
+  if (typeof record.name === 'string' && record.name.trim()) return record.name.trim()
+  if (typeof record.title === 'string' && record.title.trim()) return record.title.trim()
+  return null
+}
+
+export function extractServiceLabels(service: {
+  badge?: unknown
+  badges?: unknown
+  tags?: unknown
+  metadata?: unknown
+}): string[] {
+  const labels = new Set<string>()
+
+  const addFromCollection = (value: unknown) => {
+    for (const item of toArray(value as unknown[])) {
+      const label = extractLabelFromUnknown(item)
+      if (label) labels.add(label)
+    }
+  }
+
+  const singleBadge = extractLabelFromUnknown(service.badge)
+  if (singleBadge) labels.add(singleBadge)
+
+  addFromCollection(service.badges)
+  addFromCollection(service.tags)
+
+  if (service.metadata && typeof service.metadata === 'object') {
+    const metadata = service.metadata as Record<string, unknown>
+    if ('badges' in metadata) addFromCollection(metadata.badges)
+    if ('tags' in metadata) addFromCollection(metadata.tags)
+  }
+
+  return Array.from(labels)
+}
