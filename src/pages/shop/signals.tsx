@@ -1,22 +1,22 @@
-// src/pages/shop.tsx
+// src/pages/shop/signals.tsx
 
 'use client'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
-import SubscriptionModal from '../components/SubscriptionModal'
-import AuthPrompt from '../components/AuthFab';
+import SubscriptionModal from '../../components/SubscriptionModal'
+import AuthPrompt from '../../components/AuthFab';
 import React from 'react'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
-import Navbar from '../components/Navbar'
+import Navbar from '../../components/Navbar'
 import { useQuery } from '@tanstack/react-query'
-import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../services/api'
+import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../../services/api'
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
-import { useTelegram } from '../context/TelegramContext'
+import { useTelegram } from '@/context/TelegramContext';
 
 import type { ModalPlanData } from '@/types/modalPlanData';
 import type {
@@ -25,7 +25,7 @@ import type {
   ApiSubscriptionGroup,
   SubscriptionOption,
   DiscountDetails
-} from '../typesPlan'
+} from '../../typesPlan'
 
 // ... (الأنواع الداخلية مثل Subscription و iconMap والمكونات المساعدة تبقى كما هي)
 interface Subscription {
