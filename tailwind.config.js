@@ -87,6 +87,9 @@ module.exports = {
       boxShadow: {
         'plan-card':  '0 10px 15px -3px var(--tw-shadow-color)',
         'plan-hover': '0 20px 25px -5px var(--tw-shadow-color)',
+        // --- إضافة جديدة ---
+        'card-subtle': '0 4px 12px 0 rgba(0, 0, 0, 0.05)',
+        'card-hover': '0 8px 24px 0 rgba(0, 102, 204, 0.12)',
       },
       fontSize: {
         xs:  "0.75rem",

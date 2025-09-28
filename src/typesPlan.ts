@@ -1,3 +1,4 @@
+// src/typesPlan.ts
 import React from 'react'
 
 export type NotificationType = 

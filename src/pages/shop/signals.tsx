@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
 import { useTelegram } from '@/context/TelegramContext';
+import BackHeader from '@/components/BackHeader' // ⬅️ جديد
 
 import type { ModalPlanData } from '@/types/modalPlanData';
 import type {
@@ -212,7 +213,7 @@ const ShopComponent = () => {
         <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
             <QueryBoundary isLoading={initialLoading} isError={hasError}>
                 <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col">
-                    <Navbar />
+                    <BackHeader />
 
                     <main className="px-4 pb-20 flex-grow">
                     <section className="pt-20 pb- text-center">
