@@ -1,4 +1,4 @@
-// src/pages/_app.tsx
+﻿// src/pages/_app.tsx
 'use client'
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import type { AppProps } from 'next/app'

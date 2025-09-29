@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAcademyData } from '@/services/academy'
 import { useTelegram } from '@/context/TelegramContext'
+import SmartImage from '@/components/SmartImage'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
@@ -42,7 +43,16 @@ export default function CourseDetail() {
         <span className="text-sm text-gray-500">المدرّس: {course.instructor_name}</span>
       </div>
 
-      <img src={course.cover_image} alt={course.title} className="w-full aspect-video object-cover rounded-2xl mt-5" />
+      <div className="relative w-full aspect-video overflow-hidden rounded-2xl mt-5">
+        <SmartImage
+          src={course.cover_image || '/image.jpg'}
+          alt={course.title}
+          fill
+          sizes="(min-width: 1024px) 60vw, 100vw"
+          className="object-cover"
+          fallbackSrc="/image.jpg"
+        />
+      </div>
 
       <div className="grid md:grid-cols-3 gap-8 mt-8">
         <div className="md:col-span-2">
@@ -66,7 +76,16 @@ export default function CourseDetail() {
         </div>
         <aside>
           <div className="bg-white dark:bg-neutral-900 rounded-2xl p-4 border">
-            <img src={course.thumbnail} alt={course.title} className="w-full aspect-video object-cover rounded-lg mb-3" />
+            <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-3">
+              <SmartImage
+                src={course.thumbnail || course.cover_image || '/image.jpg'}
+                alt={course.title}
+                fill
+                sizes="(min-width: 1024px) 320px, 100vw"
+                className="object-cover"
+                fallbackSrc="/image.jpg"
+              />
+            </div>
             
             <Button className={cnJoin('w-full mt-4', isEnrolled?'bg-green-600 hover:bg-green-500':'')}>
               {isEnrolled ? 'أكمل التعلّم' : (isFree ? 'ادخل الآن' : 'اشترك الآن')}

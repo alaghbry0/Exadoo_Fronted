@@ -1,3 +1,4 @@
+
 'use client'
 import React, { useMemo, useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Search, Bookmark, Layers, Stars } from 'lucide-react'
 import AcademyHeroCard from '@/components/AcademyHeroCard'
+import SmartImage from '@/components/SmartImage'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
 
@@ -53,7 +55,18 @@ const CourseCard: React.FC<{
 }> = ({ id, title, desc, price, lessons, level, img, isFree }) => (
   <Link href={`/academy/course/${id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50 rounded-2xl">
     <Card className="rounded-2xl overflow-hidden hover:shadow-lg transition border">
-      <img src={img} alt={title} className="w-full aspect-video object-cover" />
+
+      <div className="relative w-full aspect-video">
+        <SmartImage
+          src={img || '/image.jpg'}
+          alt={title}
+          fill
+          sizes="(min-width: 1280px) 360px, (min-width: 640px) 60vw, 85vw"
+          className="object-cover"
+          fallbackSrc="/image.jpg"
+        />
+      </div>
+
       <CardContent className="p-4">
         <h3 className="font-bold line-clamp-2">{title}</h3>
         <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-2 mt-1">{desc}</p>
@@ -74,7 +87,18 @@ const BundleCard: React.FC<{
 }> = ({ id, title, desc, price, img }) => (
   <Link href={`/academy/bundle/${id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50 rounded-2xl">
     <Card className="rounded-2xl overflow-hidden hover:shadow-lg transition border">
-      <img src={img} alt={title} className="w-full aspect-[4/3] object-cover" />
+
+      <div className="relative w-full aspect-[4/3]">
+        <SmartImage
+          src={img || '/image.jpg'}
+          alt={title}
+          fill
+          sizes="(min-width: 1280px) 360px, (min-width: 640px) 60vw, 85vw"
+          className="object-cover"
+          fallbackSrc="/image.jpg"
+        />
+      </div>
+
       <CardContent className="p-4">
         <h3 className="font-bold line-clamp-2">{title}</h3>
         <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-2 mt-1">{(desc || '').replace(/\\r\\n/g, ' ')}</p>
@@ -253,7 +277,16 @@ export default function AcademyIndex() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {data.categories.map(cat=>(
                         <Link key={cat.id} href={`/academy/category/${cat.id}`} className="border rounded-2xl overflow-hidden hover:shadow-md transition bg-white dark:bg-neutral-900">
-                          <img src={cat.thumbnail} alt={cat.name} className="w-full aspect-[16/9] object-cover" />
+                          <div className="relative w-full aspect-[16/9]">
+                            <SmartImage
+                              src={cat.thumbnail || '/image.jpg'}
+                              alt={cat.name}
+                              fill
+                              sizes="(min-width: 768px) 20vw, 60vw"
+                              className="object-cover"
+                              fallbackSrc="/image.jpg"
+                            />
+                          </div>
                           <div className="p-3">
                             <div className="font-semibold">{cat.name}</div>
                             <div className="text-xs text-gray-500">{cat.number_of_courses} كورسات</div>
@@ -275,3 +308,4 @@ export default function AcademyIndex() {
     </div>
   )
 }
+

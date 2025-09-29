@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
+import SmartImage from '@/components/SmartImage'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function CategoryDetail() {
@@ -36,7 +37,16 @@ export default function CategoryDetail() {
             {courses.map(c=>(
               <Link key={c.id} href={`/academy/course/${c.id}`}>
                 <Card className="rounded-2xl overflow-hidden hover:shadow-lg transition">
-                  <img src={c.thumbnail} className="w-full aspect-video object-cover"/>
+                  <div className="relative w-full aspect-video">
+                    <SmartImage
+                      src={c.thumbnail || '/image.jpg'}
+                      alt={c.title}
+                      fill
+                      sizes="(min-width: 1024px) 30vw, 100vw"
+                      className="object-cover"
+                      fallbackSrc="/image.jpg"
+                    />
+                  </div>
                   <CardContent className="p-3">
                     <div className="font-semibold line-clamp-2">{c.title}</div>
                     <div className="text-xs text-gray-500 mt-1">{c.total_number_of_lessons} دروس</div>
@@ -55,7 +65,16 @@ export default function CategoryDetail() {
             {bundles.map(b=>(
               <Link key={b.id} href={`/academy/bundle/${b.id}`}>
                 <Card className="rounded-2xl overflow-hidden hover:shadow-lg transition">
-                  <img src={b.image || b.cover_image} className="w-full aspect-[4/3] object-cover"/>
+                  <div className="relative w-full aspect-[4/3]">
+                    <SmartImage
+                      src={b.image || b.cover_image || '/image.jpg'}
+                      alt={b.title}
+                      fill
+                      sizes="(min-width: 1024px) 30vw, 100vw"
+                      className="object-cover"
+                      fallbackSrc="/image.jpg"
+                    />
+                  </div>
                   <CardContent className="p-3">
                     <div className="font-semibold line-clamp-2">{b.title}</div>
                     <div className="text-xs text-gray-500 mt-1">${b.price}</div>

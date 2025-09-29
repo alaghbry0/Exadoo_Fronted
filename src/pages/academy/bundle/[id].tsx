@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useAcademyData } from '@/services/academy'
 import { useTelegram } from '@/context/TelegramContext'
+import SmartImage from '@/components/SmartImage'
 import { Button } from '@/components/ui/button'
 
 export default function BundleDetail() {
@@ -33,7 +34,16 @@ export default function BundleDetail() {
       </Link>
 
       <h1 className="text-2xl font-bold">{bundle.title}</h1>
-      <img src={bundle.cover_image || bundle.image} alt={bundle.title} className="w-full aspect-video object-cover rounded-2xl mt-4" />
+      <div className="relative w-full aspect-video overflow-hidden rounded-2xl mt-4">
+        <SmartImage
+          src={bundle.cover_image || bundle.image || '/image.jpg'}
+          alt={bundle.title}
+          fill
+          sizes="(min-width: 1024px) 60vw, 100vw"
+          className="object-cover"
+          fallbackSrc="/image.jpg"
+        />
+      </div>
 
       <div className="grid md:grid-cols-3 gap-8 mt-8">
         <div className="md:col-span-2">
@@ -65,7 +75,16 @@ export default function BundleDetail() {
             <div className="space-y-3">
               {coursesInBundle.map(c=>(
                 <div key={c.id} className="flex items-center gap-3 p-3 border rounded-xl bg-white dark:bg-neutral-900">
-                  <img src={c.thumbnail} className="w-24 h-16 rounded object-cover" alt={c.title}/>
+                  <div className="relative w-24 h-16 overflow-hidden rounded">
+                    <SmartImage
+                      src={c.thumbnail || '/image.jpg'}
+                      alt={c.title}
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                      fallbackSrc="/image.jpg"
+                    />
+                  </div>
                   <div className="flex-1">
                     <div className="font-semibold line-clamp-1">{c.title}</div>
                     <div className="text-xs text-gray-500">{c.instructor_name} • {c.total_number_of_lessons} دروس</div>
