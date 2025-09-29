@@ -1,3 +1,4 @@
+// src/pages/shop/index.tsx
 'use client'
 
 import React, { useMemo, useRef, useState, useEffect } from 'react'

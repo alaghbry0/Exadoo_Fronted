@@ -1,0 +1,15 @@
+{
+  "consultancy": [],
+  "academy": [],
+  "my_enrollments": [],
+  "utility_trading_panels": [],
+  "signals": [
+    {
+      "id": "2",
+      "title": "Yearly Subscription 50k To 1M",
+      "duration_days": null,
+      "subscription": null
+    }
+  ],
+  "buy_indicators": []
+}

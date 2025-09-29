@@ -1,4 +1,4 @@
-// Profile.tsx
+// src/pages/Profile.tsx
 'use client'
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
