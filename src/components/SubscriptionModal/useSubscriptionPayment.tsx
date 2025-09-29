@@ -9,7 +9,7 @@ import type { ModalPlanData } from '@/types/modalPlanData';
 import { PaymentStatus } from '@/types/payment'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTariffStore } from '@/stores/zustand'
-import { showToast } from '@/components/ui/Toast'
+import { showToast } from '@/components/ui/showToast'
 
 interface ExchangeDetails {
   depositAddress: string

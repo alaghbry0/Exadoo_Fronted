@@ -2,7 +2,7 @@ import { beginCell, Address, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
 import { useTariffStore } from '../stores/zustand';
 import { PaymentStatus } from '@/types/payment';
-import { showToast } from '../components/ui/Toast'
+import { showToast } from '../components/ui/showToast'
 
 // واجهة تعريف JettonBalance (قد تحتاج إلى تعديلها بناءً على وثائق TonAPI)
 interface JettonBalance {

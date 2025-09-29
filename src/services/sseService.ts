@@ -1,7 +1,7 @@
 // src/services/sseService.ts
 
 import { QueryClient } from '@tanstack/react-query';
-import { showToast } from '@/components/ui/Toast'; // تأكد من أن هذا المسار صحيح
+import { showToast } from '@/components/ui/showToast'; // تأكد من أن هذا المسار صحيح
 import type { NotificationType } from '@/types/notification'; // تأكد من أن هذا المسار صحيح
 
 // ثوابت للتحكم في سلوك إعادة الاتصال

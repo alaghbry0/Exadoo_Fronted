@@ -21,8 +21,12 @@ import {
 } from 'lucide-react'
 import AcademyHeroCard from '@/components/AcademyHeroCard'
 
+// === NEW: مؤشرات — جلب بيانات الاشتراك والأسعار من الـ API
+import { useTelegram } from '@/context/TelegramContext'
+import { useIndicatorsData } from '@/services/indicators'
+
 // =========================================
-//  Subtle Motion Wrapper (reduced‑motion aware)
+//  Subtle Motion Wrapper (reduced-motion aware)
 // =========================================
 const Tile: React.FC<React.PropsWithChildren<{ className?: string; delay?: number }>> = ({
   className,
@@ -87,11 +91,12 @@ const TILES: TileMeta[] = [
   {
     key: 'indicators',
     title: 'مؤشرات Exaado للبيع والشراء',
-    description: 'حزمة مؤشرات متقدمة (Gann‑based) بأداء مُثبت وتجربة سلسة.',
+    description: 'حزمة مؤشرات متقدمة (Gann-based) بأداء مُثبت وتجربة سلسة.',
     href: '/indicators',
     icon: BarChart3,
     variant: 'wide',
     accent: 'primary',
+    // يمكن إبقاء price/oldPrice كقيمة افتراضية لكن العرض الآن ديناميكي من الـ API
     price: 200,
     oldPrice: 350,
   },
@@ -142,13 +147,17 @@ const HalfCard: React.FC<{ meta: TileMeta }> = ({ meta }) => {
         <CardContent className="p-5">
           <div className="flex items-start gap-4">
             <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
-              <Icon className="h-6 w-6" />
+              <GraduationCap className="sr-only" />
+              <meta.icon className="h-6 w-6" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{meta.title}</h3>
                 {meta.live && (
-                  <span className="relative inline-flex h-3 w-3" aria-label="حي"><span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping bg-red-400" /><span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" /></span>
+                  <span className="relative inline-flex h-3 w-3" aria-label="حي">
+                    <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping bg-red-400" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+                  </span>
                 )}
               </div>
               <p className="mt-1 text-gray-600 dark:text-neutral-300 leading-relaxed">{meta.description}</p>
@@ -160,9 +169,28 @@ const HalfCard: React.FC<{ meta: TileMeta }> = ({ meta }) => {
   )
 }
 
+// === UPDATED: WideIndicators يعرض حالة الاشتراك وأسعار خطة مدى الحياة من الـ API
 const WideIndicators: React.FC<{ meta: TileMeta }> = ({ meta }) => {
   const Icon = meta.icon
-  const discount = meta.oldPrice && meta.price ? Math.round(((meta.oldPrice - meta.price) / meta.oldPrice) * 100) : null
+  const { telegramId } = useTelegram()
+  const { data, isLoading } = useIndicatorsData(telegramId || undefined)
+
+  // خطة Lifetime إن وُجدت
+  const lifetime = data?.subscriptions?.find((p: any) => p?.duration_in_months === '0')
+  const priceNow = lifetime?.discounted_price ?? lifetime?.price
+  const priceOld =
+    lifetime && lifetime.discounted_price && lifetime.discounted_price !== lifetime.price
+      ? lifetime.price
+      : undefined
+  const discount =
+    priceOld && priceNow
+      ? Math.round(((Number(priceOld) - Number(priceNow)) / Number(priceOld)) * 100)
+      : null
+
+  const myStatus = data?.my_subscription?.status
+  const currentLabel =
+    myStatus === 'lifetime' ? 'مدى الحياة' : myStatus ? String(myStatus) : 'لا يوجد اشتراك'
+
   return (
     <Link
       href={meta.href}
@@ -170,7 +198,7 @@ const WideIndicators: React.FC<{ meta: TileMeta }> = ({ meta }) => {
       aria-label={meta.title}
       prefetch
     >
-      <Card className="rounded-3xl bg-white border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
+      <Card className="rounded-3xl bg-white border border-gray-100 shadow-sm transition hover:shadow-lg hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
         <CardContent className="p-5 md:p-6">
           <div className="flex items-start gap-4">
             <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
@@ -178,7 +206,7 @@ const WideIndicators: React.FC<{ meta: TileMeta }> = ({ meta }) => {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{meta.title}</h3>
+                <h3 className="text-xl font-bold">{meta.title}</h3>
                 {discount !== null && (
                   <Badge className="bg-secondary-100 text-secondary-700 border-none">-{discount}%</Badge>
                 )}
@@ -188,14 +216,20 @@ const WideIndicators: React.FC<{ meta: TileMeta }> = ({ meta }) => {
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 items-end gap-3">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-neutral-400">اشتراكك الحالي:</p>
-                  <p className="text-base font-semibold text-gray-900 dark:text-neutral-100">مدى الحياة</p>
+                  <p className="text-base font-semibold">
+                    {isLoading ? '...جاري التحميل' : currentLabel}
+                  </p>
                 </div>
                 <div className="sm:text-right">
-                  {meta.price && (
-                    <div className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">${meta.price}</div>
+                  {priceNow && (
+                    <div className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">
+                      ${Number(priceNow).toFixed(0)}
+                    </div>
                   )}
-                  {meta.oldPrice && (
-                    <div className="text-sm text-gray-400 dark:text-neutral-500 line-through">${meta.oldPrice}</div>
+                  {priceOld && (
+                    <div className="text-sm text-gray-400 dark:text-neutral-500 line-through">
+                      ${Number(priceOld).toFixed(0)}
+                    </div>
                   )}
                 </div>
               </div>
@@ -244,7 +278,6 @@ const WideConsultations: React.FC<{ meta: TileMeta }> = ({ meta }) => {
     </Link>
   )
 }
-
 
 // =========================================
 //  Page
@@ -299,7 +332,6 @@ export default function ShopHome() {
               aria-expanded={open}
             />
           </div>
-          
         </section>
 
         {/* Hero — Academy */}
@@ -314,7 +346,8 @@ export default function ShopHome() {
             return (
               <Tile key={meta.key} className={cols} delay={0.04 + i * 0.02}>
                 {meta.variant === 'half' && <HalfCard meta={meta} />}
-                {meta.variant === 'wide' && (meta.key === 'indicators' ? <WideIndicators meta={meta} /> : <WideConsultations meta={meta} />)}
+                {meta.variant === 'wide' &&
+                  (meta.key === 'indicators' ? <WideIndicators meta={meta} /> : <WideConsultations meta={meta} />)}
               </Tile>
             )
           })}
@@ -327,7 +360,6 @@ export default function ShopHome() {
         </section>
 
         {/* Auth Prompt */}
-
         <div className="max-w-7xl mx-auto mt-8">
           <AuthPrompt />
         </div>

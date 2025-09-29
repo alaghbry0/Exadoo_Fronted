@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { showToast } from '@/components/ui/Toast'; // استخدام نظام التوست الخاص بك
+import { showToast } from '@/components/ui/showToast'; // استخدام نظام التوست الخاص بك
 
 export const useClipboard = (timeout = 2000) => {
   const [isCopied, setIsCopied] = useState(false);
