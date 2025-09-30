@@ -2,11 +2,10 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { GraduationCap, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 type Props = {
   courses?: number
@@ -14,13 +13,9 @@ type Props = {
   freeCount?: number
 }
 
-export default function AcademyHeroCard({
-  courses = 24,
-  tracks = 6,
-  freeCount = 3,
-}: Props) {
+export default function AcademyHeroCard({ courses = 24, tracks = 6, freeCount = 3 }: Props) {
   return (
-    <Link href="/academy" className="group relative block" aria-label="الدخول إلى Exaado Academy">
+    <div className="group relative">
       <Card className="relative overflow-hidden rounded-3xl border-0 shadow-subtle transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
         {/* خلفيات */}
         <div className="absolute inset-0 aurora-bg" />
@@ -29,7 +24,7 @@ export default function AcademyHeroCard({
         <span className="card-shine" aria-hidden />
 
         <CardContent className="relative p-6 md:p-8">
-          <div className="flex items-start gap-4">
+          <div className="md:flex md:items-center md:justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
@@ -41,39 +36,24 @@ export default function AcademyHeroCard({
               <p className="mt-2 text-white/90 max-w-2xl">
                 برامج عملية، مسارات واضحة، وشهادات مشاركة—طريقك للاحتراف يبدأ من هنا.
               </p>
-
-              {/* CTA */}
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                
-                <span className="text-white/90">
-                  
-                  <span className="underline underline-offset-4 hover:text-white">
-                    استعراض جميع الدورات
-                  </span>
-                </span>
-              </div>
             </div>
 
-            {/* أيقونة داخل Orb زجاجي */}
-            <motion.div
-              initial={{ y: 8, rotate: -2 }}
-              animate={{ y: 0, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-              className="hidden sm:flex items-center justify-center"
-            >
-              <div className="relative">
-                <div className="relative grid place-items-center h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-white/20 backdrop-blur-md ring-2 ring-white/30">
-                  <GraduationCap className="h-8 w-8 md:h-9 md:w-9 text-white" />
-                  <div className="absolute -inset-1 rounded-2xl animate-pulse-slow ring-1 ring-white/10" />
-                </div>
-                <div className="absolute -right-2 -bottom-2 text-[10px] md:text-xs bg-white/30 text-white/95 px-2 py-0.5 rounded-full">
-                  ACADEMY
-                </div>
-              </div>
-            </motion.div>
+            {/* --- UPDATED: CTA Button --- */}
+            <div className="mt-6 md:mt-0 md:mr-6 shrink-0">
+              <Button
+                size="lg"
+                className="w-full md:w-auto bg-white text-primary-700 hover:bg-white/90 rounded-xl font-bold shadow-lg transition-transform duration-200 group-hover:scale-105"
+                asChild
+              >
+                <Link href="/academy">
+                  استكشف الأكاديمية
+                  <ArrowLeft className="w-5 h-5 mr-2" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </div>
   )
 }

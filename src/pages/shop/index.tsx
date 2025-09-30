@@ -1,9 +1,9 @@
 // src/pages/shop/index.tsx
 'use client'
 
-import React, { useMemo, useRef, useState, useEffect } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import AuthPrompt from '@/components/AuthFab'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,37 +21,14 @@ import {
 } from 'lucide-react'
 import AcademyHeroCard from '@/components/AcademyHeroCard'
 
-// === NEW: مؤشرات — جلب بيانات الاشتراك والأسعار من الـ API
+// --- بيانات API (تبقى كما هي) ---
 import { useTelegram } from '@/context/TelegramContext'
 import { useIndicatorsData } from '@/services/indicators'
 
 // =========================================
-//  Subtle Motion Wrapper (reduced-motion aware)
+//  Data & Types (تبقى كما هي)
 // =========================================
-const Tile: React.FC<React.PropsWithChildren<{ className?: string; delay?: number }>> = ({
-  className,
-  delay = 0.06,
-  children,
-}) => {
-  const r = useReducedMotion()
-  return (
-    <motion.div
-      initial={r ? false : { opacity: 0, y: 16 }}
-      animate={r ? {} : { opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24, delay }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-// =========================================
-//  Data
-// =========================================
-
 type Variant = 'half' | 'wide'
-
 type Accent = 'primary' | 'secondary' | 'success'
 
 type TileMeta = {
@@ -63,12 +40,20 @@ type TileMeta = {
   variant: Variant
   accent: Accent
   live?: boolean
-  price?: number
-  oldPrice?: number
   eyebrow?: string
 }
 
-const TILES: TileMeta[] = [
+// --- NEW: تم إعادة هيكلة البيانات إلى فئات ---
+const TRADING_TOOLS: TileMeta[] = [
+  {
+    key: 'indicators',
+    title: 'مؤشرات Exaado للبيع والشراء',
+    description: 'حزمة مؤشرات متقدمة (Gann-based) بأداء مُثبت وتجربة سلسة.',
+    href: '/indicators',
+    icon: BarChart3,
+    variant: 'wide',
+    accent: 'primary',
+  },
   {
     key: 'forex',
     title: 'Exaado Forex',
@@ -88,18 +73,9 @@ const TILES: TileMeta[] = [
     accent: 'secondary',
     live: true,
   },
-  {
-    key: 'indicators',
-    title: 'مؤشرات Exaado للبيع والشراء',
-    description: 'حزمة مؤشرات متقدمة (Gann-based) بأداء مُثبت وتجربة سلسة.',
-    href: '/indicators',
-    icon: BarChart3,
-    variant: 'wide',
-    accent: 'primary',
-    // يمكن إبقاء price/oldPrice كقيمة افتراضية لكن العرض الآن ديناميكي من الـ API
-    price: 200,
-    oldPrice: 350,
-  },
+]
+
+const PERSONAL_SERVICES: TileMeta[] = [
   {
     key: 'consultations',
     title: 'استشارات Exaado',
@@ -112,15 +88,17 @@ const TILES: TileMeta[] = [
   },
 ]
 
-// =========================================
-//  Helpers
-// =========================================
+// دمج كل الخدمات في مصفوفة واحدة لاستخدامها في البحث
+const ALL_SERVICES = [...TRADING_TOOLS, ...PERSONAL_SERVICES]
 
+// =========================================
+//  Helpers (تبقى كما هي)
+// =========================================
 const iconWrap = (accent: Accent) =>
   ({
-    primary: 'bg-primary-50 text-primary-600',
-    secondary: 'bg-secondary-50 text-secondary-700',
-    success: 'bg-emerald-50 text-emerald-700',
+    primary: 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400',
+    secondary: 'bg-secondary-50 text-secondary-700 dark:bg-secondary-500/10 dark:text-secondary-400',
+    success: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
   }[accent])
 
 const ringFocus = (accent: Accent) =>
@@ -131,23 +109,22 @@ const ringFocus = (accent: Accent) =>
   }[accent])
 
 // =========================================
-//  Tile Variants
+//  Tile Variants (تم تحديثها)
 // =========================================
 
+// --- UPDATED: HalfCard مع CTA أوضح ---
 const HalfCard: React.FC<{ meta: TileMeta }> = ({ meta }) => {
-  const Icon = meta.icon
   return (
     <Link
       href={meta.href}
-      className={cn('block rounded-3xl outline-none focus-visible:ring-2', ringFocus(meta.accent))}
+      className={cn('group block h-full rounded-3xl outline-none focus-visible:ring-2', ringFocus(meta.accent))}
       aria-label={meta.title}
       prefetch
     >
-      <Card className="rounded-3xl bg-white border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
-        <CardContent className="p-5">
+      <Card className="flex flex-col h-full rounded-3xl bg-white border border-gray-100 shadow-sm transition-all duration-200 group-hover:shadow-lg group-hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
+        <CardContent className="p-5 flex flex-col flex-grow">
           <div className="flex items-start gap-4">
             <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
-              <GraduationCap className="sr-only" />
               <meta.icon className="h-6 w-6" />
             </div>
             <div className="flex-1">
@@ -163,84 +140,63 @@ const HalfCard: React.FC<{ meta: TileMeta }> = ({ meta }) => {
               <p className="mt-1 text-gray-600 dark:text-neutral-300 leading-relaxed">{meta.description}</p>
             </div>
           </div>
+          <div className="mt-4 flex-grow flex items-end">
+            <div className="text-sm font-semibold text-primary-600 dark:text-primary-400 flex items-center gap-1 transition-transform duration-200 group-hover:gap-2">
+              عرض التفاصيل <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-[-4px]" />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </Link>
   )
 }
 
-// === UPDATED: WideIndicators يعرض حالة الاشتراك وأسعار خطة مدى الحياة من الـ API
+// --- UPDATED: WideIndicators بتصميم CTA وسعر أفضل ---
 const WideIndicators: React.FC<{ meta: TileMeta }> = ({ meta }) => {
-  const Icon = meta.icon
   const { telegramId } = useTelegram()
   const { data, isLoading } = useIndicatorsData(telegramId || undefined)
 
-  // خطة Lifetime إن وُجدت
   const lifetime = data?.subscriptions?.find((p: any) => p?.duration_in_months === '0')
   const priceNow = lifetime?.discounted_price ?? lifetime?.price
-  const priceOld =
-    lifetime && lifetime.discounted_price && lifetime.discounted_price !== lifetime.price
-      ? lifetime.price
-      : undefined
-  const discount =
-    priceOld && priceNow
-      ? Math.round(((Number(priceOld) - Number(priceNow)) / Number(priceOld)) * 100)
-      : null
-
-  const myStatus = data?.my_subscription?.status
-  const currentLabel =
-    myStatus === 'lifetime' ? 'مدى الحياة' : myStatus ? String(myStatus) : 'لا يوجد اشتراك'
+  const priceOld = lifetime?.discounted_price && lifetime.discounted_price !== lifetime.price ? lifetime.price : undefined
+  const discount = priceOld && priceNow ? Math.round(((Number(priceOld) - Number(priceNow)) / Number(priceOld)) * 100) : null
 
   return (
     <Link
       href={meta.href}
-      className={cn('block rounded-3xl outline-none focus-visible:ring-2', ringFocus(meta.accent))}
+      className={cn('group block rounded-3xl outline-none focus-visible:ring-2', ringFocus(meta.accent))}
       aria-label={meta.title}
       prefetch
     >
-      <Card className="rounded-3xl bg-white border border-gray-100 shadow-sm transition hover:shadow-lg hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
+      <Card className="rounded-3xl bg-white border border-gray-100 shadow-sm transition group-hover:shadow-lg group-hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
         <CardContent className="p-5 md:p-6">
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
             <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
-              <Icon className="h-6 w-6" />
+              <meta.icon className="h-6 w-6" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold">{meta.title}</h3>
                 {discount !== null && (
-                  <Badge className="bg-secondary-100 text-secondary-700 border-none">-{discount}%</Badge>
+                  <Badge variant="destructive">خصم {discount}%</Badge>
                 )}
               </div>
               <p className="mt-1 text-gray-600 dark:text-neutral-300 leading-relaxed">{meta.description}</p>
-
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 items-end gap-3">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-neutral-400">اشتراكك الحالي:</p>
-                  <p className="text-base font-semibold">
-                    {isLoading ? '...جاري التحميل' : currentLabel}
-                  </p>
-                </div>
-                <div className="sm:text-right">
-                  {priceNow && (
-                    <div className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">
-                      ${Number(priceNow).toFixed(0)}
-                    </div>
-                  )}
-                  {priceOld && (
-                    <div className="text-sm text-gray-400 dark:text-neutral-500 line-through">
-                      ${Number(priceOld).toFixed(0)}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Button className="rounded-2xl bg-primary-600 hover:bg-primary-700 text-white">
-                  تفاصيل المؤشرات
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                </Button>
-              </div>
             </div>
+          </div>
+          <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+             <div>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">خطة مدى الحياة تبدأ من</p>
+                {isLoading ? <div className="h-8 w-24 mt-1 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse" /> : 
+                <div className="flex items-baseline gap-2">
+                    {priceNow && <span className="text-3xl font-extrabold text-primary-600 dark:text-primary-400">${Number(priceNow).toFixed(0)}</span>}
+                    {priceOld && <span className="text-lg text-gray-400 line-through">${Number(priceOld).toFixed(0)}</span>}
+                </div>}
+            </div>
+            <Button size="lg" className="rounded-xl w-full sm:w-auto font-bold group-hover:bg-primary-700">
+              تفاصيل المؤشرات
+              <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:translate-x-[-4px]" />
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -248,29 +204,34 @@ const WideIndicators: React.FC<{ meta: TileMeta }> = ({ meta }) => {
   )
 }
 
+// --- UPDATED: WideConsultations مع CTA أوضح ---
 const WideConsultations: React.FC<{ meta: TileMeta }> = ({ meta }) => {
-  const Icon = meta.icon
   return (
     <Link
       href={meta.href}
-      className={cn('block rounded-3xl outline-none focus-visible:ring-2', ringFocus(meta.accent))}
+      className={cn('group block rounded-3xl outline-none focus-visible:ring-2', ringFocus(meta.accent))}
       aria-label={meta.title}
       prefetch
     >
-      <Card className="group rounded-3xl bg-white border border-gray-100 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl grid place-items-center shrink-0 bg-emerald-50 text-emerald-700">
-              <Icon className="h-6 w-6" />
+      <Card className="rounded-3xl bg-white border border-gray-100 shadow-sm transition-all duration-200 group-hover:shadow-lg group-hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
+        <CardContent className="p-5 md:p-6">
+          <div className="sm:flex sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+                <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
+                    <meta.icon className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{meta.title}</h3>
+                    {meta.eyebrow && <Badge className="bg-emerald-100 text-emerald-700 border-none dark:bg-emerald-900/50 dark:text-emerald-300">{meta.eyebrow}</Badge>}
+                </div>
+                <p className="mt-1 text-gray-600 dark:text-neutral-300 leading-relaxed max-w-lg">{meta.description}</p>
+                </div>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{meta.title}</h3>
-                {meta.eyebrow && (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-none">{meta.eyebrow}</Badge>
-                )}
-              </div>
-              <p className="mt-1 text-gray-600 dark:text-neutral-300 leading-relaxed">{meta.description}</p>
+            <div className="mt-4 sm:mt-0 sm:mr-6 shrink-0">
+                <Button variant="outline" className="rounded-xl w-full sm:w-auto border-gray-300 dark:border-neutral-700">
+                    احجز الآن <ArrowLeft className="w-4 h-4 mr-2" />
+                </Button>
             </div>
           </div>
         </CardContent>
@@ -280,87 +241,130 @@ const WideConsultations: React.FC<{ meta: TileMeta }> = ({ meta }) => {
 }
 
 // =========================================
-//  Page
+//  Page Component (تمت إعادة هيكلته بالكامل)
 // =========================================
-
 export default function ShopHome() {
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const wrapRef = useRef<HTMLDivElement | null>(null)
-  const [open, setOpen] = useState(false)
 
-  const filtered = useMemo(() => {
+  const filteredServices = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return TILES
-    return TILES.filter((t) => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q))
+    if (!q) return []
+    return ALL_SERVICES.filter(
+      (t) => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+    )
   }, [query])
 
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+  const isSearching = query.length > 0
+
+  const renderService = (meta: TileMeta) => {
+    if (meta.variant === 'half') {
+      return <div className="col-span-12 sm:col-span-6"><HalfCard meta={meta} /></div>
     }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [])
+    if (meta.key === 'indicators') {
+      return <div className="col-span-12"><WideIndicators meta={meta} /></div>
+    }
+    if (meta.key === 'consultations') {
+      return <div className="col-span-12"><WideConsultations meta={meta} /></div>
+    }
+    return null;
+  }
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 font-arabic">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 pb-24">
-        {/* Search */}
-        <section className="pt-20 mb-4" aria-label="بحث عن الخدمات">
-          <div ref={wrapRef} className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        {/* --- NEW: Hero Section --- */}
+        <section className="text-center pt-20 pb-12" aria-labelledby="page-title">
+         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }} className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+                                         
+                                          متجر Exaado
+                                     </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="mt-4 text-lg text-gray-600 dark:text-neutral-300 max-w-2xl mx-auto"
+          >
+            أدواتك وخدماتك للوصول إلى مستوى جديد في عالم التداول. استكشف، تعلم، ونفّذ.
+          </motion.p>
+        </section>
+
+        {/* --- UPDATED: Search Bar --- */}
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="mb-12 max-w-2xl mx-auto"
+        >
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
             </div>
             <input
               ref={inputRef}
               type="search"
-              placeholder="ابحث… (مثال: Signals)"
+              placeholder="ابحث عن خدمة... (مثال: Signals)"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setOpen(true)}
               className={cn(
-                'block w-full pl-10 pr-4 py-3 rounded-2xl',
+                'block w-full pl-12 pr-4 py-3 rounded-2xl text-base',
                 'bg-white border border-gray-200 shadow-sm',
                 'text-gray-900 placeholder:text-gray-400 focus:outline-none',
                 'focus:ring-2 focus:ring-primary-400/40 focus:border-primary-400',
-                'dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-100'
+                'dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-100'
               )}
               aria-label="ابحث في خدمات إكسادو"
-              aria-expanded={open}
             />
           </div>
-        </section>
+        </motion.div>
 
-        {/* Hero — Academy */}
-        <Tile className="col-span-12" delay={0.02}>
-          <AcademyHeroCard courses={26} tracks={7} freeCount={4} />
-        </Tile>
+        {/* --- NEW: Conditional Rendering Logic --- */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={isSearching ? 'search-results' : 'categories'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isSearching ? (
+              // --- Search Results View ---
+              <section id="search-results" aria-label="نتائج البحث">
+                <div className="grid grid-cols-12 gap-4 sm:gap-5">
+                  {filteredServices.length > 0 ? (
+                    filteredServices.map(meta => <React.Fragment key={meta.key}>{renderService(meta)}</React.Fragment>)
+                  ) : (
+                    <div className="col-span-12 text-center py-16">
+                      <p className="text-gray-600 dark:text-neutral-400">لا توجد نتائج مطابقة لكلمة البحث "{query}".</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            ) : (
+              // --- Categorized View ---
+              <div className="space-y-12">
+                <section id="education" aria-labelledby="education-title">
+                  <h2 id="education-title" className="text-2xl font-bold mb-5 text-gray-900 dark:text-neutral-100">التعليم والتطوير</h2>
+                  <AcademyHeroCard courses={26} tracks={7} freeCount={4} />
+                </section>
+                
+                <section id="trading-tools" aria-labelledby="trading-tools-title">
+                  <h2 id="trading-tools-title" className="text-2xl font-bold mb-5 text-gray-900 dark:text-neutral-100">أدوات التداول</h2>
+                  <div className="grid grid-cols-12 gap-4 sm:gap-5">
+                    {TRADING_TOOLS.map(meta => <React.Fragment key={meta.key}>{renderService(meta)}</React.Fragment>)}
+                  </div>
+                </section>
 
-        {/* Grid */}
-        <section id="services-grid" className="grid grid-cols-12 gap-4 sm:gap-5 mt-4" aria-label="قائمة الخدمات">
-          {filtered.map((meta, i) => {
-            const cols = meta.variant === 'half' ? 'col-span-12 sm:col-span-6' : 'col-span-12'
-            return (
-              <Tile key={meta.key} className={cols} delay={0.04 + i * 0.02}>
-                {meta.variant === 'half' && <HalfCard meta={meta} />}
-                {meta.variant === 'wide' &&
-                  (meta.key === 'indicators' ? <WideIndicators meta={meta} /> : <WideConsultations meta={meta} />)}
-              </Tile>
-            )
-          })}
-
-          {filtered.length === 0 && (
-            <div className="col-span-12 text-center py-16">
-              <p className="text-gray-600 dark:text-neutral-400">لا توجد نتائج مطابقة. جرّب كلمة أخرى.</p>
-            </div>
-          )}
-        </section>
-
-        {/* Auth Prompt */}
-        <div className="max-w-7xl mx-auto mt-8">
+                <section id="personal-services" aria-labelledby="personal-services-title">
+                  <h2 id="personal-services-title" className="text-2xl font-bold mb-5 text-gray-900 dark:text-neutral-100">خدمات مخصصة</h2>
+                  <div className="grid grid-cols-12 gap-4 sm:gap-5">
+                    {PERSONAL_SERVICES.map(meta => <React.Fragment key={meta.key}>{renderService(meta)}</React.Fragment>)}
+                  </div>
+                </section>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+        
+        <div className="max-w-7xl mx-auto mt-12">
           <AuthPrompt />
         </div>
       </main>

@@ -1,239 +1,162 @@
 'use client'
 import React, { useMemo, useState } from 'react'
-import Navbar from '@/components/Navbar'
+import BackHeader from '@/components/BackHeader'
+import AuthPrompt from '@/components/AuthFab'
 import { useTelegram } from '@/context/TelegramContext'
 import { useConsultancyData } from '@/services/consultancy'
-import type { ConsultancyData, Slot } from '@/pages/api/consultancy'
+import type { Slot } from '@/pages/api/consultancy'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { ArrowRight, Calendar, Clock, User, CheckCircle2, Sparkles } from 'lucide-react'
 
-const fmtUSD = (v?: string | null) => {
-  if (!v) return ''
-  const n = Number(v)
-  return Number.isFinite(n) ? `$${n.toFixed(0)}` : String(v)
-}
+// Helper
+const fmtUSD = (v?: string | null) => `$${Number(v || 0).toFixed(0)}`
 
-function DateButton({
-  label,
-  selected,
-  disabled,
-  onClick,
-}: { label: string; selected?: boolean; disabled?: boolean; onClick?: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        'px-3 py-2 rounded-xl border text-sm transition-colors',
-        selected
-          ? 'bg-primary-600 text-white border-primary-600'
-          : 'bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 hover:border-primary-400',
-        disabled ? 'opacity-50 cursor-not-allowed' : '',
-      ].join(' ')}
-    >
-      {label}
-    </button>
-  )
-}
-
+// =========================================
+//  Main Page Component (Completely Restructured)
+// =========================================
 export default function ConsultancyPage() {
   const { telegramId } = useTelegram()
   const { data, isLoading, isError, error } = useConsultancyData(telegramId || undefined)
 
-  // اختيار التاريخ/الوقت
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
 
   const details = data?.details
   const sessionDates = useMemo(() => Object.keys(data?.sessionTimings || {}).sort((a, b) => {
-    const [da, ma, ya] = a.split('-').map(Number)
-    const [db, mb, yb] = b.split('-').map(Number)
+    const [da, ma, ya] = a.split('-').map(Number); const [db, mb, yb] = b.split('-').map(Number)
     return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime()
   }), [data?.sessionTimings])
 
-  const slots = (selectedDate && data?.sessionTimings?.[selectedDate]) || []
-
+  const slotsForSelectedDate = (selectedDate && data?.sessionTimings?.[selectedDate]) || []
   const priceNow = details?.discounted_price ?? details?.price
-  const hasDiscount = !!details?.discounted_price && details.discounted_price !== details.price
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    setSelectedSlot(null); // Reset selected slot when date changes
+  }
+  
+  const handleBooking = () => {
+    // TODO: Connect to your booking/payment flow
+    if (!selectedDate || !selectedSlot) return;
+    alert(`سيتم الحجز لـ ${selectedDate} من ${selectedSlot.from} إلى ${selectedSlot.to} مقابل ${fmtUSD(priceNow)}`)
+  }
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 font-arabic">
-      <Navbar />
-
-      <main className="max-w-6xl mx-auto px-4 pb-24">
+      <BackHeader />
+      <main className="max-w-5xl mx-auto px-4 pb-24">
         {/* Header */}
-        <section className="pt-20">
-          <h1 className="text-2xl md:text-3xl font-extrabold">{details?.title ?? 'استشارات مباشرة'}</h1>
-          {details?.subtitle && <p className="mt-2 text-gray-600 dark:text-neutral-300">{details.subtitle}</p>}
+        <section className="pt-20 pb-10 text-center">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-extrabold tracking-tight">
+            {details?.title ?? 'استشارة فردية مباشرة'}
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-4 text-lg text-gray-600 dark:text-neutral-300 max-w-2xl mx-auto">
+            {details?.subtitle ?? 'احجز جلسة 1:1 خاصة مع خبير لمناقشة استراتيجياتك، تحليل أدائك، والإجابة على جميع أسئلتك.'}
+          </motion.p>
         </section>
 
-        {/* Loading / Error */}
-        {isLoading && <div className="mt-10 text-center text-gray-500">...جاري التحميل</div>}
-        {isError && <div className="mt-10 text-center text-red-500">تعذر تحميل البيانات: {(error as Error)?.message}</div>}
+        {/* Loading / Error States */}
+        {isLoading && <div className="py-20 text-center text-gray-500">جاري تحميل المواعيد المتاحة...</div>}
+        {isError && <div className="py-20 text-center text-red-500">تعذر تحميل البيانات: {(error as Error)?.message}</div>}
 
         {!isLoading && !isError && data && (
-          <div className="space-y-10 md:space-y-14 mt-8">
-            {/* Instructor / Summary */}
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="rounded-3xl md:col-span-2">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold">{details?.instructor}</h3>
-                  {details?.about_instructor && (
-                    <p className="mt-2 text-gray-600 dark:text-neutral-300 whitespace-pre-line">{details.about_instructor}</p>
-                  )}
-
-                  {details?.description && (
-                    <p className="mt-4 text-sm leading-7 text-gray-700 dark:text-neutral-300">{details.description}</p>
-                  )}
-
-                  {!!details?.options?.length && (
-                    <div className="mt-5">
-                      <h4 className="font-semibold mb-2">يمكننا مساعدتك في:</h4>
-                      <ul className="list-disc pr-6 space-y-1 text-sm text-gray-700 dark:text-neutral-300">
-                        {details.options.map((o, i) => <li key={i}>{o}</li>)}
-                      </ul>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            {/* --- NEW: Unified Booking Wizard --- */}
+            <Card className="rounded-3xl shadow-xl border dark:border-neutral-800 overflow-hidden">
+              <div className="grid md:grid-cols-[1fr,400px]">
+                {/* Left Side: Information Panel */}
+                <div className="p-6 md:p-8 border-b md:border-b-0 md:border-l dark:border-neutral-800">
+                  <div className="flex items-center gap-4">
+                    <img src={details?.instructor_image} alt={details?.instructor} className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-neutral-700 shadow-sm" />
+                    <div>
+                      <p className="text-sm text-gray-500">المستشار</p>
+                      <h3 className="text-xl font-bold">{details?.instructor}</h3>
                     </div>
-                  )}
-
-                  {!!details?.terms?.length && (
-                    <div className="mt-6">
-                      <h4 className="font-semibold mb-2">الشروط:</h4>
-                      <ul className="list-disc pr-6 space-y-1 text-sm text-gray-600 dark:text-neutral-400">
-                        {details.terms.map((t, i) => <li key={i}>{t}</li>)}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl">
-                <CardContent className="p-6">
-                  <p className="text-sm text-gray-500 dark:text-neutral-400">مدة الجلسة</p>
-                  <div className="text-xl font-bold">{details?.session_minutes ?? '30'} دقيقة</div>
-
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">السعر</p>
-                    <div className="flex items-end gap-2">
-                      <div className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">
-                        {fmtUSD(priceNow)}
+                  </div>
+                  <div className="mt-6 border-t dark:border-neutral-800 pt-6 space-y-4">
+                    <div className="flex items-center gap-3 text-lg"><Clock className="w-6 h-6 text-primary-500" /> <strong>{details?.session_minutes ?? '30'} دقيقة</strong> من التحليل والنقاش المركز.</div>
+                    {details?.options && details.options.length > 0 && (
+                      <div>
+                          <h4 className="font-bold mb-3 flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary-500"/> محاور الجلسة:</h4>
+                          <ul className="space-y-2 pr-2">
+                              {details.options.map((o, i) => <li key={i} className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" /><span>{o}</span></li>)}
+                          </ul>
                       </div>
-                      {hasDiscount && (
-                        <div className="text-sm text-gray-400 dark:text-neutral-500 line-through">
-                          {fmtUSD(details?.price)}
-                        </div>
-                      )}
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Scheduler Panel */}
+                <div className="p-6 md:p-8 bg-gray-50/50 dark:bg-neutral-900/50">
+                  {/* Step 1: Select Date */}
+                  <div>
+                    <h3 className="font-bold flex items-center gap-2"><span className="bg-primary-600 text-white rounded-full w-6 h-6 text-sm grid place-content-center">1</span> اختر اليوم المناسب</h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {sessionDates.map(d => (
+                        <button key={d} onClick={() => handleDateSelect(d)} className={cn('px-3 py-2 rounded-lg border text-sm font-semibold transition-colors', selectedDate === d ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-neutral-800 hover:border-primary-500')}>
+                          {d}
+                        </button>
+                      ))}
+                      {!sessionDates.length && <p className="text-sm text-gray-500">لا توجد تواريخ متاحة حاليًا.</p>}
                     </div>
                   </div>
 
-                  {!!details?.limit_per_week && details.limit_per_week !== '0' && (
-                    <Badge className="mt-4 bg-secondary-100 text-secondary-700 border-0">
-                      الحد الأسبوعي: {details.limit_per_week} حجوزات
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Date & time picker */}
-            <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-4">احجز موعدك</h2>
-
-              {/* Dates row */}
-              <div className="flex flex-wrap gap-2">
-                {sessionDates.map(d => {
-                  const disabled = details?.excluded_days?.includes(d)
-                  return (
-                    <DateButton
-                      key={d}
-                      label={d}
-                      selected={selectedDate === d}
-                      disabled={disabled}
-                      onClick={() => { setSelectedDate(d); setSelectedSlot(null) }}
-                    />
-                  )
-                })}
-                {!sessionDates.length && (
-                  <span className="text-gray-500">لا توجد تواريخ متاحة حاليًا.</span>
-                )}
+                  {/* Step 2: Select Time */}
+                  <AnimatePresence>
+                    {selectedDate && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
+                        <h3 className="font-bold flex items-center gap-2"><span className="bg-primary-600 text-white rounded-full w-6 h-6 text-sm grid place-content-center">2</span> اختر التوقيت</h3>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          {slotsForSelectedDate.length > 0 ? slotsForSelectedDate.map((s, i) => {
+                            const isSelected = selectedSlot?.from === s.from;
+                            const isDisabled = s.status !== 'available';
+                            return <button key={i} disabled={isDisabled} onClick={() => setSelectedSlot(s)} className={cn('px-3 py-3 rounded-lg border text-sm font-semibold transition-colors disabled:opacity-50', isSelected ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-neutral-800 hover:border-primary-500')}> {s.from} - {s.to} </button>
+                          }) : <p className="text-sm text-gray-500 col-span-2">لا توجد أوقات متاحة في هذا اليوم.</p>}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Final CTA */}
+                  <div className="mt-6 border-t dark:border-neutral-800 pt-6">
+                    <div className="flex items-baseline justify-between mb-4">
+                        <span className="text-gray-600 dark:text-neutral-300">السعر الإجمالي:</span>
+                        <span className="text-2xl font-bold">{fmtUSD(priceNow)}</span>
+                    </div>
+                    <Button size="lg" className="w-full rounded-xl text-base font-bold" disabled={!selectedSlot} onClick={handleBooking}>
+                      {!selectedSlot ? 'اختر موعدًا للتأكيد' : `تأكيد حجز ${selectedSlot.from}`}
+                    </Button>
+                  </div>
+                </div>
               </div>
+            </Card>
 
-              {/* Slots */}
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {slots.map((s, i) => {
-                  const isSelected = selectedSlot?.from === s.from && selectedSlot?.to === s.to
-                  const isDisabled = s.status !== 'available' && !s.is_mine
-                  return (
-                    <button
-                      key={`${s.from}-${s.to}-${i}`}
-                      disabled={isDisabled}
-                      onClick={() => setSelectedSlot(s)}
-                      className={[
-                        'px-3 py-2 rounded-xl border text-sm transition-colors',
-                        isSelected
-                          ? 'bg-primary-600 text-white border-primary-600'
-                          : 'bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 hover:border-primary-400',
-                        isDisabled ? 'opacity-50 cursor-not-allowed' : '',
-                      ].join(' ')}
-                    >
-                      {s.from}–{s.to} {s.is_mine ? '• حجزك' : ''}
-                    </button>
-                  )
-                })}
-                {selectedDate && !slots.length && (
-                  <div className="col-span-full text-gray-500">لا توجد أوقات متاحة لهذا اليوم.</div>
-                )}
-              </div>
-
-              {/* CTA */}
-              <div className="mt-5">
-                <Button
-                  className="rounded-2xl bg-primary-600 hover:bg-primary-700 text-white"
-                  disabled={!selectedDate || !selectedSlot}
-                  onClick={() => {
-                    // TODO: اربط بتدفّق الحجز/الدفع لديك
-                    console.log('Reserve:', { date: selectedDate, slot: selectedSlot })
-                    alert(`سيتم الحجز لـ ${selectedDate} من ${selectedSlot?.from} إلى ${selectedSlot?.to}`)
-                  }}
-                >
-                  تأكيد الحجز
-                </Button>
-              </div>
-            </section>
-
-            {/* My previous consultations */}
-            <section>
-              <h2 className="text-xl md:text-2xl font-bold mb-3">حجوزاتي السابقة</h2>
-              {data.my_consultations.length ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* My Previous Consultations */}
+            {data.my_consultations && data.my_consultations.length > 0 && (
+              <section className="mt-16">
+                <h2 className="text-3xl font-bold mb-5 text-center">حجوزاتي السابقة</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {data.my_consultations.map(m => (
-                    <Card key={m.id} className="rounded-3xl">
-                      <CardContent className="p-4">
-                        <div className="font-semibold">{m.date}</div>
-                        <div className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
-                          {m.time_from} – {m.time_to}
+                    <Card key={m.id} className="rounded-2xl bg-white dark:bg-neutral-900 border dark:border-neutral-800 shadow-sm">
+                      <CardContent className="p-5">
+                        <div className="flex justify-between items-center">
+                          <div className="font-bold text-lg">{m.date}</div>
+                          <Badge variant={m.status === 'expired' ? 'outline' : 'default'} className="capitalize">{m.status === 'expired' ? 'مكتملة' : 'قادمة'}</Badge>
                         </div>
-                        <div className="mt-2">
-                          <Badge className="border-0">
-                            {m.status === 'expired' ? 'منتهٍ' : m.status}
-                          </Badge>
-                        </div>
-                        {m.meeting_link && (
-                          <a href={m.meeting_link} target="_blank" rel="noreferrer" className="text-primary-600 text-sm mt-2 inline-block">
-                            رابط الاجتماع
-                          </a>
-                        )}
+                        <p className="text-gray-600 dark:text-neutral-400 mt-1">{m.time_from} – {m.time_to}</p>
+                        {m.meeting_link && <Button asChild variant="link" className="p-0 h-auto mt-3"><a href={m.meeting_link} target="_blank" rel="noreferrer">رابط الاجتماع <ArrowRight className="w-4 h-4 mr-1" /></a></Button>}
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-              ) : (
-                <Card className="rounded-3xl">
-                  <CardContent className="p-6 text-gray-500">لا توجد حجوزات سابقة.</CardContent>
-                </Card>
-              )}
-            </section>
-          </div>
+              </section>
+            )}
+            <AuthPrompt />
+          </motion.div>
         )}
       </main>
     </div>

@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
   compress: true,
 
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "exaado.plebits.com",
+        pathname: "/uploads/**",
+      },
+    ],
     unoptimized: true,
   },
 
@@ -25,6 +34,28 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/_next/image",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, stale-while-revalidate=604800",
+          },
+          {
+            key: "Last-Modified",
+            value: "Wed, 01 Jan 2025 00:00:00 GMT",
           },
         ],
       },

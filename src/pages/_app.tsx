@@ -140,6 +140,25 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     Promise.all(pagesToPrefetch.map((p) => router.prefetch(p))).catch((e) => console.warn('Prefetch error:', e))
   }, [router])
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+    const isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
+    if (!isSecureContext) return
+
+    const register = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+        }
+      } catch (error) {
+        console.warn('[PWA] Service worker registration failed:', error)
+      }
+    }
+
+    register()
+  }, [])
+
   // شرط السبلاتش
   const showSplashScreen =
     !minDelayCompleted ||

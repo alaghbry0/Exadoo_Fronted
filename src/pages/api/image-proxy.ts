@@ -1,62 +1,96 @@
-// pages/api/image-proxy.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import fetch from 'node-fetch'; // أو استخدم fetch العالمي إذا كان Node.js >= 18
+import type { NextApiRequest, NextApiResponse } from "next"
+
+const CACHE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30 // 30 days
+const CACHE_STALE_WHILE_REVALIDATE_SECONDS = 60 * 60 * 24 * 7 // 7 days
+const FETCH_TIMEOUT_MS = 35000
+const MAX_FETCH_ATTEMPTS = 2
+
+const isAllowedProtocol = (protocol: string) => protocol === "http:" || protocol === "https:"
+
+const FETCH_HEADERS = {
+  Accept: "image/avif,image/webp,image/png,image/jpeg,image/svg+xml,image/*;q=0.8,*/*;q=0.5",
+  "User-Agent": "ExaadoImageProxy/1.0 (+https://exaado.plebits.com)",
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { url } = req.query;
+  const { url } = req.query
 
-  if (!url || typeof url !== 'string') {
-    return res.status(400).json({ error: 'Image URL is required' });
+  if (!url || Array.isArray(url)) {
+    res.status(400).json({ error: "Missing url query parameter" })
+    return
   }
 
+  let targetUrl: URL
   try {
-    console.log(`Proxying image from: ${url}`); // تسجيل URL المطلوب
-    const imageRes = await fetch(url);
+    targetUrl = new URL(url)
+  } catch {
+    res.status(400).json({ error: "Invalid url" })
+    return
+  }
 
-    if (!imageRes.ok) {
-      console.error(`Failed to fetch image from ${url}. Status: ${imageRes.status} ${imageRes.statusText}`);
-      // حاول قراءة نص الخطأ من المصدر إذا كان متاحًا
-      let errorBody = `Failed to fetch image: ${imageRes.statusText}`;
-       try {
-         const bodyText = await imageRes.text();
-         if (bodyText) errorBody += ` - Body: ${bodyText}`;
-      } catch { /* ignore if can't read body */ }
+  if (!isAllowedProtocol(targetUrl.protocol)) {
+    res.status(400).json({ error: "Only http and https protocols are allowed" })
+    return
+  }
 
-      return res.status(imageRes.status).json({ error: errorBody });
+  for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt++) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+    try {
+      const upstreamResponse = await fetch(targetUrl, {
+        signal: controller.signal,
+        cache: "no-store",
+        headers: FETCH_HEADERS,
+      })
+
+      if (!upstreamResponse.ok) {
+        console.error(
+          `[image-proxy] Upstream responded with ${upstreamResponse.status} for ${targetUrl.toString()} (attempt ${attempt}/${MAX_FETCH_ATTEMPTS})`
+        )
+        if (attempt === MAX_FETCH_ATTEMPTS) {
+          clearTimeout(timeout)
+          res
+            .status(upstreamResponse.status)
+            .json({ error: `Upstream responded with ${upstreamResponse.status}` })
+          return
+        }
+
+        clearTimeout(timeout)
+        continue
+      }
+
+      const contentType = upstreamResponse.headers.get("content-type") ?? "application/octet-stream"
+      const etag = upstreamResponse.headers.get("etag")
+      const buffer = Buffer.from(await upstreamResponse.arrayBuffer())
+
+      res.setHeader("Content-Type", contentType)
+      res.setHeader("Content-Length", buffer.length.toString())
+      res.setHeader(
+        "Cache-Control",
+        `public, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`
+      )
+
+      if (etag) {
+        res.setHeader("ETag", etag)
+      }
+
+      res.status(200).send(buffer)
+      clearTimeout(timeout)
+      return
+    } catch (error) {
+      const isAbortError = error instanceof Error && error.name === "AbortError"
+      console.error(
+        `[image-proxy] Failed to fetch ${targetUrl.toString()} (attempt ${attempt}/${MAX_FETCH_ATTEMPTS})`,
+        error
+      )
+      if (attempt === MAX_FETCH_ATTEMPTS) {
+        const status = isAbortError ? 504 : 502
+        res.status(status).json({ error: "Failed to fetch upstream image" })
+        return
+      }
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const contentType = imageRes.headers.get('content-type');
-    if (!contentType || !contentType.startsWith('image/')) {
-        console.error(`Invalid content type from ${url}: ${contentType}`);
-        return res.status(500).json({ error: 'Invalid content type, not an image.' });
-    }
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400, immutable'); // تخزين مؤقت لمدة يوم
-
-    // تحويل الجسم إلى Buffer وإرساله
-    const imageBuffer = await imageRes.arrayBuffer(); // استخدام arrayBuffer للحصول على البيانات الثنائية
-    res.status(200).send(Buffer.from(imageBuffer)); // إرسال الـ Buffer
-
-    // --- طريقة الـ Stream (احتفظ بها كبديل إذا لم تعمل طريقة Buffer لسبب ما) ---
-    // if (imageRes.body) {
-    //   imageRes.body.pipe(res);
-    //   // يجب التأكد من معالجة أخطاء الـ stream أيضًا
-    //   imageRes.body.on('error', (streamError) => {
-    //     console.error('Stream error during piping:', streamError);
-    //     // قد يكون من الصعب إرسال استجابة خطأ هنا لأن الرؤوس قد أُرسلت بالفعل
-    //     res.end(); // إنهاء الاستجابة
-    //   });
-    // } else {
-    //   console.error('Image response body is null');
-    //   return res.status(500).json({ error: 'Image response body is null' });
-    // }
-    // -------------------------------------------------------------------------
-
-
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Image proxy CATCH error:', err.message, err.stack);
-    res.status(500).json({ error: 'Internal server error fetching image', details: err.message });
   }
 }
