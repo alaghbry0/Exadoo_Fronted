@@ -2,58 +2,123 @@
 'use client'
 
 import Link from 'next/link'
+import { GraduationCap, ArrowLeft } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-type Props = {
+export interface AcademyHeroCardProps {
   courses?: number
   tracks?: number
   freeCount?: number
+  className?: string
 }
 
-export default function AcademyHeroCard({ courses = 24, tracks = 6, freeCount = 3 }: Props) {
+function AcademyHeroCard({
+  courses = 24,
+  tracks = 6,
+  freeCount = 3,
+  className,
+}: AcademyHeroCardProps) {
   return (
-    <div className="group relative">
-      <Card className="relative overflow-hidden rounded-3xl border-0 shadow-subtle transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-        {/* خلفيات */}
-        <div className="absolute inset-0 aurora-bg" />
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.12] dark:opacity-[0.08]" />
-        <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-white/10 blur-3xl" />
-        <span className="card-shine" aria-hidden />
+    <Link
+      href="/academy"
+      prefetch
+      aria-label="الدخول إلى أكاديمية إكسادو"
+      // تحسين حالة التركيز (focus) لتكون أوضح
+      className={cn(
+        'group block rounded-3xl outline-none focus-visible:ring-4 focus-visible:ring-primary-400/50',
+        className
+      )}
+    >
+      <Card
+        dir="rtl"
+        className={cn(
+          'relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm',
+          // تحسين تأثير الحركة عند المرور ليكون أكثر سلاسة
+          'transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-primary-500/10',
+          'dark:border-neutral-800 dark:bg-neutral-900'
+        )}
+      >
+        {/* إضافة تأثير توهج عند المرور */}
+        <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gradient-to-br dark:from-primary-500/10 dark:via-transparent dark:to-secondary-500/10" />
+        
+        {/* تحسين ألوان وتأثير حركة الخلفيات الضبابية */}
+        <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-primary-100/80 blur-3xl transition-transform duration-500 group-hover:-translate-x-2 group-hover:-translate-y-2 dark:bg-primary-500/20" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-secondary-500/10 blur-3xl transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2 dark:bg-secondary-600/20" />
 
-        <CardContent className="relative p-6 md:p-8">
-          <div className="md:flex md:items-center md:justify-between">
+        {/* زيادة المساحة الداخلية للبطاقة */}
+        <CardContent className="p-8 md:p-10 font-arabic text-gray-800 dark:text-neutral-200">
+          <div className="relative flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-                  Exaado Academy
-                </h1>
-                <Badge className="bg-white/20 text-white border-none">مُحدّث</Badge>
+              <div className="flex items-center gap-4">
+                {/* تكبير حجم الأيقونة والمربع المحيط بها */}
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary-100 text-primary-600 transition-transform duration-300 group-hover:scale-110 dark:bg-primary-500/10 dark:text-primary-400">
+                  <GraduationCap className="h-7 w-7" aria-hidden="true" />
+                </div>
+                {/* تحسين العنوان */}
+                <h2 id="academy-title" className="font-display text-2xl font-bold tracking-tight text-gray-900 dark:text-neutral-100 md:text-3xl">
+                  أكاديمية إكسادو: انطلق نحو الاحتراف
+                </h2>
               </div>
 
-              <p className="mt-2 text-white/90 max-w-2xl">
-                برامج عملية، مسارات واضحة، وشهادات مشاركة—طريقك للاحتراف يبدأ من هنا.
+              {/* اقتراح نص وصفي بديل وأكثر جاذبية */}
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-neutral-300 md:text-lg">
+                حوّل معرفتك إلى مهارات حقيقية. ابدأ رحلتك التعليمية مع مسارات عملية وشهادات معتمدة.
               </p>
+
+              {/* زيادة المسافة العلوية للرقائق */}
+              <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+                <StatChip label="دورة" value={courses} />
+                <StatChip label="مسار" value={tracks} />
+                <StatChip label="مجانية" value={freeCount} variant="success" />
+              </div>
             </div>
 
-            {/* --- UPDATED: CTA Button --- */}
-            <div className="mt-6 md:mt-0 md:mr-6 shrink-0">
-              <Button
-                size="lg"
-                className="w-full md:w-auto bg-white text-primary-700 hover:bg-white/90 rounded-xl font-bold shadow-lg transition-transform duration-200 group-hover:scale-105"
-                asChild
+            <div className="shrink-0">
+              <div
+                className={cn(
+                  'inline-flex h-10 items-center justify-center gap-2 rounded-full px-7 text-sm font-bold text-white',
+                  // اقتراح تدرج لوني أكثر حيوية للزر
+                  'bg-gradient-to-r from-primary-500 to-primary-700 shadow-lg transition-all duration-300',
+                  // تأثير ظل أكثر بروزاً وحركة سهم أكبر عند المرور
+                  'group-hover:shadow-2xl group-hover:shadow-primary-500/30'
+                )}
+                role="button"
+                aria-hidden="true"
               >
-                <Link href="/academy">
-                  استكشف الأكاديمية
-                  <ArrowLeft className="w-5 h-5 mr-2" />
-                </Link>
-              </Button>
+                {/* اقتراح نص CTA بديل */}
+                <span>ابدأ التعلّم الآن</span>
+                <ArrowLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1.5" aria-hidden="true" />
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Link>
+  )
+}
+
+export default AcademyHeroCard
+
+function StatChip({
+  label,
+  value,
+  variant = 'default',
+}: {
+  label: string
+  value: number | string
+  variant?: 'default' | 'success'
+}) {
+  const base = 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium'
+  const styles = {
+    default: 'border-primary-200/80 bg-primary-50 text-primary-800 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300',
+    success: 'border-success-200 bg-success-100 text-success-800 dark:border-success-700/30 dark:bg-success-700/15 dark:text-success-400',
+  };
+
+  return (
+    <span className={cn(base, styles[variant])} aria-label={`${label}: ${value}`}>
+      <span className="opacity-80">{label}</span>
+      <span className="font-bold tabular-nums">{value}</span>
+    </span>
   )
 }

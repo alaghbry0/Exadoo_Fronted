@@ -1,129 +1,114 @@
-"use client"
+// src/components/SmartImage.tsx
+'use client'
 
-import Image, { ImageProps } from "next/image"
-import { useEffect, useMemo, useState } from "react"
-import { cn } from "@/lib/utils"
+import Image, { ImageProps } from 'next/image'
+import { useState, useEffect, useMemo } from 'react'
+import { cn } from '@/lib/utils'
 
+// Blur placeholder خفيف جدًا
 const BLUR_DATA_URL =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTAwJScgaGVpZ2h0PScxMDAlJyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnPjxyZWN0IHdpZHRoPScxMDAlJyBoZWlnaHQ9JzEwMCUnIGZpbGw9J2xpbmVhci1ncmFkaWVudCgwLCAxMDAlLCAxMDAlKScvPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSdnbCcgeDE9JzAlJyB5MT0nMCUnIHgyPScwJScgeTI9JzEwMCUnPjxzdG9wIHByb2dyZXNzaW9uPScwJScgZmlsbD0nI2Y1ZjhmZicgLz48c3RvcCBwcm9ncmVzc2lvbj0nMTAwJScgZmlsbD0nI2UyZTVmNCcgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48L3N2Zz4="
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4='
 
-const isHttpUrl = (value: string) => /^https?:\/\//i.test(value)
-
-const toProxiedSrc = <T extends ImageProps["src"] | undefined>(value: T) => {
-  if (typeof value !== "string") {
-    return value
+// التحقق من الروابط الخارجية
+function needsProxy(src: string | undefined): boolean {
+  if (!src || typeof src !== 'string') return false
+  try {
+    const url = new URL(src)
+    return url.hostname === 'exaado.plebits.com'
+  } catch {
+    return false
   }
-  return isHttpUrl(value) ? `/api/image-proxy?url=${encodeURIComponent(value)}` : value
 }
 
-type SmartImageProps = ImageProps & {
-  fallbackSrc?: ImageProps["src"]
+// تحويل الرابط للـ proxy (مع normalization)
+// ✅ وفق التعديل: تنظيف الرابط بإزالة الـ query params
+function toProxiedUrl(src: string): string {
+  if (!needsProxy(src)) return src
+
+  try {
+    const url = new URL(src)
+    const cleanUrl = `${url.origin}${url.pathname}`
+    return `/api/image-proxy?url=${encodeURIComponent(cleanUrl)}`
+  } catch {
+    return `/api/image-proxy?url=${encodeURIComponent(src)}`
+  }
+}
+
+type SmartImageProps = Omit<ImageProps, 'placeholder' | 'blurDataURL'> & {
+  fallbackSrc?: string
 }
 
 export default function SmartImage({
-  className,
-  fallbackSrc,
-  loading = "lazy",
-  onError,
-  onLoadingComplete,
-  src: initialSrc,
+  src,
   alt,
-  style,
+  className,
+  fallbackSrc = '/image.jpg',
+  onError,
+  onLoad,
   ...props
 }: SmartImageProps) {
-  const proxiedInitialSrc = useMemo(() => toProxiedSrc(initialSrc), [initialSrc])
-  const proxiedFallbackSrc = useMemo(() => toProxiedSrc(fallbackSrc), [fallbackSrc])
+  // ✅ useMemo بدل useState لثبات normalizedSrc
+  const normalizedSrc = useMemo(() => {
+    if (typeof src === 'string') {
+      return toProxiedUrl(src)
+    }
+    return src as string
+  }, [src])
 
-  const [src, setSrc] = useState(proxiedInitialSrc)
-  const [blurDataUrl, setBlurDataUrl] = useState<string>(BLUR_DATA_URL)
+  const normalizedFallback = useMemo(() => toProxiedUrl(fallbackSrc), [fallbackSrc])
+
+  // ✅ الحالة تعتمد على normalizedSrc المحسوب
+  const [imageSrc, setImageSrc] = useState<string>(normalizedSrc)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
-  const normalizedInitialSrc = useMemo(() => {
-    if (typeof initialSrc === "string") return initialSrc
-    if (typeof initialSrc === "object" && initialSrc && "src" in initialSrc) {
-      return initialSrc.src as string
-    }
-    return undefined
-  }, [initialSrc])
-
+  // تحديث المصدر عند تغيير prop
   useEffect(() => {
-    setSrc(proxiedInitialSrc)
+    setImageSrc(normalizedSrc)
     setIsLoaded(false)
-  }, [proxiedInitialSrc])
+    setHasError(false)
+  }, [normalizedSrc])
 
-  useEffect(() => {
-    let isActive = true
-    if (!normalizedInitialSrc) {
-      setBlurDataUrl(BLUR_DATA_URL)
-      return () => {
-        isActive = false
-      }
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    if (!hasError && normalizedFallback && imageSrc !== normalizedFallback) {
+      setHasError(true)
+      setImageSrc(normalizedFallback)
     }
+    onError?.(e)
+  }
 
-    const hydrateBlur = async () => {
-      try {
-        const { getImageMetadata } = await import("@/lib/cache/academyCache")
-        const metadata = await getImageMetadata(normalizedInitialSrc)
-        if (!isActive) return
-        if (metadata?.inlineBase64) {
-          setBlurDataUrl(metadata.inlineBase64)
-        } else {
-          setBlurDataUrl(BLUR_DATA_URL)
-        }
-      } catch (error) {
-        if (isActive) {
-          console.warn("[SmartImage] Failed to resolve blur placeholder", error)
-          setBlurDataUrl(BLUR_DATA_URL)
-        }
-      }
-    }
-
-    hydrateBlur()
-
-    return () => {
-      isActive = false
-    }
-  }, [normalizedInitialSrc])
-
-  const baseClassName = cn(
-    "bg-gray-100 object-cover dark:bg-neutral-900 transition-opacity duration-500",
-    isLoaded ? "opacity-100" : "opacity-0",
-    className
-  )
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    setIsLoaded(true)
+    onLoad?.(e)
+  }
 
   return (
-    <span className="relative block h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
+      {/* Skeleton loader */}
       {!isLoaded && (
-        <span
-          aria-hidden="true"
+        <div
           className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 via-gray-200/80 to-gray-100 dark:from-neutral-900 dark:via-neutral-800/80 dark:to-neutral-900"
+          aria-hidden="true"
         />
       )}
+
       <Image
         {...props}
+        src={imageSrc}
         alt={alt}
-        className={baseClassName}
-        src={src}
-        loading={loading}
+        className={cn(
+          'object-cover transition-opacity duration-300',
+          isLoaded ? 'opacity-100' : 'opacity-0',
+          className
+        )}
         placeholder="blur"
-        blurDataURL={blurDataUrl}
-        style={{
-          transition: "opacity 300ms ease",
-          ...style,
-        }}
-        onLoadingComplete={(result) => {
-          setIsLoaded(true)
-          onLoadingComplete?.(result)
-        }}
-        onError={(event) => {
-          setIsLoaded(false)
-          if (proxiedFallbackSrc && src !== proxiedFallbackSrc) {
-            setSrc(proxiedFallbackSrc)
-            return
-          }
-          onError?.(event)
-        }}
+        blurDataURL={BLUR_DATA_URL}
+        onLoad={handleLoad}
+        onError={handleError}
+        quality={85}
+        // مهم: استخدم كاش Next.js
+        unoptimized={false}
       />
-    </span>
+    </div>
   )
 }

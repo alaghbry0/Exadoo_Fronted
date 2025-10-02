@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
 
   images: {
     formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     remotePatterns: [
       {
@@ -14,12 +16,15 @@ const nextConfig: NextConfig = {
         pathname: "/uploads/**",
       },
     ],
-    unoptimized: true,
+    // ✅ إزالة unoptimized لتفعيل تحسينات Next.js
+    unoptimized: false,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   async headers() {
     return [
-
       {
         source: "/api/:path*",
         headers: [
@@ -29,7 +34,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/_next/static/(.*)",
+        source: "/_next/static/:path*",
         headers: [
           {
             key: "Cache-Control",
@@ -42,24 +47,19 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=86400, stale-while-revalidate=604800",
+            value: "public, max-age=31536000, stale-while-revalidate=86400",
           },
         ],
       },
       {
-        source: "/images/:path*",
+        source: "/api/image-proxy",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, stale-while-revalidate=604800",
-          },
-          {
-            key: "Last-Modified",
-            value: "Wed, 01 Jan 2025 00:00:00 GMT",
+            value: "public, max-age=2592000, stale-while-revalidate=604800",
           },
         ],
       },
-      // سياسة CSP شاملة
       {
         source: "/:path*",
         headers: [
@@ -70,20 +70,17 @@ const nextConfig: NextConfig = {
               "script-src 'self' https://telegram.org https://alaghbry0.github.io 'unsafe-inline' 'unsafe-eval';",
               "script-src-elem 'self' https://telegram.org https://alaghbry0.github.io;",
               "style-src 'self' 'unsafe-inline';",
-              // <-- تم التحديث هنا: إضافة نطاقات الاتصال الضرورية
-              "connect-src 'self' https://exadoo.onrender.com  https://exadoo-rxr9.onrender.com  https://exaado.plebits.com http://192.168.0.96:5000 http://localhost:5002 https://exadoo-sse-server.onrender.com https://tonapi.io https://bridge.tonapi.io https://cdn.echooo.xyz https://tonconnectbridge.mytonwallet.org https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://go-bridge.tomo.inc https://ton-bridge.tobiwallet.app https://bridge.dewallet.pro https://dapp.gateio.services  https://ton-bridge.safepal.com  https://toncenter.com https://*.toncdn.io https://vercel.live https://wallet-bridge.fintopio.com https://tc.architecton.su https://ton-connect.mytokenpocket.vip https://bridge.mirai.app  https://wallet.binance.com https://www.okx.com https://ton-connect-bridge.bgwapi.io https://connect.tonhubapi.com https://raw.githubusercontent.com https://walletbot.me;",
-
-              "img-src 'self' data: blob: https: *.githubusercontent.com *.bnbstatic.com *.okx.com *.tonhub.com *.mytonwallet.io *.tonkeeper.com *.tg *.tobiwallet.app *.bitgetimg.com *.gatedataimg.com *.delab-team;",
+              "connect-src 'self' https://exadoo.onrender.com https://exadoo-rxr9.onrender.com https://exaado.plebits.com http://192.168.0.96:5000 http://localhost:5002 https://exadoo-sse-server.onrender.com https://tonapi.io https://bridge.tonapi.io https://cdn.echooo.xyz https://tonconnectbridge.mytonwallet.org https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://go-bridge.tomo.inc https://ton-bridge.tobiwallet.app https://bridge.dewallet.pro https://dapp.gateio.services https://ton-bridge.safepal.com https://toncenter.com https://*.toncdn.io https://vercel.live https://wallet-bridge.fintopio.com https://tc.architecton.su https://ton-connect.mytokenpocket.vip https://bridge.mirai.app https://wallet.binance.com https://www.okx.com https://ton-connect-bridge.bgwapi.io https://connect.tonhubapi.com https://raw.githubusercontent.com https://walletbot.me;",
+              "img-src 'self' data: blob: https:;",
               "font-src 'self';",
               "frame-src 'self' https://telegram.org https://wallet.tg https://connect.tonhubapi.com;",
               "object-src 'self';",
-            ].join(" ").replace(/\n/g, ' '),
+            ].join(" "),
           },
         ],
       },
     ];
   },
-
 
   async rewrites() {
     return [

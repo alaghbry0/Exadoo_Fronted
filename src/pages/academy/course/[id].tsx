@@ -1,119 +1,436 @@
 'use client'
-import React, { useMemo } from 'react'
+
+import React, { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { useAcademyData } from '@/services/academy'
-import { useTelegram } from '@/context/TelegramContext'
-import Navbar from '@/components/Navbar'
+import { motion, AnimatePresence } from 'framer-motion'
 import AuthPrompt from '@/components/AuthFab'
 import SmartImage from '@/components/SmartImage'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
+import SubscribeFab from '@/components/SubscribeFab'
 import { cn } from '@/lib/utils'
-import { ArrowRight, CheckCircle2, BookOpen, BarChart3, Users, Clock } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, BookOpen, BarChart3, User, Clock, Play, Star, Users, Award, ChevronRight } from 'lucide-react'
+import { useAcademyData } from '@/services/academy'
+import { useTelegram } from '@/context/TelegramContext'
 
-// --- UPDATED: Page Layout ---
+// --- Interfaces and Helper Functions ---
+interface Course {
+  id: string
+  title: string
+  short_description: string
+  description?: string
+  instructor_name?: string
+  instructor_photo?: string
+  level?: string
+  total_number_of_lessons: number
+  total_enrollment?: number
+  thumbnail?: string
+  cover_image?: string
+  price: string
+  discounted_price?: string
+  is_free_course?: string
+  outcomes?: string[]
+  requirements?: string[]
+  rating?: number
+  duration?: string
+}
+
+const formatPrice = (value?: string) => {
+  if (!value) return ''
+  if (value.toLowerCase?.() === 'free') return 'مجاني'
+  const n = Number(value)
+  return isNaN(n) ? value : `$${n.toFixed(0)}`
+}
+
+// Function to clean and parse description HTML
+const parseDescription = (description: string) => {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = description;
+  let textContent = tempDiv.textContent || tempDiv.innerText || '';
+  const lessonPattern = /C\d+\s*\|\s*الدرس\s*\d+\s*\|\s*([^<]+)/g;
+  let lessons = [];
+  let match;
+  while ((match = lessonPattern.exec(description)) !== null) {
+    lessons.push(match[1].trim());
+  }
+  const generalInfo = textContent.split('C3 |')[0].trim();
+  return { generalInfo, lessons };
+}
+
+// --- Main Component ---
 export default function CourseDetail() {
   const router = useRouter()
   const id = (router.query.id as string) || ''
   const { telegramId } = useTelegram()
   const { data, isLoading, isError, error } = useAcademyData(telegramId || undefined)
+  const [activeTab, setActiveTab] = useState('overview')
+  const [scrollY, setScrollY] = useState(0)
+  const [isEnrolled, setIsEnrolled] = useState(false)
 
-  const course = useMemo(()=> data?.courses.find(c=>c.id===id), [data, id])
-  const isEnrolled = useMemo(()=> data?.my_enrollments.course_ids.includes(id), [data, id])
+  // Track scroll position for parallax effect only
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
-  if (isLoading) return <div className="py-40 text-center">جاري تحميل تفاصيل الدورة...</div>
-  if (isError) return <div className="py-40 text-center text-red-500">تعذر التحميل: {(error as Error)?.message}</div>
-  if (!course && !isLoading) return <div className="py-40 text-center">عذراً، لم يتم العثور على هذه الدورة.</div>
-  if (!course) return null // Render nothing while course is being found
+  const course: Course | undefined = useMemo(() => data?.courses.find((c: Course) => c.id === id), [data, id])
+  
+  useEffect(() => {
+    if (data?.my_enrollments?.course_ids?.includes(id)) {
+      setIsEnrolled(true)
+    }
+  }, [data, id])
 
-  const isFree = course.is_free_course==='1' || course.price.toLowerCase()==='free'
+  if (isLoading) return (
+    <div className="font-arabic min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+        <p className="text-lg text-gray-600 dark:text-gray-300">جاري تحميل تفاصيل الدورة…</p>
+      </div>
+    </div>
+  )
+  
+  if (isError) return (
+    <div className="font-arabic min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center p-12">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 max-w-md">
+        <h2 className="text-xl font-bold text-red-800 dark:text-red-400 mb-2">حدث خطأ</h2>
+        <p className="text-red-600 dark:text-red-300">تعذّر التحميل: {(error as Error)?.message}</p>
+        <Button className="mt-4" onClick={() => window.location.reload()}>
+          إعادة المحاولة
+        </Button>
+      </div>
+    </div>
+  )
+  
+  if (!course) return (
+    <div className="font-arabic min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center p-12">
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6 max-w-md">
+        <h2 className="text-xl font-bold text-amber-800 dark:text-amber-400 mb-2">الدورة غير موجودة</h2>
+        <p className="text-amber-600 dark:text-amber-300">عذرًا، لم يتم العثور على هذه الدورة.</p>
+        <Link href="/academy" className="mt-4 inline-block">
+          <Button>
+            العودة للأكاديمية
+          </Button>
+        </Link>
+      </div>
+    </div>
+  )
+
+  const isFree = course.is_free_course === '1' || course.price?.toLowerCase?.() === 'free'
+  const { generalInfo, lessons } = parseDescription(course.description || '');
+  const progress = isEnrolled ? Math.floor(Math.random() * 100) : 0; // Mock progress if enrolled
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 }
+    },
+  }
 
   return (
-    <div dir="rtl" className="bg-gray-50 dark:bg-neutral-950 text-gray-800 dark:text-neutral-200 font-arabic">
-      <Navbar />
-      <main>
-        {/* --- NEW: Hero Section --- */}
-        <div className="bg-white dark:bg-neutral-900 border-b dark:border-neutral-800">
-            <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-                <Link href="/academy" className="inline-flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline mb-4">
-                    <ArrowRight className="w-4 h-4" />
-                    العودة إلى الأكاديمية
-                </Link>
-                <div className="grid lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2">
-                        <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-neutral-100">{course.title}</motion.h1>
-                        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-3 text-lg text-gray-600 dark:text-neutral-300">{course.short_description}</motion.p>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-sm">
-                            <div className="flex items-center gap-2"><img src={course.instructor_image} alt={course.instructor_name} className="w-6 h-6 rounded-full object-cover" /> <span>{course.instructor_name}</span></div>
-                            <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-gray-500" /> <span className="capitalize">{course.level || 'غير محدد'}</span></div>
-                            <div className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-gray-500" /> <span>{course.total_number_of_lessons} دروس</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div dir="rtl" className="font-arabic min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-neutral-900 dark:to-neutral-950 text-gray-800 dark:text-neutral-200">
+      <main className="pb-24"> {/* Increased padding to account for the fixed bar */}
+        {/* --- Hero Image with Parallax Effect --- */}
+        <div className="relative h-64 w-full overflow-hidden md:h-96">
+          <div 
+            className="absolute inset-0 will-change-transform"
+            style={{ transform: `translateY(${scrollY * 0.5}px)` }}
+          >
+            <SmartImage
+              src={course.cover_image || course.thumbnail || '/image.jpg'}
+              alt={course.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
+              className="object-cover"
+              style={{ borderRadius: '0 0 2rem 2rem' }}
+              priority
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          
+          {/* Back Button */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-4 left-4 z-10"
+          >
+            <Link
+              href="/academy"
+              prefetch
+              className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-sm text-white transition-all hover:bg-white/30"
+              aria-label="العودة إلى الأكاديمية"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span>العودة</span>
+            </Link>
+          </motion.div>
+          
+          {/* Course Title Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-2xl font-bold tracking-tight text-white md:text-4xl"
+            >
+              {course.title}
+            </motion.h1>
+          </div>
         </div>
-        
-        {/* --- NEW: Main Content with Sticky Sidebar --- */}
-        <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-                <div className="lg:col-span-2">
-                    <div className="prose prose-lg dark:prose-invert max-w-none bg-white dark:bg-neutral-900 rounded-2xl p-6 border dark:border-neutral-800">
-                        <h2 className="font-bold">عن الدورة</h2>
-                        <div dangerouslySetInnerHTML={{ __html: course.description || '<p>لا يوجد وصف متوفر حالياً.</p>' }} />
-                    </div>
-                    {course.outcomes?.length > 0 && (
-                        <div className="mt-8 bg-white dark:bg-neutral-900 rounded-2xl p-6 border dark:border-neutral-800">
-                            <h3 className="text-2xl font-bold mb-4">ماذا ستتعلم؟</h3>
-                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                                {course.outcomes.map((o,i)=><li key={i} className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-primary-500 mt-1 shrink-0" /><span>{o}</span></li>)}
-                            </ul>
-                        </div>
-                    )}
-                    {course.requirements?.length > 0 && (
-                         <div className="mt-8 bg-white dark:bg-neutral-900 rounded-2xl p-6 border dark:border-neutral-800">
-                            <h3 className="text-2xl font-bold mb-4">المتطلبات</h3>
-                            <ul className="space-y-3">
-                                {course.requirements.map((r,i)=><li key={i} className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-gray-500 mt-1 shrink-0" /><span>{r}</span></li>)}
-                            </ul>
-                        </div>
-                    )}
-                </div>
 
-                <aside className="mt-8 lg:mt-0">
-                    <div className="sticky top-24">
-                         <Card className="rounded-2xl overflow-hidden shadow-lg border dark:border-neutral-800">
-                            <div className="relative w-full aspect-video">
-                                <SmartImage src={course.thumbnail || course.cover_image || '/image.jpg'} alt={course.title} fill className="object-cover" />
-                            </div>
-                            <div className="p-5">
-                                <div className="flex items-baseline gap-2">
-                                    {isFree ? (
-                                        <span className="text-3xl font-extrabold text-emerald-600">مجاني</span>
+        {/* --- Course Header & Details --- */}
+        <div className="mx-auto max-w-4xl px-4 py-8 md:py-12">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="space-y-6"
+          >
+            {/* Short Description */}
+            <motion.p variants={itemVariants} className="text-lg text-gray-600 dark:text-gray-300">
+              {course.short_description}
+            </motion.p>
+
+            {/* Course Stats */}
+            <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
+              {(course.instructor_name || course.instructor_photo) && (
+                <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
+                  {course.instructor_photo && (
+                    <img
+                      src={course.instructor_photo}
+                      alt={course.instructor_name || 'المدرب'}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  )}
+                  {course.instructor_name && <span className="font-medium">{course.instructor_name}</span>}
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
+                <BarChart3 className="h-4 w-4 text-primary-600" />
+                <span className="capitalize">{course.level || 'غير محدّد'}</span>
+              </div>
+              
+              <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
+                <BookOpen className="h-4 w-4 text-primary-600" />
+                <span>{course.total_number_of_lessons} دروس</span>
+              </div>
+              
+              {course.total_enrollment && (
+                <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
+                  <Users className="h-4 w-4 text-primary-600" />
+                  <span>{course.total_enrollment} طالب</span>
+                </div>
+              )}
+              
+              {course.rating && (
+                <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
+                  <Star className="h-4 w-4 text-amber-500 fill-current" />
+                  <span>{course.rating}</span>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Progress Bar (if enrolled) */}
+            {isEnrolled && (
+              <motion.div variants={itemVariants} className="bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">تقدمك في الدورة</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{progress}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </motion.div>
+            )}
+
+            {/* --- Course Content with Tabs --- */}
+            <motion.div variants={itemVariants} className="mt-8">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="mb-6 grid w-full grid-cols-3 bg-white dark:bg-neutral-800 p-1 rounded-xl shadow-sm">
+                  <TabsTrigger 
+                    value="overview" 
+                    className="data-[state=active]:bg-primary-600 data-[state=active]:text-white rounded-lg transition-all"
+                  >
+                    نظرة عامة
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="curriculum" 
+                    className="data-[state=active]:bg-primary-600 data-[state=active]:text-white rounded-lg transition-all"
+                  >
+                    المنهج
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="outcomes" 
+                    className="data-[state=active]:bg-primary-600 data-[state=active]:text-white rounded-lg transition-all"
+                  >
+                    النتائج
+                  </TabsTrigger>
+                </TabsList>
+                
+                <AnimatePresence mode="wait">
+                  {activeTab === 'overview' && (
+                    <motion.div
+                      key="overview"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Card className="border-0 shadow-lg overflow-hidden">
+                        <CardHeader className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 pb-4">
+                          <CardTitle className="flex items-center gap-2">
+                            <BookOpen className="h-5 w-5 text-primary-600" />
+                            عن الدورة
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {generalInfo || 'لا يوجد وصف متوفر حاليًا.'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                  
+                  {activeTab === 'curriculum' && (
+                    <motion.div
+                      key="curriculum"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Card className="border-0 shadow-lg overflow-hidden">
+                        <CardHeader className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 pb-4">
+                          <CardTitle className="flex items-center gap-2">
+                            <BookOpen className="h-5 w-5 text-primary-600" />
+                            منهج الدورة
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          {lessons.length > 0 ? (
+                            <div className="space-y-3">
+                              {lessons.map((lesson, index) => (
+                                <motion.div 
+                                  key={index} 
+                                  className="flex items-center gap-3 rounded-lg border border-gray-100 dark:border-neutral-700 p-3 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer"
+                                  whileHover={{ x: 5 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+                                    {isEnrolled ? (
+                                      <CheckCircle2 className="h-5 w-5" />
                                     ) : (
-                                        <>
-                                            <span className="text-3xl font-extrabold text-primary-600 dark:text-primary-400">${course.discounted_price || course.price}</span>
-                                            {course.discounted_price && <span className="text-lg text-gray-400 line-through">${course.price}</span>}
-                                        </>
+                                      <Play className="h-5 w-5" />
                                     )}
-                                </div>
-                                <Button size="lg" className={cn('w-full mt-4 rounded-xl text-base font-bold', isEnrolled && 'bg-green-600 hover:bg-green-700')}>
-                                    {isEnrolled ? 'اذهب إلى الدورة' : (isFree ? 'سجل الآن مجاناً' : 'اشترك في الدورة')}
-                                </Button>
-                                <ul className="mt-5 text-sm text-gray-600 dark:text-neutral-400 space-y-3">
-                                    <li className="flex items-center gap-2"><Clock className="w-4 h-4" /> وصول مدى الحياة للمحتوى</li>
-                                    <li className="flex items-center gap-2"><Users className="w-4 h-4" /> {course.total_enrollment} طالب مسجل</li>
-                                </ul>
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium">{lesson}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">الدرس {index + 1}</p>
+                                  </div>
+                                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                                </motion.div>
+                              ))}
                             </div>
-                         </Card>
-                    </div>
-                </aside>
-            </div>
+                          ) : (
+                            <p className="text-gray-600 dark:text-gray-300">لا توجد تفاصيل عن المنهج متاحة حاليًا.</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                  
+                  {activeTab === 'outcomes' && (
+                    <motion.div
+                      key="outcomes"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Card className="border-0 shadow-lg overflow-hidden">
+                        <CardHeader className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 pb-4">
+                          <CardTitle className="flex items-center gap-2">
+                            <Award className="h-5 w-5 text-primary-600" />
+                            ماذا ستتعلم؟
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          {course.outcomes?.length ? (
+                            <ul className="space-y-3">
+                              {course.outcomes.map((o, i) => (
+                                <motion.li 
+                                  key={i} 
+                                  className="flex items-start gap-3"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.3, delay: i * 0.1 }}
+                                >
+                                  <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-primary-500" />
+                                  <span>{o}</span>
+                                </motion.li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-600 dark:text-gray-300">لا توجد نتائج محددة متاحة حاليًا.</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Tabs>
+            </motion.div>
+          </motion.div>
         </div>
       </main>
-      <AuthPrompt />
+
+      {/* --- Fixed Bottom Enrollment Bar --- */}
+      <SubscribeFab
+  isEnrolled={isEnrolled}
+  isFree={isFree}
+  price={course.price}
+  discountedPrice={course.discounted_price}
+  formatPrice={formatPrice}
+  onClick={() => {
+    // منطق الضغط:
+    // - إن كان ملتحقًا، انتقل لواجهة الدروس/المشاهدة
+    // - إن لم يكن، افتح تدفق الاشتراك/التسجيل لديك
+    if (isEnrolled) {
+      // مثال: وجّه لواجهة المشاهدة الخاصة بدورتك
+      // عدله حسب مسارات التطبيق لديك
+      router.push(`/academy/course/${id}`)
+    } else {
+      // لو عندك مودال/منطق للاشتراك فعّله هنا
+      // مثال بسيط: ارسل حدث تيليجرام/افتح مودال
+      // openSubscribeModal() أو triggerAuthPrompt()
+      const evt = new CustomEvent('open-subscribe', { detail: { courseId: id } })
+      window.dispatchEvent(evt)
+    }
+  }}
+/>
+
+<AuthPrompt />
     </div>
   )
 }
