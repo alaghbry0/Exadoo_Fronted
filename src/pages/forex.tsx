@@ -279,3 +279,5 @@ export default function ForexPage() {
     </div>
   )
 }
+
+(ForexPage as any).hideFooter = true;

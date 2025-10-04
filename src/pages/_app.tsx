@@ -1,5 +1,6 @@
-﻿'use client'
-import React, { useEffect, useState, useRef } from 'react'
+﻿// src/pages/_app.tsx
+'use client'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
@@ -14,11 +15,11 @@ import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
 import { useNotificationStream } from '@/hooks/useNotificationStream'
+import GlobalAuthSheet from '@/components/GlobalAuthSheet'
 
 // ===================== startapp helpers =====================
 type StartAppParam = string | null;
 
-// خريطة الأسماء المختصرة -> مسارات داخل التطبيق
 const ROUTE_MAP: Record<string, string> = {
   shop: '/shop',
   plans: '/plans',
@@ -27,15 +28,13 @@ const ROUTE_MAP: Record<string, string> = {
 };
 
 function readStartAppParam(): StartAppParam {
-  // من تيليجرام
-  const tg = window.Telegram?.WebApp;
+  const tg = (globalThis as any)?.Telegram?.WebApp;
   const tgParam =
     tg?.initDataUnsafe?.start_param ||
     tg?.initDataUnsafe?.startapp ||
     tg?.initData?.start_param;
   if (tgParam && typeof tgParam === 'string') return tgParam;
 
-  // من المتصفح (للاختبار)
   try {
     const sp = new URLSearchParams(globalThis.location?.search || '');
     return sp.get('startapp') || sp.get('tgWebAppStartParam') || sp.get('start_param');
@@ -45,16 +44,13 @@ function readStartAppParam(): StartAppParam {
 }
 
 function resolveTargetRoute(startParam: string): string | null {
-  // شكل مباشر: startapp=shop
   if (ROUTE_MAP[startParam]) return ROUTE_MAP[startParam];
 
-  // شكل route:/path?x=1 (معاملات مركّبة، مشفّرة)
   if (startParam.startsWith('route:')) {
     const raw = decodeURIComponent(startParam.slice('route:'.length));
-    if (raw.startsWith('/')) return raw; // أمان بسيط
+    if (raw.startsWith('/')) return raw;
   }
 
-  // شكل namespaced: shop?plan=pro
   const [name, qs] = startParam.split('?');
   if (ROUTE_MAP[name]) return qs ? `${ROUTE_MAP[name]}?${qs}` : ROUTE_MAP[name];
 
@@ -94,17 +90,16 @@ const globalQueryClient = new QueryClient({
 })
 
 // Hook مخصص لجلب عنوان المحفظة
-const useWalletAddress = () => {
-  return useQuery({
+const useWalletAddress = () =>
+  useQuery({
     queryKey: ['walletAddress'],
     queryFn: fetchBotWalletAddress,
     retry: 3,
     staleTime: 15 * 60 * 1000,
-  });
-}
+  })
 
 // ===================== AppContent =====================
-function AppContent({ children }: { children: React.ReactNode }) {
+function AppContent({ children, hideFooter }: { children: React.ReactNode; hideFooter?: boolean }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false);
   const { setSubscriptions } = useProfileStore();
   const { isTelegramApp, isTelegramReady, isLoading: isTelegramLoading, telegramId } = useTelegram();
@@ -169,7 +164,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications'];
+        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications', '/shop'];
         await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
         console.log("🔄 Prefetched important pages:", pagesToPrefetch.join(', '));
       } catch (error) {
@@ -179,25 +174,27 @@ function AppContent({ children }: { children: React.ReactNode }) {
     prefetchPages();
   }, [router]);
 
-  // شرط السبلاتش
+  // ===== احسب showFooter قبل أي return =====
+  const asPath = router.asPath;
+  const pathnameNoQuery = useMemo(() => asPath.split('?')[0], [asPath]);
+
+  const showFooter = useMemo(() => {
+    if (hideFooter) return false;
+    const allowPrefixes = ['/', '/shop', '/profile', '/plans', '/notifications'];
+    return allowPrefixes.some(p =>
+      pathnameNoQuery === p || pathnameNoQuery.startsWith(`${p}/`)
+    );
+  }, [hideFooter, pathnameNoQuery]);
+
+  // شرط السبلاتش (بعد حساب كل الـhooks)
   const showSplashScreen =
     !minDelayCompleted ||
     isWalletLoading ||
     isTelegramLoading ||
     (isTelegramApp && !isTelegramReady);
 
-  console.log("⏳ Splash Screen Conditions:", {
-    minDelayCompleted,
-    isWalletLoading,
-    isTelegramLoading,
-    isTelegramApp,
-    isTelegramReady,
-    showSplashScreen
-  });
-
   // ======= التوجيه الديناميكي حسب startapp =======
   useEffect(() => {
-    // نفّذ مرة واحدة بعد الجاهزية
     if (didRouteRef.current) return;
 
     const ready = !showSplashScreen && (!isTelegramApp || isTelegramReady);
@@ -209,7 +206,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
     const target = resolveTargetRoute(raw);
     if (!target) return;
 
-    // لا تعيد التوجيه لو أنت أصلاً على نفس الصفحة
     if (router.asPath.split('?')[0] === target.split('?')[0]) {
       didRouteRef.current = true;
       return;
@@ -218,13 +214,11 @@ function AppContent({ children }: { children: React.ReactNode }) {
     didRouteRef.current = true;
     router.replace(target).catch(console.error);
 
-    // تنظيف باراميترات الواجهة (اختياري)
     try {
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
     } catch {}
   }, [isTelegramApp, isTelegramReady, showSplashScreen, router]);
-  // ================================================
 
   if (showSplashScreen) {
     return <SplashScreen />;
@@ -249,25 +243,26 @@ function AppContent({ children }: { children: React.ReactNode }) {
   }
 
   console.log(`✅ App Ready. Running inside Telegram: ${isTelegramApp}. Telegram ID: ${telegramId || 'N/A'}`);
-
   return (
     <>
       {children}
-      <FooterNav />
+      {showFooter && <FooterNav />}
       <NotificationToast />
     </>
   );
 }
-
 // ===================== MyApp =====================
 function MyApp({ Component, pageProps }: AppProps) {
+  const hideFooter = Boolean((Component as any).hideFooter)
+
   return (
     <TelegramProvider>
       <QueryClientProvider client={globalQueryClient}>
         <NotificationsProvider>
-          <AppContent>
+          <AppContent hideFooter={hideFooter}>
             <Component {...pageProps} />
           </AppContent>
+          <GlobalAuthSheet />
           <ReactQueryDevtools initialIsOpen={false} />
         </NotificationsProvider>
       </QueryClientProvider>
@@ -275,4 +270,4 @@ function MyApp({ Component, pageProps }: AppProps) {
   );
 }
 
-export default MyApp;
+export default MyApp
