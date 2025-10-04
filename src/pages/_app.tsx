@@ -164,7 +164,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications', '/shop'];
+        const pagesToPrefetch = [ '' ,'/', '/plans', '/profile', '/notifications', '/shop'];
         await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
         console.log("🔄 Prefetched important pages:", pagesToPrefetch.join(', '));
       } catch (error) {
