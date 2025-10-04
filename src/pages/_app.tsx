@@ -16,6 +16,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
 import { useNotificationStream } from '@/hooks/useNotificationStream'
 import GlobalAuthSheet from '@/components/GlobalAuthSheet'
+import { TonConnectUIProvider } from '@tonconnect/ui-react'
 
 // ===================== startapp helpers =====================
 type StartAppParam = string | null;
@@ -266,17 +267,19 @@ function MyApp({ Component, pageProps }: AppProps) {
   const hideFooter = Boolean((Component as any).hideFooter)
 
   return (
-    <TelegramProvider>
-      <QueryClientProvider client={globalQueryClient}>
-        <NotificationsProvider>
-          <AppContent hideFooter={hideFooter}>
-            <Component {...pageProps} />
-          </AppContent>
-          <GlobalAuthSheet />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </NotificationsProvider>
-      </QueryClientProvider>
-    </TelegramProvider>
+    <TonConnectUIProvider manifestUrl={process.env.NEXT_PUBLIC_TON_MANIFEST_URL ?? 'https://exadooo-plum.vercel.app/tonconnect-manifest.json'}>
+      <TelegramProvider>
+        <QueryClientProvider client={globalQueryClient}>
+          <NotificationsProvider>
+            <AppContent hideFooter={hideFooter}>
+              <Component {...pageProps} />
+            </AppContent>
+            <GlobalAuthSheet />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </NotificationsProvider>
+        </QueryClientProvider>
+      </TelegramProvider>
+    </TonConnectUIProvider>
   );
 }
 

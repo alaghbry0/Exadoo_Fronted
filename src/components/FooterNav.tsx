@@ -3,10 +3,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
+import type { ElementType } from 'react'
 import { cn } from '@/lib/utils'
 import { Home, CreditCard, User } from 'lucide-react' // ⬅️ Lucide
 
-type NavItem = { path: string; icon: React.ElementType; label: string }
+type NavItem = { path: string; icon: ElementType; label: string }
+
+type FooterNavProps = {
+  items?: NavItem[]
+  currentPath?: string
+}
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
   { path: '/', icon: Home, label: 'الرئيسية' },
@@ -14,8 +20,15 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   { path: '/profile', icon: User, label: 'الملف' },
 ]
 
-export default function FooterNav({ items = DEFAULT_NAV_ITEMS }: { items?: NavItem[] }) {
+export default function FooterNav({ items = DEFAULT_NAV_ITEMS, currentPath }: FooterNavProps) {
   const pathname = usePathname()
+  const resolvedPath = (() => {
+    const candidate = currentPath ?? pathname ?? '/'
+    if (!candidate.startsWith('/')) {
+      return `/${candidate}`
+    }
+    return candidate || '/'
+  })()
   const tabVariants = {
     active: { y: -2, transition: { type: 'spring', stiffness: 400, damping: 25 } },
     inactive: { y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } }
@@ -29,7 +42,7 @@ export default function FooterNav({ items = DEFAULT_NAV_ITEMS }: { items?: NavIt
     >
       <div className="flex justify-around items-stretch h-full max-w-lg mx-auto">
         {items.map((item) => {
-          const isActive = pathname === item.path
+          const isActive = resolvedPath === item.path
           return (
             <Link
               href={item.path}
