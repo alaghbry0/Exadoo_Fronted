@@ -27,73 +27,71 @@ function resolveTestTelegramId(): string | null {
     const url = new URL(window.location.href);
     const qp = url.searchParams.get("tgid");
     if (qp && /^\d{5,}$/.test(qp)) return qp;
-
     const ls = window.localStorage.getItem("dev_telegram_id");
     if (ls && /^\d{5,}$/.test(ls)) return ls;
   }
   return null; // مفيش fallback
 }
-
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const { setUserData, telegramId: contextTelegramId } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
-
   // وضع الاختبار الخالص: لا نحاول استخدام Telegram SDK إطلاقًا.
   useEffect(() => {
     let isMounted = true;
-
     const bootDevMode = async () => {
       try {
         const testId = resolveTestTelegramId();
         console.log("🧪 DEV MODE: Booting with mocked Telegram ID:", testId);
-
         // 1) حفظ بيانات المستخدم الأساسية في المتجر
         setUserData({
-          telegramId: testId,
+          telegramId: testId ?? null,
           telegramUsername: "dev_user",
           fullName: "Dev Tester",
           photoUrl: null,
           joinDate: null,
         });
-
-        // 2) مزامنة أولية مع الباكند (اختياري لكنها مفيدة لتوحيد السلوك)
-        try {
-          console.log("🔄 [DEV] Syncing user data with backend...");
-          await syncUserData({
-            telegramId: testId,
-            telegramUsername: "dev_user",
-            fullName: "Dev Tester",
-          });
-          console.log("✅ [DEV] Sync successful.");
-        } catch (e) {
-          console.warn("⚠️ [DEV] Sync failed (continuing in dev):", e);
-        }
-
-        // 3) فحص حالة الربط isLinked مثل السلوك الحقيقي
-        try {
-          console.log("🔗 [DEV] Checking link status...");
-          const resp = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(
-              testId
-            )}`
-          );
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data.linked) {
-              console.log("✅ [DEV] User is linked. Gmail:", data.gmail);
-              setUserData({ isLinked: true, gmail: data.gmail });
-            } else {
-              console.log("ℹ️ [DEV] User is NOT linked.");
-              setUserData({ isLinked: false, gmail: null });
-            }
-          } else {
-            console.warn("⚠️ [DEV] Link check failed:", resp.status, resp.statusText);
+        if (testId) {
+          // 2) مزامنة أولية مع الباكند (اختياري لكنها مفيدة لتوحيد السلوك)
+          try {
+            console.log("🔄 [DEV] Syncing user data with backend...");
+            await syncUserData({
+              telegramId: testId,
+              telegramUsername: "dev_user",
+              fullName: "Dev Tester",
+            });
+            console.log("✅ [DEV] Sync successful.");
+          } catch (e) {
+            console.warn("⚠️ [DEV] Sync failed (continuing in dev):", e);
           }
-        } catch (e) {
-          console.warn("⚠️ [DEV] Error checking link status:", e);
+          // 3) فحص حالة الربط isLinked مثل السلوك الحقيقي
+          try {
+            console.log("🔗 [DEV] Checking link status...");
+            const resp = await fetch(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(
+                testId
+              )}`
+            );
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.linked) {
+                console.log("✅ [DEV] User is linked. Gmail:", data.gmail);
+                setUserData({ isLinked: true, gmail: data.gmail });
+              } else {
+                console.log("ℹ️ [DEV] User is NOT linked.");
+                setUserData({ isLinked: false, gmail: null });
+              }
+            } else {
+              console.warn("⚠️ [DEV] Link check failed:", resp.status, resp.statusText);
+            }
+          } catch (e) {
+            console.warn("⚠️ [DEV] Error checking link status:", e);
+          }
+        } else {
+          console.warn(
+            "⚠️ [DEV] No Telegram ID resolved for dev mode. Skipping backend sync and link checks."
+          );
         }
-
         if (!isMounted) return;
         setIsTelegramReady(true);
         setIsLoading(false);
@@ -105,15 +103,12 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         setIsLoading(false);
       }
     };
-
     bootDevMode();
-
     return () => {
       isMounted = false;
       console.log("🧹 TelegramProvider (dev) unmounted. Cleanup complete.");
     };
   }, [setUserData]);
-
   // إعادة فحص حالة الربط عند العودة للنافذة/التركيز — نفس منطقك الحالي
   useEffect(() => {
     const checkLink = async () => {
