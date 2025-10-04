@@ -10,7 +10,6 @@ import { ArrowLeft } from 'lucide-react'
 import { ReactNode } from 'react'
 
 type Accent = 'primary' | 'secondary' | 'success'
-type Layout = 'half' | 'wide'
 type Variant = 'minimal' | 'glass' | 'dark' | 'compact' | 'split'
 
 const cardVariants = cva(

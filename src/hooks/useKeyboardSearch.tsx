@@ -1,10 +1,10 @@
 // hooks/useKeyboardSearch.ts
 
 import { useEffect } from 'react'
-import type { RefObject, FC } from 'react'
+import type { RefObject } from 'react'
 
 interface UseKeyboardSearchProps {
-  inputRef: RefObject<HTMLInputElement>
+  inputRef: RefObject<HTMLInputElement | null>
   query: string
   onClear: () => void
 }

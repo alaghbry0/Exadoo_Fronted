@@ -1,324 +1,248 @@
-'use client'
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { useTelegramPayment } from '@/hooks/useTelegramPayment'
-import { useTonConnectUI } from '@tonconnect/ui-react'
-import { useUserStore } from '@/stores/zustand/userStore'
-import { handleTonPayment } from '@/utils/tonPayment'
-import { useTelegram } from '@/context/TelegramContext'
+'use client';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useTelegramPayment } from '@/hooks/useTelegramPayment';
+import { useTonConnectUI } from '@tonconnect/ui-react';
+import { useUserStore } from '@/stores/zustand/userStore';
+import { handleTonPayment } from '@/utils/tonPayment';
+import { useTelegram } from '@/context/TelegramContext';
 import type { ModalPlanData } from '@/types/modalPlanData';
-import { PaymentStatus } from '@/types/payment'
-import { useQueryClient } from '@tanstack/react-query'
-import { useTariffStore } from '@/stores/zustand'
-import { showToast } from '@/components/ui/showToast'
+import type { PaymentStatus } from '@/types/payment';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTariffStore } from '@/stores/zustand';
+import { showToast } from '@/components/ui/showToast';
+import { createPaymentIntent } from '@/utils/paymentIntent';
 
-interface ExchangeDetails {
-  depositAddress: string
-  amount: string
-  network: string
-  paymentToken: string
-  planName?: string
-}
-
-// عدّل هذه الدالة لترجع Promise<boolean>
 export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: () => void) => {
-  const { handleTelegramStarsPayment } = useTelegramPayment()
-  const { telegramId } = useTelegram()
-  const { telegramUsername, fullName } = useUserStore()
-  const [tonConnectUI] = useTonConnectUI()
-  const queryClient = useQueryClient()
+  const { handleTelegramStarsPayment } = useTelegramPayment();
+  const { telegramId } = useTelegram();
+  const { telegramUsername, fullName } = useUserStore();
+  const [tonConnectUI] = useTonConnectUI();
+  const queryClient = useQueryClient();
 
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
-  const [loading, setLoading] = useState<boolean>(false)
-  const [exchangeDetails, setExchangeDetails] = useState<ExchangeDetails | null>(null)
-  const [isInitializing, setIsInitializing] = useState(false)
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [exchangeDetails, setExchangeDetails] = useState<{
+    depositAddress: string;
+    amount: string;
+    network: string;
+    paymentToken: string;
+    planName?: string;
+  } | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const paymentSessionRef = useRef<{
-    paymentToken?: string
-    planId?: string
-  }>({})
+  const paymentSessionRef = useRef<{ paymentToken?: string; planId?: string }>({});
 
   const cleanupPaymentSession = useCallback(() => {
-    localStorage.removeItem('paymentData')
-    paymentSessionRef.current = {}
-    setExchangeDetails(null)
-  }, [])
+    localStorage.removeItem('paymentData');
+    paymentSessionRef.current = {};
+    setExchangeDetails(null);
+  }, []);
 
   const resetPaymentStatus = useCallback(() => {
-    setPaymentStatus('idle')
-    cleanupPaymentSession()
-
+    setPaymentStatus('idle');
+    cleanupPaymentSession();
     if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-      pollingIntervalRef.current = null
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
-  }, [cleanupPaymentSession])
+  }, [cleanupPaymentSession]);
 
   const handlePaymentSuccess = useCallback(() => {
-    cleanupPaymentSession()
-    setPaymentStatus('success')
-    queryClient.invalidateQueries({
-      queryKey: ['subscriptions', telegramId || '']
-    })
-    onSuccess()
-
+    cleanupPaymentSession();
+    setPaymentStatus('success');
+    queryClient.invalidateQueries({ queryKey: ['subscriptions', telegramId || ''] });
+    onSuccess();
     if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-      pollingIntervalRef.current = null
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
-  }, [cleanupPaymentSession, queryClient, telegramId, onSuccess])
+  }, [cleanupPaymentSession, queryClient, telegramId, onSuccess]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (paymentStatus === 'processing') {
-        e.preventDefault()
-        e.returnValue = 'لديك عملية دفع قيد التقدم، هل أنت متأكد من المغادرة؟'
+        e.preventDefault();
+        e.returnValue = 'لديك عملية دفع قيد التقدم، هل أنت متأكد من المغادرة؟';
       }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [paymentStatus])
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [paymentStatus]);
 
   const restoreSession = useCallback(async () => {
-    if (!plan || paymentStatus !== 'idle') return
-
-    setIsInitializing(true)
+    if (!plan || paymentStatus !== 'idle') return;
+    setIsInitializing(true);
     try {
-      const savedData = localStorage.getItem('paymentData')
-      if (!savedData) {
-        setIsInitializing(false)
-        return
-      }
-
-      const { paymentToken, planId, timestamp } = JSON.parse(savedData)
-
-      if (Date.now() - timestamp > 30 * 60 * 1000) {
-        localStorage.removeItem('paymentData')
-        setIsInitializing(false)
-        return
-      }
-
-      if (planId !== plan.selectedOption.id.toString()) {
-        localStorage.removeItem('paymentData')
-        setIsInitializing(false)
-        return
-      }
-
-      if (paymentToken) {
-        handlePaymentSuccess()
-      }
+      const savedData = localStorage.getItem('paymentData');
+      if (!savedData) return;
+      const { paymentToken, planId, timestamp } = JSON.parse(savedData);
+      if (Date.now() - timestamp > 30 * 60 * 1000) return localStorage.removeItem('paymentData');
+      if (planId !== plan.selectedOption.id.toString()) return localStorage.removeItem('paymentData');
+      if (paymentToken) handlePaymentSuccess();
     } catch (error) {
-      console.error('فشل في استعادة الجلسة:', error)
-      showToast.error('تعذر استعادة جلسة الدفع، يرجى البدء من جديد')
-      localStorage.removeItem('paymentData')
+      console.error('فشل في استعادة الجلسة:', error);
+      showToast.error('تعذر استعادة جلسة الدفع، يرجى البدء من جديد');
+      localStorage.removeItem('paymentData');
     } finally {
-      setIsInitializing(false)
+      setIsInitializing(false);
     }
-  }, [plan, paymentStatus, handlePaymentSuccess])
+  }, [plan, paymentStatus, handlePaymentSuccess]);
 
-  useEffect(() => {
-    restoreSession()
-  }, [restoreSession])
+  useEffect(() => { restoreSession(); }, [restoreSession]);
 
   useEffect(() => {
     if (paymentStatus === 'exchange_success') {
-      const timer = setTimeout(() => {
-        onSuccess()
-      }, 2000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => onSuccess(), 2000);
+      return () => clearTimeout(timer);
     }
-  }, [paymentStatus, onSuccess])
-
-  const handleTonPaymentWrapper = useCallback(async () => {
-    if (!plan) return
-
-    try {
-      setLoading(true)
-      const selectedPlanId = plan.selectedOption.id.toString()
-      const { payment_token } = await handleTonPayment(
-        tonConnectUI,
-        setPaymentStatus,
-        selectedPlanId,
-        telegramId || 'unknown',
-        telegramUsername || 'unknown',
-        fullName || 'Unknown'
-      )
-
-      if (payment_token) {
-        handlePaymentSuccess()
-      } else {
-        setPaymentStatus('failed')
-      }
-    } catch (error) {
-      console.error('فشل الدفع:', error)
-      showToast.error(error instanceof Error ? error.message : 'فشلت عملية الدفع')
-      setPaymentStatus('failed')
-    } finally {
-      setLoading(false)
-    }
-  }, [plan, tonConnectUI, telegramId, telegramUsername, fullName, handlePaymentSuccess, setPaymentStatus])
+  }, [paymentStatus, onSuccess]);
 
   const startPollingPaymentStatus = useCallback((paymentToken: string) => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-    }
-
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
     const pollStatus = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/status?token=${paymentToken}`)
-        if (!response.ok) throw new Error(response.statusText)
-
-        const data = await response.json()
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/status?token=${paymentToken}`);
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
         if (data.status === 'exchange_success') {
-          setPaymentStatus('exchange_success')
+          setPaymentStatus('exchange_success');
           localStorage.setItem('paymentData', JSON.stringify({
             paymentToken,
             planId: plan?.selectedOption.id.toString(),
             status: 'exchange_success',
             timestamp: Date.now()
-          }))
-
+          }));
           if (pollingIntervalRef.current) {
-            clearInterval(pollingIntervalRef.current)
-            pollingIntervalRef.current = null
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
           }
         }
-      } catch (error) {
-        console.error('خطأ في استطلاع حالة الدفع:', error)
+      } catch (e) {
+        console.error('خطأ في استطلاع حالة الدفع:', e);
       }
-    }
+    };
+    pollStatus();
+    pollingIntervalRef.current = setInterval(pollStatus, 3000);
+  }, [plan]);
 
-    pollStatus()
-    pollingIntervalRef.current = setInterval(pollStatus, 3000)
-  }, [plan])
-
-  // 👇 --- التعديل يبدأ هنا --- 👇
+  // USDT: كل الحالات تبدأ بـ create-intent
   const handleUsdtPaymentChoice = useCallback(async (method: 'wallet' | 'exchange'): Promise<boolean> => {
-    if (!plan) return false;
-
+    if (!plan || !telegramId) return false;
     setLoading(true);
     try {
+      const price = Number(plan.selectedOption.price);
+      if (Number.isNaN(price)) throw new Error('سعر غير صالح');
+
+      // 1) create-intent
+      const intent = await createPaymentIntent({
+        webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET as string,
+        telegramId,
+        telegramUsername,
+        fullName,
+        productType: 'signals_subscription',
+        subscriptionPlanId: plan.selectedOption.id,
+        amount: price,           // USDT
+        currency: 'USDT',
+        paymentMethod: 'USDT (TON)',
+        extraMetadata: {},       // لو احتجت بيانات إضافية لاحقًا
+      });
+
+      if (!intent.success || !intent.payment_token) {
+        showToast.error(intent.error || 'فشل إنشاء نية الدفع');
+        setPaymentStatus('failed');
+        return false;
+      }
+
+      paymentSessionRef.current = {
+        paymentToken: intent.payment_token,
+        planId: plan.selectedOption.id.toString(),
+      };
+      localStorage.setItem('paymentData', JSON.stringify({
+        paymentToken: intent.payment_token,
+        planId: plan.selectedOption.id.toString(),
+        timestamp: Date.now()
+      }));
+
       if (method === 'wallet') {
-        // منطق المحفظة يبقى كما هو، لكن نرجع true عند البدء
-        await handleTonPaymentWrapper();
+        // 2) دفع محفظة TON
+        await handleTonPayment(
+          tonConnectUI,
+          setPaymentStatus,
+          plan.selectedOption.id.toString(), // يمكن تجاهله لاحقًا لو استغنيت عنه داخليًا
+          String(telegramId),
+          telegramUsername || 'unknown',
+          fullName || 'Unknown',
+          intent.payment_token 
+        );
         return true;
       } else {
-        // منطق منصات التداول
-        let payment_token = paymentSessionRef.current.paymentToken || '';
-        if (!payment_token) {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Telegram-Id': telegramId || 'unknown'
-            },
-            body: JSON.stringify({
-              webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
-              planId: plan.selectedOption.id,
-              telegramId,
-              telegramUsername,
-              fullName
-            }),
-          });
-
-          if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع');
-          const data = await response.json();
-          payment_token = data.payment_token;
-        }
-
-        paymentSessionRef.current = {
-          paymentToken: payment_token,
-          planId: plan.selectedOption.id.toString()
-        };
-
-        localStorage.setItem('paymentData', JSON.stringify({
-          paymentToken: payment_token,
-          planId: plan.selectedOption.id.toString(),
-          timestamp: Date.now()
-        }));
-
+        // 2) مسار الإيداع عبر منصة/Exchange
         setExchangeDetails({
-          depositAddress: useTariffStore.getState().walletAddress || '0xRecipientAddress',
-          amount: plan.selectedOption.price.toString(),
+          depositAddress: useTariffStore.getState().walletAddress || 'TON-ADDRESS',
+          amount: String(price),
           network: 'TON Network',
-          paymentToken: payment_token,
-          planName: plan.name
+          paymentToken: intent.payment_token,
+          planName: plan.name,
         });
-
         setPaymentStatus('processing');
-        startPollingPaymentStatus(payment_token);
-        return true; // ✅ مهم جداً: أرجع true عند النجاح
+        startPollingPaymentStatus(intent.payment_token);
+        return true;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('خطأ في عملية الدفع:', error);
       setPaymentStatus('failed');
-      showToast.error('فشلت عملية الدفع، يرجى المحاولة مرة أخرى');
-      return false; // ✅ مهم جداً: أرجع false عند الفشل
+      showToast.error(error?.message || 'فشلت عملية الدفع');
+      return false;
     } finally {
       setLoading(false);
     }
-  }, [plan, telegramId, telegramUsername, fullName, startPollingPaymentStatus, handleTonPaymentWrapper]);
-  // 👆 --- التعديل ينتهي هنا --- 👆
+  }, [plan, telegramId, telegramUsername, fullName, startPollingPaymentStatus, tonConnectUI]);
 
+  // Stars: عبر الهوك الموحّد
   const handleStarsPayment = async () => {
-    // 👇 --- بداية التعديل --- 👇
-
-    // 1. التحقق من البيانات بالطريقة الصحيحة
-    // يجب أن نتأكد من وجود السعر ومعامل التحويل في `selectedOption`
-    if (!plan || !plan.selectedOption.price || plan.selectedOption.telegramStarsPrice == null) {
-        console.error("Missing plan data for Stars payment:", { plan });
-        showToast.error("بيانات الخطة غير مكتملة للدفع بالنجوم.");
-        return;
+    if (!plan || !telegramId || plan.selectedOption.telegramStarsPrice == null) {
+      return showToast.error('بيانات غير مكتملة للدفع بالنجوم');
     }
-
     try {
-        setLoading(true);
-        // 2. تعيين حالة الدفع الصحيحة لإظهار Spinner على زر النجوم
-        setPaymentStatus('processing_stars');
+      setLoading(true);
+      setPaymentStatus('processing_stars');
 
-        // 3. الوصول إلى السعر النهائي من المسار الصحيح
-        const finalUsdtPrice = plan.selectedOption.price;
-    const starsMultiplier = plan.selectedOption.telegramStarsPrice;
+      const starsAmount = Math.round(Number(plan.selectedOption.price) * Number(plan.selectedOption.telegramStarsPrice));
+      const { paymentToken, error } = await handleTelegramStarsPayment({
+        productType: 'signals_subscription',
+        subscriptionPlanId: plan.selectedOption.id,
+        productId: undefined,
+        starsAmount,
+        title: 'اشتراك إشارات',
+        description: `تجديد/شراء اشتراك: ${plan.selectedOption.duration}`,
+        payloadExtra: { planId: plan.selectedOption.id },
+        telegramUsername,
+        fullName,
+      });
 
-    // لم تعد هناك حاجة لـ Number()
-    const finalStarsPrice = Math.round(Number(finalUsdtPrice) * Number(starsMultiplier));
-
-        // استدعاء دالة الدفع بالقيم الصحيحة
-        const { paymentToken } = await handleTelegramStarsPayment(
-            plan.selectedOption.id,
-            finalStarsPrice
-        );
-
-        if (paymentToken) {
-            handlePaymentSuccess();
-        } else {
-            // في حالة فشل الدفع (مثل إغلاق المستخدم للنافذة)
-            setPaymentStatus('failed');
-        }
-    } catch (error) {
-        // في حالة حدوث خطأ أثناء العملية
-        console.error("Stars payment failed:", error);
+      if (paymentToken) {
+        handlePaymentSuccess();
+      } else {
         setPaymentStatus('failed');
-        showToast.error("فشلت عملية الدفع بالنجوم.");
+        if (error) showToast.error(error);
+      }
+    } catch (e: any) {
+      console.error('Stars payment failed:', e);
+      setPaymentStatus('failed');
+      showToast.error(e?.message || 'فشلت عملية الدفع بالنجوم');
     } finally {
-        // إيقاف التحميل في جميع الحالات
-        setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!exchangeDetails && paymentStatus === 'processing') {
-      setPaymentStatus('idle')
-    }
-  }, [exchangeDetails, paymentStatus])
+    if (!exchangeDetails && paymentStatus === 'processing') setPaymentStatus('idle');
+  }, [exchangeDetails, paymentStatus]);
 
   useEffect(() => {
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current)
-      }
-    }
-  }, [])
+    return () => { if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current); };
+  }, []);
 
   return {
     paymentStatus,
@@ -329,6 +253,6 @@ export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: ()
     handleUsdtPaymentChoice,
     handleStarsPayment,
     resetPaymentStatus,
-    cleanupPaymentSession
-  }
-}
+    cleanupPaymentSession,
+  };
+};

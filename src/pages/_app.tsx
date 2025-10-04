@@ -15,8 +15,10 @@ import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
 import { useNotificationStream } from '@/hooks/useNotificationStream'
+import { TonConnectUIProvider } from '@tonconnect/ui-react' 
 import { readStartAppParam, resolveTargetRoute } from '@/lib/startapp'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import GlobalAuthSheet from '@/components/GlobalAuthSheet'
 
 export interface NotificationExtraData {
   invite_link?: string | null;
@@ -284,8 +286,11 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
   return (
     <>
       {/* مؤشر التقدم أثناء التنقل */}
-      
-      
+      {isNavigating && (
+        <div className="fixed inset-x-0 top-0 z-[9999]">
+          <div className="h-1 w-full animate-pulse bg-gradient-to-r from-primary-500 via-primary-400 to-primary-600" />
+        </div>
+      )}
       <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo(0, 0)}>
         <motion.main
           id="app-main"
@@ -315,16 +320,19 @@ function MyApp({ Component, pageProps }: AppProps) {
   const hideFooter = Boolean((Component as any).hideFooter)
 
   return (
-    <TelegramProvider>
-      <QueryClientProvider client={globalQueryClient}>
-        <NotificationsProvider>
-          <AppContent hideFooter={hideFooter}>
-            <Component {...pageProps} />
-          </AppContent>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </NotificationsProvider>
-      </QueryClientProvider>
-    </TelegramProvider>
+    <TonConnectUIProvider manifestUrl={process.env.NEXT_PUBLIC_TON_MANIFEST_URL ?? 'https://exadooo-plum.vercel.app/tonconnect-manifest.json'}>
+      <TelegramProvider>
+        <QueryClientProvider client={globalQueryClient}>
+          <NotificationsProvider>
+            <AppContent hideFooter={hideFooter}>
+              <Component {...pageProps} />
+            </AppContent>
+            <GlobalAuthSheet />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </NotificationsProvider>
+        </QueryClientProvider>
+      </TelegramProvider>
+    </TonConnectUIProvider>
   )
 }
 

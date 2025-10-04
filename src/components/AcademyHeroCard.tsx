@@ -7,16 +7,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 export interface AcademyHeroCardProps {
-  courses?: number
-  tracks?: number
-  freeCount?: number
   className?: string
 }
 
 function AcademyHeroCard({
-  courses = 24,
-  tracks = 6,
-  freeCount = 3,
   className,
 }: AcademyHeroCardProps) {
   return (
@@ -67,10 +61,8 @@ function AcademyHeroCard({
               </p>
 
               {/* زيادة المسافة العلوية للرقائق */}
-              <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-                <StatChip label="دورة" value={courses} />
-                <StatChip label="مسار" value={tracks} />
-                <StatChip label="مجانية" value={freeCount} variant="success" />
+              <div className=" flex flex-wrap items-center gap-2 text-sm">
+              
               </div>
             </div>
 

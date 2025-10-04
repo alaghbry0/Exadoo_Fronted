@@ -1,3 +1,4 @@
+// src/components/SubscriptionModal.tsx
 'use client'
 
 // --- استيرادات (لا تغيير) ---
@@ -18,7 +19,7 @@ import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
 import { PaymentExchangeSuccess } from '../components/PaymentExchangeSuccess'
 
 // ====================================================================
-// المكون الرئيسي للمودال (مع لمسات إبداعية)
+// المكون الرئيسي لمودال شراء اشتراكات الاشارات 
 // ====================================================================
 const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onClose: () => void }) => {
   // --- Hooks والحالات (لا تغيير في المنطق) ---

@@ -1,3 +1,4 @@
+// src/pages/api/forex.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 export interface MyForexSubscription {
@@ -9,6 +10,8 @@ export interface MyForexSubscription {
   status: string // e.g. "lifetime"
   expiration_date: string
   date_added: string // unix seconds
+  download_link?: string | null
+  setup_guide_link?: string | null
 }
 
 export interface ForexSubscriptionPlan {
@@ -46,6 +49,14 @@ function normalizeForexPayload(payload: any): ForexData {
         status: S(fx.my_subscription.status),
         expiration_date: S(fx.my_subscription.expiration_date),
         date_added: S(fx.my_subscription.date_added),
+        download_link:
+          fx.my_subscription.download_link == null
+            ? null
+            : S(fx.my_subscription.download_link),
+        setup_guide_link:
+          fx.my_subscription.setup_guide_link == null
+            ? null
+            : S(fx.my_subscription.setup_guide_link),
       }
     : undefined
 

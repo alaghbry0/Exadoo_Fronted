@@ -1,7 +1,7 @@
 // src/components/SmartImage.tsx
 'use client'
 
-import Image, { ImageProps } from 'next/image'
+import Image, { type ImageProps, type StaticImageData } from 'next/image'
 import { useState, useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -52,7 +52,12 @@ export default function SmartImage({
     if (typeof src === 'string') {
       return toProxiedUrl(src)
     }
-    return src as string
+
+    if (src && typeof src === 'object' && 'src' in src) {
+      return (src as StaticImageData).src
+    }
+
+    return typeof src === 'undefined' ? '' : String(src)
   }, [src])
 
   const normalizedFallback = useMemo(() => toProxiedUrl(fallbackSrc), [fallbackSrc])

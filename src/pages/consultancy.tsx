@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { ArrowRight, Calendar, Clock, User, CheckCircle2, Sparkles } from 'lucide-react'
+import { ArrowRight, Clock, CheckCircle2, Sparkles } from 'lucide-react'
 
 // Helper
 const fmtUSD = (v?: string | null) => `$${Number(v || 0).toFixed(0)}`
@@ -47,7 +47,11 @@ export default function ConsultancyPage() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 font-arabic">
-      <BackHeader />
+      <BackHeader
+      
+      backTo="/shop"
+      backMode="always"
+    />
       <main className="max-w-5xl mx-auto px-4 pb-24">
         {/* Header */}
         <section className="pt-20 pb-10 text-center">
@@ -71,7 +75,11 @@ export default function ConsultancyPage() {
                 {/* Left Side: Information Panel */}
                 <div className="p-6 md:p-8 border-b md:border-b-0 md:border-l dark:border-neutral-800">
                   <div className="flex items-center gap-4">
-                    <img src={details?.instructor_image} alt={details?.instructor} className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-neutral-700 shadow-sm" />
+                    <img
+                      src={details?.instructor_image || '/image.jpg'}
+                      alt={details?.instructor || 'المستشار'}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-neutral-700 shadow-sm"
+                    />
                     <div>
                       <p className="text-sm text-gray-500">المستشار</p>
                       <h3 className="text-xl font-bold">{details?.instructor}</h3>

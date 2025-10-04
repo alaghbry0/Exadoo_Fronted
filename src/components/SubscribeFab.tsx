@@ -25,17 +25,65 @@ export default function SubscribeFab({
   onClick,
 }: Props) {
   const [mounted, setMounted] = React.useState(false)
+  const [hidden, setHidden] = React.useState(false)
+  const openSetRef = React.useRef<Set<string>>(new Set())
   const reduceMotion = useReducedMotion()
-  React.useEffect(() => setMounted(true), [])
-  if (!mounted) return null
 
-  // نصّ الزر مُسبقًا لمنع إعادة الحساب داخل JSX
+  React.useEffect(() => setMounted(true), [])
+
+  // اسمع لأحداث فتح/إغلاق المودالات ذات الصلة وأخفِ/أظهر الزر
+  React.useEffect(() => {
+    const relevant = new Set(['academyPurchase', 'usdtMethod'])
+
+    const onModalOpen = (e: Event) => {
+      const name = (e as CustomEvent<{ name?: string }>).detail?.name
+      if (name && relevant.has(name)) {
+        openSetRef.current.add(name)
+        setHidden(true)
+      }
+    }
+
+    const onModalClose = (e: Event) => {
+      const name = (e as CustomEvent<{ name?: string }>).detail?.name
+      if (name && relevant.has(name)) {
+        openSetRef.current.delete(name)
+        setHidden(openSetRef.current.size > 0)
+      }
+    }
+
+    // دعم رجعي لحدثيك الحاليين (اختياري)
+    const onPurchaseOpen = () => {
+      openSetRef.current.add('academyPurchase')
+      setHidden(true)
+    }
+    const onPurchaseClose = () => {
+      openSetRef.current.delete('academyPurchase')
+      setHidden(openSetRef.current.size > 0)
+    }
+
+    window.addEventListener('modal:open', onModalOpen as EventListener)
+    window.addEventListener('modal:close', onModalClose as EventListener)
+    window.addEventListener('purchase-open', onPurchaseOpen)
+    window.addEventListener('purchase-close', onPurchaseClose)
+
+    return () => {
+      window.removeEventListener('modal:open', onModalOpen as EventListener)
+      window.removeEventListener('modal:close', onModalClose as EventListener)
+      window.removeEventListener('purchase-open', onPurchaseOpen)
+      window.removeEventListener('purchase-close', onPurchaseClose)
+    }
+  }, [])
+
+  // لا ترندر الزر نهائيًا أثناء فتح المودالات المعنية
+  if (!mounted || hidden) return null
+
+  // نصّ الزر مُسبقًا
   const label = isEnrolled ? 'استمر في التعلم' : isFree ? 'سجل الآن مجانًا' : 'اشترك الآن'
   const aria = isEnrolled ? 'اذهب إلى الدورة' : isFree ? 'سجل الآن مجانًا' : 'اشترك في الدورة'
 
   return createPortal(
     <div
-      className="fixed z-[9999] pointer-events-none"
+      className="fixed z-[30] pointer-events-none"
       style={{
         left: '50%',
         transform: 'translateX(-50%)',
@@ -43,9 +91,7 @@ export default function SubscribeFab({
       }}
     >
       <motion.div
-        initial={
-          reduceMotion ? false : { y: 48, opacity: 0, scale: 0.98 }
-        }
+        initial={ reduceMotion ? false : { y: 48, opacity: 0, scale: 0.98 } }
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 240, damping: 22 }}
         className="pointer-events-auto"
@@ -55,36 +101,22 @@ export default function SubscribeFab({
           size="lg"
           aria-label={aria}
           className={cn(
-            // مقاسات ولمس قابلية النقر على الجوال
             'h-12 md:h-14 px-5 md:px-6 rounded-full min-w-[260px]',
-            // خلفية بسيطة ومحايدة تناسب الثيمين
             'bg-white/95 dark:bg-neutral-900/80 backdrop-blur-xl',
-            // حدود وتباين واضح
             'border border-neutral-200/70 dark:border-neutral-700/60',
-            // نص واضح
             'text-neutral-900 dark:text-neutral-100 font-medium tracking-tight',
-            // ظل رقيق وحديث
             'shadow-xl',
-            // انتقالات معتدلة
             'transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0',
-            // تركيز للوصولية
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
-            // منع التفاف العناصر داخل الزر
             'whitespace-nowrap relative overflow-hidden group'
           )}
         >
-          {/* لمعة خفيفة عند التحويم */}
           <span
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background:
-                'radial-gradient(160px 160px at 50% 10%, rgba(255,255,255,0.18), transparent 60%)'
-            }}
+            style={{ background: 'radial-gradient(160px 160px at 50% 10%, rgba(255,255,255,0.18), transparent 60%)' }}
           />
-
           <span className="relative z-10 flex items-center gap-3 md:gap-4">
-            {/* أيقونة الحالة */}
             <span
               className={cn(
                 'flex items-center justify-center w-8 h-8 rounded-full shrink-0',
@@ -96,10 +128,8 @@ export default function SubscribeFab({
               {isEnrolled ? <ChevronLeft className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </span>
 
-            {/* النص */}
             <span className="text-sm md:text-base">{label}</span>
 
-            {/* السعر */}
             {!isEnrolled && (
               <span className="flex items-baseline gap-1 rounded-full px-2.5 py-1 shrink-0
                                bg-neutral-100 text-neutral-900

@@ -5,10 +5,9 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionModal from '../../components/SubscriptionModal'
-import AuthPrompt from '../../components/AuthFab';
+
 import React from 'react'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
-import Navbar from '../../components/Navbar'
 import { useQuery } from '@tanstack/react-query'
 import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../../services/api'
 import { cn } from "@/lib/utils"
@@ -231,7 +230,7 @@ const ShopComponent = () => {
                         </div>
                     </section>
                     <div className="max-w-7xl mx-auto">
-                            <AuthPrompt />
+                           
                         </div>
                     <div className="relative my-12 md:my-16 px-4">
                         <div className="absolute inset-0 flex items-center" aria-hidden="true"><div className="w-full border-t border-gray-200" /></div>

@@ -6,6 +6,7 @@ export interface ConsultancyDetails {
   title: string
   subtitle: string
   instructor: string
+  instructor_image?: string | null
   about_instructor: string
   description: string
   options: string[]               // from JSON string
@@ -68,6 +69,7 @@ function normalizeConsultancyPayload(payload: any): ConsultancyData {
     title: S(det.title),
     subtitle: S(det.subtitle),
     instructor: S(det.instructor),
+    instructor_image: det.instructor_image == null ? null : S(det.instructor_image),
     about_instructor: S(det.about_instructor),
     description: S(det.description),
     options: parseJSON<string[]>(det.options, []),

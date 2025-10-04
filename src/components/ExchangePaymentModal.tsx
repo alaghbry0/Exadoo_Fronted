@@ -1,3 +1,4 @@
+// src/components/ExchangePaymentModal.tsx
 'use client'
 
 import React, { useState, useEffect, useReducer } from 'react'
@@ -83,6 +84,18 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+
+  useEffect(() => {
+    // أعلن أني فتحت (أعلى مودال)
+    // emitModalOpen('exchangePayment');
+    window.dispatchEvent(new CustomEvent('modal:open', { detail: { name: 'exchangePayment' } }));
+
+    return () => {
+      // emitModalClose('exchangePayment');
+      window.dispatchEvent(new CustomEvent('modal:close', { detail: { name: 'exchangePayment' } }));
+    };
+  }, []);
+
   // --- الحالات والـ Hooks (المنطق يبقى كما هو) ---
   const [copied, setCopied] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -131,7 +144,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-gray-50 text-gray-800 flex flex-col z-[95]">
+      <div className="fixed inset-0 bg-gray-50 text-gray-800 flex flex-col z-[100]"> 
         {/* الهيدر */}
         <header className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-10">
           <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center">

@@ -11,12 +11,14 @@ export type CachedAcademyEntry = {
   updatedAt: number
 }
 
-let idbStore: any = null
+type IdbModule = typeof import('idb-keyval')
+
+let idbStore: Pick<IdbModule, 'get' | 'set' | 'del' | 'keys'> | null = null
 
 async function getIdb() {
   if (idbStore) return idbStore
-  
-  const mod = await import('idb-keyval')
+
+  const mod: IdbModule = await import('idb-keyval')
   idbStore = {
     get: mod.get,
     set: mod.set,

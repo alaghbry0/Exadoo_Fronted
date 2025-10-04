@@ -8,6 +8,7 @@ export interface IndicatorsSubscriptionPlan {
   discounted_price: string
   duration_in_months: string // "0" = Lifetime
   date_added: string
+  is_featured?: string | null
 }
 export type IndicatorsStatus = 'lifetime' | 'active' | 'expired' | string
 
@@ -36,6 +37,7 @@ const normalizePlan = (raw: any): IndicatorsSubscriptionPlan => ({
   discounted_price: S(raw.discounted_price, '0'),
   duration_in_months: S(raw.duration_in_months, '0'),
   date_added: S(raw.date_added, ''),
+  is_featured: raw.is_featured == null ? null : S(raw.is_featured),
 })
 const normalizeMySub = (raw: any): MyIndicatorsSubscription => ({
   id: S(raw.id),

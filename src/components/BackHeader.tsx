@@ -7,22 +7,28 @@ import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+type BackMode = 'always' | 'fallback' | 'replace';
+
 type BackHeaderProps = {
-  title?: string;               // يظهر تحت الشعار في المنتصف
-  subtitle?: string;            // سطر ثانٍ رشيق
+  title?: string;
+  subtitle?: string;
   className?: string;
-  sticky?: boolean;             // افتراضياً مفعّل
-  fallbackUrl?: string;         // لو ما في تاريخ للتراجع
-  hideWhenNoHistory?: boolean;  // إخفاء زرّ الرجوع عند عدم وجود تاريخ
-  /** جديد: إن كنت تفضّل زر تليجرام بدل زرّنا المحلي */
-  preferTelegramBackButton?: boolean; // افتراضياً false => زرّنا يظهر دايمًا
-  /** متوافق مع الإصدارات السابقة: سيتم اعتباره مثل preferTelegramBackButton */
-  hideIfTgBackButton?: boolean;
-  topOffsetPx?: number;         // إزاحة من الأعلى
-  logoSrc?: string;             // مسار الشعار في المنتصف
-  centerLogo?: boolean;         // إظهار الشعار بالمنتصف (افتراضياً true)
-  onLogoClick?: () => void;     // سلوك عند الضغط على الشعار
-  rightSlot?: React.ReactNode;  // زر إضافي يمين (اختياري)
+  sticky?: boolean;
+  /** الوجهة المفضلة للرجوع */
+  backTo?: string;                 // جديد
+  /** كيف نتصرف عند الرجوع */
+  backMode?: BackMode;             // جديد: 'always' | 'fallback' | 'replace' (افتراضي 'fallback')
+  fallbackUrl?: string;            // ما زالت مدعومة (كاحتياط)
+  hideWhenNoHistory?: boolean;
+  preferTelegramBackButton?: boolean;
+  hideIfTgBackButton?: boolean;    // legacy
+  topOffsetPx?: number;
+  logoSrc?: string;
+  centerLogo?: boolean;
+  onLogoClick?: () => void;
+  rightSlot?: React.ReactNode;
+  /** لو حاب تمرر onBack مخصص، سنستدعيه بدل السلوك الافتراضي */
+  onBack?: () => void;             // جديد (اختياري)
 };
 
 type TelegramWebAppBackButton = {
@@ -31,27 +37,25 @@ type TelegramWebAppBackButton = {
   onClick: (cb: () => void) => void;
   offClick: (cb: () => void) => void;
 };
-
-type TelegramWebApp = {
-  BackButton: TelegramWebAppBackButton;
-};
-
-const HEADER_HEIGHT = 56; // px
+type TelegramWebApp = { BackButton: TelegramWebAppBackButton };
 
 const BackHeader: React.FC<BackHeaderProps> = ({
   title,
   subtitle,
   className,
   sticky = true,
+  backTo,                      // ← جديد
+  backMode = 'fallback',       // ← جديد
   fallbackUrl = '/shop',
   hideWhenNoHistory = false,
   preferTelegramBackButton,
-  hideIfTgBackButton, // legacy
+  hideIfTgBackButton,
   topOffsetPx = 0,
   logoSrc = '/logo.png',
   centerLogo = true,
   onLogoClick,
   rightSlot,
+  onBack,                      // ← جديد
 }) => {
   const router = useRouter();
 
@@ -60,12 +64,39 @@ const BackHeader: React.FC<BackHeaderProps> = ({
     return (window as any)?.Telegram?.WebApp ?? null;
   }, []);
 
-  const handleBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
-    else router.push(fallbackUrl);
+  const goTo = (href: string, mode: BackMode) => {
+    if (!href) return;
+    if (mode === 'replace') router.replace(href);
+    else router.push(href);
   };
 
-  // فعّل زر تليجرام فقط لو المستخدم فضّله
+  const handleBack = () => {
+    // أولوية لأي onBack مخصص
+    if (typeof onBack === 'function') {
+      onBack();
+      return;
+    }
+
+    const target = backTo || fallbackUrl;
+    const hasHistory = typeof window !== 'undefined' && window.history.length > 1;
+
+    if (backMode === 'always') {
+      // تجاهل التاريخ دائمًا
+      return goTo(target, 'push' as any); // نستخدم push هنا
+    }
+
+    if (backMode === 'replace') {
+      return goTo(target, 'replace');
+    }
+
+    // fallback (السلوك القديم): جرّب التاريخ، وإلا ارجع للهدف
+    if (hasHistory) {
+      window.history.back();
+    } else {
+      goTo(target, 'push' as any);
+    }
+  };
+
   useEffect(() => {
     const preferTg =
       (typeof preferTelegramBackButton === 'boolean'
@@ -82,12 +113,10 @@ const BackHeader: React.FC<BackHeaderProps> = ({
       btn.hide();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tg, preferTelegramBackButton, hideIfTgBackButton]);
+  }, [tg, preferTelegramBackButton, hideIfTgBackButton, backTo, backMode]);
 
   const noHistory = typeof window !== 'undefined' ? window.history.length <= 1 : false;
-
-  // ✅ الآن زرّنا المحلي يظهر بشكل افتراضي حتى لو تليجرام يعرض زر خاص به
-  const shouldShowLocalBtn = !(hideWhenNoHistory && noHistory) && true;
+  const shouldShowLocalBtn = !(hideWhenNoHistory && noHistory);
 
   return (
     <div
@@ -103,37 +132,35 @@ const BackHeader: React.FC<BackHeaderProps> = ({
       style={{ top: sticky ? topOffsetPx : undefined }}
     >
       <div className="mx-auto max-w-7xl px-3">
-        {/* شريط بارتفاع ثابت لضمان اتساق جميع الصفحات */}
-        <div className="relative h-14 flex items-center">
-          {/* يسار (في RTL هي البداية): زر الرجوع */}
+        <div className="relative flex h-14 items-center">
+          {/* زر الرجوع */}
           <div className="flex items-center">
-      {shouldShowLocalBtn && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={handleBack}
-          aria-label="رجوع"
-          
-        >
-          <ChevronLeft
-            size={32}          // ⬅️ أكبر من 28
-            strokeWidth={2.5}  // ⬅️ أسمك شوية
-            className="text-blue-600"
-          />
-        </Button>
+            {shouldShowLocalBtn && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleBack}
+                aria-label="رجوع"
+              >
+                <ChevronLeft
+                  size={32}
+                  strokeWidth={2.5}
+                  className="text-blue-600"
+                />
+              </Button>
             )}
           </div>
 
-          {/* المنتصف: الشعار + العنوان/الوصف، مُتمركز تمامًا */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-2 pointer-events-auto">
+          {/* المنتصف */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="pointer-events-auto flex items-center gap-2">
               {centerLogo && (
                 <button
                   type="button"
                   onClick={onLogoClick ?? (() => router.push('/'))}
                   aria-label="الانتقال للصفحة الرئيسية"
-                  className="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-gray-100/60 transition"
+                  className="flex items-center gap-2 rounded-xl px-2 py-1 transition hover:bg-gray-100/60"
                 >
                   <Image
                     src={logoSrc}
@@ -146,12 +173,12 @@ const BackHeader: React.FC<BackHeaderProps> = ({
                   {(title || subtitle) && (
                     <div className="text-center">
                       {title && (
-                        <div className="text-sm md:text-base font-extrabold text-gray-900 leading-tight">
+                        <div className="leading-tight text-sm font-extrabold text-gray-900 md:text-base">
                           {title}
                         </div>
                       )}
                       {subtitle && (
-                        <div className="text-[11px] md:text-xs text-gray-500 -mt-0.5">
+                        <div className="-mt-0.5 text-[11px] text-gray-500 md:text-xs">
                           {subtitle}
                         </div>
                       )}
@@ -162,12 +189,12 @@ const BackHeader: React.FC<BackHeaderProps> = ({
               {!centerLogo && (title || subtitle) && (
                 <div className="text-center">
                   {title && (
-                    <div className="text-sm md:text-base font-extrabold text-gray-900 leading-tight">
+                    <div className="leading-tight text-sm font-extrabold text-gray-900 md:text-base">
                       {title}
                     </div>
                   )}
                   {subtitle && (
-                    <div className="text-[11px] md:text-xs text-gray-500 -mt-0.5">
+                    <div className="-mt-0.5 text-[11px] text-gray-500 md:text-xs">
                       {subtitle}
                     </div>
                   )}
@@ -176,21 +203,16 @@ const BackHeader: React.FC<BackHeaderProps> = ({
             </div>
           </div>
 
-          {/* يمين: فتحة لأكشن إضافي/محاذاة مثالية للمنتصف */}
+          {/* يمين */}
           <div className="mr-auto flex items-center">
-            {rightSlot ?? <div className="opacity-0 w-10 h-10" aria-hidden="true" />}
+            {rightSlot ?? <div className="h-10 w-10 opacity-0" aria-hidden="true" />}
           </div>
         </div>
       </div>
 
-      {/* خط سفلي ناعم بتدرّج */}
       <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
     </div>
   );
 };
 
 export default BackHeader;
-
-// ملاحظة:
-// - افتراضياً زرّنا المحلي ظاهر دائماً.
-// - لو تبغى تعتمد زر تليجرام بداله مرّر preferTelegramBackButton={true}.
