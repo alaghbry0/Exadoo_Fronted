@@ -19,10 +19,10 @@ const TelegramContext = createContext<TelegramContextType>({
   telegramId: null,
 });
 
-const DEFAULT_TEST_TELEGRAM_ID = "5113997414";
+//const DEFAULT_TEST_TELEGRAM_ID = "5113997414";
 
 // اختيارياً: السماح بتمرير telegramId عبر كويري بارام أو localStorage
-function resolveTestTelegramId(): string {
+function resolveTestTelegramId(): string | null {
   if (typeof window !== "undefined") {
     const url = new URL(window.location.href);
     const qp = url.searchParams.get("tgid");
@@ -31,7 +31,7 @@ function resolveTestTelegramId(): string {
     const ls = window.localStorage.getItem("dev_telegram_id");
     if (ls && /^\d{5,}$/.test(ls)) return ls;
   }
-  return DEFAULT_TEST_TELEGRAM_ID;
+  return null; // مفيش fallback
 }
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
