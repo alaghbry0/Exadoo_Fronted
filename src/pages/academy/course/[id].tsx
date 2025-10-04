@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import SubscribeFab from '@/components/SubscribeFab'
-import { ArrowLeft, CheckCircle2, BookOpen, BarChart3, Play, Star, Users, Award, ChevronRight } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, BookOpen, BarChart3, Play, Star, Award, ChevronRight } from 'lucide-react'
 import { useAcademyData } from '@/services/academy'
 import { useTelegram } from '@/context/TelegramContext'
 
@@ -43,22 +43,41 @@ const formatPrice = (value?: string) => {
   return isNaN(n) ? value : `$${n.toFixed(0)}`
 }
 
-// نفس دالة الوصف السابقة (خفيفة)
-const parseDescription = (description: string) => {
-  const tempDiv = document.createElement('div')
-  tempDiv.innerHTML = description || ''
-  const textContent = tempDiv.textContent || tempDiv.innerText || ''
+const normalizeDescription = (description?: string) => {
+  if (!description) {
+    return { generalInfo: '', lessons: [] as string[] }
+  }
 
-  // التقط عناوين دروس بسيطة (إن وُجدت)
+  const normalizedText = description
+    .replace(/<br\s*\/?>(?=\s|$)/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<li>/gi, '\n• ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
   const lessonPattern = /C\d+\s*\|\s*الدرس\s*\d+\s*\|\s*([^<]+)/g
   const lessons: string[] = []
-  let match
+  let match: RegExpExecArray | null
   while ((match = lessonPattern.exec(description)) !== null) {
-    lessons.push((match[1] || '').trim())
+    const lessonTitle = (match[1] || '').replace(/<[^>]+>/g, ' ').trim()
+    if (lessonTitle) lessons.push(lessonTitle)
   }
-  const generalInfo = textContent.split('C3 |')[0]?.trim() || textContent.trim()
+
+  const generalInfo = normalizedText.split('C3 |')[0]?.trim() || normalizedText
   return { generalInfo, lessons }
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
+} as const
+
+const itemVariants = {
+  hidden: { y: 16, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.45 } },
+} as const
 
 export default function CourseDetail() {
   const router = useRouter()
@@ -67,13 +86,32 @@ export default function CourseDetail() {
   const { data, isLoading, isError, error } = useAcademyData(telegramId || undefined)
 
   const [activeTab, setActiveTab] = useState('overview')
-  const [scrollY, setScrollY] = useState(0)
-  const [isEnrolled, setIsEnrolled] = useState(false)
+  const heroParallaxRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
+    const element = heroParallaxRef.current
+    if (!element) return
+
+    let frame: number | null = null
+    const updateTransform = () => {
+      if (!element) return
+      const offset = window.scrollY * 0.35
+      element.style.transform = `translateY(${offset}px)`
+      frame = null
+    }
+
+    const handleScroll = () => {
+      if (frame !== null) return
+      frame = window.requestAnimationFrame(updateTransform)
+    }
+
+    updateTransform()
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   const course: Course | undefined = useMemo(
@@ -81,9 +119,21 @@ export default function CourseDetail() {
     [data, id]
   )
 
-  useEffect(() => {
-    if (data?.my_enrollments?.course_ids?.includes(id)) setIsEnrolled(true)
+  const isEnrolled = useMemo(() => {
+    return Boolean(data?.my_enrollments?.course_ids?.includes?.(id))
   }, [data, id])
+
+  const { generalInfo, lessons } = useMemo(() => normalizeDescription(course?.description), [course?.description])
+
+  const progress = useMemo(() => {
+    if (!course || !isEnrolled) return 0
+    let hash = 0
+    for (let i = 0; i < course.id.length; i += 1) {
+      hash = (hash * 31 + course.id.charCodeAt(i)) % 997
+    }
+    const normalized = 35 + (hash % 60)
+    return Math.min(100, normalized)
+  }, [course, isEnrolled])
 
   if (isLoading)
     return (
@@ -105,41 +155,35 @@ export default function CourseDetail() {
     )
   if (!course) return null
 
-  const isFree =
-    (course.is_free_course ?? '') === '1' || course.price?.toLowerCase?.() === 'free'
-  const { generalInfo, lessons } = parseDescription(course.description || '')
-  const progress = isEnrolled ? Math.min(100, Math.floor(Math.random() * 96) + 4) : 0
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
-  }
-  const itemVariants = {
-    hidden: { y: 16, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.45 } },
-  }
+  const isFree = (course.is_free_course ?? '') === '1' || course.price?.toLowerCase?.() === 'free'
 
   return (
     <div dir="rtl" className="font-bold min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200">
       <main className="pb-24">
-        {/* Hero موحّد مع الحزمة */}
+        {/* Hero ثابت بدون Fade/Blur لوقف الوميض */}
         <div className="relative h-64 w-full overflow-hidden md:h-96">
-          <div className="absolute inset-0 will-change-transform" style={{ transform: `translateY(${scrollY * 0.35}px)` }}>
+          <div
+            ref={heroParallaxRef}
+            className="absolute inset-0 will-change-transform [transform:translateZ(0)] [backface-visibility:hidden] pointer-events-none"
+          >
             <SmartImage
               src={course.cover_image || course.thumbnail || '/image.jpg'}
               alt={course.title}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
               className="object-cover"
-              style={{ borderRadius: '0 0 2rem 2rem' }}
+              style={{ borderRadius: '0 0 0rem 0rem' }}
+              noFade
+              disableSkeleton
+              eager
               priority
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
           <div className="absolute top-4 left-4 z-10">
             <Link
               href="/academy"
-              prefetch
+              prefetch={false}
               className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-sm text-white transition-all hover:bg-white/30"
               aria-label="العودة إلى الأكاديمية"
             >
@@ -159,7 +203,7 @@ export default function CourseDetail() {
           </div>
         </div>
 
-        {/* محتوى موحّد */}
+        {/* المحتوى */}
         <div className="mx-auto max-w-4xl px-4 py-8 md:py-12">
           <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-6">
             {/* وصف مختصر */}
@@ -167,16 +211,22 @@ export default function CourseDetail() {
               {course.short_description}
             </motion.p>
 
-            {/* Chips إحصائيات موحّدة */}
+            {/* Chips */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-3">
               {(course.instructor_name || course.instructor_photo) && (
                 <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
                   {course.instructor_photo && (
-                    <img
-                      src={course.instructor_photo}
-                      alt={course.instructor_name || 'المدرب'}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full">
+                      <SmartImage
+                        src={course.instructor_photo}
+                        alt={course.instructor_name || 'المدرب'}
+                        fill
+                        sizes="32px"
+                        className="object-cover"
+                        noFade
+                        disableSkeleton
+                      />
+                    </div>
                   )}
                   {course.instructor_name && <span className="font-medium">{course.instructor_name}</span>}
                 </div>
@@ -200,7 +250,7 @@ export default function CourseDetail() {
               )}
             </motion.div>
 
-            {/* تقدم (عند الالتحاق) */}
+            {/* تقدّم */}
             {isEnrolled && (
               <motion.div variants={itemVariants} className="bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm">
                 <div className="flex justify-between items-center mb-2">
@@ -211,7 +261,7 @@ export default function CourseDetail() {
               </motion.div>
             )}
 
-            {/* Tabs موحّدة */}
+            {/* Tabs */}
             <motion.div variants={itemVariants} className="mt-2">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="mb-6 grid w-full grid-cols-3 bg-white dark:bg-neutral-800 p-1 rounded-xl shadow-sm">
@@ -340,7 +390,7 @@ export default function CourseDetail() {
         </div>
       </main>
 
-      {/* FAB موحّد */}
+      {/* FAB */}
       <SubscribeFab
         isEnrolled={isEnrolled}
         isFree={isFree}

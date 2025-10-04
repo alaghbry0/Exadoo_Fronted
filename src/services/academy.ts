@@ -57,5 +57,6 @@ export function useAcademyData(telegramId?: string) {
     staleTime: ACADEMY_CACHE_TTL,
     gcTime: 10 * 60_000,
     retry: 2,
+    refetchOnWindowFocus: false,
   })
 }

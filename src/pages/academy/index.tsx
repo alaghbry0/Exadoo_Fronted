@@ -1,7 +1,13 @@
 // src/pages/academy/index.tsx
 'use client'
 
-import React, { memo, useMemo, useState, useCallback } from 'react'
+import React, {
+  memo,
+  useMemo,
+  useState,
+  useCallback,
+  useDeferredValue,
+} from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -59,12 +65,43 @@ const formatPrice = (value?: string) => {
 const isFreeCourse = (c: Pick<CourseItem, 'price' | 'is_free_course'>) =>
   c.is_free_course === '1' || c.price?.toLowerCase?.() === 'free'
 
+// --- Arabic normalizer for better search matching ---
+function normalizeArabic(input: string) {
+  return (input || '')
+    .toLowerCase()
+    .replace(/[\u064B-\u0652]/g, '') // إزالة التشكيل
+    .replace(/[أإآ]/g, 'ا') // توحيد الألف
+    .replace(/ى/g, 'ي') // توحيد الياء
+    .replace(/ة/g, 'ه') // توحيد التاء المربوطة
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// =========================================
+//  UI Utilities
+// =========================================
+
+function SkeletonCard() {
+  return (
+    <div className="h-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="aspect-[16/10] w-full animate-pulse rounded-lg bg-gray-200 dark:bg-neutral-800" />
+      <div className="mt-3 space-y-2">
+        <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-neutral-800" />
+        <div className="h-3 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-neutral-800" />
+      </div>
+    </div>
+  )
+}
+
 // =========================================
 //  UI Components
 // =========================================
 
-/** HScroll — سكرول أفقي بسيط (صف واحد) **/
-const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({ children, itemClassName = 'w-[70%] sm:w-[45%]' }) => {
+/** HScroll — سكرول أفقي بسيط (صف واحد) + Edge Faders **/
+const HScroll = memo(function HScroll({
+  children,
+  itemClassName = 'w-[70%] sm:w-[45%]',
+}: React.PropsWithChildren<{ itemClassName?: string }>) {
   const count = React.Children.count(children)
   if (count === 0) return null
   return (
@@ -75,44 +112,50 @@ const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = (
         role="list"
       >
         {React.Children.map(children, (ch, i) => (
-          <div key={i} className={cn('flex-shrink-0 snap-start', itemClassName)} role="listitem">
+          <div
+            key={i}
+            className={cn('flex-shrink-0 snap-start', itemClassName, 'md:[&>*]:shadow-sm')}
+            role="listitem"
+          >
             {ch}
           </div>
         ))}
       </div>
+      
     </div>
   )
-}
+})
 
-/** ✅ [مدمج] GridCarousel — سكرول أفقي شبكي (صفين) **/
-const GridCarousel: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const count = React.Children.count(children)
-    if (count === 0) return null
-    return (
-        <div className="relative">
-            <div
-                className="-mx-4 grid grid-flow-col grid-rows-2 auto-cols-[85%] gap-x-3 gap-y-3 overflow-x-auto snap-x snap-mandatory px-4 pb-2 sm:auto-cols-[45%]"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                role="list"
-            >
-                {React.Children.map(children, (child, i) => <div key={i} className="snap-start">{child}</div>)}
-            </div>
-        </div>
-    )
-}
-
-/** بطاقـة دورة مصغّرة **/
+/** بطاقة دورة مصغّرة **/
 const MiniCourseCard = memo(function MiniCourseCard({
-  id, title, desc, price, lessons, level, img, free, variant,
+  id,
+  title,
+  desc,
+  price,
+  lessons,
+  level,
+  img,
+  free,
+  variant,
+  priority,
 }: {
-  id: string; title: string; desc: string; price: string; lessons: number; level?: string; img?: string; free?: boolean; variant?: 'default' | 'highlight' | 'top'
+  id: string
+  title: string
+  desc: string
+  price: string
+  lessons: number
+  level?: string
+  img?: string
+  free?: boolean
+  variant?: 'default' | 'highlight' | 'top'
+  priority?: boolean
 }) {
   const router = useRouter()
   const prefetch = useCallback(() => router.prefetch(`/academy/course/${id}`), [router, id])
 
   const cardClass = cn(
-    'h-full overflow-hidden rounded-xl border shadow-sm transition-all duration-200',
-    'group-hover:-translate-y-0.5 group-hover:shadow-md',
+    'h-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-200',
+    'md:group-hover:-translate-y-0.5 md:group-hover:shadow-md',
     variant === 'highlight'
       ? 'border-amber-200 bg-white dark:border-amber-800 dark:bg-neutral-900'
       : variant === 'top'
@@ -123,7 +166,7 @@ const MiniCourseCard = memo(function MiniCourseCard({
   return (
     <Link
       href={`/academy/course/${id}`}
-      prefetch
+      prefetch={false} // نتجنب double prefetch
       onMouseEnter={prefetch}
       onTouchStart={prefetch}
       className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
@@ -133,10 +176,11 @@ const MiniCourseCard = memo(function MiniCourseCard({
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
-            alt={title}
+            alt={`${title} — ${lessons} درس${level ? ` • ${level}` : ''}`}
             fill
             sizes="(min-width:1280px) 300px, (min-width:640px) 45vw, 70vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority={!!priority}
+            className="object-cover transition-transform duration-300 md:group-hover:scale-105"
           />
           {variant === 'top' && (
             <div className="absolute left-2 top-2 rounded-full bg-blue-600/90 p-1.5 text-white">
@@ -150,11 +194,19 @@ const MiniCourseCard = memo(function MiniCourseCard({
           )}
         </div>
         <CardContent className="p-3">
-          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">{title}</h3>
-          <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600 dark:text-neutral-400">{desc}</p>
+          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">
+            {title}
+          </h3>
+          <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600 dark:text-neutral-400">
+            {desc}
+          </p>
           <div className="mt-3 flex items-center justify-between text-[12px] text-gray-500 dark:text-neutral-400">
-            <span className="truncate">{lessons} درس{level ? ` • ${level}` : ''}</span>
-            <span className="font-extrabold text-primary-600 dark:text-primary-400">{free ? 'مجاني' : formatPrice(price)}</span>
+            <span className="truncate">
+              {lessons} درس{level ? ` • ${level}` : ''}
+            </span>
+            <span className="font-extrabold text-primary-600 dark:text-primary-400">
+              {free ? 'مجاني' : formatPrice(price)}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -164,29 +216,46 @@ const MiniCourseCard = memo(function MiniCourseCard({
 
 /** بطاقة حزمة مصغّرة **/
 const MiniBundleCard = memo(function MiniBundleCard({
-  id, title, desc, price, img, variant,
-}: { id: string; title: string; desc: string; price: string; img?: string; variant?: 'default' | 'highlight' }) {
+  id,
+  title,
+  desc,
+  price,
+  img,
+  variant,
+  priority,
+}: {
+  id: string
+  title: string
+  desc: string
+  price: string
+  img?: string
+  variant?: 'default' | 'highlight'
+  priority?: boolean
+}) {
   return (
     <Link
       href={`/academy/bundle/${id}`}
-      prefetch
+      prefetch={false}
       className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
       aria-label={`فتح حزمة ${title}`}
     >
-      <Card className={cn(
-        'h-full overflow-hidden rounded-xl border shadow-sm transition-all duration-200',
-        'group-hover:-translate-y-0.5 group-hover:shadow-md',
-        variant === 'highlight'
-          ? 'border-amber-200 bg-white dark:border-amber-800 dark:bg-neutral-900'
-          : 'border-gray-100 bg-white dark:border-neutral-800 dark:bg-neutral-900'
-      )}>
+      <Card
+        className={cn(
+          'h-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-200',
+          'md:group-hover:-translate-y-0.5 md:group-hover:shadow-md',
+          variant === 'highlight'
+            ? 'border-amber-200 bg-white dark:border-amber-800 dark:bg-neutral-900'
+            : 'border-gray-100 bg-white dark:border-neutral-800 dark:bg-neutral-900'
+        )}
+      >
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
-            alt={title}
+            alt={`${title} — حزمة تعليمية`}
             fill
             sizes="(min-width:1280px) 300px, (min-width:640px) 45vw, 70vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority={!!priority}
+            className="object-cover transition-transform duration-300 md:group-hover:scale-105"
           />
           {variant === 'highlight' && (
             <div className="absolute left-2 top-2 rounded-full bg-amber-600/90 p-1.5 text-white">
@@ -195,11 +264,17 @@ const MiniBundleCard = memo(function MiniBundleCard({
           )}
         </div>
         <CardContent className="p-3">
-          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">{title}</h3>
-          <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600 dark:text-neutral-400">{(desc || '').replace(/\\r\\n/g, ' ')}</p>
+          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">
+            {title}
+          </h3>
+          <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600 dark:text-neutral-400">
+            {(desc || '').replace(/\\r\\n/g, ' ')}
+          </p>
           <div className="mt-3 flex items-center justify-between text-[12px] text-gray-500 dark:text-neutral-400">
             <span className="truncate">حزمة تعليمية</span>
-            <span className="font-extrabold text-primary-600 dark:text-primary-400">{formatPrice(price)}</span>
+            <span className="font-extrabold text-primary-600 dark:text-primary-400">
+              {formatPrice(price)}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -208,21 +283,32 @@ const MiniBundleCard = memo(function MiniBundleCard({
 })
 
 /** بطاقة تصنيف **/
-const CategoryCard = memo(function CategoryCard({ id, name, thumbnail }: { id: string; name: string; thumbnail?: string; }) {
+const CategoryCard = memo(function CategoryCard({
+  id,
+  name,
+  thumbnail,
+  priority,
+}: {
+  id: string
+  name: string
+  thumbnail?: string
+  priority?: boolean
+}) {
   return (
     <Link
       href={`/academy/category/${id}`}
-      prefetch
-      className="group relative block h-full overflow-hidden rounded-xl border bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
+      prefetch={false}
+      className="group relative block h-full overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
       aria-label={`فتح تصنيف ${name}`}
     >
       <div className="relative h-full">
         <SmartImage
           src={thumbnail || '/image.jpg'}
-          alt={name}
+          alt={`تصنيف: ${name}`}
           fill
           sizes="(min-width:768px) 22vw, 50vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          priority={!!priority}
+          className="object-cover transition-transform duration-300 md:group-hover:scale-105"
         />
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -233,13 +319,13 @@ const CategoryCard = memo(function CategoryCard({ id, name, thumbnail }: { id: s
   )
 })
 
-
 // =========================================
 //  Page Component
 // =========================================
 export default function AcademyIndex() {
   const [tab, setTab] = useState<'all' | 'mine'>('all')
   const [q, setQ] = useState('')
+  const deferredQuery = useDeferredValue(q)
   const { telegramId } = useTelegram()
   const { data, isLoading, isError, error } = useAcademyData(telegramId || undefined)
 
@@ -248,54 +334,55 @@ export default function AcademyIndex() {
     if (!data) return { topCourses: [], categories: [], highlightBundles: [], highlightCourses: [] }
     const allCourses = (data.courses || []) as CourseItem[]
     const allBundles = (data.bundles || []) as BundleItem[]
-    
+
     let tc = ((data.top_course_ids || []) as string[])
-        .map(id => allCourses.find(c => c.id === id))
-        .filter(Boolean) as CourseItem[]
+      .map((id) => allCourses.find((c) => c.id === id))
+      .filter(Boolean) as CourseItem[]
     if (tc.length === 0) tc = allCourses.slice(0, 5)
 
     let hb = ((data.highlight_bundle_ids || []) as string[])
-        .map(id => allBundles.find(b => b.id === id))
-        .filter(Boolean) as BundleItem[]
+      .map((id) => allBundles.find((b) => b.id === id))
+      .filter(Boolean) as BundleItem[]
     if (hb.length === 0) hb = allBundles.slice(0, 5)
 
-    const topIds = new Set(tc.map(c => c.id))
+    const topIds = new Set(tc.map((c) => c.id))
     let hc = ((data.highlight_course_ids || []) as string[])
-        .map(id => allCourses.find(c => c.id === id && !topIds.has(c.id)))
-        .filter(Boolean) as CourseItem[]
-    if (hc.length === 0) hc = allCourses.filter(c => !topIds.has(c.id)).slice(0, 8)
-    
-    return { 
-        topCourses: tc, 
-        categories: (data.categories || []) as CategoryItem[], 
-        highlightBundles: hb, 
-        highlightCourses: hc 
+      .map((id) => allCourses.find((c) => c.id === id && !topIds.has(c.id)))
+      .filter(Boolean) as CourseItem[]
+    if (hc.length === 0) hc = allCourses.filter((c) => !topIds.has(c.id)).slice(0, 8)
+
+    return {
+      topCourses: tc,
+      categories: (data.categories || []) as CategoryItem[],
+      highlightBundles: hb,
+      highlightCourses: hc,
     }
   }, [data])
 
-  // ===== منطق البحث والفلترة =====
-  const ql = q.trim().toLowerCase()
+  // ===== منطق البحث (Normalizer عربي) =====
+  const ql = useMemo(() => normalizeArabic(deferredQuery || ''), [deferredQuery])
   const isSearching = ql.length > 0
-  
+
   const filteredData = useMemo(() => {
     if (!isSearching) return { topCourses, categories, highlightBundles, highlightCourses }
-    
-    const filterCourse = (c: CourseItem) => (c.title + c.short_description).toLowerCase().includes(ql)
-    const filterBundle = (b: BundleItem) => (b.title + b.description).toLowerCase().includes(ql)
-    const filterCategory = (c: CategoryItem) => c.name?.toLowerCase?.().includes(ql)
+
+    const filterCourse = (c: CourseItem) =>
+      normalizeArabic(`${c.title || ''} ${c.short_description || ''}`).includes(ql)
+    const filterBundle = (b: BundleItem) =>
+      normalizeArabic(`${b.title || ''} ${b.description || ''}`).includes(ql)
+    const filterCategory = (c: CategoryItem) => normalizeArabic(c.name || '').includes(ql)
 
     return {
-        topCourses: topCourses.filter(filterCourse),
-        categories: categories.filter(filterCategory),
-        highlightBundles: highlightBundles.filter(filterBundle),
-        highlightCourses: highlightCourses.filter(filterCourse)
+      topCourses: topCourses.filter(filterCourse),
+      categories: categories.filter(filterCategory),
+      highlightBundles: highlightBundles.filter(filterBundle),
+      highlightCourses: highlightCourses.filter(filterCourse),
     }
   }, [isSearching, ql, topCourses, categories, highlightBundles, highlightCourses])
 
-
   // بيانات “دوراتي”
   const mine = useMemo(() => {
-    if (!data) return { courses: [], bundles: [] }
+    if (!data) return { courses: [] as CourseItem[], bundles: [] as BundleItem[] }
     const cset = new Set((data.my_enrollments?.course_ids || []) as string[])
     const bset = new Set((data.my_enrollments?.bundle_ids || []) as string[])
     return {
@@ -304,10 +391,20 @@ export default function AcademyIndex() {
     }
   }, [data])
 
+  // تبويبات + A11y (مع تنقل بالأسهم)
   const handleTab = useCallback((key: 'all' | 'mine') => setTab(key), [])
+  const onTabsKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      setTab((prev) => (prev === 'all' ? 'mine' : 'all'))
+    }
+  }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-50 font-arabic text-gray-800 dark:bg-neutral-950 dark:text-neutral-200">
+    <div
+      dir="rtl"
+      className="min-h-screen bg-gray-50 font-arabic text-gray-800 dark:bg-neutral-950 dark:text-neutral-200"
+    >
       <BackHeader title="الأكاديمية" backTo="/shop" backMode="always" />
 
       <main className="mx-auto max-w-7xl px-4 pb-12">
@@ -345,27 +442,70 @@ export default function AcademyIndex() {
                 placeholder="ابحث في كل المحتوى..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="block w-full rounded-2xl py-2.5 pr-3.5 pl-10 text-sm bg-white text-gray-900 shadow-sm placeholder:text-gray-400 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-400/40 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="block w-full rounded-2xl border border-gray-200 bg-white py-2.5 pr-3.5 pl-10 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/40 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                aria-label="بحث في محتوى الأكاديمية"
               />
             </div>
           </motion.div>
         </section>
 
-        {/* Tabs بسيطة */}
+        {/* Tabs */}
         <div className="sticky top-[56px] z-20 -mx-4 border-b border-gray-200 bg-gray-50/80 px-4 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950/80">
-          <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 py-3">
-            <Button onClick={() => handleTab('all')} className={cn('rounded-xl', tab === 'all' ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg' : 'bg-transparent text-gray-700 hover:bg-gray-200 dark:text-neutral-300 dark:hover:bg-neutral-800')} aria-pressed={tab === 'all'}>
+          <div
+            role="tablist"
+            aria-label="أقسام الأكاديمية"
+            onKeyDown={onTabsKeyDown}
+            className="mx-auto flex max-w-7xl items-center justify-center gap-2 py-3"
+          >
+            <Button
+              role="tab"
+              aria-selected={tab === 'all'}
+              tabIndex={tab === 'all' ? 0 : -1}
+              onClick={() => handleTab('all')}
+              className={cn(
+                'rounded-xl',
+                tab === 'all'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
+              )}
+            >
               <Layers className="ml-2 h-4 w-4" /> جميع المحتوى
             </Button>
-            <Button onClick={() => handleTab('mine')} className={cn('rounded-xl', tab === 'mine' ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg' : 'bg-transparent text-gray-700 hover:bg-gray-200 dark:text-neutral-300 dark:hover:bg-neutral-800')} aria-pressed={tab === 'mine'}>
+            <Button
+              role="tab"
+              aria-selected={tab === 'mine'}
+              tabIndex={tab === 'mine' ? 0 : -1}
+              onClick={() => handleTab('mine')}
+              className={cn(
+                'rounded-xl',
+                tab === 'mine'
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+                  : 'bg-transparent text-gray-700 hover:bg-gray-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
+              )}
+            >
               <Bookmark className="ml-2 h-4 w-4" /> دوراتي
             </Button>
           </div>
         </div>
 
         {/* Loading / Error */}
-        {isLoading && <div className="py-16 text-center text-gray-500">جاري تحميل المحتوى…</div>}
-        {isError && <div className="py-16 text-center text-error-500">حدث خطأ: {(error as Error)?.message}</div>}
+        <div aria-live="polite">
+          {isLoading && (
+            <section className="pt-8">
+              <div className="mb-3 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-neutral-800" />
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="w-[68%] sm:w-[30%]">
+                    <SkeletonCard />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {isError && (
+            <div className="py-16 text-center text-red-500">حدث خطأ: {(error as Error)?.message}</div>
+          )}
+        </div>
 
         {/* المحتوى */}
         {data && !isLoading && !isError && (
@@ -383,7 +523,9 @@ export default function AcademyIndex() {
                   {mine.courses.length === 0 && mine.bundles.length === 0 ? (
                     <div className="mx-auto max-w-lg rounded-3xl border border-dashed border-gray-300 bg-white/70 p-8 text-center text-gray-600 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-300">
                       <p className="text-lg font-semibold">لم تقم بالاشتراك في أي محتوى بعد.</p>
-                      <p className="mt-2 text-sm">اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى".</p>
+                      <p className="mt-2 text-sm">
+                        اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب &quot;جميع المحتوى&quot;.
+                      </p>
                       <Button
                         className="mt-6 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-button"
                         onClick={() => setTab('all')}
@@ -402,15 +544,17 @@ export default function AcademyIndex() {
                             </h2>
                           </div>
                           <HScroll itemClassName="w-[68%] sm:w-[30%]">
-                            {mine.courses.map((c) => (
+                            {mine.courses.map((c, i) => (
                               <MiniCourseCard
                                 key={c.id}
-                                {...c}
+                                id={c.id}
+                                title={c.title}
                                 desc={c.short_description}
                                 price={c.discounted_price || c.price}
                                 lessons={c.total_number_of_lessons}
                                 img={c.thumbnail}
                                 free={isFreeCourse(c)}
+                                priority={i === 0}
                               />
                             ))}
                           </HScroll>
@@ -426,7 +570,7 @@ export default function AcademyIndex() {
                             </h2>
                           </div>
                           <HScroll itemClassName="w-[78%] sm:w-[35%]">
-                            {mine.bundles.map((b) => (
+                            {mine.bundles.map((b, i) => (
                               <MiniBundleCard
                                 key={b.id}
                                 id={b.id}
@@ -435,6 +579,7 @@ export default function AcademyIndex() {
                                 price={b.price}
                                 img={b.image || b.cover_image}
                                 variant="highlight"
+                                priority={i === 0}
                               />
                             ))}
                           </HScroll>
@@ -445,7 +590,7 @@ export default function AcademyIndex() {
                 </section>
               ) : (
                 <>
-                  {/* 1) Top Courses */}
+                  {/* 1) Top Courses — سكرول أفقي */}
                   {filteredData.topCourses.length > 0 && (
                     <section aria-labelledby="top-courses">
                       <div className="mb-3 flex items-center gap-2">
@@ -453,7 +598,7 @@ export default function AcademyIndex() {
                         <h2 id="top-courses" className="text-xl font-bold">الأكثر طلباً</h2>
                       </div>
                       <HScroll itemClassName="w-[68%] sm:w-[30%]">
-                        {filteredData.topCourses.map((c) => (
+                        {filteredData.topCourses.map((c, i) => (
                           <MiniCourseCard
                             key={c.id}
                             id={c.id}
@@ -465,13 +610,14 @@ export default function AcademyIndex() {
                             img={c.thumbnail}
                             free={isFreeCourse(c)}
                             variant="top"
+                            priority={i === 0}
                           />
                         ))}
                       </HScroll>
                     </section>
                   )}
 
-                  {/* 2) Categories */}
+                  {/* 2) Categories — سكرول أفقي */}
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories">
                       <div className="mb-3 flex items-center gap-2">
@@ -479,14 +625,14 @@ export default function AcademyIndex() {
                         <h2 id="categories" className="text-xl font-bold">التصنيفات</h2>
                       </div>
                       <HScroll itemClassName="w-[45%] sm:w-[22%] aspect-[5/4]">
-                        {filteredData.categories.map((cat) => (
-                          <CategoryCard key={cat.id} {...cat} />
+                        {filteredData.categories.map((cat, i) => (
+                          <CategoryCard key={cat.id} {...cat} priority={i === 0} />
                         ))}
                       </HScroll>
                     </section>
                   )}
 
-                  {/* 3) Highlight Bundles */}
+                  {/* 3) Highlight Bundles — سكرول أفقي */}
                   {filteredData.highlightBundles.length > 0 && (
                     <section aria-labelledby="highlight-bundles">
                       <div className="mb-3 flex items-center gap-2">
@@ -494,7 +640,7 @@ export default function AcademyIndex() {
                         <h2 id="highlight-bundles" className="text-xl font-bold">حزم مميزة</h2>
                       </div>
                       <HScroll itemClassName="w-[78%] sm:w-[35%]">
-                        {filteredData.highlightBundles.map((b) => (
+                        {filteredData.highlightBundles.map((b, i) => (
                           <MiniBundleCard
                             key={b.id}
                             id={b.id}
@@ -503,21 +649,22 @@ export default function AcademyIndex() {
                             price={b.price}
                             img={b.image || b.cover_image}
                             variant="highlight"
+                            priority={i === 0}
                           />
                         ))}
                       </HScroll>
                     </section>
                   )}
-                  
-                  {/* ✅ [مدمج] 4) Highlight Courses using GridCarousel */}
+
+                  {/* 4) Highlight Courses — سكرول أفقي (متناسق مع الباقي) */}
                   {filteredData.highlightCourses.length > 0 && (
                     <section aria-labelledby="highlight-courses">
                       <div className="mb-3 flex items-center gap-2">
                         <Star className="h-5 w-5 text-amber-600" />
                         <h2 id="highlight-courses" className="text-xl font-bold">كورسات مميزة</h2>
                       </div>
-                      <GridCarousel>
-                        {filteredData.highlightCourses.map((c) => (
+                      <HScroll itemClassName="w-[68%] sm:w-[30%]">
+                        {filteredData.highlightCourses.map((c, i) => (
                           <MiniCourseCard
                             key={c.id}
                             id={c.id}
@@ -529,11 +676,29 @@ export default function AcademyIndex() {
                             img={c.thumbnail}
                             free={isFreeCourse(c)}
                             variant="highlight"
+                            priority={i === 0}
                           />
                         ))}
-                      </GridCarousel>
+                      </HScroll>
                     </section>
                   )}
+
+                  {/* Empty State خاص بالبحث */}
+                  {isSearching &&
+                    filteredData.topCourses.length === 0 &&
+                    filteredData.categories.length === 0 &&
+                    filteredData.highlightBundles.length === 0 &&
+                    filteredData.highlightCourses.length === 0 && (
+                      <div className="mx-auto max-w-lg rounded-3xl border border-dashed border-gray-300 bg-white/70 p-8 text-center text-gray-600 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-300">
+                        <p className="text-lg font-semibold">لا توجد نتائج</p>
+                        <p className="mt-2 text-sm">جرّب كلمات أبسط أو تصنيفات مختلفة.</p>
+                        <div className="mt-4 flex justify-center gap-2 text-xs">
+                          <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-neutral-800">تحليل</span>
+                          <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-neutral-800">مبتدئ</span>
+                          <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-neutral-800">مجاني</span>
+                        </div>
+                      </div>
+                    )}
                 </>
               )}
               <div className="pt-2">

@@ -1,7 +1,7 @@
 // src/pages/academy/bundle/[id].tsx
 'use client'
 
-import React, { useMemo, useCallback } from 'react'
+import React, { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -16,6 +16,9 @@ import { ArrowLeft, Layers, Gift, MessageSquare } from 'lucide-react'
 import SubscribeFab from '@/components/SubscribeFab'
 import { cn } from '@/lib/utils'
 
+// ==============================
+// Types
+// ==============================
 interface Course {
   id: string
   title: string
@@ -38,6 +41,9 @@ interface Bundle {
   telegram_url?: string
 }
 
+// ==============================
+// Helpers
+// ==============================
 const formatPrice = (value?: string) => {
   if (!value) return ''
   if (value.toLowerCase?.() === 'free') return 'مجاني'
@@ -47,8 +53,12 @@ const formatPrice = (value?: string) => {
 const isFreeCourse = (c: Pick<Course, 'price' | 'is_free_course'>) =>
   (c.is_free_course ?? '') === '1' || c.price?.toLowerCase?.() === 'free'
 
-// HScroll
-const HScroll: React.FC<React.PropsWithChildren<{ itemWidth?: number | string }>> = ({ children, itemWidth = '70%' }) => {
+// ==============================
+// UI: HScroll (مع Faders)
+// ==============================
+const HScroll: React.FC<
+  React.PropsWithChildren<{ itemWidth?: number | string }>
+> = ({ children, itemWidth = '70%' }) => {
   const count = React.Children.count(children)
   if (count === 0) return null
   return (
@@ -60,18 +70,42 @@ const HScroll: React.FC<React.PropsWithChildren<{ itemWidth?: number | string }>
         aria-label="قائمة أفقية قابلة للتمرير"
       >
         {React.Children.map(children, (ch, i) => (
-          <div key={i} className="flex-shrink-0 snap-start" style={{ width: itemWidth }} role="listitem">
+          <div
+            key={i}
+            className="flex-shrink-0 snap-start md:[&>*]:shadow-sm"
+            style={{ width: itemWidth }}
+            role="listitem"
+          >
             {ch}
           </div>
         ))}
       </div>
+      
     </div>
   )
 }
 
-// MiniCourseCard بلا شارات
-function MiniCourseCard({ id, title, lessons, level, img, free, price }: {
-  id: string; title: string; lessons: number; level?: string; img?: string; free?: boolean; price?: string
+// ==============================
+// MiniCourseCard (مع prefetch يدوي + priority اختياري)
+// ==============================
+function MiniCourseCard({
+  id,
+  title,
+  lessons,
+  level,
+  img,
+  free,
+  price,
+  priority,
+}: {
+  id: string
+  title: string
+  lessons: number
+  level?: string
+  img?: string
+  free?: boolean
+  price?: string
+  priority?: boolean
 }) {
   const router = useRouter()
   const prefetch = useCallback(() => router.prefetch(`/academy/course/${id}`), [router, id])
@@ -79,31 +113,40 @@ function MiniCourseCard({ id, title, lessons, level, img, free, price }: {
   return (
     <Link
       href={`/academy/course/${id}`}
-      prefetch
+      prefetch={false}
       onMouseEnter={prefetch}
       onTouchStart={prefetch}
       className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
       aria-label={`فتح دورة ${title}`}
     >
-      <Card className={cn(
-        'h-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm',
-        'transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md',
-        'dark:border-neutral-800 dark:bg-neutral-900'
-      )}>
+      <Card
+        className={cn(
+          'h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm',
+          'transition-all duration-200 md:group-hover:-translate-y-0.5 md:group-hover:shadow-md',
+          'dark:border-neutral-800 dark:bg-neutral-900'
+        )}
+      >
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
-            alt={title}
+            alt={`${title} — ${lessons} درس${level ? ` • ${level}` : ''}`}
             fill
             sizes="(min-width:1280px) 300px, (min-width:640px) 45vw, 70vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover md:group-hover:scale-105 transition-transform duration-300"
+            priority={!!priority}
           />
         </div>
         <CardContent className="p-3">
-          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">{title}</h3>
+          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">
+            {title}
+          </h3>
           <div className="mt-2 flex items-center justify-between text-[12px] text-gray-500 dark:text-neutral-400">
-            <span className="truncate">{lessons} درس{level ? ` • ${level}` : ''}</span>
-            <span className="font-extrabold text-primary-600 dark:text-primary-400">{free ? 'مجاني' : formatPrice(price)}</span>
+            <span className="truncate">
+              {lessons} درس{level ? ` • ${level}` : ''}
+            </span>
+            <span className="font-extrabold text-primary-600 dark:text-primary-400">
+              {free ? 'مجاني' : formatPrice(price)}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -111,11 +154,39 @@ function MiniCourseCard({ id, title, lessons, level, img, free, price }: {
   )
 }
 
+// ==============================
+// Page
+// ==============================
 export default function BundleDetail() {
   const router = useRouter()
   const id = (router.query.id as string) || ''
   const { telegramId } = useTelegram()
   const { data, isLoading, isError, error } = useAcademyData(telegramId || undefined)
+
+  const heroParallaxRef = useRef<HTMLDivElement | null>(null)
+
+  // Parallax خفيف + ترقية GPU (نفس صفحة الكورس)
+  useEffect(() => {
+    const el = heroParallaxRef.current
+    if (!el) return
+    let frame: number | null = null
+    const update = () => {
+      if (!el) return
+      const offset = window.scrollY * 0.35
+      el.style.transform = `translateY(${offset}px)`
+      frame = null
+    }
+    const onScroll = () => {
+      if (frame !== null) return
+      frame = window.requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [])
 
   const bundle: Bundle | undefined = useMemo(
     () => data?.bundles.find((b: Bundle) => b.id === id),
@@ -132,8 +203,10 @@ export default function BundleDetail() {
     }
   }, [data, bundle])
 
-  const isEnrolled = Boolean((data as any)?.my_enrollments?.bundle_ids?.includes?.(id)) || false
-  const isFree = bundle?.price?.toLowerCase?.() === 'free' || Number(bundle?.price) === 0
+  const isEnrolled =
+    Boolean((data as any)?.my_enrollments?.bundle_ids?.includes?.(id)) || false
+  const isFree =
+    bundle?.price?.toLowerCase?.() === 'free' || Number(bundle?.price) === 0
 
   if (isLoading)
     return (
@@ -156,24 +229,35 @@ export default function BundleDetail() {
   if (!bundle) return null
 
   return (
-    <div dir="rtl" className="font-arabic bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 min-h-screen">
+    <div
+      dir="rtl"
+      className="font-arabic bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 min-h-screen"
+    >
       <main className="pb-24">
-        {/* Hero */}
+        {/* Hero ثابت بلا Fade/Blur + GPU hints */}
         <div className="relative h-64 w-full md:h-96 overflow-hidden">
-          <SmartImage
-            src={bundle.cover_image || bundle.image || '/image.jpg'}
-            alt={bundle.title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
-            className="object-cover"
-            style={{ borderRadius: '0 0 2rem 2rem' }}
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div
+            ref={heroParallaxRef}
+            className="absolute inset-0 will-change-transform [transform:translateZ(0)] [backface-visibility:hidden] pointer-events-none"
+          >
+            <SmartImage
+              src={bundle.cover_image || bundle.image || '/image.jpg'}
+              alt={bundle.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
+              className="object-cover"
+              style={{ borderRadius: '0 0 0rem 0rem' }}
+              noFade
+              disableSkeleton
+              eager
+              priority
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
           <div className="absolute top-4 left-4 z-10">
             <Link
               href="/academy"
-              prefetch
+              prefetch={false}
               className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-sm text-white transition-all hover:bg-white/30"
               aria-label="العودة إلى الأكاديمية"
             >
@@ -193,12 +277,14 @@ export default function BundleDetail() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* المحتوى */}
         <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             {/* الوصف */}
             <div className="lg:col-span-2">
-              <Badge variant="secondary" className="mb-3">حزمة تعليمية</Badge>
+              <Badge variant="secondary" className="mb-3">
+                حزمة تعليمية
+              </Badge>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -237,12 +323,12 @@ export default function BundleDetail() {
             </aside>
           </div>
 
-          {/* الكورسات ضمن الحزمة — الآن أفقي */}
+          {/* الكورسات ضمن الحزمة — أفقي مع Faders + priority لأول عنصر */}
           {coursesInBundle.length > 0 && (
             <div className="mt-12">
               <h2 className="mb-3 text-2xl font-bold md:text-3xl">الكورسات المتضمنة</h2>
               <HScroll itemWidth="68%">
-                {coursesInBundle.map((course) => (
+                {coursesInBundle.map((course, i) => (
                   <MiniCourseCard
                     key={course.id}
                     id={course.id}
@@ -252,6 +338,7 @@ export default function BundleDetail() {
                     img={course.thumbnail}
                     free={isFreeCourse(course)}
                     price={course.price}
+                    priority={i === 0}
                   />
                 ))}
               </HScroll>
