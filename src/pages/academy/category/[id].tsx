@@ -9,7 +9,6 @@ import { useAcademyData } from '@/services/academy'
 import AuthPrompt from '@/components/AuthFab'
 import SmartImage from '@/components/SmartImage'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import BackHeader from '@/components/BackHeader'
 

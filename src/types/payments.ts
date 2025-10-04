@@ -24,7 +24,7 @@ export interface PaymentIntentRequest {
     trading_view_id?: string;
     forex_addresses?: string[];
     [k: string]: any;
-  }; | null;
+  } | null;
 }
 
 export interface PaymentIntentResponse {

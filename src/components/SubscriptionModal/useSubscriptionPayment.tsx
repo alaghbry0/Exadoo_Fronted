@@ -169,11 +169,11 @@ export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: ()
         await handleTonPayment(
           tonConnectUI,
           setPaymentStatus,
-          plan.selectedOption.id.toString(), // يمكن تجاهله لاحقًا لو استغنيت عنه داخليًا
+          intent.payment_token,
+          price,
           String(telegramId),
           telegramUsername || 'unknown',
-          fullName || 'Unknown',
-          intent.payment_token 
+          fullName || 'Unknown'
         );
         return true;
       } else {

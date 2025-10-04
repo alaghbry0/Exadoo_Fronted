@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUserStore } from '@/stores/zustand/userStore';
 import { useUIStore } from '@/stores/zustand/uiStore';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Check, X, ShieldAlert, Zap, Gift, Sparkles } from 'lucide-react';
+import { ArrowLeft, X, ShieldAlert, Zap, Gift, Sparkles } from 'lucide-react';
 
 // ... (الدوال المساعدة مثل buildTelegramDeepLinkForReturn تبقى كما هي)
 const POLL_INTERVAL_MS = 3000;

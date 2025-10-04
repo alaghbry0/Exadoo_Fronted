@@ -14,7 +14,6 @@ import {
   TrendingUp,
   Waves,
   BarChart3,
-  CalendarCheck2,
   Search,
   ArrowLeft,
   Sparkles,
@@ -53,10 +52,6 @@ const TRADING_TOOLS: TileMeta[] = [
   { key: 'indicators', title: 'مؤشرات Exaado للبيع والشراء', description: 'حزمة مؤشرات متقدمة (Gann-based) بأداء مُثبت وتجربة سلسة.', href: '/indicators', icon: BarChart3, variant: 'wide', accent: 'primary' },
   { key: 'forex', title: 'Exaado Forex', description: 'تحكم كامل في صفقاتك مع لوحات Exaado للتداول. نفّذ أوامرك بنقرة واحدة، أدر مخاطرك بفعالية، وركز على الأهم: تحقيق الأرباح.', href: '/forex', icon: TrendingUp, variant: 'half', accent: 'primary' },
 ]
-const PERSONAL_SERVICES: TileMeta[] = [
- // { key: 'consultations', title: 'استشارات Exaado', description: 'احجز جلسة مباشرة 1:1 مع الخبراء مع اختيار الوقت المناسب.', href: '/consultancy', icon: CalendarCheck2, variant: 'wide', accent: 'success', eyebrow: '1:1 مباشر' },
-]
-//const ALL_SERVICES = [...TRADING_TOOLS, ...PERSONAL_SERVICES]
 const ALL_SERVICES = [...TRADING_TOOLS]
 
 const iconWrap = (accent: Accent): string => ({ primary: 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400', secondary: 'bg-secondary-50 text-secondary-700 dark:bg-secondary-500/10 dark:text-secondary-400', success: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' }[accent])
@@ -148,9 +143,8 @@ const WideIndicators = React.memo<{ meta: TileMeta }>(({ meta }) => {
   const isLinked = useUserStore((state) => state.isLinked);
 
   // (مهم) جلب البيانات بشكل مشروط: فقط إذا كان المستخدم مرتبطاً
-  const { data, isLoading } = useIndicatorsData(telegramId, {
-    enabled: isLinked && !!telegramId,
-  });
+  const indicatorsTelegramId = isLinked && telegramId ? telegramId : undefined;
+  const { data, isLoading } = useIndicatorsData(indicatorsTelegramId);
 
   const lifetime = data?.subscriptions?.find((p: any) => p?.duration_in_months === '0');
   const priceNow = lifetime?.discounted_price ?? lifetime?.price;
@@ -330,7 +324,7 @@ export default function ShopHome() {
                     <h2 id="education-title" className="text-2xl font-bold text-gray-900 dark:text-neutral-100">التعليم والتطوير</h2>
                   </div>
                   <LockedServiceWrapper isLocked={!isLinked}>
-                      <AcademyHeroCard courses={26} tracks={7} freeCount={4} />
+                      <AcademyHeroCard />
                   </LockedServiceWrapper>
                 </section>
 

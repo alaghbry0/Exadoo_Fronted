@@ -1,7 +1,6 @@
 // src/pages/indicators.tsx
 'use client'
 import { useMemo } from 'react'
-import Link from 'next/link'
 import BackHeader from '@/components/BackHeader'
 import AuthPrompt from '@/components/AuthFab'
 import { Card, CardContent } from '@/components/ui/card'

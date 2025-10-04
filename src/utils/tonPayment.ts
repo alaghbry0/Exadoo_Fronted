@@ -146,9 +146,9 @@ export const handleTonPayment = async (
   setPaymentStatus: React.Dispatch<React.SetStateAction<PaymentStatus>>,
   paymentToken: string,     // ✅ يمرّر من create-intent
   amountUsdt: number,       // ✅ يمرّر من create-intent
-  telegramId?: string,      // اختياري للتسجيل/الـ logs
-  telegramUsername?: string,
-  fullName?: string
+  _telegramId?: string,      // اختياري للتسجيل/الـ logs
+  _telegramUsername?: string,
+  _fullName?: string
 ): Promise<{ payment_token?: string }> => {
   if (typeof setPaymentStatus !== 'function') {
     showToast.error('❌ دالة الحالة غير صالحة!');

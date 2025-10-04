@@ -10,7 +10,7 @@ import AuthPrompt from '@/components/AuthFab'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Search, Bookmark, Layers, Sparkles, ArrowLeft, Star, TrendingUp, Award } from 'lucide-react'
+import { Search, Bookmark, Layers, Star, TrendingUp, Award } from 'lucide-react'
 import SmartImage from '@/components/SmartImage'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
@@ -379,9 +379,70 @@ export default function AcademyIndex() {
               className="space-y-8 pt-8"
             >
               {tab === 'mine' ? (
-                 <section className="space-y-8">
-                    {/* ... قسم دوراتي يبقى كما هو ... */}
-                 </section>
+                <section className="space-y-8">
+                  {mine.courses.length === 0 && mine.bundles.length === 0 ? (
+                    <div className="mx-auto max-w-lg rounded-3xl border border-dashed border-gray-300 bg-white/70 p-8 text-center text-gray-600 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-300">
+                      <p className="text-lg font-semibold">لم تقم بالاشتراك في أي محتوى بعد.</p>
+                      <p className="mt-2 text-sm">اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى".</p>
+                      <Button
+                        className="mt-6 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-button"
+                        onClick={() => setTab('all')}
+                      >
+                        استكشف الدورات الآن
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {mine.courses.length > 0 && (
+                        <section aria-labelledby="my-courses">
+                          <div className="mb-3 flex items-center gap-2">
+                            <Bookmark className="h-5 w-5 text-primary-600" />
+                            <h2 id="my-courses" className="text-xl font-bold">
+                              دوراتي
+                            </h2>
+                          </div>
+                          <HScroll itemClassName="w-[68%] sm:w-[30%]">
+                            {mine.courses.map((c) => (
+                              <MiniCourseCard
+                                key={c.id}
+                                {...c}
+                                desc={c.short_description}
+                                price={c.discounted_price || c.price}
+                                lessons={c.total_number_of_lessons}
+                                img={c.thumbnail}
+                                free={isFreeCourse(c)}
+                              />
+                            ))}
+                          </HScroll>
+                        </section>
+                      )}
+
+                      {mine.bundles.length > 0 && (
+                        <section aria-labelledby="my-bundles">
+                          <div className="mb-3 flex items-center gap-2">
+                            <Award className="h-5 w-5 text-amber-600" />
+                            <h2 id="my-bundles" className="text-xl font-bold">
+                              الحزم المسجلة
+                            </h2>
+                          </div>
+                          <HScroll itemClassName="w-[78%] sm:w-[35%]">
+                            {mine.bundles.map((b) => (
+                              <MiniBundleCard
+                                key={b.id}
+                                id={b.id}
+                                title={b.title}
+                                desc={b.description}
+                                price={b.price}
+                                img={b.image || b.cover_image}
+                                variant="highlight"
+                              />
+                            ))}
+                          </HScroll>
+                        </section>
+                      )}
+                    </>
+                  )}
+                </section>
               ) : (
                 <>
                   {/* 1) Top Courses */}
@@ -393,7 +454,18 @@ export default function AcademyIndex() {
                       </div>
                       <HScroll itemClassName="w-[68%] sm:w-[30%]">
                         {filteredData.topCourses.map((c) => (
-                          <MiniCourseCard key={c.id} {...c} price={c.discounted_price || c.price} lessons={c.total_number_of_lessons} img={c.thumbnail} free={isFreeCourse(c)} variant="top" />
+                          <MiniCourseCard
+                            key={c.id}
+                            id={c.id}
+                            title={c.title}
+                            desc={c.short_description}
+                            price={c.discounted_price || c.price}
+                            lessons={c.total_number_of_lessons}
+                            level={c.level}
+                            img={c.thumbnail}
+                            free={isFreeCourse(c)}
+                            variant="top"
+                          />
                         ))}
                       </HScroll>
                     </section>
@@ -416,31 +488,50 @@ export default function AcademyIndex() {
 
                   {/* 3) Highlight Bundles */}
                   {filteredData.highlightBundles.length > 0 && (
-                     <section aria-labelledby="highlight-bundles">
-                       <div className="mb-3 flex items-center gap-2">
-                         <Award className="h-5 w-5 text-amber-600" />
-                         <h2 id="highlight-bundles" className="text-xl font-bold">حزم مميزة</h2>
-                       </div>
-                       <HScroll itemClassName="w-[78%] sm:w-[35%]">
-                         {filteredData.highlightBundles.map((b) => (
-                           <MiniBundleCard key={b.id} {...b} img={b.image || b.cover_image} variant="highlight" />
-                         ))}
-                       </HScroll>
-                     </section>
+                    <section aria-labelledby="highlight-bundles">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Award className="h-5 w-5 text-amber-600" />
+                        <h2 id="highlight-bundles" className="text-xl font-bold">حزم مميزة</h2>
+                      </div>
+                      <HScroll itemClassName="w-[78%] sm:w-[35%]">
+                        {filteredData.highlightBundles.map((b) => (
+                          <MiniBundleCard
+                            key={b.id}
+                            id={b.id}
+                            title={b.title}
+                            desc={b.description}
+                            price={b.price}
+                            img={b.image || b.cover_image}
+                            variant="highlight"
+                          />
+                        ))}
+                      </HScroll>
+                    </section>
                   )}
                   
                   {/* ✅ [مدمج] 4) Highlight Courses using GridCarousel */}
                   {filteredData.highlightCourses.length > 0 && (
-                   <section aria-labelledby="highlight-courses">
+                    <section aria-labelledby="highlight-courses">
                       <div className="mb-3 flex items-center gap-2">
                         <Star className="h-5 w-5 text-amber-600" />
                         <h2 id="highlight-courses" className="text-xl font-bold">كورسات مميزة</h2>
                       </div>
-                      <HScroll itemClassName="w-[68%] sm:w-[30%]">
-                        {filteredData.topCourses.map((c) => (
-                          <MiniCourseCard key={c.id} {...c} price={c.discounted_price || c.price} lessons={c.total_number_of_lessons} img={c.thumbnail} free={isFreeCourse(c)} variant="highlight" />
+                      <GridCarousel>
+                        {filteredData.highlightCourses.map((c) => (
+                          <MiniCourseCard
+                            key={c.id}
+                            id={c.id}
+                            title={c.title}
+                            desc={c.short_description}
+                            price={c.discounted_price || c.price}
+                            lessons={c.total_number_of_lessons}
+                            level={c.level}
+                            img={c.thumbnail}
+                            free={isFreeCourse(c)}
+                            variant="highlight"
+                          />
                         ))}
-                      </HScroll>
+                      </GridCarousel>
                     </section>
                   )}
                 </>

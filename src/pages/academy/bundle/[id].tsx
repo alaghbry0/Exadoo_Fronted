@@ -12,7 +12,7 @@ import SmartImage from '@/components/SmartImage'
 import { Card, CardContent } from '@/components/ui/card'
 import AcademyPurchaseModal from '@/components/AcademyPurchaseModal'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Layers, Gift, MessageSquare, BookOpen } from 'lucide-react'
+import { ArrowLeft, Layers, Gift, MessageSquare } from 'lucide-react'
 import SubscribeFab from '@/components/SubscribeFab'
 import { cn } from '@/lib/utils'
 

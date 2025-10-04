@@ -91,26 +91,3 @@ function AcademyHeroCard({
 }
 
 export default AcademyHeroCard
-
-function StatChip({
-  label,
-  value,
-  variant = 'default',
-}: {
-  label: string
-  value: number | string
-  variant?: 'default' | 'success'
-}) {
-  const base = 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium'
-  const styles = {
-    default: 'border-primary-200/80 bg-primary-50 text-primary-800 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-300',
-    success: 'border-success-200 bg-success-100 text-success-800 dark:border-success-700/30 dark:bg-success-700/15 dark:text-success-400',
-  };
-
-  return (
-    <span className={cn(base, styles[variant])} aria-label={`${label}: ${value}`}>
-      <span className="opacity-80">{label}</span>
-      <span className="font-bold tabular-nums">{value}</span>
-    </span>
-  )
-}

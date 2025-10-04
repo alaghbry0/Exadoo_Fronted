@@ -86,9 +86,18 @@ export const useTelegramPayment = () => {
           return { error: e };
         }
 
+        const webApp = window.Telegram?.WebApp
+        if (!webApp?.openInvoice) {
+          const e = 'Telegram WebApp غير متاح لفتح الفاتورة'
+          setError(e)
+          setPaymentStatus('failed')
+          return { error: e }
+        }
+        const openInvoice = webApp.openInvoice.bind(webApp)
+
         // 3) فتح واجهة الدفع
         return await new Promise<PaymentResponse>((resolve) => {
-          window.Telegram!.WebApp!.openInvoice(invoice.invoice_url!, (status: string) => {
+          openInvoice(invoice.invoice_url!, (status: string) => {
             if (status === 'paid') {
               setPaymentStatus('processing');
               resolve({ paymentToken: intent.payment_token });

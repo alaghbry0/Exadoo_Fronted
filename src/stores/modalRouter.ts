@@ -19,7 +19,7 @@ export type ModalPayloads = {
     paymentToken: string
     planName?: string
   }
-  paymentSuccess: {}
+  paymentSuccess: null
   paymentExchangeSuccess: { planName?: string }
 }
 
