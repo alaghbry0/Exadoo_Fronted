@@ -183,5 +183,6 @@ const Home: React.FC = () => {
     </TonConnectUIProvider>
   )
 }
-
+(Home as any).hideFooter = false;
 export default Home
+
