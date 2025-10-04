@@ -108,34 +108,36 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
   const queryClient = useTanstackQueryClient();
   const didRouteRef = useRef(false);
 
-  // إشعارات عبر SSE
+  // ===== 1) تطبيع المسار عند الإقلاع =====
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      // في بعض WebView النادر، pathname يطلع '' أو ما يبدأ بـ '/'.
+      let p = window.location.pathname || '/';
+      if (!p.startsWith('/')) p = `/${p}`;
+      if (p === '' || p === '/index' || p === '/index.html') p = '/';
+      // لو الـURL الأصلي جاء بدون سلاش نهائي، المتصفح عادةً يرصد '/'، بس نضمن توحيده:
+      const finalUrl = p + window.location.search + window.location.hash;
+      if (window.location.pathname !== p) {
+        window.history.replaceState({}, '', finalUrl);
+      }
+    } catch {/* no-op */}
+  }, []);
+
+  // ==== إشعارات SSE ====
   useNotificationStream();
 
-  // سبلاش مينيوم
+  // ==== سبلاش مينيوم ====
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMinDelayCompleted(true);
-      console.log("⏱️ Minimum splash delay completed.");
-    }, 1500);
+    const timer = setTimeout(() => setMinDelayCompleted(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  // جلب المحفظة
-  const {
-    data: walletAddress,
-    isLoading: isWalletLoading,
-    isError: isWalletError,
-    error: walletError
-  } = useWalletAddress();
+  // ==== جلب المحفظة ====
+  const { data: walletAddress, isLoading: isWalletLoading, isError: isWalletError, error: walletError } = useWalletAddress();
+  useEffect(() => { if (walletAddress) setWalletAddress(walletAddress); }, [walletAddress, setWalletAddress]);
 
-  useEffect(() => {
-    if (walletAddress) {
-      console.log("🏦 Wallet address fetched:", walletAddress);
-      setWalletAddress(walletAddress);
-    }
-  }, [walletAddress, setWalletAddress]);
-
-  // الاشتراكات (كاش محلي)
+  // ==== الاشتراكات (كاش محلي) ====
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!telegramId) return;
@@ -144,15 +146,12 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
         if (cached) {
           const { data, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < 5 * 60 * 1000) {
-            console.log("📦 Using cached subscriptions for:", telegramId);
             setSubscriptions(data);
             return;
-          } else {
-            console.log("🗑️ Cached subscriptions expired for:", telegramId);
           }
         }
       } catch (error) {
-        console.error(`❌ Failed to fetch/load subscriptions for ${telegramId}:`, error);
+        console.error(`❌ Failed to load subscriptions for ${telegramId}:`, error);
       }
     };
     fetchSubscriptions();
@@ -160,43 +159,52 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     return () => clearInterval(interval);
   }, [telegramId, setSubscriptions]);
 
-  // Prefetch صفحات مهمة
+  // ==== Prefetch ====
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        const pagesToPrefetch = [ '' ,'/', '/plans', '/profile', '/notifications', '/shop'];
+        const pagesToPrefetch = ['/', '/shop', '/plans', '/profile', '/notifications'];
         await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
-        console.log("🔄 Prefetched important pages:", pagesToPrefetch.join(', '));
       } catch (error) {
-        console.error('⚠️ Error during page prefetch:', error);
+        console.error('⚠️ Prefetch error:', error);
       }
     };
     prefetchPages();
   }, [router]);
 
-  // ===== احسب showFooter قبل أي return =====
-  const asPath = router.asPath;
-  const pathnameNoQuery = useMemo(() => asPath.split('?')[0], [asPath]);
+  // ===== 2) حساب مسار ثابت وموحَّد (fallback على window.location) =====
+  const stablePath = useMemo(() => {
+    try {
+      const routerPath = (router.asPath || '').split('?')[0].split('#')[0];
+      const locPath = typeof window !== 'undefined' ? (window.location.pathname || '') : '';
+      let p = routerPath || locPath || '/';
+      if (!p.startsWith('/')) p = `/${p}`;
+      if (p === '' || p === '/index' || p === '/index.html') p = '/';
+      return p;
+    } catch {
+      return '/';
+    }
+  }, [router.asPath, router.isReady]);
 
+  // ==== سياسة الفوتر المرنة (مع حالة فشل محسوبة) ====
   const showFooter = useMemo(() => {
     if (hideFooter) return false;
+    // لو لسه مش واضح لأي سبب (حافة نادرة)، عدّه '/'
+    const p = stablePath || '/';
     const allowPrefixes = ['/', '/shop', '/profile', '/plans', '/notifications'];
-    return allowPrefixes.some(p =>
-      pathnameNoQuery === p || pathnameNoQuery.startsWith(`${p}/`)
-    );
-  }, [hideFooter, pathnameNoQuery]);
+    return allowPrefixes.some(prefix => p === prefix || p.startsWith(`${prefix}/`));
+  }, [hideFooter, stablePath]);
 
-  // شرط السبلاتش (بعد حساب كل الـhooks)
+  // ==== شرط السبلاتش ====
   const showSplashScreen =
     !minDelayCompleted ||
     isWalletLoading ||
     isTelegramLoading ||
     (isTelegramApp && !isTelegramReady);
 
-  // ======= التوجيه الديناميكي حسب startapp =======
+  // ==== توجيه startapp بعد الجاهزية ====
   useEffect(() => {
     if (didRouteRef.current) return;
-
     const ready = !showSplashScreen && (!isTelegramApp || isTelegramReady);
     if (!ready) return;
 
@@ -206,7 +214,8 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     const target = resolveTargetRoute(raw);
     if (!target) return;
 
-    if (router.asPath.split('?')[0] === target.split('?')[0]) {
+    const targetPath = (target.split('?')[0] || '/');
+    if (stablePath === targetPath) {
       didRouteRef.current = true;
       return;
     }
@@ -218,7 +227,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
     } catch {}
-  }, [isTelegramApp, isTelegramReady, showSplashScreen, router]);
+  }, [isTelegramApp, isTelegramReady, showSplashScreen, router, stablePath]);
 
   if (showSplashScreen) {
     return <SplashScreen />;
@@ -242,11 +251,12 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     );
   }
 
-  console.log(`✅ App Ready. Running inside Telegram: ${isTelegramApp}. Telegram ID: ${telegramId || 'N/A'}`);
   return (
     <>
-      {children}
-      {showFooter && <FooterNav />}
+      <div className={showFooter ? 'pb-16' : undefined}>
+        {children}
+      </div>
+      {showFooter && <FooterNav currentPath={stablePath} />}
       <NotificationToast />
     </>
   );

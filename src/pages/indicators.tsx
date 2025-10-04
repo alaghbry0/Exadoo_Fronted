@@ -170,7 +170,7 @@ const SubscribedView: React.FC<{ sub: NonNullable<IndicatorsData['my_subscriptio
                         </p>
                         <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
                             <Button size="lg" asChild className="rounded-xl font-bold bg-gradient-to-r from-primary-500 to-primary-700 text-white shadow-lg transition-transform hover:-translate-y-0.5">
-                                <a href="https://www.tradingview.com/chart/" target="_blank" rel="noopener noreferrer">
+                                <a href="https://www.tradingview.com" target="_blank" rel="noopener noreferrer">
                                     <BarChart3 className="w-5 h-5 ml-2" />
                                     افتح TradingView
                                 </a>
