@@ -268,7 +268,7 @@ export default function ShopHome() {
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 font-arabic">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 pb-24">
+      <main className="max-w-6xl mx-auto px-4 pb-12">
         {/* ... Hero Section and Search Bar ... */}
         <section className="text-center pt-20 pb-12" aria-labelledby="page-title">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} >
