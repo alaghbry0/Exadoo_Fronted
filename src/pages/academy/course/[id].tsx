@@ -120,7 +120,7 @@ export default function CourseDetail() {
   }
 
   return (
-    <div dir="rtl" className="font-arabic min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200">
+    <div dir="rtl" className="font-bold min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200">
       <main className="pb-24">
         {/* Hero موحّد مع الحزمة */}
         <div className="relative h-64 w-full overflow-hidden md:h-96">
@@ -191,13 +191,6 @@ export default function CourseDetail() {
                 <BookOpen className="h-4 w-4 text-primary-600" />
                 <span>{course.total_number_of_lessons} دروس</span>
               </div>
-
-              {!!course.total_enrollment && (
-                <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
-                  <Users className="h-4 w-4 text-primary-600" />
-                  <span>{course.total_enrollment} طالب</span>
-                </div>
-              )}
 
               {!!course.rating && (
                 <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 rounded-full px-4 py-2 shadow-sm">
