@@ -95,28 +95,52 @@ const GlobalAuthSheet: React.FC = () => {
     pollTimerRef.current = window.setTimeout(tick, POLL_INTERVAL_MS);
   };
 
-  const handleLink = () => {
-    if (!telegramId) {
-      setToast('لم نتمكن من الحصول على معرف تيليجرام.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const currentPath = router.asPath || '/';
-      const telegramReturn = buildTelegramDeepLinkForReturn(currentPath);
-      const fallbackUrl = typeof window !== 'undefined' ? window.location.href : '';
-      const redirectUrl = encodeURIComponent(telegramReturn || fallbackUrl);
-      const uname = encodeURIComponent(telegramUsername || '');
-      const deepLink = `https://app.exaado.com/link_telegram?id=${encodeURIComponent(telegramId)}&uname=${uname}&redirect_url=${redirectUrl}`;
-      window.open(deepLink, '_blank', 'noopener,noreferrer');
-      setTimeout(startShortPolling, 2000);
-    } catch {
-      setToast('حدث خطأ أثناء إنشاء الرابط.');
-    } finally {
-      setTimeout(() => setLoading(false), 1000);
-    }
-  };
+function safeEncodeOnce(raw: string) {
+  try {
+    // لو شكله مشفّر مسبقًا، نفكّه مرة
+    const decoded = decodeURIComponent(raw);
+    // لو الفك نجح بدون تغيّر جذري، اشتغل على المفكوك
+    return encodeURIComponent(decoded);
+  } catch {
+    // لو كان غير قابل للفك، شفّره مباشرة
+    return encodeURIComponent(raw);
+  }
+}
 
+  const handleLink = () => {
+  if (!telegramId) {
+    setToast('لم نتمكن من الحصول على معرف تيليجرام.');
+    return;
+  }
+  setLoading(true);
+  try {
+    const bot = process.env.NEXT_PUBLIC_BOT_USERNAME;
+    // 👇 استخدم رابط خام غير مشفّر
+    const botOpenUrl = bot ? `https://t.me/${bot}` : null;
+
+    const currentPath = router.asPath || '/';
+    const telegramReturn = buildTelegramDeepLinkForReturn(currentPath);
+    const fallbackUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+    // اختر الهدف: فتح البوت مباشرة، ثم ديب لينك، ثم رابط الصفحة
+    const redirectTarget = botOpenUrl || telegramReturn || fallbackUrl;
+
+    // 👇 شفّر مرة واحدة فقط
+    const redirectUrl = safeEncodeOnce(redirectTarget);
+
+    const uname = encodeURIComponent(telegramUsername || '');
+    const deepLink = `https://app.exaado.com/link_telegram?id=${encodeURIComponent(
+      telegramId
+    )}&uname=${uname}&redirect_url=${redirectUrl}`;
+
+    window.open(deepLink, '_blank', 'noopener,noreferrer');
+    setTimeout(startShortPolling, 2000);
+  } catch {
+    setToast('حدث خطأ أثناء إنشاء الرابط.');
+  } finally {
+    setTimeout(() => setLoading(false), 1000);
+  }
+};
   useEffect(() => { return () => stopPolling(); }, []);
   useEffect(() => {
     if (!toast) return;
