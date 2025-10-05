@@ -156,7 +156,7 @@ const GlobalAuthSheet: React.FC = () => {
         animate={{ y: '0%' }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-        className="fixed bottom-0 left-0 right-0 z-[110] bg-white dark:bg-neutral-900 rounded-t-3xl p-6 pb-8 shadow-2xl max-w-lg mx-auto"
+        className="fixed bottom-0 left-0 right-0 z-[1000] bg-white dark:bg-neutral-900 rounded-t-3xl p-6 pb-8 shadow-2xl max-w-lg mx-auto"
         dir="rtl"
         role="dialog"
       >

@@ -53,7 +53,7 @@ export default function FooterNav({
       dir="rtl"
       aria-label="التنقّل السفلي"
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-[9999] h-[70px]',
+        'fixed bottom-0 left-0 right-0 z-[999] h-[70px]',
         'bg-gray-50/90 dark:bg-neutral-900/80 backdrop-blur-lg',
         'border-t border-gray-200/80 dark:border-neutral-800'
       )}
