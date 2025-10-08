@@ -96,13 +96,13 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
 
           <button
             onClick={() => setIsDismissed(true)}
-            className="absolute top-4 left-4 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-9999"
+            className="absolute top-4 left-4 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
             aria-label="إخفاء"
           >
             <X className="w-6 h-6" />
           </button>
 
-          <div className="relative z-9999">
+          <div className="relative z-10">
             <div className="flex items-start justify-between gap-8">
               {/* المحتوى الرئيسي */}
               <div className="flex-1">

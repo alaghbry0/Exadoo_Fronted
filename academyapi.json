@@ -1,8 +1,9 @@
+//محتوى الكورسات والحزم
 {
     "academy": {
         "my_enrollments": {
             "course_ids": [
-        "5"
+        "2"
       ],
       "bundle_ids": [
         "6"
@@ -10,28 +11,17 @@
         },
         "top_courses": [
       "1",
-      "2",
-      "4",
-      "5",
-      "7"
+      "2"
     ],
         "highlight_courses": [
       "1",
       "2",
-      "3",
-      "4",
-      "5",
-      "7",
-      "8"
+      "3"
     ],
         "top_bundles":[
       "6",
       "7",
       "8"
-    ],
-        "highlight_bundles":  [
-      "9",
-      "10"
     ],
         "categories": [
             {
@@ -205,180 +195,6 @@
                 "instructor_name": "Mohamed Mahdy",
                 "total_enrollment": 59,
                 "total_number_of_lessons": 45
-            },
-            {
-                "id": "4",
-                "title": "ALL IN ONE COURSE | الدورة الشاملة",
-                "short_description": "",
-                "description": "",
-                "outcomes": [],
-                "language": "english",
-                "category_id": "1",
-                "sub_category_id": "2",
-                "section": "[8,9,10,11,12,13,14,21,22,51,58]",
-                "requirements": [
-                    "انتهيت من الدورة المجانية بيوتيوب لتأسيسك بالكريبتو"
-                ],
-                "price": "500",
-                "discount_flag": null,
-                "discounted_price": "500",
-                "level": "beginner",
-                "user_id": "4",
-                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_4.jpg",
-                "video_url": "",
-                "expiry_days": "99999",
-                "date_added": "1665352800",
-                "last_modified": "1751490000",
-                "course_type": "general",
-                "is_top_course": "1",
-                "is_highlight_course": "1",
-                "is_admin": "1",
-                "is_disabled": "0",
-                "status": "active",
-                "course_overview_provider": "",
-                "meta_keywords": "",
-                "meta_description": "",
-                "is_free_course": null,
-                "is_limit_working": "1",
-                "multi_instructor": "0",
-                "creator": "4",
-                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_4.jpg",
-                "rating": 5,
-                "number_of_ratings": 24,
-                "instructor_name": "Mohamed Mahdy",
-                "total_enrollment": 1290,
-                "total_number_of_lessons": 152
-            },
-            {
-                "id": "5",
-                "title": "دورة احتراف سوق العملات الرقمية مجانا",
-                "short_description": "هذه الدور شاملة للتأسيس في أسواق المال وسوق العملات الرقمية خصوصا - وأنصحك بمشاهدتها قبل الاشتراك في أي دورة مدفوعة هنا في اكسادو أو أي مكان آخر",
-                "description": "",
-                "outcomes": [
-                    "ستخرج منها محترف أساسيات العملات الرقمية  مجانا"
-                ],
-                "language": "english",
-                "category_id": "1",
-                "sub_category_id": "4",
-                "section": "[17,18,19,21]",
-                "requirements": [
-                    " لا تحتاج أي خبرة لمشاهدتها والاستفادة منها"
-                ],
-                "price": "Free",
-                "discount_flag": null,
-                "discounted_price": "0",
-                "level": "beginner",
-                "user_id": "4",
-                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_5.jpg",
-                "video_url": "https://youtube.com/playlist?list=PL-PTb_TfXbWJR6SkG_6EJv-AbNwc8dFiA",
-                "expiry_days": "99999",
-                "date_added": "1672956000",
-                "last_modified": "1676671200",
-                "course_type": "general",
-                "is_top_course": "1",
-                "is_highlight_course": "1",
-                "is_admin": "1",
-                "is_disabled": "0",
-                "status": "active",
-                "course_overview_provider": "youtube",
-                "meta_keywords": "",
-                "meta_description": "",
-                "is_free_course": "1",
-                "is_limit_working": "1",
-                "multi_instructor": "0",
-                "creator": "4",
-                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_5.jpg",
-                "rating": 5,
-                "number_of_ratings": 5,
-                "instructor_name": "Mohamed Mahdy",
-                "total_enrollment": 465,
-                "total_number_of_lessons": 44
-            },
-            {
-                "id": "7",
-                "title": "دورة احتراف سوق الفوركس مجانا ",
-                "short_description": "",
-                "description": "",
-                "outcomes": [
-                    "كن قريب من التطبيق - خلال ساعات سيتم رفع الدورة ان شاء الله"
-                ],
-                "language": "english",
-                "category_id": "1",
-                "sub_category_id": "4",
-                "section": "[26,29,30,31,32]",
-                "requirements": [
-                    "الدورة مجانية تماما - ولا تحتاج الا العزيمة واتخاذ القرار للاستفاده منه "
-                ],
-                "price": "Free",
-                "discount_flag": null,
-                "discounted_price": "0",
-                "level": "beginner",
-                "user_id": "4",
-                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_7.jpg",
-                "video_url": "https://www.youtube.com/playlist?list=PL-PTb_TfXbWK2A9C-9Yy-UCIdYFJTogbO",
-                "expiry_days": "1000",
-                "date_added": "1676671200",
-                "last_modified": "1702245600",
-                "course_type": "general",
-                "is_top_course": "1",
-                "is_highlight_course": "1",
-                "is_admin": "0",
-                "is_disabled": "0",
-                "status": "active",
-                "course_overview_provider": "youtube",
-                "meta_keywords": "",
-                "meta_description": "",
-                "is_free_course": "1",
-                "is_limit_working": "1",
-                "multi_instructor": "0",
-                "creator": "4",
-                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_7.jpg",
-                "rating": 5,
-                "number_of_ratings": 2,
-                "instructor_name": "Mohamed Mahdy",
-                "total_enrollment": 777,
-                "total_number_of_lessons": 49
-            },
-            {
-                "id": "8",
-                "title": "DCA | أقوي استراتيجية للاستثمار",
-                "short_description": "أهم اللايفات المباشرة هنا ان شاء الله بشكل حصري",
-                "description": "",
-                "outcomes": [],
-                "language": "english",
-                "category_id": "1",
-                "sub_category_id": "4",
-                "section": "[28]",
-                "requirements": [],
-                "price": "Free",
-                "discount_flag": null,
-                "discounted_price": "0",
-                "level": "beginner",
-                "user_id": "4",
-                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_8.jpg",
-                "video_url": "",
-                "expiry_days": "99999999",
-                "date_added": "1679436000",
-                "last_modified": "1702245600",
-                "course_type": "general",
-                "is_top_course": "0",
-                "is_highlight_course": "1",
-                "is_admin": "0",
-                "is_disabled": "0",
-                "status": "active",
-                "course_overview_provider": "",
-                "meta_keywords": "",
-                "meta_description": "",
-                "is_free_course": "1",
-                "is_limit_working": "1",
-                "multi_instructor": "0",
-                "creator": "4",
-                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_8.jpg",
-                "rating": 5,
-                "number_of_ratings": 4,
-                "instructor_name": "Mohamed Mahdy",
-                "total_enrollment": 1026,
-                "total_number_of_lessons": 2
             }
         ],
         "all_bundles": [
@@ -453,50 +269,6 @@
                 ],
                 "is_disabled": "0",
                 "date_added": "1703367403"
-            },
-            {
-                "id": "9",
-                "title": "المعسكر الزمني - Plus",
-                "description": "جروب خاص علي التلجرام لنشر تحليلاتك وتقيميها والرد عليها مني شخصيا علي مدار الساعة -\r\n بث مباشر للتداول الحقيقي معك مباشرة بسوق العملات الرقمية والفوركس - \r\nشهادة موثقة من اكسادو باجتيازك الدورة بالكامل -\r\nامتحانات دورية لتقييم مستوي استيعابك -\r\nجميع الايفات المباشرة مسجلة - ",
-                "course_ids": "[\"4\",\"18\",\"19\"]",
-                "free_sessions_count": "0",
-                "price": "500",
-                "discounted_price": "0",
-                "image": "https://exaado.plebits.com/uploads/course_bundles/46c9a4bafc13bc9a80b5b5d36d8797fb_image.jpg",
-                "cover_image": "https://exaado.plebits.com/uploads/course_bundles/608d9187eac9bda204d047d0c2f472cf_cover.jpg",
-                "telegram_url": "https://t.me/+qz7xgIBxTgthM2M0",
-                "status": "active",
-                "sub_category_id": "2",
-                "is_top": "0",
-                "is_highlight": "1",
-                "requirements": [
-                    "انتهيت من الدورة المجانية بيوتيوب لتأسيسك بالكريبتو"
-                ],
-                "outcomes": [],
-                "is_disabled": "0",
-                "date_added": "1729032630"
-            },
-            {
-                "id": "10",
-                "title": "المعسكر الزمني - Premium",
-                "description": "- ستحصل علي 4 جلسات خاصة مع د محمد مهدي\r\nجروب خاص علي التلجرام لنشر تحليلاتك وتقيميها والرد عليها مني شخصيا علي مدار الساعة -\r\n بث مباشر للتداول الحقيقي معك مباشرة بسوق العملات الرقمية والفوركس - \r\nشهادة موثقة من اكسادو باجتيازك الدورة بالكامل -\r\nامتحانات دورية لتقييم مستوي استيعابك -\r\nجميع الايفات المباشرة مسجلة - ",
-                "course_ids": "[\"4\",\"18\",\"19\"]",
-                "free_sessions_count": "4",
-                "price": "800",
-                "discounted_price": "0",
-                "image": "https://exaado.plebits.com/uploads/course_bundles/46c9a4bafc13bc9a80b5b5d36d8797fb_image.jpg",
-                "cover_image": "https://exaado.plebits.com/uploads/course_bundles/cb3ce4688ae1475f296278e42e1af32b_cover.jpg",
-                "telegram_url": "https://t.me/+qz7xgIBxTgthM2M0\r\n",
-                "status": "active",
-                "sub_category_id": "2",
-                "is_top": "0",
-                "is_highlight": "1",
-                "requirements": [
-                    "انتهيت من الدورة المجانية بيوتيوب لتأسيسك بالكريبتو"
-                ],
-                "outcomes": [],
-                "is_disabled": "0",
-                "date_added": "1729032630"
             }
         ]
     }

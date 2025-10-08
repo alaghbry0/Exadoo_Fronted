@@ -1,330 +1,363 @@
-/* استيراد Tailwind CSS الأساسي */
+/* ================================
+   Tailwind base/components/utilities
+   ================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*@import "flowbite/dist/flowbite.css";
+/* ==============================================
+   متغيرات ألوان وتدرجات + ظلال (كما هي عندك)
+   ============================================== */
+:root {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #0084FF;
+  --color-primary-600: #0066CC;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 
-/* 2. إعدادات الطبقة الأساسية (Base Layer) */
+  --gradient-primary: linear-gradient(135deg, #0084FF 0%, #0066CC 100%);
+  --gradient-secondary: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+
+  --gradient-hero: linear-gradient(135deg,
+    rgba(239, 246, 255, 0.8) 0%,
+    rgba(219, 234, 254, 0.6) 35%,
+    rgba(196, 181, 253, 0.4) 100%);
+  --gradient-dark-hero: linear-gradient(135deg,
+    rgba(17, 24, 39, 0.9) 0%,
+    rgba(30, 41, 59, 0.8) 35%,
+    rgba(51, 65, 85, 0.7) 100%);
+
+  --shadow-soft: 0 4px 20px -2px rgba(0, 132, 255, 0.1);
+  --shadow-medium: 0 8px 25px -5px rgba(0, 132, 255, 0.15);
+  --shadow-strong: 0 20px 40px -12px rgba(0, 132, 255, 0.25);
+  --shadow-glow: 0 0 40px rgba(0, 132, 255, 0.3);
+
+  --dark-bg-primary: #0f172a;
+  --dark-bg-secondary: #1e293b;
+  --dark-text-primary: #f8fafc;
+  --dark-text-secondary: #cbd5e1;
+}
+
+/* ======================
+   خطوط محلية (كما هي)
+   ====================== */
+@font-face { font-family: 'Almarai'; font-weight: 300; src: url('/fonts/Almarai-Light.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Almarai'; font-weight: 400; src: url('/fonts/Almarai-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Almarai'; font-weight: 700; src: url('/fonts/Almarai-Bold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Almarai'; font-weight: 800; src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Outfit';  font-weight: 400; src: url('/fonts/Outfit-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Outfit';  font-weight: 500; src: url('/fonts/Outfit-Medium.ttf')  format('truetype'); }
+@font-face { font-family: 'Orlean';  font-weight: 400; src: url('/fonts/Orlean-Regular.otf') format('opentype'); font-display: swap; }
+
+/* ==============================
+   Base layer: خلفيات + سكروول + فوكس
+   ============================== */
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-800 antialiased dark:bg-neutral-900 dark:text-neutral-200;
-    font-family: 'Almarai', sans-serif;
-    margin: 0;
-    padding: 0;
+    @apply antialiased;
+    font-family: 'Almarai', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gradient-hero);
+    transition: background-color 0.3s ease;
   }
+  .dark body { background: var(--gradient-dark-hero); }
 
-  html {
-    /* تم إبقاء هذا معلقاً كما في النسخة المحسنة لتجنب التعارض */
-    /* background-color: hsl(var(--background)); */
-    /* color: hsl(var(--foreground)); */
-  }
-
-  /* تحسين شريط التمرير */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
+  /* Scrollbar عامة (لغير الأقسام الأفقية) */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
   ::-webkit-scrollbar-thumb {
-    background-color: #0066CC; /* استخدام لون مباشر لضمان الظهور */
-    border-radius: 4px;
+    background: linear-gradient(45deg, #0084FF, #0066CC);
+    border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
   }
-}
+  ::-webkit-scrollbar-thumb:hover { background: linear-gradient(45deg, #0066CC, #0052A3); }
 
-/* 3. استيراد الخطوط المحلية */
-@font-face {
-  font-family: 'Almarai';
-  font-weight: 300;
-  src: url('/fonts/Almarai-Light.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Almarai';
-  font-weight: 400;
-  src: url('/fonts/Almarai-Regular.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Almarai';
-  font-weight: 700;
-  src: url('/fonts/Almarai-Bold.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Almarai';
-  font-weight: 800;
-  src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Outfit';
-  font-weight: 400;
-  src: url('/fonts/Outfit-Regular.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Outfit';
-  font-weight: 500;
-  src: url('/fonts/Outfit-Medium.ttf') format('truetype');
-}
-@font-face {
-  font-family: 'Orlean';
-  font-weight: 400;
-  src: url('/fonts/Orlean-Regular.otf') format('opentype');
-  font-display: swap;
-}
-
-/* 4. مكونات مخصصة (Custom Components Layer) */
-@layer components {
-  .safe-area-padding {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+  /* Focus States للوصولية */
+  *:focus-visible {
+    outline: 2px solid rgba(0, 132, 255, 0.6);
+    outline-offset: 2px;
+    border-radius: 8px;
   }
-
-  .shadow-subtle {
-    box-shadow: 0 8px 24px -6px rgba(30, 64, 175, 0.1);
-  }
-
-  .gradient-border {
-    background: linear-gradient(white, white),
-                linear-gradient(135deg, #2390f1 0%, #1a6dbd 100%);
-    background-clip: padding-box, border-box;
-    background-origin: padding-box, border-box;
-    border: 2px solid transparent;
-  }
-
-
-  /* كلاسات الأزرار والإشعارات التي تستخدم @apply */
-  .close-btn {
-    @apply absolute top-2 right-2 text-gray-600 text-xl cursor-pointer;
-    background: none;
-    border: none;
-  }
-  .toast-button {
-    @apply inline-flex items-center px-3 py-1 text-xs text-white rounded transition-all duration-200;
-  }
-  .close-button {
-    @apply p-1 hover:bg-black/5 rounded-full transition-colors duration-200 ml-2;
-  }
-  .x-icon {
-    @apply w-4 h-4 text-current;
-  }
-
-  /* تحسينات عامة */
-  button:focus, a:focus {
-    @apply outline-none ring-2 ring-offset-2 ring-blue-500;
-  }
-  a[target="_blank"] {
-    @apply font-medium underline hover:text-blue-700;
-  }
+  .dark *:focus-visible { outline-color: rgba(96, 165, 250, 0.6); }
 }
 
-/* 5. الأدوات المساعدة والرسوم المتحركة (Utilities and Animations) */
-/* (لا تستخدم @apply هنا لتجنب مشاكل الترتيب) */
-
-/* أدوات مساعدة أساسية */
-.min-w-6 { min-width: 1.5rem; }
-.rtl { direction: rtl; }
-.filter-transition { transition: all 0.3s ease; }
-.scrollbar-thin { scrollbar-width: thin; }
-
-/* تأثيرات الخلفية */
-.bg-noise {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-}
-
-/* كلاسات تفعيل الحركات */
-.animate-ping-once { animation: ping-once 0.5s ease-out; }
-.animate-progress-pulse { animation: progress-pulse 1.5s ease-in-out infinite; }
-.animate-pulse-slow { animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-.notification-new-highlight { animation: highlight-notification 2s cubic-bezier(0.4, 0, 0.6, 1) 2; }
-.slide-in-right { animation: slide-in-right 0.3s ease-out forwards; }
-.slide-out-right { animation: slide-out-right 0.3s ease-in forwards; }
-.spin { animation: spin 1s linear infinite; }
-.skeleton {
-  background: linear-gradient(90deg, rgba(226, 232, 240, 0.6) 25%, rgba(241, 245, 249, 0.6) 37%, rgba(226, 232, 240, 0.6) 63%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-.list-refresh { animation: list-refresh 0.5s ease-out; }
-.notification-pulse-warning { animation: pulse-warning 2s infinite; }
-.notification-shake { animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both; }
-
-/* كلاسات الإشعارات والتأثيرات */
-.Toastify__toast { animation: toast-entry 0.3s ease-out; }
-.ripple-effect {
-  position: absolute;
-  border-radius: inherit;
-  background-color: rgba(59, 130, 246, 0.3);
-  width: 100%;
-  height: 100%;
-  animation: ripple 0.8s ease-out;
-  pointer-events: none;
-}
-.staggered-list-item {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeInUp 0.5s ease forwards;
-}
-/* تأخير متدرج للقوائم */
-.staggered-list-item:nth-child(1) { animation-delay: 0.05s; }
-.staggered-list-item:nth-child(2) { animation-delay: 0.1s; }
-.staggered-list-item:nth-child(3) { animation-delay: 0.15s; }
-.staggered-list-item:nth-child(4) { animation-delay: 0.2s; }
-.staggered-list-item:nth-child(5) { animation-delay: 0.25s; }
-
-.loading-wave > * { animation: wave 1.5s infinite; }
-.loading-wave > *:nth-child(2) { animation-delay: 0.2s; }
-.loading-wave > *:nth-child(3) { animation-delay: 0.4s; }
-
-
-/* 6. تعريفات Keyframes */
-@keyframes ping-once {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.3); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
-}
-@keyframes progress-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-@keyframes highlight-notification {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); } /* تقليل الحركة لجعلها ألطف */
-}
-@keyframes progress {
-  0% { transform: scaleX(0); }
-  100% { transform: scaleX(1); }
-}
-@keyframes toast-entry {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes slideIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-@keyframes slide-in-right {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-@keyframes slide-out-right {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(100%); opacity: 0; }
-}
-@keyframes ripple {
-  to { transform: scale(4); opacity: 0; }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* =======================
+   Keyframes (موحّدة)
+   ======================= */
+@keyframes card-appear {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  0%   { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
 }
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
+@keyframes gradient-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes pulse-glow      { 0% { box-shadow: 0 0 20px rgba(0,132,255,.4);} 100% { box-shadow: 0 0 40px rgba(0,132,255,.8);} }
+@keyframes skeleton-shimmer{ 0% { background-position: -400% 0; } 100% { background-position: 400% 0; } }
+@keyframes float-gentle    { 0%,100% { transform: translateY(0) rotate(0);} 33% { transform: translateY(-10px) rotate(1deg);} 66% { transform: translateY(-5px) rotate(-1deg);} }
+@keyframes slide-in-up     { from { transform: translateY(30px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
+@keyframes slide-in-right  { from { transform: translateX(30px); opacity: 0;} to { transform: translateX(0); opacity: 1;} }
+@keyframes scale-in        { from { transform: scale(.9); opacity: 0;} to { transform: scale(1); opacity: 1;} }
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(2); opacity: 0; }
 }
-@keyframes list-refresh {
-  from { opacity: 0.5; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes wave {
-  0%, 60%, 100% { transform: initial; }
-  30% { transform: translateY(-8px); }
-}
-@keyframes pulse-warning {
-  50% { opacity: 0.5; }
-}
-@keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
-}
+@keyframes featured-glow   { 0% { opacity:.6; filter: blur(8px);} 100% { opacity:.9; filter: blur(12px);} }
 
-/* 7. استعلامات الوسائط (Media Queries) - توضع في النهاية */
-@media (max-width: 640px) {
-  .profile-header {
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
+/* ==============================
+   Components layer
+   ============================== */
+@layer components {
+  /* Glass effect للتبويبات/الهيدرز */
+  .glass-effect {
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
-  .subscription-item {
-    flex-direction: column;
-    align-items: flex-start;
+  .dark .glass-effect { background: rgba(10,10,10,0.8); }
+
+  /* بطاقات + ظلال */
+  .enhanced-card {
+    @apply relative overflow-hidden rounded-3xl border backdrop-blur-md transition-all duration-300;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-soft);
   }
-}
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  .enhanced-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-strong); }
+  .dark .enhanced-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(71, 85, 105, 0.3); }
+
+  .card-shadow {
+    box-shadow:
+      0 1px 2px 0 rgba(0,0,0,0.03),
+      0 2px 4px 0 rgba(0,0,0,0.02);
+  }
+  .card-shadow-hover {
+    box-shadow:
+      0 4px 6px -1px rgba(0,0,0,0.06),
+      0 10px 15px -3px rgba(0,0,0,0.05),
+      0 0 0 1px rgba(0,132,255,0.05);
+  }
+  .dark .card-shadow {
+    box-shadow:
+      0 1px 2px 0 rgba(0,0,0,0.2),
+      0 2px 4px 0 rgba(0,0,0,0.15);
+  }
+  .dark .card-shadow-hover {
+    box-shadow:
+      0 4px 6px -1px rgba(0,0,0,0.4),
+      0 10px 15px -3px rgba(0,0,0,0.3),
+      0 0 0 1px rgba(96,165,250,0.15);
+  }
+
+  /* أزرار محسّنة */
+  .btn-primary-enhanced {
+    @apply relative px-8 py-4 rounded-2xl font-semibold text-white transition-all duration-300;
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-medium);
+    overflow: hidden;
+  }
+  .btn-primary-enhanced:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
+  .btn-primary-enhanced::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,.1) 50%, transparent 70%);
+    transform: translateX(-100%); transition: transform .6s ease;
+  }
+  .btn-primary-enhanced:hover::before { transform: translateX(100%); }
+
+  /* شريط البحث */
+  .search-enhanced { @apply relative; }
+  .search-enhanced::before {
+    content: ''; position: absolute; inset: -2px; border-radius: 1.5rem; z-index: -1;
+    background: linear-gradient(45deg, #0084FF, #8B5CF6, #F59E0B, #10B981);
+    opacity: 0; transition: opacity .3s ease; animation: gradient-rotate 3s linear infinite;
+  }
+  .search-enhanced:focus-within::before { opacity: 1; }
+
+  /* صور/لودينغ */
+  .image-zoom { transition: transform .6s cubic-bezier(.4,0,.2,1); }
+  .image-zoom:hover { transform: scale(1.08); }
+
+  .loading-shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(to right,
+      rgba(226,232,240,0.2) 0%,
+      rgba(226,232,240,0.5) 50%,
+      rgba(226,232,240,0.2) 100%);
+    background-size: 1000px 100%;
+  }
+  .dark .loading-shimmer {
+    background: linear-gradient(to right,
+      rgba(38,38,38,0.2) 0%,
+      rgba(64,64,64,0.5) 50%,
+      rgba(38,38,38,0.2) 100%);
+  }
+
+  /* حالات مميّزة / فلو */
+  .pulse-glow { animation: pulse-glow 2s ease-in-out infinite alternate; }
+  .featured-card { position: relative; }
+  .featured-card::before {
+    content: ''; position: absolute; inset: -2px;
+    background: linear-gradient(45deg, #0084FF, #8B5CF6, #F59E0B);
+    border-radius: inherit; z-index: -1; opacity: .8; filter: blur(8px);
+    animation: featured-glow 3s ease-in-out infinite alternate;
+  }
+  .float-gentle { animation: float-gentle 6s ease-in-out infinite; }
+  .float-gentle:nth-child(2n){ animation-delay: -2s; }
+  .float-gentle:nth-child(3n){ animation-delay: -4s; }
+
+  /* Ripple */
+  .ripple-effect { position: relative; overflow: hidden; }
+  .ripple-effect::after {
+    content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
+    background: rgba(255,255,255,0.3); border-radius: 50%;
+    transform: translate(-50%,-50%) scale(0); pointer-events: none;
+  }
+  .ripple-effect:active::after { animation: ripple .6s ease-out; }
 }
 
-/* لمتصفحات IE, Edge, and Firefox */
-.scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-
+/* ==============================
+   Utilities layer
+   ============================== */
 @layer utilities {
-  .bg-grid-pattern-subtle {
-    background-image: linear-gradient(rgba(0, 102, 204, 0.04) 1px, transparent 1px), linear-gradient(to right, rgba(0, 102, 204, 0.04) 1px, transparent 1px);
-    background-size: 24px 24px;
+  /* نص متدرّج */
+  .text-gradient-primary {
+    background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .text-gradient-secondary {
+    background: var(--gradient-secondary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .gradient-text { /* alias للراحة */
+    background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .dark .gradient-text {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
 
-    .bg-blueprint {
+  /* خلفيات */
+  .bg-gradient-enhanced { background: var(--gradient-hero); }
+  .dark .bg-gradient-enhanced { background: var(--gradient-dark-hero); }
+  .bg-grid-enhanced {
     background-image:
-      linear-gradient(rgba(219, 234, 254, 0.1) 1px, transparent 1px),
-      linear-gradient(to right, rgba(219, 234, 254, 0.1) 1px, transparent 1px);
-    background-size: 2rem 2rem; /* 32px */
+      linear-gradient(rgba(0,132,255,0.06) 1px, transparent 1px),
+      linear-gradient(to right, rgba(0,132,255,0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
-  
-  .mask-fade-out {
-    mask-image: linear-gradient(to top, transparent 0%, black 20%);
-  }
+  .dark .bg-grid-enhanced {
+    background-image:
+      linear-gradient(rgba(139,92,246,0.08) 1px, transparent 1px),
+      linear-gradient(to right, rgba(139,92,246,0.08) 1px, transparent 1px);
   }
 
-  
+  /* ظلال */
+  .shadow-soft   { box-shadow: var(--shadow-soft); }
+  .shadow-medium { box-shadow: var(--shadow-medium); }
+  .shadow-strong { box-shadow: var(--shadow-strong); }
+  .shadow-glow   { box-shadow: var(--shadow-glow); }
+
+  /* Snap + Scroll helpers للأقسام الأفقية */
+  .snap-container { scroll-snap-type: x mandatory; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; }
+  .snap-item { scroll-snap-align: start; scroll-snap-stop: normal; }
+
+  /* إخفاء سكروول للأفقية فقط */
+  .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  /* Typo & transitions */
+  .text-balance { text-wrap: balance; }
+  .transition-smooth { transition: all .3s cubic-bezier(.4,0,.2,1); }
+
+  /* GPU/perf */
+  .gpu-accelerated { transform: translateZ(0); will-change: transform; }
+  .optimized-repaint { contain: layout style paint; }
+
+  /* شِمر/سكليتون موحّد */
+  .skeleton {
+    background: linear-gradient(90deg,
+      rgba(226,232,240,0.6) 25%,
+      rgba(241,245,249,0.8) 50%,
+      rgba(226,232,240,0.6) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  .dark .skeleton {
+    background: linear-gradient(90deg,
+      rgba(38,38,38,0.6) 25%,
+      rgba(64,64,64,0.8) 50%,
+      rgba(38,38,38,0.6) 75%);
+  }
+
+  /* Badges */
+  .badge-glow { box-shadow: 0 0 12px rgba(0, 132, 255, 0.3); }
+  .dark .badge-glow { box-shadow: 0 0 12px rgba(96,165,250,0.3); }
+
+  /* Responsive text */
+  @media (max-width: 640px) {
+    .responsive-text-xl  { font-size: clamp(1.25rem, 4vw, 1.5rem); }
+    .responsive-text-2xl { font-size: clamp(1.5rem, 5vw, 1.875rem); }
+    .responsive-text-4xl { font-size: clamp(2rem, 7vw, 2.5rem); }
+  }
+
+  /* Grid للكورسات */
+  .course-grid-enhanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+    gap: 2rem;
+  }
+  @media (max-width: 640px) {
+    .course-grid-enhanced { grid-template-columns: 1fr; gap: 1.5rem; }
+    .search-enhanced { @apply mx-4; }
+  }
+
+  /* Empty state float */
+  .empty-state-float { animation: float 3s ease-in-out infinite; } /* uses @keyframes float-gentle? retained alt name */
 }
 
-
-/* === Enhancements for cards/background === */
-
-.card-shine {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+/* ==============================
+   Dark mode overrides
+   ============================== */
+.dark {
+  --shadow-soft:   0 4px 20px -2px rgba(0,0,0,0.3);
+  --shadow-medium: 0 8px 25px -5px rgba(0,0,0,0.4);
+  --shadow-strong: 0 20px 40px -12px rgba(0,0,0,0.5);
+  --shadow-glow:   0 0 40px rgba(139, 92, 246, 0.2);
 }
-.card-shine::before {
-  content: "";
-  position: absolute;
-  inset: -20%;
-  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%);
-  transform: translateX(-120%);
-  transition: transform 0.8s ease;
-  will-change: transform;
+.dark .text-gradient-primary {
+  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
-.group:hover .card-shine::before { transform: translateX(120%); }
 
-
+/* ==============================
+   Motion preferences
+   ============================== */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .card-shine::before { transition: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .float-gentle, .pulse-glow, .skeleton { animation: none !important; }
 }
 
-.aurora-bg{
-  background:
-    radial-gradient(1200px 600px at 90% -10%, rgba(255,255,255,0.18), transparent 40%),
-    radial-gradient(900px 420px at -10% 120%, rgba(255, 87, 34, 0.22), transparent 52%),
-    linear-gradient(135deg, #015cb8 0%, #2653cf 40%, #0579e5 70%, #0a62bb 100%);
+/* ==============================
+   Backdrop blur fallback
+   ============================== */
+@supports not (backdrop-filter: blur(12px)) {
+  .glass-effect { background: rgba(255,255,255,0.95); }
+  .dark .glass-effect { background: rgba(10,10,10,0.95); }
 }
-.dark .aurora-bg{
-  background:
-    radial-gradient(1200px 600px at 90% -10%, rgba(255,255,255,0.08), transparent 40%),
-    radial-gradient(900px 420px at -10% 120%, rgba(255, 87, 34, 0.16), transparent 52%),
-    linear-gradient(135deg, #0b2a52 0%, #0f2b6a 38%, #0b3e7a 78%, #0b2a52 100%);
+
+/* ==============================
+   Print
+   ============================== */
+@media print {
+  .no-print { display: none !important; }
 }

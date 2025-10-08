@@ -3,7 +3,8 @@
 
 import type { AcademyData } from '@/pages/api/academy'
 
-const ACADEMY_CACHE_PREFIX = 'academy-cache-v2:'
+export const ACADEMY_CACHE_VERSION = 3
+const ACADEMY_CACHE_PREFIX = `academy-cache-v${ACADEMY_CACHE_VERSION}:`
 export const ACADEMY_CACHE_TTL = 1000 * 60 * 30 // 30 دقيقة
 
 export type CachedAcademyEntry = {

@@ -16,7 +16,16 @@ import AuthPrompt from '@/components/AuthFab'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Search, Bookmark, Layers, Star, TrendingUp, Award } from 'lucide-react'
+import {
+  Search,
+  Bookmark,
+  Layers,
+  Star,
+  TrendingUp,
+  Award,
+  BookOpen,
+  Sparkles,
+} from 'lucide-react'
 import SmartImage from '@/components/SmartImage'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
@@ -65,29 +74,55 @@ const formatPrice = (value?: string) => {
 const isFreeCourse = (c: Pick<CourseItem, 'price' | 'is_free_course'>) =>
   c.is_free_course === '1' || c.price?.toLowerCase?.() === 'free'
 
-// --- Arabic normalizer for better search matching ---
 function normalizeArabic(input: string) {
   return (input || '')
     .toLowerCase()
-    .replace(/[\u064B-\u0652]/g, '') // إزالة التشكيل
-    .replace(/[أإآ]/g, 'ا') // توحيد الألف
-    .replace(/ى/g, 'ي') // توحيد الياء
-    .replace(/ة/g, 'ه') // توحيد التاء المربوطة
+    .replace(/[\u064B-\u0652]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
     .replace(/\s+/g, ' ')
     .trim()
 }
 
 // =========================================
+//  Level Badge
+// =========================================
+const LevelBadge = memo(({ level }: { level?: string }) => {
+  if (!level) return null
+
+  const levelConfig = {
+    beginner: { label: 'مبتدئ', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
+    intermediate: { label: 'متوسط', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+    advanced: { label: 'متقدم', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' },
+  }
+
+  const config = levelConfig[level as keyof typeof levelConfig] || levelConfig.beginner
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium badge-glow',
+        config.color
+      )}
+    >
+      <Sparkles className="h-2.5 w-2.5" />
+      {config.label}
+    </span>
+  )
+})
+LevelBadge.displayName = 'LevelBadge'
+
+// =========================================
 //  UI Utilities
 // =========================================
-
 function SkeletonCard() {
   return (
-    <div className="h-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="aspect-[16/10] w-full animate-pulse rounded-lg bg-gray-200 dark:bg-neutral-800" />
-      <div className="mt-3 space-y-2">
-        <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-neutral-800" />
-        <div className="h-3 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-neutral-800" />
+    <div className="h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white p-4 card-shadow dark:border-neutral-800/50 dark:bg-neutral-900">
+      <div className="aspect-[16/9] w-full loading-shimmer rounded-2xl" />
+      <div className="mt-4 space-y-3">
+        <div className="h-4 w-3/4 skeleton rounded-lg" />
+        <div className="h-3 w-1/2 skeleton rounded-lg" />
       </div>
     </div>
   )
@@ -97,36 +132,35 @@ function SkeletonCard() {
 //  UI Components
 // =========================================
 
-/** HScroll — سكرول أفقي بسيط (صف واحد) + Edge Faders **/
+/** HScroll — يستخدم snap + إخفاء سكروول */
 const HScroll = memo(function HScroll({
   children,
-  itemClassName = 'w-[70%] sm:w-[45%]',
+  itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]',
 }: React.PropsWithChildren<{ itemClassName?: string }>) {
   const count = React.Children.count(children)
   if (count === 0) return null
   return (
-    <div className="relative">
+    <div className="relative -mx-4 px-4">
       <div
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex gap-4 overflow-x-auto pb-2 snap-container scrollbar-hide"
         role="list"
+        aria-label="اسحب لليمين/اليسار لعرض المزيد"
       >
         {React.Children.map(children, (ch, i) => (
           <div
             key={i}
-            className={cn('flex-shrink-0 snap-start', itemClassName, 'md:[&>*]:shadow-sm')}
+            className={cn('flex-shrink-0 snap-item', itemClassName)}
             role="listitem"
           >
             {ch}
           </div>
         ))}
       </div>
-      
     </div>
   )
 })
 
-/** بطاقة دورة مصغّرة **/
+/** بطاقة دورة مصغّرة محسّنة */
 const MiniCourseCard = memo(function MiniCourseCard({
   id,
   title,
@@ -153,58 +187,78 @@ const MiniCourseCard = memo(function MiniCourseCard({
   const router = useRouter()
   const prefetch = useCallback(() => router.prefetch(`/academy/course/${id}`), [router, id])
 
-  const cardClass = cn(
-    'h-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-200',
-    'md:group-hover:-translate-y-0.5 md:group-hover:shadow-md',
+  const borderVariant =
     variant === 'highlight'
-      ? 'border-amber-200 bg-white dark:border-amber-800 dark:bg-neutral-900'
+      ? 'border-amber-200/70 dark:border-amber-800/50'
       : variant === 'top'
-      ? 'border-blue-200 bg-white dark:border-blue-800 dark:bg-neutral-900'
-      : 'border-gray-100 bg-white dark:border-neutral-800 dark:bg-neutral-900'
-  )
+      ? 'border-blue-200/70 dark:border-blue-800/50'
+      : 'border-gray-100/50 dark:border-neutral-800/50'
 
   return (
     <Link
       href={`/academy/course/${id}`}
-      prefetch={false} // نتجنب double prefetch
+      prefetch={false}
       onMouseEnter={prefetch}
       onTouchStart={prefetch}
-      className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
+      className="block h-full outline-none focus-enhanced ripple-effect"
       aria-label={`فتح دورة ${title}`}
     >
-      <Card className={cardClass}>
-        <div className="relative aspect-[16/10] w-full overflow-hidden">
+      <Card className={cn(
+        'group relative h-full overflow-hidden rounded-3xl border bg-white transition-smooth card-shadow hover:card-shadow-hover dark:bg-neutral-900',
+        borderVariant
+      )}>
+        <div className="relative aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
-            alt={`${title} — ${lessons} درس${level ? ` • ${level}` : ''}`}
+            alt={title}
             fill
-            sizes="(min-width:1280px) 300px, (min-width:640px) 45vw, 70vw"
+            sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
             priority={!!priority}
-            className="object-cover transition-transform duration-300 md:group-hover:scale-105"
+            className="object-cover image-zoom"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-smooth group-hover:opacity-100" />
+
+          {/* Badges */}
           {variant === 'top' && (
-            <div className="absolute left-2 top-2 rounded-full bg-blue-600/90 p-1.5 text-white">
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-blue-600/95 px-2.5 py-1 text-white shadow-medium backdrop-blur-strong">
               <TrendingUp className="h-3 w-3" />
+              <span className="text-[11px] font-semibold">الأكثر طلباً</span>
             </div>
           )}
           {variant === 'highlight' && (
-            <div className="absolute left-2 top-2 rounded-full bg-amber-600/90 p-1.5 text-white">
-              <Star className="h-3 w-3" />
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-2.5 py-1 text-white shadow-medium backdrop-blur-strong">
+              <Star className="h-3 w-3 fill-current" />
+              <span className="text-[11px] font-semibold">مميّز</span>
+            </div>
+          )}
+          {free && (
+            <div className="absolute right-3 top-3 rounded-full bg-emerald-500/95 px-2.5 py-1 text-[11px] font-semibold text-white shadow-medium backdrop-blur-strong">
+              مجاني
             </div>
           )}
         </div>
-        <CardContent className="p-3">
-          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">
-            {title}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600 dark:text-neutral-400">
+
+        <CardContent className="p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h3 className="line-clamp-1 text-[15px] font-bold high-contrast">
+              {title}
+            </h3>
+          </div>
+
+          <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 text-balance dark:text-neutral-400">
             {desc}
           </p>
-          <div className="mt-3 flex items-center justify-between text-[12px] text-gray-500 dark:text-neutral-400">
-            <span className="truncate">
-              {lessons} درس{level ? ` • ${level}` : ''}
-            </span>
-            <span className="font-extrabold text-primary-600 dark:text-primary-400">
+
+          <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-neutral-800">
+            <div className="flex items-center gap-3 text-[12px] text-gray-600 dark:text-neutral-400">
+              <span className="flex items-center gap-1">
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="font-medium">{lessons}</span>
+              </span>
+              <LevelBadge level={level} />
+            </div>
+
+            <span className="text-[15px] font-extrabold text-gradient-primary">
               {free ? 'مجاني' : formatPrice(price)}
             </span>
           </div>
@@ -214,7 +268,7 @@ const MiniCourseCard = memo(function MiniCourseCard({
   )
 })
 
-/** بطاقة حزمة مصغّرة **/
+/** بطاقة حزمة محسّنة */
 const MiniBundleCard = memo(function MiniBundleCard({
   id,
   title,
@@ -236,43 +290,51 @@ const MiniBundleCard = memo(function MiniBundleCard({
     <Link
       href={`/academy/bundle/${id}`}
       prefetch={false}
-      className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
+      className="group block h-full outline-none focus-enhanced ripple-effect"
       aria-label={`فتح حزمة ${title}`}
     >
       <Card
         className={cn(
-          'h-full overflow-hidden rounded-2xl border shadow-sm transition-all duration-200',
-          'md:group-hover:-translate-y-0.5 md:group-hover:shadow-md',
+          'relative h-full overflow-hidden rounded-3xl border bg-white transition-smooth card-shadow hover:card-shadow-hover dark:bg-neutral-900',
           variant === 'highlight'
-            ? 'border-amber-200 bg-white dark:border-amber-800 dark:bg-neutral-900'
-            : 'border-gray-100 bg-white dark:border-neutral-800 dark:bg-neutral-900'
+            ? 'border-amber-200/70 dark:border-amber-800/50'
+            : 'border-gray-100/50 dark:border-neutral-800/50'
         )}
       >
-        <div className="relative aspect-[16/10] w-full overflow-hidden">
+        <div className="relative aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
-            alt={`${title} — حزمة تعليمية`}
+            alt={title}
             fill
-            sizes="(min-width:1280px) 300px, (min-width:640px) 45vw, 70vw"
+            sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
             priority={!!priority}
-            className="object-cover transition-transform duration-300 md:group-hover:scale-105"
+            className="object-cover image-zoom"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-smooth group-hover:opacity-100" />
+
           {variant === 'highlight' && (
-            <div className="absolute left-2 top-2 rounded-full bg-amber-600/90 p-1.5 text-white">
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-2.5 py-1 text-white shadow-medium backdrop-blur-strong">
               <Award className="h-3 w-3" />
+              <span className="text-[11px] font-semibold">حزمة مميزة</span>
             </div>
           )}
         </div>
-        <CardContent className="p-3">
-          <h3 className="line-clamp-1 text-sm font-bold text-gray-900 dark:text-neutral-100">
+
+        <CardContent className="p-4">
+          <h3 className="mb-2 line-clamp-1 text-[15px] font-bold high-contrast">
             {title}
           </h3>
-          <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-600 dark:text-neutral-400">
+
+          <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 text-balance dark:text-neutral-400">
             {(desc || '').replace(/\\r\\n/g, ' ')}
           </p>
-          <div className="mt-3 flex items-center justify-between text-[12px] text-gray-500 dark:text-neutral-400">
-            <span className="truncate">حزمة تعليمية</span>
-            <span className="font-extrabold text-primary-600 dark:text-primary-400">
+
+          <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-neutral-800">
+            <span className="flex items-center gap-1.5 text-[12px] text-gray-600 dark:text-neutral-400">
+              <Award className="h-3.5 w-3.5" />
+              <span className="font-medium">حزمة تعليمية</span>
+            </span>
+            <span className="text-[15px] font-extrabold text-gradient-primary">
               {formatPrice(price)}
             </span>
           </div>
@@ -282,7 +344,7 @@ const MiniBundleCard = memo(function MiniBundleCard({
   )
 })
 
-/** بطاقة تصنيف **/
+/** بطاقة تصنيف محسّنة */
 const CategoryCard = memo(function CategoryCard({
   id,
   name,
@@ -298,26 +360,49 @@ const CategoryCard = memo(function CategoryCard({
     <Link
       href={`/academy/category/${id}`}
       prefetch={false}
-      className="group relative block h-full overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
+      className="group relative block h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white transition-smooth card-shadow hover:card-shadow-hover dark:border-neutral-800/50 dark:bg-neutral-900"
       aria-label={`فتح تصنيف ${name}`}
     >
-      <div className="relative h-full">
+      <div className="relative h-full min-h-[140px]">
         <SmartImage
           src={thumbnail || '/image.jpg'}
           alt={`تصنيف: ${name}`}
           fill
-          sizes="(min-width:768px) 22vw, 50vw"
+          sizes="(min-width:1024px) 23vw, (min-width:640px) 48vw, 75vw"
           priority={!!priority}
-          className="object-cover transition-transform duration-300 md:group-hover:scale-105"
+          className="object-cover image-zoom"
         />
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-      <div className="absolute bottom-0 right-0 p-3 text-white">
-        <h3 className="line-clamp-1 text-sm font-bold">{name}</h3>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-white/90" />
+            <h3 className="line-clamp-1 text-[15px] font-bold text-white">{name}</h3>
+          </div>
+        </div>
       </div>
     </Link>
   )
 })
+
+// =========================================
+//  Section Header
+// =========================================
+const SectionHeader = memo(({ icon: Icon, title, id }: {
+  icon: React.ElementType
+  title: string
+  id: string
+}) => (
+  <div className="mb-5 flex items-center gap-2.5">
+    <div className="rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 p-2 shadow-soft dark:from-primary-600 dark:to-primary-700">
+      <Icon className="h-5 w-5 text-white" />
+    </div>
+    <h2 id={id} className="text-[22px] font-bold high-contrast">
+      {title}
+    </h2>
+  </div>
+))
+SectionHeader.displayName = 'SectionHeader'
 
 // =========================================
 //  Page Component
@@ -329,9 +414,8 @@ export default function AcademyIndex() {
   const { telegramId } = useTelegram()
   const { data, isLoading, isError, error } = useAcademyData(telegramId || undefined)
 
-  // ===== مصادر الأقسام بالترتيب المطلوب (مع منطق احتياطي) =====
-  const { topCourses, categories, highlightBundles, highlightCourses } = useMemo(() => {
-    if (!data) return { topCourses: [], categories: [], highlightBundles: [], highlightCourses: [] }
+  const { topCourses, categories, topBundles, highlightCourses } = useMemo(() => {
+    if (!data) return { topCourses: [], categories: [], topBundles: [], highlightCourses: [] }
     const allCourses = (data.courses || []) as CourseItem[]
     const allBundles = (data.bundles || []) as BundleItem[]
 
@@ -340,31 +424,30 @@ export default function AcademyIndex() {
       .filter(Boolean) as CourseItem[]
     if (tc.length === 0) tc = allCourses.slice(0, 5)
 
-    let hb = ((data.highlight_bundle_ids || []) as string[])
+    let tb = ((data.top_bundle_ids || []) as string[])
       .map((id) => allBundles.find((b) => b.id === id))
       .filter(Boolean) as BundleItem[]
-    if (hb.length === 0) hb = allBundles.slice(0, 5)
+    if (tb.length === 0) tb = allBundles.slice(0, 5)
 
     const topIds = new Set(tc.map((c) => c.id))
     let hc = ((data.highlight_course_ids || []) as string[])
-      .map((id) => allCourses.find((c) => c.id === id && !topIds.has(c.id)))
+      .map((id) => allCourses.find((c) => c.id === id))
       .filter(Boolean) as CourseItem[]
     if (hc.length === 0) hc = allCourses.filter((c) => !topIds.has(c.id)).slice(0, 8)
 
     return {
       topCourses: tc,
       categories: (data.categories || []) as CategoryItem[],
-      highlightBundles: hb,
+      topBundles: tb,
       highlightCourses: hc,
     }
   }, [data])
 
-  // ===== منطق البحث (Normalizer عربي) =====
   const ql = useMemo(() => normalizeArabic(deferredQuery || ''), [deferredQuery])
   const isSearching = ql.length > 0
 
   const filteredData = useMemo(() => {
-    if (!isSearching) return { topCourses, categories, highlightBundles, highlightCourses }
+    if (!isSearching) return { topCourses, categories, topBundles, highlightCourses }
 
     const filterCourse = (c: CourseItem) =>
       normalizeArabic(`${c.title || ''} ${c.short_description || ''}`).includes(ql)
@@ -375,12 +458,11 @@ export default function AcademyIndex() {
     return {
       topCourses: topCourses.filter(filterCourse),
       categories: categories.filter(filterCategory),
-      highlightBundles: highlightBundles.filter(filterBundle),
+      topBundles: topBundles.filter(filterBundle),
       highlightCourses: highlightCourses.filter(filterCourse),
     }
-  }, [isSearching, ql, topCourses, categories, highlightBundles, highlightCourses])
+  }, [isSearching, ql, topCourses, categories, topBundles, highlightCourses])
 
-  // بيانات “دوراتي”
   const mine = useMemo(() => {
     if (!data) return { courses: [] as CourseItem[], bundles: [] as BundleItem[] }
     const cset = new Set((data.my_enrollments?.course_ids || []) as string[])
@@ -391,99 +473,96 @@ export default function AcademyIndex() {
     }
   }, [data])
 
-  // تبويبات + A11y (مع تنقل بالأسهم)
   const handleTab = useCallback((key: 'all' | 'mine') => setTab(key), [])
-  const onTabsKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      e.preventDefault()
-      setTab((prev) => (prev === 'all' ? 'mine' : 'all'))
-    }
-  }
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen bg-gray-50 font-arabic text-gray-800 dark:bg-neutral-950 dark:text-neutral-200"
-    >
+    <div dir="rtl" className="min-h-screen bg-white dark:bg-neutral-950 font-arabic text-gray-800 dark:text-neutral-200">
       <BackHeader title="الأكاديمية" backTo="/shop" backMode="always" />
 
-      <main className="mx-auto max-w-7xl px-4 pb-12">
-        {/* Hero مختصر + بحث */}
-        <section className="pt-8 pb-6" aria-labelledby="page-title">
-          <motion.h1
-            id="page-title"
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-bold tracking-tight text-gray-900 dark:text-neutral-100 md:text-4xl"
-          >
-            أكاديمية Exaado
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mt-2 max-w-2xl text-sm text-gray-600 dark:text-neutral-300"
-          >
-            طريقك المتكامل لإتقان التداول. تعلّم من الخبراء، وطبّق باستراتيجيات عملية.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mt-4 max-w-xl"
-            role="search"
-          >
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                <Search className="h-4 w-4 text-gray-400" />
+      <main className="mx-auto max-w-7xl px-4 pb-20">
+        {/* Hero */}
+        <section className="relative overflow-hidden pt-8 pb-8 no-print" aria-labelledby="page-title">
+
+          <div className="relative text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-6"
+            >
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-1.5 dark:bg-primary-900/20">
+                <Sparkles className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+                <span className="text-sm font-medium text-primary-700 dark:text-primary-300">رحلتك التعليمية تبدأ هنا </span>
               </div>
-              <input
-                type="search"
-                placeholder="ابحث في كل المحتوى..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="block w-full rounded-2xl border border-gray-200 bg-white py-2.5 pr-3.5 pl-10 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/40 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-                aria-label="بحث في محتوى الأكاديمية"
-              />
-            </div>
-          </motion.div>
+
+              <h1 id="page-title" className="mb-3 text-4xl font-bold text-gray-900 responsive-text-5xl">
+                أكاديمية Exaado
+              </h1>
+
+              <p className="mx-auto max-w-2xl text-base text-gray-600 text-balance dark:text-neutral-300">
+                طريقك المتكامل لإتقان التداول. تعلّم من الخبراء وطبّق باستراتيجيات عملية
+              </p>
+            </motion.div>
+
+            {/* Search */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="mx-auto max-w-2xl search-enhanced"
+              role="search"
+            >
+              <div className="relative rounded-[1.5rem] bg-white p-0.5 dark:bg-neutral-900">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <Search className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
+                </div>
+                <input
+                  type="search"
+                  placeholder="ابحث في الدورات والحزم والتصنيفات..."
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="block w-full rounded-[1.35rem] border border-transparent bg-white py-3.5 pr-4 pl-12 text-base text-gray-900 shadow-soft placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-400/10 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-primary-500"
+                  aria-label="بحث في محتوى الأكاديمية"
+                />
+              </div>
+            </motion.div>
+          </div>
         </section>
 
         {/* Tabs */}
-        <div className="sticky top-[56px] z-20 -mx-4 border-b border-gray-200 bg-gray-50/80 px-4 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-950/80">
+        <div className="sticky top-[56px] z-20 -mx-4 mb-8 border-y border-gray-200/80 bg-white/80 px-4 backdrop-blur-xl glass-effect dark:border-neutral-800/80">
           <div
             role="tablist"
             aria-label="أقسام الأكاديمية"
-            onKeyDown={onTabsKeyDown}
-            className="mx-auto flex max-w-7xl items-center justify-center gap-2 py-3"
+            className="mx-auto flex max-w-7xl items-center justify-center gap-3 py-4"
           >
             <Button
               role="tab"
               aria-selected={tab === 'all'}
-              tabIndex={tab === 'all' ? 0 : -1}
               onClick={() => handleTab('all')}
               className={cn(
-                'rounded-xl',
+                'rounded-xl px-6 py-2.5 text-[15px] font-semibold transition-smooth ripple-effect',
                 tab === 'all'
-                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-                  : 'bg-transparent text-gray-700 hover:bg-gray-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
+                  ? 'btn-primary-enhanced'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
               )}
             >
-              <Layers className="ml-2 h-4 w-4" /> جميع المحتوى
+              <Layers className="ml-2 h-4 w-4" />
+              جميع المحتوى
             </Button>
             <Button
               role="tab"
               aria-selected={tab === 'mine'}
-              tabIndex={tab === 'mine' ? 0 : -1}
               onClick={() => handleTab('mine')}
               className={cn(
-                'rounded-xl',
+                'rounded-xl px-6 py-2.5 text-[15px] font-semibold transition-smooth ripple-effect',
                 tab === 'mine'
-                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-                  : 'bg-transparent text-gray-700 hover:bg-gray-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
+                  ? 'btn-primary-enhanced'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
               )}
             >
-              <Bookmark className="ml-2 h-4 w-4" /> دوراتي
+              <Bookmark className="ml-2 h-4 w-4" />
+              دوراتي
             </Button>
           </div>
         </div>
@@ -491,19 +570,19 @@ export default function AcademyIndex() {
         {/* Loading / Error */}
         <div aria-live="polite">
           {isLoading && (
-            <section className="pt-8">
-              <div className="mb-3 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-neutral-800" />
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="w-[68%] sm:w-[30%]">
-                    <SkeletonCard />
-                  </div>
+            <section className="space-y-8">
+              <div className="mb-5 h-7 w-40 skeleton rounded-xl" />
+              <HScroll>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonCard key={i} />
                 ))}
-              </div>
+              </HScroll>
             </section>
           )}
           {isError && (
-            <div className="py-16 text-center text-red-500">حدث خطأ: {(error as Error)?.message}</div>
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center text-red-600 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-400">
+              حدث خطأ: {(error as Error)?.message}
+            </div>
           )}
         </div>
 
@@ -512,38 +591,41 @@ export default function AcademyIndex() {
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-8 pt-8"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-12"
             >
               {tab === 'mine' ? (
-                <section className="space-y-8">
+                <section className="space-y-10">
                   {mine.courses.length === 0 && mine.bundles.length === 0 ? (
-                    <div className="mx-auto max-w-lg rounded-3xl border border-dashed border-gray-300 bg-white/70 p-8 text-center text-gray-600 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-300">
-                      <p className="text-lg font-semibold">لم تقم بالاشتراك في أي محتوى بعد.</p>
-                      <p className="mt-2 text-sm">
-                        اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب &quot;جميع المحتوى&quot;.
-                      </p>
-                      <Button
-                        className="mt-6 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-button"
-                        onClick={() => setTab('all')}
-                      >
-                        استكشف الدورات الآن
-                      </Button>
+                    <div className="mx-auto max-w-lg no-print">
+                      <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 text-center card-shadow dark:border-neutral-700 dark:bg-neutral-900/70">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-900/20">
+                          <BookOpen className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+                        </div>
+                        <p className="mb-2 text-lg font-bold high-contrast">
+                          لم تشترك في أي محتوى بعد
+                        </p>
+                        <p className="mb-6 text-sm text-gray-600 text-balance dark:text-neutral-400">
+                          اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى"
+                        </p>
+                        <Button
+                          className="btn-primary-enhanced rounded-xl px-6 py-2.5"
+                          onClick={() => setTab('all')}
+                        >
+                          <Layers className="ml-2 h-4 w-4" />
+                          استكشف الدورات الآن
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <>
                       {mine.courses.length > 0 && (
                         <section aria-labelledby="my-courses">
-                          <div className="mb-3 flex items-center gap-2">
-                            <Bookmark className="h-5 w-5 text-primary-600" />
-                            <h2 id="my-courses" className="text-xl font-bold">
-                              دوراتي
-                            </h2>
-                          </div>
-                          <HScroll itemClassName="w-[68%] sm:w-[30%]">
+                          <SectionHeader icon={Bookmark} title="دوراتي" id="my-courses" />
+                          <HScroll>
                             {mine.courses.map((c, i) => (
                               <MiniCourseCard
                                 key={c.id}
@@ -552,6 +634,7 @@ export default function AcademyIndex() {
                                 desc={c.short_description}
                                 price={c.discounted_price || c.price}
                                 lessons={c.total_number_of_lessons}
+                                level={c.level}
                                 img={c.thumbnail}
                                 free={isFreeCourse(c)}
                                 priority={i === 0}
@@ -563,13 +646,8 @@ export default function AcademyIndex() {
 
                       {mine.bundles.length > 0 && (
                         <section aria-labelledby="my-bundles">
-                          <div className="mb-3 flex items-center gap-2">
-                            <Award className="h-5 w-5 text-amber-600" />
-                            <h2 id="my-bundles" className="text-xl font-bold">
-                              الحزم المسجلة
-                            </h2>
-                          </div>
-                          <HScroll itemClassName="w-[78%] sm:w-[35%]">
+                          <SectionHeader icon={Award} title="حزمي المسجلة" id="my-bundles" />
+                          <HScroll>
                             {mine.bundles.map((b, i) => (
                               <MiniBundleCard
                                 key={b.id}
@@ -590,14 +668,11 @@ export default function AcademyIndex() {
                 </section>
               ) : (
                 <>
-                  {/* 1) Top Courses — سكرول أفقي */}
+                  {/* Top Courses */}
                   {filteredData.topCourses.length > 0 && (
                     <section aria-labelledby="top-courses">
-                      <div className="mb-3 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-blue-600" />
-                        <h2 id="top-courses" className="text-xl font-bold">الأكثر طلباً</h2>
-                      </div>
-                      <HScroll itemClassName="w-[68%] sm:w-[30%]">
+                      <SectionHeader icon={TrendingUp} title="الأكثر طلباً" id="top-courses" />
+                      <HScroll>
                         {filteredData.topCourses.map((c, i) => (
                           <MiniCourseCard
                             key={c.id}
@@ -617,14 +692,11 @@ export default function AcademyIndex() {
                     </section>
                   )}
 
-                  {/* 2) Categories — سكرول أفقي */}
+                  {/* Categories */}
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories">
-                      <div className="mb-3 flex items-center gap-2">
-                        <Layers className="h-5 w-5 text-primary-600" />
-                        <h2 id="categories" className="text-xl font-bold">التصنيفات</h2>
-                      </div>
-                      <HScroll itemClassName="w-[45%] sm:w-[22%] aspect-[5/4]">
+                      <SectionHeader icon={Layers} title="التصنيفات" id="categories" />
+                      <HScroll itemClassName="w-[48%] sm:w-[32%] lg:w-[23%]">
                         {filteredData.categories.map((cat, i) => (
                           <CategoryCard key={cat.id} {...cat} priority={i === 0} />
                         ))}
@@ -632,15 +704,12 @@ export default function AcademyIndex() {
                     </section>
                   )}
 
-                  {/* 3) Highlight Bundles — سكرول أفقي */}
-                  {filteredData.highlightBundles.length > 0 && (
-                    <section aria-labelledby="highlight-bundles">
-                      <div className="mb-3 flex items-center gap-2">
-                        <Award className="h-5 w-5 text-amber-600" />
-                        <h2 id="highlight-bundles" className="text-xl font-bold">حزم مميزة</h2>
-                      </div>
-                      <HScroll itemClassName="w-[78%] sm:w-[35%]">
-                        {filteredData.highlightBundles.map((b, i) => (
+                  {/* Top Bundles */}
+                  {filteredData.topBundles.length > 0 && (
+                    <section aria-labelledby="top-bundles">
+                      <SectionHeader icon={Award} title="حزم مميزة" id="top-bundles" />
+                      <HScroll>
+                        {filteredData.topBundles.map((b, i) => (
                           <MiniBundleCard
                             key={b.id}
                             id={b.id}
@@ -656,14 +725,11 @@ export default function AcademyIndex() {
                     </section>
                   )}
 
-                  {/* 4) Highlight Courses — سكرول أفقي (متناسق مع الباقي) */}
+                  {/* Highlight Courses */}
                   {filteredData.highlightCourses.length > 0 && (
                     <section aria-labelledby="highlight-courses">
-                      <div className="mb-3 flex items-center gap-2">
-                        <Star className="h-5 w-5 text-amber-600" />
-                        <h2 id="highlight-courses" className="text-xl font-bold">كورسات مميزة</h2>
-                      </div>
-                      <HScroll itemClassName="w-[68%] sm:w-[30%]">
+                      <SectionHeader icon={Star} title="دورات مميزة" id="highlight-courses" />
+                      <HScroll>
                         {filteredData.highlightCourses.map((c, i) => (
                           <MiniCourseCard
                             key={c.id}
@@ -683,25 +749,39 @@ export default function AcademyIndex() {
                     </section>
                   )}
 
-                  {/* Empty State خاص بالبحث */}
+                  {/* Empty state (search) */}
                   {isSearching &&
                     filteredData.topCourses.length === 0 &&
                     filteredData.categories.length === 0 &&
-                    filteredData.highlightBundles.length === 0 &&
+                    filteredData.topBundles.length === 0 &&
                     filteredData.highlightCourses.length === 0 && (
-                      <div className="mx-auto max-w-lg rounded-3xl border border-dashed border-gray-300 bg-white/70 p-8 text-center text-gray-600 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-300">
-                        <p className="text-lg font-semibold">لا توجد نتائج</p>
-                        <p className="mt-2 text-sm">جرّب كلمات أبسط أو تصنيفات مختلفة.</p>
-                        <div className="mt-4 flex justify-center gap-2 text-xs">
-                          <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-neutral-800">تحليل</span>
-                          <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-neutral-800">مبتدئ</span>
-                          <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-neutral-800">مجاني</span>
+                      <div className="mx-auto max-w-lg">
+                        <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 text-center card-shadow dark:border-neutral-700 dark:bg-neutral-900/70">
+                          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-neutral-800">
+                            <Search className="h-8 w-8 text-gray-400 dark:text-neutral-500" />
+                          </div>
+                          <p className="mb-2 text-lg font-bold high-contrast">لا توجد نتائج</p>
+                          <p className="mb-4 text-sm text-gray-600 text-balance dark:text-neutral-400">
+                            جرّب كلمات أبسط أو تصنيفات مختلفة
+                          </p>
+                          <div className="flex flex-wrap justify-center gap-2">
+                            <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-neutral-300">
+                              تحليل فني
+                            </span>
+                            <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-neutral-300">
+                              مبتدئ
+                            </span>
+                            <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-neutral-300">
+                              مجاني
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}
                 </>
               )}
-              <div className="pt-2">
+
+              <div className="pt-4">
                 <AuthPrompt />
               </div>
             </motion.div>

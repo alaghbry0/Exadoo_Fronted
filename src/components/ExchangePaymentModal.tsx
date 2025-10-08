@@ -84,18 +84,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-
-  useEffect(() => {
-    // أعلن أني فتحت (أعلى مودال)
-    // emitModalOpen('exchangePayment');
-    window.dispatchEvent(new CustomEvent('modal:open', { detail: { name: 'exchangePayment' } }));
-
-    return () => {
-      // emitModalClose('exchangePayment');
-      window.dispatchEvent(new CustomEvent('modal:close', { detail: { name: 'exchangePayment' } }));
-    };
-  }, []);
-
+  
   // --- الحالات والـ Hooks (المنطق يبقى كما هو) ---
   const [copied, setCopied] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
