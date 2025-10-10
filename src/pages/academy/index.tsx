@@ -101,10 +101,10 @@ const LevelBadge = memo(({ level }: { level?: CourseItem['level'] }) => {
 
   return (
     <span className={cn(
-      'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
+      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs font-medium',
       config.color,
     )}>
-      <Sparkles className="h-3 w-3" />
+      <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       {config.label}
     </span>
   )
@@ -116,11 +116,11 @@ LevelBadge.displayName = 'LevelBadge'
 ========================= */
 function SkeletonCard() {
   return (
-    <div className="h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-3 shadow-lg shadow-slate-200/40 dark:border-neutral-800/60 dark:bg-neutral-900">
-      <div className="aspect-[16/9] w-full rounded-2xl bg-slate-200 dark:bg-neutral-800 animate-pulse" />
-      <div className="mt-4 space-y-3">
-        <div className="h-5 w-3/4 rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
-        <div className="h-4 w-1/2 rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
+    <div className="h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-3 sm:p-4 shadow-lg shadow-slate-200/40 dark:border-neutral-800/60 dark:bg-neutral-900">
+      <div className="aspect-[4/3] sm:aspect-[16/9] w-full rounded-2xl bg-slate-200 dark:bg-neutral-800 animate-pulse" />
+      <div className="mt-3 sm:mt-4 space-y-2.5 sm:space-y-3">
+        <div className="h-4 sm:h-5 w-3/4 rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
+        <div className="h-3.5 sm:h-4 w-1/2 rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
         <div className="h-3 w-full rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
       </div>
     </div>
@@ -132,7 +132,7 @@ function SkeletonCard() {
 ========================= */
 const HScroll = memo(function HScroll({
   children,
-  itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]',
+  itemClassName = 'min-w-[220px] w-[68%] xs:w-[58%] sm:w-[45%] lg:w-[30%] xl:w-[23%]',
 }: React.PropsWithChildren<{ itemClassName?: string }>) {
   const count = React.Children.count(children)
   if (count === 0) return null
@@ -198,14 +198,15 @@ const MiniCourseCard = memo(function MiniCourseCard({
     >
       <div className={cn(
         'relative h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50',
+        'sm:[&_*]:text-[inherit]',
         borderVariant,
       )}>
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
             alt={title}
             fill
-            sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
+            sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             priority={!!priority}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             style={{ borderRadius: '0 0 0rem 0rem' }}
@@ -216,40 +217,40 @@ const MiniCourseCard = memo(function MiniCourseCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           {variant === 'top' && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 px-2.5 py-1 text-white shadow-lg shadow-blue-500/30 backdrop-blur-sm">
+            <div className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-white shadow-lg shadow-blue-500/30 backdrop-blur-sm">
               <TrendingUp className="h-3.5 w-3.5" />
-              <span className="text-xs font-semibold">الأكثر طلباً</span>
+              <span className="text-[10px] sm:text-xs font-semibold">الأكثر طلباً</span>
             </div>
           )}
           {variant === 'highlight' && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/90 px-2.5 py-1 text-white shadow-lg shadow-amber-500/30 backdrop-blur-sm">
+            <div className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3 flex items-center gap-1.5 rounded-full bg-amber-500/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-white shadow-lg shadow-amber-500/30 backdrop-blur-sm">
               <Star className="h-3.5 w-3.5" />
-              <span className="text-xs font-semibold">مميّز</span>
+              <span className="text-[10px] sm:text-xs font-semibold">مميّز</span>
             </div>
           )}
           {free && (
-            <div className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-emerald-500/30 backdrop-blur-sm">
+            <div className="absolute right-2.5 sm:right-3 top-2.5 sm:top-3 rounded-full bg-emerald-500/90 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-white shadow-lg shadow-emerald-500/30 backdrop-blur-sm">
               مجاني
             </div>
           )}
         </div>
 
-        <div className="p-4 flex flex-col flex-grow">
-          <h3 className="line-clamp-1 text-base font-bold text-slate-900 mb-2">
+        <div className="p-3 sm:p-4 flex flex-col flex-grow">
+          <h3 className="line-clamp-1 text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2">
             {title}
           </h3>
-          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600 text-balance mb-4 flex-grow">
+          <p className="line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-slate-600 text-balance mb-3 sm:mb-4 flex-grow">
             {desc}
           </p>
-          <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 mt-auto">
-            <div className="flex items-center gap-3 text-xs text-slate-600">
+          <div className="flex items-center justify-between gap-2.5 sm:gap-3 border-t border-slate-100 pt-2.5 sm:pt-3 mt-auto">
+            <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] sm:text-xs text-slate-600">
               <span className="flex items-center gap-1.5 font-medium">
-                <BookOpen className="h-4 w-4" />
+                <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>{lessons} درس</span>
               </span>
               <LevelBadge level={level} />
             </div>
-            <span className="text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
+            <span className="text-sm sm:text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
               {free ? 'مجاني' : formatPrice(price)}
             </span>
           </div>
@@ -292,12 +293,12 @@ const MiniBundleCard = memo(function MiniBundleCard({
           ? 'border-purple-400/30 hover:border-purple-500/50'
           : 'hover:border-blue-500/30',
       )}>
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
             alt={title}
             fill
-            sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
+            sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             priority={!!priority}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             style={{ borderRadius: '0 0 0rem 0rem' }}
@@ -308,26 +309,26 @@ const MiniBundleCard = memo(function MiniBundleCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           {variant === 'highlight' && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-purple-600/90 px-2.5 py-1 text-white shadow-lg shadow-purple-500/30 backdrop-blur-sm">
+            <div className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3 flex items-center gap-1.5 rounded-full bg-purple-600/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-white shadow-lg shadow-purple-500/30 backdrop-blur-sm">
               <Award className="h-3.5 w-3.5" />
-              <span className="text-xs font-semibold">حزمة مميزة</span>
+              <span className="text-[10px] sm:text-xs font-semibold">حزمة مميزة</span>
             </div>
           )}
         </div>
 
-        <div className="p-4 flex flex-col flex-grow">
-          <h3 className="line-clamp-1 text-base font-bold text-slate-900 mb-2">
+        <div className="p-3 sm:p-4 flex flex-col flex-grow">
+          <h3 className="line-clamp-1 text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2">
             {title}
           </h3>
-          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600 text-balance mb-4 flex-grow">
+          <p className="line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-slate-600 text-balance mb-3 sm:mb-4 flex-grow">
             {(desc || '').replace(/\\r\\n/g, ' ')}
           </p>
-          <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-auto">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-              <Award className="h-4 w-4" />
+          <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 sm:pt-3 mt-auto">
+            <span className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-600">
+              <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>حزمة تعليمية</span>
             </span>
-            <span className="text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
+            <span className="text-sm sm:text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
               {formatPrice(price)}
             </span>
           </div>
@@ -358,12 +359,12 @@ const CategoryCard = memo(function CategoryCard({
       whileHover={{ y: -6 }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
-      <div className="relative h-full min-h-[160px] sm:min-h-[200px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50">
+      <div className="relative h-full min-h-[130px] sm:min-h-[180px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50">
         <SmartImage
           src={thumbnail || '/image.jpg'}
           alt={`تصنيف: ${name}`}
           fill
-          sizes="(min-width:1024px) 23vw, (min-width:640px) 48vw, 75vw"
+          sizes="(min-width:1024px) 22vw, (min-width:640px) 38vw, 50vw"
           priority={!!priority}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           style={{ borderRadius: '0 0 0rem 0rem' }}
@@ -372,12 +373,12 @@ const CategoryCard = memo(function CategoryCard({
           eager
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <div className="flex items-center gap-2.5">
-            <div className="grid place-items-center w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm">
-              <Layers className="h-5 w-5 text-white" />
+        <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
+          <div className="flex items-center gap-2">
+            <div className="grid place-items-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/20 backdrop-blur-sm">
+              <Layers className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <h3 className="line-clamp-1 text-base font-bold text-white tracking-wide">{name}</h3>
+            <h3 className="line-clamp-1 text-sm sm:text-base font-bold text-white tracking-wide">{name}</h3>
           </div>
         </div>
       </div>
@@ -698,7 +699,7 @@ export default function AcademyIndex() {
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories">
                       <SectionHeader icon={Layers} title="التصنيفات" id="categories" />
-                      <HScroll itemClassName="w-[60%] sm:w-[40%] lg:w-[23%]">
+                      <HScroll itemClassName="min-w-[180px] w-[55%] xs:w-[48%] sm:w-[38%] lg:w-[22%] xl:w-[18%]">
                         {filteredData.categories.map((cat, i) => (
                           <CategoryCard key={cat.id} {...cat} priority={i === 0} />
                         ))}
