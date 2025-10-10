@@ -261,7 +261,11 @@
   .shadow-glow   { box-shadow: var(--shadow-glow); }
 
   /* Snap + Scroll helpers للأقسام الأفقية */
-  .snap-container { scroll-snap-type: x mandatory; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; }
+  .snap-container { 
+  scroll-snap-type: x proximity; 
+  scroll-padding: 0 16px; 
+  -webkit-overflow-scrolling: touch;
+}
   .snap-item { scroll-snap-align: start; scroll-snap-stop: normal; }
 
   /* إخفاء سكروول للأفقية فقط */
@@ -272,7 +276,9 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; } /* WebKit */
   
   /* مفيدة لسحب أفقي ناعم على الموبايل */
-  .touch-pan-x { touch-action: pan-x; }
+  .touch-pan-x { 
+  touch-action: pan-x pan-y; /* يسمح للعمودي والأفقي معًا */
+}
   .overscroll-contain { overscroll-behavior-x: contain; }
 
   /* Typo & transitions */
