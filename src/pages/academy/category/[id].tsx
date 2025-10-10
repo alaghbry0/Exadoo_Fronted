@@ -91,32 +91,20 @@ const LevelBadge = ({ level }: { level?: string }) => {
 }
 
 // --- UI: Horizontal Scroll ---
-const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({
-  children,
-  itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]',
+const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({ 
+  children, 
+  itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]' 
 }) => {
   const count = React.Children.count(children)
   if (count === 0) return null
-
   return (
-    <div className="relative mx-0 sm:-mx-4 px-0 sm:px-4">
-      <div
-        className={cn(
-          'flex gap-4 overflow-x-auto pb-2',
-          'snap-container scrollbar-hide touch-pan-x overscroll-contain'
-        )}
-        style={{ WebkitOverflowScrolling: 'touch' }}
-        role="list"
-        aria-label="قائمة أفقية قابلة للتمرير"
-      >
+    <div className="relative -mx-4 px-4">
+      <div className="hscroll hscroll-snap" role="list" aria-label="قائمة أفقية قابلة للتمرير">
         {React.Children.map(children, (ch, i) => (
-          <div key={i} className={cn('flex-shrink-0 snap-item', itemClassName)} role="listitem">
+          <div key={i} className={cn('hscroll-item', itemClassName)} role="listitem">
             {ch}
           </div>
         ))}
-
-        {/* مسافة ختامية لسناب نظيف */}
-        <div className="flex-shrink-0 w-px sm:w-2 lg:w-4 snap-item" />
       </div>
     </div>
   )

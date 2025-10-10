@@ -139,19 +139,13 @@ const HScroll = memo(function HScroll({
 
   return (
     <div className="relative mx-0 sm:-mx-4 px-0 sm:px-4">
-      <div
-        className={cn(
-          'flex gap-5 overflow-x-auto pb-4',
-          'snap-container scrollbar-hide touch-pan-x overscroll-contain'
-        )}
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
+      <div className="hscroll hscroll-snap">
         {React.Children.map(children, (child, i) => (
-          <div key={i} className={cn('flex-shrink-0 snap-item', itemClassName)}>
+          <div key={i} className={cn('hscroll-item', itemClassName)}>
             {child}
           </div>
         ))}
-        <div className="flex-shrink-0 w-px sm:w-2 lg:w-4 snap-item" />
+        <div className="hscroll-item w-px sm:w-2 lg:w-4" />
       </div>
     </div>
   )

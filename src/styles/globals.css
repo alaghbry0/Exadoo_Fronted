@@ -260,26 +260,39 @@
   .shadow-strong { box-shadow: var(--shadow-strong); }
   .shadow-glow   { box-shadow: var(--shadow-glow); }
 
-  /* Snap + Scroll helpers للأقسام الأفقية */
+  /* ===== HScroll الجديد: مريح للموبايل ويخفي الشريط ===== */
+  .hscroll {
+    display: flex;
+    gap: 1.25rem;                /* gap 5 */
+    overflow-x: auto;
+    padding-bottom: 1rem;        /* pb-4 */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* Edge legacy */
+  }
+  .hscroll::-webkit-scrollbar { display: none; } /* WebKit */
+
+  /* سناب لطيف على الموبايل وصارم على الديسكتوب */
+  .hscroll-snap { scroll-snap-type: x proximity; }
+  @media (min-width: 1024px) {
+    .hscroll-snap { scroll-snap-type: x mandatory; }
+  }
+  .hscroll-item { flex-shrink: 0; scroll-snap-align: start; }
+
+  /* (اختياري) Snap قديم لو بتحتاجه في أماكن أخرى */
   .snap-container { 
-  scroll-snap-type: x proximity; 
-  scroll-padding: 0 16px; 
-  -webkit-overflow-scrolling: touch;
-}
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 16px;
+    -webkit-overflow-scrolling: touch;
+  }
   .snap-item { scroll-snap-align: start; scroll-snap-stop: normal; }
 
-  /* إخفاء سكروول للأفقية فقط */
+  /* إخفاء سكروول (عامة) */
   .scrollbar-hide {
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* IE/Edge legacy */
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; } /* WebKit */
-  
-  /* مفيدة لسحب أفقي ناعم على الموبايل */
-  .touch-pan-x { 
-  touch-action: pan-x pan-y; /* يسمح للعمودي والأفقي معًا */
-}
-  .overscroll-contain { overscroll-behavior-x: contain; }
 
   /* Typo & transitions */
   .text-balance { text-wrap: balance; }
@@ -328,7 +341,7 @@
   }
 
   /* Empty state float */
-  .empty-state-float { animation: float 3s ease-in-out infinite; } /* uses @keyframes float-gentle? retained alt name */
+  .empty-state-float { animation: float 3s ease-in-out infinite; }
 }
 
 /* ==============================
@@ -374,7 +387,6 @@
 @media print {
   .no-print { display: none !important; }
 }
-
 
 /* ===== Global: منع أي سكروول أفقي على الصفحة ===== */
 html, body {
