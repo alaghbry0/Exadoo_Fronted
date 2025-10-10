@@ -86,7 +86,7 @@ function normalizeArabic(input: string) {
 }
 
 /* =========================
-   Level Badge (ستايل مبسّط مع ألوانك)
+   Level Badge
 ========================= */
 const LevelBadge = memo(({ level }: { level?: CourseItem['level'] }) => {
   if (!level) return null
@@ -112,7 +112,7 @@ const LevelBadge = memo(({ level }: { level?: CourseItem['level'] }) => {
 LevelBadge.displayName = 'LevelBadge'
 
 /* =========================
-   Skeleton (مستوحي من CardSkeleton)
+   Skeleton
 ========================= */
 function SkeletonCard() {
   return (
@@ -128,7 +128,7 @@ function SkeletonCard() {
 }
 
 /* =========================
-   HScroll — نسخة هجينة: snap + mask + widths
+   HScroll — snap + إخفاء الشريط + سحب ناعم
 ========================= */
 const HScroll = memo(function HScroll({
   children,
@@ -138,37 +138,27 @@ const HScroll = memo(function HScroll({
   if (count === 0) return null
 
   return (
-    <div className="relative -mx-4 px-4">
+    <div className="relative mx-0 sm:-mx-4 px-0 sm:px-4">
       <div
-        className="flex gap-5 overflow-x-auto pb-4"
-        style={{
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none',
-          
-          
-        }}
+        className={cn(
+          'flex gap-5 overflow-x-auto pb-4',
+          'snap-container scrollbar-hide touch-pan-x overscroll-contain'
+        )}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {React.Children.map(children, (child, i) => (
-          <div
-            key={i}
-            className={cn('flex-shrink-0', itemClassName)}
-            style={{ scrollSnapAlign: 'start' }}
-          >
+          <div key={i} className={cn('flex-shrink-0 snap-item', itemClassName)}>
             {child}
           </div>
         ))}
-        <div
-          className="flex-shrink-0 w-px sm:w-2 lg:w-4"
-          style={{ scrollSnapAlign: 'end' }}
-        />
+        <div className="flex-shrink-0 w-px sm:w-2 lg:w-4 snap-item" />
       </div>
     </div>
   )
 })
 
 /* =========================
-   MiniCourseCard — مزيج من تصميمك + لمسات النسخة المُعجِبتك
+   MiniCourseCard
 ========================= */
 const MiniCourseCard = memo(function MiniCourseCard({
   id,
@@ -231,7 +221,6 @@ const MiniCourseCard = memo(function MiniCourseCard({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-          {/* Badges */}
           {variant === 'top' && (
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 px-2.5 py-1 text-white shadow-lg shadow-blue-500/30 backdrop-blur-sm">
               <TrendingUp className="h-3.5 w-3.5" />
@@ -277,7 +266,7 @@ const MiniCourseCard = memo(function MiniCourseCard({
 })
 
 /* =========================
-   MiniBundleCard — بنفس روح البطاقات المميزة
+   MiniBundleCard
 ========================= */
 const MiniBundleCard = memo(function MiniBundleCard({
   id,
@@ -355,7 +344,7 @@ const MiniBundleCard = memo(function MiniBundleCard({
 })
 
 /* =========================
-   CategoryCard — صورة كاملة + شارة سفلية واضحة
+   CategoryCard
 ========================= */
 const CategoryCard = memo(function CategoryCard({
   id,
@@ -387,7 +376,6 @@ const CategoryCard = memo(function CategoryCard({
           noFade
           disableSkeleton
           eager
-          
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-4">
@@ -549,7 +537,7 @@ export default function AcademyIndex() {
         </section>
 
         {/* Tabs */}
-        <div className="sticky top-[56px] z-20 -mx-4 mb-8 border-y border-gray-200/80 bg-white/80 px-4 backdrop-blur-xl dark:border-neutral-800/80">
+        <div className="sticky top-[56px] z-20 mx-0 sm:-mx-4 mb-8 border-y border-gray-200/80 bg-white/80 px-0 sm:px-4 backdrop-blur-xl dark:border-neutral-800/80">
           <div
             role="tablist"
             aria-label="أقسام الأكاديمية"

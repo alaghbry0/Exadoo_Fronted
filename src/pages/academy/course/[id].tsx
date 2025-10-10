@@ -258,14 +258,18 @@ const CourseSidebar = ({
         className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg overflow-hidden"
       >
         <div className="relative aspect-video">
-          <SmartImage
-            src={course.cover_image || course.thumbnail || '/image.jpg'}
-            alt={course.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 480px"
-            priority
-          />
+           <SmartImage
+              src={course.cover_image || course.thumbnail || '/image.jpg'}
+              alt={course.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
+              className="object-cover"
+              style={{ borderRadius: '0 0 0rem 0rem' }}
+              noFade
+              disableSkeleton
+              eager
+              priority
+            />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <button className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-lg flex items-center justify-center text-white hover:bg-white/30 transition-colors">
               <Play className="h-8 w-8 fill-current" />
