@@ -71,22 +71,30 @@ const isFreeCourse = (c: Pick<Course, 'price' | 'is_free_course'>) =>
 ============================== */
 const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({
   children,
-  itemClassName = 'w-[85%] sm:w-[48%] lg:w-[32%]'
+  itemClassName = 'w-[85%] sm:w-[48%] lg:w-[32%]',
 }) => {
   const count = React.Children.count(children)
   if (count === 0) return null
+
   return (
-    <div className="relative -mx-4 px-4">
+    <div className="relative mx-0 sm:-mx-4 px-0 sm:px-4">
       <div
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 scrollbar-hide"
+        className={cn(
+          'flex gap-4 overflow-x-auto pb-2',
+          'snap-container scrollbar-hide touch-pan-x overscroll-contain'
+        )}
+        style={{ WebkitOverflowScrolling: 'touch' }}
         role="list"
         aria-label="قائمة أفقية قابلة للتمرير"
       >
         {React.Children.map(children, (ch, i) => (
-          <div key={i} className={cn('flex-shrink-0 snap-start', itemClassName)} role="listitem">
+          <div key={i} className={cn('flex-shrink-0 snap-item', itemClassName)} role="listitem">
             {ch}
           </div>
         ))}
+
+        {/* مسافة ختامية لسناب نظيف */}
+        <div className="flex-shrink-0 w-px sm:w-2 lg:w-4 snap-item" />
       </div>
     </div>
   )

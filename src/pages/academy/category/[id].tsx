@@ -91,10 +91,10 @@ const LevelBadge = ({ level }: { level?: string }) => {
 }
 
 // --- UI: Horizontal Scroll ---
-const HScroll = memo(function HScroll({
+const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({
   children,
   itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]',
-}: React.PropsWithChildren<{ itemClassName?: string }>) {
+}) => {
   const count = React.Children.count(children)
   if (count === 0) return null
 
@@ -102,21 +102,25 @@ const HScroll = memo(function HScroll({
     <div className="relative mx-0 sm:-mx-4 px-0 sm:px-4">
       <div
         className={cn(
-          'flex gap-5 overflow-x-auto pb-4',
+          'flex gap-4 overflow-x-auto pb-2',
           'snap-container scrollbar-hide touch-pan-x overscroll-contain'
         )}
         style={{ WebkitOverflowScrolling: 'touch' }}
+        role="list"
+        aria-label="قائمة أفقية قابلة للتمرير"
       >
-        {React.Children.map(children, (child, i) => (
-          <div key={i} className={cn('flex-shrink-0 snap-item', itemClassName)}>
-            {child}
+        {React.Children.map(children, (ch, i) => (
+          <div key={i} className={cn('flex-shrink-0 snap-item', itemClassName)} role="listitem">
+            {ch}
           </div>
         ))}
+
+        {/* مسافة ختامية لسناب نظيف */}
         <div className="flex-shrink-0 w-px sm:w-2 lg:w-4 snap-item" />
       </div>
     </div>
   )
-})
+}
 
 // --- UI: Mini Course Card ---
 function MiniCourseCard({ 
