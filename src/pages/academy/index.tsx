@@ -30,9 +30,9 @@ import SmartImage from '@/components/SmartImage'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
 
-// =========================================
-//  Types
-// =========================================
+/* =========================
+   Types
+========================= */
 interface CourseItem {
   id: string
   title: string
@@ -42,7 +42,7 @@ interface CourseItem {
   total_number_of_lessons: number
   thumbnail: string
   is_free_course?: string | null
-  level?: string
+  level?: 'beginner' | 'intermediate' | 'advanced' | string
 }
 
 interface BundleItem {
@@ -61,9 +61,9 @@ interface CategoryItem {
   number_of_courses?: number
 }
 
-// =========================================
-//  Helpers
-// =========================================
+/* =========================
+   Helpers
+========================= */
 const formatPrice = (value?: string) => {
   if (!value) return ''
   if (value.toLowerCase?.() === 'free') return 'مجاني'
@@ -85,82 +85,91 @@ function normalizeArabic(input: string) {
     .trim()
 }
 
-// =========================================
-//  Level Badge
-// =========================================
-const LevelBadge = memo(({ level }: { level?: string }) => {
+/* =========================
+   Level Badge (ستايل مبسّط مع ألوانك)
+========================= */
+const LevelBadge = memo(({ level }: { level?: CourseItem['level'] }) => {
   if (!level) return null
 
   const levelConfig = {
-    beginner: { label: 'مبتدئ', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
-    intermediate: { label: 'متوسط', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-    advanced: { label: 'متقدم', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' },
-  }
+    beginner: { label: 'مبتدئ', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
+    intermediate: { label: 'متوسط', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' },
+    advanced: { label: 'متقدم', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300' },
+  } as const
 
-  const config = levelConfig[level as keyof typeof levelConfig] || levelConfig.beginner
+  const config = (levelConfig as any)[level] || levelConfig.beginner
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium badge-glow',
-        config.color
-      )}
-    >
-      <Sparkles className="h-2.5 w-2.5" />
+    <span className={cn(
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
+      config.color,
+    )}>
+      <Sparkles className="h-3 w-3" />
       {config.label}
     </span>
   )
 })
 LevelBadge.displayName = 'LevelBadge'
 
-// =========================================
-//  UI Utilities
-// =========================================
+/* =========================
+   Skeleton (مستوحي من CardSkeleton)
+========================= */
 function SkeletonCard() {
   return (
-    <div className="h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white p-4 card-shadow dark:border-neutral-800/50 dark:bg-neutral-900">
-      <div className="aspect-[16/9] w-full loading-shimmer rounded-2xl" />
+    <div className="h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-3 shadow-lg shadow-slate-200/40 dark:border-neutral-800/60 dark:bg-neutral-900">
+      <div className="aspect-[16/9] w-full rounded-2xl bg-slate-200 dark:bg-neutral-800 animate-pulse" />
       <div className="mt-4 space-y-3">
-        <div className="h-4 w-3/4 skeleton rounded-lg" />
-        <div className="h-3 w-1/2 skeleton rounded-lg" />
+        <div className="h-5 w-3/4 rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
+        <div className="h-4 w-1/2 rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
+        <div className="h-3 w-full rounded-lg bg-slate-200 dark:bg-neutral-800 animate-pulse" />
       </div>
     </div>
   )
 }
 
-// =========================================
-//  UI Components
-// =========================================
-
-/** HScroll — يستخدم snap + إخفاء سكروول */
+/* =========================
+   HScroll — نسخة هجينة: snap + mask + widths
+========================= */
 const HScroll = memo(function HScroll({
   children,
   itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]',
 }: React.PropsWithChildren<{ itemClassName?: string }>) {
   const count = React.Children.count(children)
   if (count === 0) return null
+
   return (
     <div className="relative -mx-4 px-4">
       <div
-        className="flex gap-4 overflow-x-auto pb-2 snap-container scrollbar-hide"
-        role="list"
-        aria-label="اسحب لليمين/اليسار لعرض المزيد"
+        className="flex gap-5 overflow-x-auto pb-4"
+        style={{
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          
+          
+        }}
       >
-        {React.Children.map(children, (ch, i) => (
+        {React.Children.map(children, (child, i) => (
           <div
             key={i}
-            className={cn('flex-shrink-0 snap-item', itemClassName)}
-            role="listitem"
+            className={cn('flex-shrink-0', itemClassName)}
+            style={{ scrollSnapAlign: 'start' }}
           >
-            {ch}
+            {child}
           </div>
         ))}
+        <div
+          className="flex-shrink-0 w-px sm:w-2 lg:w-4"
+          style={{ scrollSnapAlign: 'end' }}
+        />
       </div>
     </div>
   )
 })
 
-/** بطاقة دورة مصغّرة محسّنة */
+/* =========================
+   MiniCourseCard — مزيج من تصميمك + لمسات النسخة المُعجِبتك
+========================= */
 const MiniCourseCard = memo(function MiniCourseCard({
   id,
   title,
@@ -178,7 +187,7 @@ const MiniCourseCard = memo(function MiniCourseCard({
   desc: string
   price: string
   lessons: number
-  level?: string
+  level?: CourseItem['level']
   img?: string
   free?: boolean
   variant?: 'default' | 'highlight' | 'top'
@@ -189,23 +198,23 @@ const MiniCourseCard = memo(function MiniCourseCard({
 
   const borderVariant =
     variant === 'highlight'
-      ? 'border-amber-200/70 dark:border-amber-800/50'
+      ? 'border-amber-400/30 hover:border-amber-500/50'
       : variant === 'top'
-      ? 'border-blue-200/70 dark:border-blue-800/50'
-      : 'border-gray-100/50 dark:border-neutral-800/50'
+      ? 'border-blue-400/30 hover:border-blue-500/50'
+      : 'hover:border-blue-500/30'
 
   return (
-    <Link
+    <motion.a
       href={`/academy/course/${id}`}
-      prefetch={false}
       onMouseEnter={prefetch}
       onTouchStart={prefetch}
-      className="block h-full outline-none focus-enhanced ripple-effect"
-      aria-label={`فتح دورة ${title}`}
+      className="block h-full group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-3xl"
+      whileHover={{ y: -6 }}
+      transition={{ type: 'spring', stiffness: 300 }}
     >
-      <Card className={cn(
-        'group relative h-full overflow-hidden rounded-3xl border bg-white transition-smooth card-shadow hover:card-shadow-hover dark:bg-neutral-900',
-        borderVariant
+      <div className={cn(
+        'relative h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50',
+        borderVariant,
       )}>
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <SmartImage
@@ -214,61 +223,62 @@ const MiniCourseCard = memo(function MiniCourseCard({
             fill
             sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
             priority={!!priority}
-            className="object-cover image-zoom"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            style={{ borderRadius: '0 0 0rem 0rem' }}
+            noFade
+            disableSkeleton
+            eager
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-smooth group-hover:opacity-100" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           {/* Badges */}
           {variant === 'top' && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-blue-600/95 px-2.5 py-1 text-white shadow-medium backdrop-blur-strong">
-              <TrendingUp className="h-3 w-3" />
-              <span className="text-[11px] font-semibold">الأكثر طلباً</span>
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 px-2.5 py-1 text-white shadow-lg shadow-blue-500/30 backdrop-blur-sm">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold">الأكثر طلباً</span>
             </div>
           )}
           {variant === 'highlight' && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-2.5 py-1 text-white shadow-medium backdrop-blur-strong">
-              <Star className="h-3 w-3 fill-current" />
-              <span className="text-[11px] font-semibold">مميّز</span>
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/90 px-2.5 py-1 text-white shadow-lg shadow-amber-500/30 backdrop-blur-sm">
+              <Star className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold">مميّز</span>
             </div>
           )}
           {free && (
-            <div className="absolute right-3 top-3 rounded-full bg-emerald-500/95 px-2.5 py-1 text-[11px] font-semibold text-white shadow-medium backdrop-blur-strong">
+            <div className="absolute right-3 top-3 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-emerald-500/30 backdrop-blur-sm">
               مجاني
             </div>
           )}
         </div>
 
-        <CardContent className="p-4">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <h3 className="line-clamp-1 text-[15px] font-bold high-contrast">
-              {title}
-            </h3>
-          </div>
-
-          <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 text-balance dark:text-neutral-400">
+        <div className="p-4 flex flex-col flex-grow">
+          <h3 className="line-clamp-1 text-base font-bold text-slate-900 mb-2">
+            {title}
+          </h3>
+          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600 text-balance mb-4 flex-grow">
             {desc}
           </p>
-
-          <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-neutral-800">
-            <div className="flex items-center gap-3 text-[12px] text-gray-600 dark:text-neutral-400">
-              <span className="flex items-center gap-1">
-                <BookOpen className="h-3.5 w-3.5" />
-                <span className="font-medium">{lessons}</span>
+          <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 mt-auto">
+            <div className="flex items-center gap-3 text-xs text-slate-600">
+              <span className="flex items-center gap-1.5 font-medium">
+                <BookOpen className="h-4 w-4" />
+                <span>{lessons} درس</span>
               </span>
               <LevelBadge level={level} />
             </div>
-
-            <span className="text-[15px] font-extrabold text-gradient-primary">
+            <span className="text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
               {free ? 'مجاني' : formatPrice(price)}
             </span>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+      </div>
+    </motion.a>
   )
 })
 
-/** بطاقة حزمة محسّنة */
+/* =========================
+   MiniBundleCard — بنفس روح البطاقات المميزة
+========================= */
 const MiniBundleCard = memo(function MiniBundleCard({
   id,
   title,
@@ -287,20 +297,18 @@ const MiniBundleCard = memo(function MiniBundleCard({
   priority?: boolean
 }) {
   return (
-    <Link
+    <motion.a
       href={`/academy/bundle/${id}`}
-      prefetch={false}
-      className="group block h-full outline-none focus-enhanced ripple-effect"
-      aria-label={`فتح حزمة ${title}`}
+      className="block h-full group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-3xl"
+      whileHover={{ y: -6 }}
+      transition={{ type: 'spring', stiffness: 300 }}
     >
-      <Card
-        className={cn(
-          'relative h-full overflow-hidden rounded-3xl border bg-white transition-smooth card-shadow hover:card-shadow-hover dark:bg-neutral-900',
-          variant === 'highlight'
-            ? 'border-amber-200/70 dark:border-amber-800/50'
-            : 'border-gray-100/50 dark:border-neutral-800/50'
-        )}
-      >
+      <div className={cn(
+        'relative h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50',
+        variant === 'highlight'
+          ? 'border-purple-400/30 hover:border-purple-500/50'
+          : 'hover:border-blue-500/30',
+      )}>
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
@@ -308,43 +316,47 @@ const MiniBundleCard = memo(function MiniBundleCard({
             fill
             sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
             priority={!!priority}
-            className="object-cover image-zoom"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            style={{ borderRadius: '0 0 0rem 0rem' }}
+            noFade
+            disableSkeleton
+            eager
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-smooth group-hover:opacity-100" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           {variant === 'highlight' && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-2.5 py-1 text-white shadow-medium backdrop-blur-strong">
-              <Award className="h-3 w-3" />
-              <span className="text-[11px] font-semibold">حزمة مميزة</span>
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-purple-600/90 px-2.5 py-1 text-white shadow-lg shadow-purple-500/30 backdrop-blur-sm">
+              <Award className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold">حزمة مميزة</span>
             </div>
           )}
         </div>
 
-        <CardContent className="p-4">
-          <h3 className="mb-2 line-clamp-1 text-[15px] font-bold high-contrast">
+        <div className="p-4 flex flex-col flex-grow">
+          <h3 className="line-clamp-1 text-base font-bold text-slate-900 mb-2">
             {title}
           </h3>
-
-          <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 text-balance dark:text-neutral-400">
+          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600 text-balance mb-4 flex-grow">
             {(desc || '').replace(/\\r\\n/g, ' ')}
           </p>
-
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-neutral-800">
-            <span className="flex items-center gap-1.5 text-[12px] text-gray-600 dark:text-neutral-400">
-              <Award className="h-3.5 w-3.5" />
-              <span className="font-medium">حزمة تعليمية</span>
+          <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-auto">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+              <Award className="h-4 w-4" />
+              <span>حزمة تعليمية</span>
             </span>
-            <span className="text-[15px] font-extrabold text-gradient-primary">
+            <span className="text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
               {formatPrice(price)}
             </span>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+      </div>
+    </motion.a>
   )
 })
 
-/** بطاقة تصنيف محسّنة */
+/* =========================
+   CategoryCard — صورة كاملة + شارة سفلية واضحة
+========================= */
 const CategoryCard = memo(function CategoryCard({
   id,
   name,
@@ -357,56 +369,62 @@ const CategoryCard = memo(function CategoryCard({
   priority?: boolean
 }) {
   return (
-    <Link
+    <motion.a
       href={`/academy/category/${id}`}
-      prefetch={false}
-      className="group relative block h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white transition-smooth card-shadow hover:card-shadow-hover dark:border-neutral-800/50 dark:bg-neutral-900"
-      aria-label={`فتح تصنيف ${name}`}
+      className="block h-full group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-3xl"
+      whileHover={{ y: -6 }}
+      transition={{ type: 'spring', stiffness: 300 }}
     >
-      <div className="relative h-full min-h-[140px]">
+      <div className="relative h-full min-h-[160px] sm:min-h-[200px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50">
         <SmartImage
           src={thumbnail || '/image.jpg'}
           alt={`تصنيف: ${name}`}
           fill
           sizes="(min-width:1024px) 23vw, (min-width:640px) 48vw, 75vw"
           priority={!!priority}
-          className="object-cover image-zoom"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          style={{ borderRadius: '0 0 0rem 0rem' }}
+          noFade
+          disableSkeleton
+          eager
+          
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
         <div className="absolute inset-x-0 bottom-0 p-4">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-white/90" />
-            <h3 className="line-clamp-1 text-[15px] font-bold text-white">{name}</h3>
+          <div className="flex items-center gap-2.5">
+            <div className="grid place-items-center w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm">
+              <Layers className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="line-clamp-1 text-base font-bold text-white tracking-wide">{name}</h3>
           </div>
         </div>
       </div>
-    </Link>
+    </motion.a>
   )
 })
 
-// =========================================
-//  Section Header
-// =========================================
+/* =========================
+   Section Header
+========================= */
 const SectionHeader = memo(({ icon: Icon, title, id }: {
   icon: React.ElementType
   title: string
   id: string
 }) => (
-  <div className="mb-5 flex items-center gap-2.5">
-    <div className="rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 p-2 shadow-soft dark:from-primary-600 dark:to-primary-700">
-      <Icon className="h-5 w-5 text-white" />
+  <div className="mb-6 flex items-center gap-4">
+    <div className="grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30">
+      <Icon className="w-7 h-7 text-white" />
     </div>
-    <h2 id={id} className="text-[22px] font-bold high-contrast">
+    <h2 id={id} className="text-3xl font-bold text-slate-900 tracking-tight">
       {title}
     </h2>
   </div>
 ))
 SectionHeader.displayName = 'SectionHeader'
 
-// =========================================
-//  Page Component
-// =========================================
+/* =========================
+   Page
+========================= */
 export default function AcademyIndex() {
   const [tab, setTab] = useState<'all' | 'mine'>('all')
   const [q, setQ] = useState('')
@@ -482,7 +500,6 @@ export default function AcademyIndex() {
       <main className="mx-auto max-w-7xl px-4 pb-20">
         {/* Hero */}
         <section className="relative overflow-hidden pt-8 pb-8 no-print" aria-labelledby="page-title">
-
           <div className="relative text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -492,10 +509,12 @@ export default function AcademyIndex() {
             >
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-1.5 dark:bg-primary-900/20">
                 <Sparkles className="h-4 w-4 text-primary-600 dark:text-primary-400" />
-                <span className="text-sm font-medium text-primary-700 dark:text-primary-300">رحلتك التعليمية تبدأ هنا </span>
+                <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+                  رحلتك التعليمية تبدأ هنا
+                </span>
               </div>
 
-              <h1 id="page-title" className="mb-3 text-4xl font-bold text-gray-900 responsive-text-5xl">
+              <h1 id="page-title" className="mb-3 text-4xl font-bold text-gray-900">
                 أكاديمية Exaado
               </h1>
 
@@ -509,7 +528,7 @@ export default function AcademyIndex() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="mx-auto max-w-2xl search-enhanced"
+              className="mx-auto max-w-2xl"
               role="search"
             >
               <div className="relative rounded-[1.5rem] bg-white p-0.5 dark:bg-neutral-900">
@@ -521,7 +540,7 @@ export default function AcademyIndex() {
                   placeholder="ابحث في الدورات والحزم والتصنيفات..."
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  className="block w-full rounded-[1.35rem] border border-transparent bg-white py-3.5 pr-4 pl-12 text-base text-gray-900 shadow-soft placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-400/10 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-primary-500"
+                  className="block w-full rounded-[1.35rem] border border-transparent bg-white py-3.5 pr-4 pl-12 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-400/10 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-primary-500"
                   aria-label="بحث في محتوى الأكاديمية"
                 />
               </div>
@@ -530,7 +549,7 @@ export default function AcademyIndex() {
         </section>
 
         {/* Tabs */}
-        <div className="sticky top-[56px] z-20 -mx-4 mb-8 border-y border-gray-200/80 bg-white/80 px-4 backdrop-blur-xl glass-effect dark:border-neutral-800/80">
+        <div className="sticky top-[56px] z-20 -mx-4 mb-8 border-y border-gray-200/80 bg-white/80 px-4 backdrop-blur-xl dark:border-neutral-800/80">
           <div
             role="tablist"
             aria-label="أقسام الأكاديمية"
@@ -541,9 +560,9 @@ export default function AcademyIndex() {
               aria-selected={tab === 'all'}
               onClick={() => handleTab('all')}
               className={cn(
-                'rounded-xl px-6 py-2.5 text-[15px] font-semibold transition-smooth ripple-effect',
+                'rounded-xl px-6 py-2.5 text-[15px] font-semibold',
                 tab === 'all'
-                  ? 'btn-primary-enhanced'
+                  ? 'bg-primary-600 text-white hover:bg-primary-600/90'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
               )}
             >
@@ -555,9 +574,9 @@ export default function AcademyIndex() {
               aria-selected={tab === 'mine'}
               onClick={() => handleTab('mine')}
               className={cn(
-                'rounded-xl px-6 py-2.5 text-[15px] font-semibold transition-smooth ripple-effect',
+                'rounded-xl px-6 py-2.5 text-[15px] font-semibold',
                 tab === 'mine'
-                  ? 'btn-primary-enhanced'
+                  ? 'bg-primary-600 text-white hover:bg-primary-600/90'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
               )}
             >
@@ -571,9 +590,9 @@ export default function AcademyIndex() {
         <div aria-live="polite">
           {isLoading && (
             <section className="space-y-8">
-              <div className="mb-5 h-7 w-40 skeleton rounded-xl" />
+              <div className="mb-5 h-7 w-40 rounded-xl bg-slate-200 dark:bg-neutral-800 animate-pulse" />
               <HScroll>
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: 4 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
               </HScroll>
@@ -586,7 +605,7 @@ export default function AcademyIndex() {
           )}
         </div>
 
-        {/* المحتوى */}
+        {/* Content */}
         {data && !isLoading && !isError && (
           <AnimatePresence mode="wait">
             <motion.div
@@ -599,20 +618,21 @@ export default function AcademyIndex() {
             >
               {tab === 'mine' ? (
                 <section className="space-y-10">
-                  {mine.courses.length === 0 && mine.bundles.length === 0 ? (
+                  {/* Empty mine */}
+                  {( (mine.courses.length === 0) && (mine.bundles.length === 0) ) ? (
                     <div className="mx-auto max-w-lg no-print">
-                      <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 text-center card-shadow dark:border-neutral-700 dark:bg-neutral-900/70">
+                      <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 text-center dark:border-neutral-700 dark:bg-neutral-900/70">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-900/20">
                           <BookOpen className="h-8 w-8 text-primary-600 dark:text-primary-400" />
                         </div>
-                        <p className="mb-2 text-lg font-bold high-contrast">
+                        <p className="mb-2 text-lg font-bold text-slate-900 dark:text-neutral-100">
                           لم تشترك في أي محتوى بعد
                         </p>
-                        <p className="mb-6 text-sm text-gray-600 text-balance dark:text-neutral-400">
+                        <p className="mb-6 text-sm text-slate-600 dark:text-neutral-400">
                           اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى"
                         </p>
                         <Button
-                          className="btn-primary-enhanced rounded-xl px-6 py-2.5"
+                          className="rounded-xl px-6 py-2.5 bg-primary-600 text-white hover:bg-primary-600/90"
                           onClick={() => setTab('all')}
                         >
                           <Layers className="ml-2 h-4 w-4" />
@@ -696,7 +716,7 @@ export default function AcademyIndex() {
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories">
                       <SectionHeader icon={Layers} title="التصنيفات" id="categories" />
-                      <HScroll itemClassName="w-[48%] sm:w-[32%] lg:w-[23%]">
+                      <HScroll itemClassName="w-[60%] sm:w-[40%] lg:w-[23%]">
                         {filteredData.categories.map((cat, i) => (
                           <CategoryCard key={cat.id} {...cat} priority={i === 0} />
                         ))}
@@ -749,19 +769,19 @@ export default function AcademyIndex() {
                     </section>
                   )}
 
-                  {/* Empty state (search) */}
+                  {/* Empty search state */}
                   {isSearching &&
                     filteredData.topCourses.length === 0 &&
                     filteredData.categories.length === 0 &&
                     filteredData.topBundles.length === 0 &&
                     filteredData.highlightCourses.length === 0 && (
                       <div className="mx-auto max-w-lg">
-                        <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 text-center card-shadow dark:border-neutral-700 dark:bg-neutral-900/70">
+                        <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 text-center dark:border-neutral-700 dark:bg-neutral-900/70">
                           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-neutral-800">
                             <Search className="h-8 w-8 text-gray-400 dark:text-neutral-500" />
                           </div>
-                          <p className="mb-2 text-lg font-bold high-contrast">لا توجد نتائج</p>
-                          <p className="mb-4 text-sm text-gray-600 text-balance dark:text-neutral-400">
+                          <p className="mb-2 text-lg font-bold text-slate-900 dark:text-neutral-100">لا توجد نتائج</p>
+                          <p className="mb-4 text-sm text-slate-600 dark:text-neutral-400">
                             جرّب كلمات أبسط أو تصنيفات مختلفة
                           </p>
                           <div className="flex flex-wrap justify-center gap-2">
