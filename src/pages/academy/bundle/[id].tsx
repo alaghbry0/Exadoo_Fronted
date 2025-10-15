@@ -17,12 +17,9 @@ import {
   Gift,
   MessageSquare,
   BookOpen,
-  CheckCircle2,
   Award,
   Sparkles,
   Package,
-  Home,
-  Share2,
   ShoppingCart
 } from 'lucide-react'
 import SubscribeFab from '@/components/SubscribeFab'
@@ -67,11 +64,11 @@ const isFreeCourse = (c: Pick<Course, 'price' | 'is_free_course'>) =>
   (c.is_free_course ?? '') === '1' || c.price?.toLowerCase?.() === 'free'
 
 /* ==============================
-   HScroll
+   HScroll (أعرض قليلاً مع min-w للجوال)
 ============================== */
 const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({
   children,
-  itemClassName = 'w-[85%] sm:w-[48%] lg:w-[32%]'
+  itemClassName = 'min-w-[220px] w-[68%] xs:w-[58%] sm:w-[45%] lg:w-[30%] xl:w-[23%]'
 }) => {
   const count = React.Children.count(children)
   if (count === 0) return null
@@ -83,13 +80,14 @@ const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = (
             {ch}
           </div>
         ))}
+        <div className="hscroll-item w-px sm:w-2 lg:w-4" />
       </div>
     </div>
   )
 }
 
 /* ==============================
-   MiniCourseCard
+   MiniCourseCard — أصغر على الجوال + 4:3
 ============================== */
 function MiniCourseCard({
   id,
@@ -132,36 +130,36 @@ function MiniCourseCard({
       aria-label={`فتح دورة ${title}`}
     >
       <Card className="group relative h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 dark:border-neutral-800/50 dark:bg-neutral-900">
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
             alt={`${title} — ${lessons} درس${level ? ` • ${level}` : ''}`}
             fill
-            sizes="(min-width:1280px) 300px, (min-width:640px) 45vw, 70vw"
+            sizes="(min-width:1280px) 28vw, (min-width:640px) 45vw, 60vw"
             className="object-cover md:group-hover:scale-105 transition-transform duration-300"
             priority={!!priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           {free && (
-            <div className="absolute right-3 top-3 rounded-full bg-emerald-500/95 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
+            <div className="absolute right-2.5 sm:right-3 top-2.5 sm:top-3 rounded-full bg-emerald-500/95 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
               مجاني
             </div>
           )}
         </div>
 
-        <CardContent className="p-4">
-          <h3 className="mb-2 line-clamp-1 text-[15px] font-bold text-gray-900 dark:text-neutral-100">
+        <CardContent className="p-3 sm:p-4">
+          <h3 className="mb-1.5 sm:mb-2 line-clamp-1 text-sm sm:text-[15px] font-bold text-gray-900 dark:text-neutral-100">
             {title}
           </h3>
 
           {desc && (
-            <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 dark:text-neutral-400">
+            <p className="mb-3 line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-gray-600 dark:text-neutral-400">
               {desc}
             </p>
           )}
 
-          <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-neutral-800">
-            <div className="flex items-center gap-2 text-[12px]">
+          <div className="flex items-center justify-between gap-2.5 sm:gap-3 border-t border-gray-100 pt-2.5 sm:pt-3 dark:border-neutral-800">
+            <div className="flex items-center gap-2.5 sm:gap-2 text-[11px] sm:text-[12px]">
               <BookOpen className="h-3.5 w-3.5 text-gray-500 dark:text-neutral-400" />
               <span className="font-medium text-gray-600 dark:text-neutral-400">{lessons} درس</span>
               {levelInfo && (
@@ -172,7 +170,7 @@ function MiniCourseCard({
               )}
             </div>
 
-            <span className="text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
+            <span className="text-sm sm:text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
               {free ? 'مجاني' : formatPrice(price)}
             </span>
           </div>
@@ -181,8 +179,6 @@ function MiniCourseCard({
     </Link>
   )
 }
-
-
 
 /* ==============================
    TitleMetaBundle (زجاجية تحت الصورة + CTA)
@@ -198,6 +194,7 @@ const TitleMetaBundle = ({
 }) => {
   const isFree = bundle.price?.toLowerCase?.() === 'free' || Number(bundle.price) === 0
   const hasPrice = !!bundle.price
+  const buttonText = isFree ? 'ابدأ الآن' : `اشترك - ${formatPrice(bundle.price)}`
 
   return (
     <motion.section
@@ -250,15 +247,24 @@ const TitleMetaBundle = ({
         </div>
 
         {/* CTA Row */}
-        
-    
+        {hasPrice && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              onClick={onCTA}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600/90 transition-colors"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              <span>{buttonText}</span>
+            </button>
+          </div>
+        )}
       </div>
     </motion.section>
   )
 }
 
 /* ==============================
-   StickyHeader (نفس روح صفحة الكورسات)
+   StickyHeader
 ============================== */
 const StickyHeader = ({
   title,
@@ -307,7 +313,6 @@ export default function BundleDetail() {
   const { telegramId } = useTelegram()
   const { data, isLoading, isError, error } = useAcademyData(telegramId || undefined)
 
-  // Sticky header trigger
   const [showSticky, setShowSticky] = useState(false)
   useEffect(() => {
     const onScroll = () => setShowSticky(window.scrollY > 500)
@@ -316,7 +321,6 @@ export default function BundleDetail() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Parallax
   const heroRef = useRef<HTMLDivElement>(null)
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 300], [0, 60])
@@ -356,20 +360,6 @@ export default function BundleDetail() {
         },
       })
     )
-  }
-
-  const onShare = () => {
-    try {
-      if (navigator.share) {
-        navigator.share({
-          title: bundle?.title,
-          text: bundle?.description,
-          url: typeof window !== 'undefined' ? window.location.href : '',
-        })
-      } else {
-        navigator.clipboard?.writeText(typeof window !== 'undefined' ? window.location.href : '')
-      }
-    } catch { /* no-op */ }
   }
 
   if (isLoading)
@@ -444,14 +434,10 @@ export default function BundleDetail() {
             </Link>
           </div>
 
-
-
-
           {/* تدرجات خفيفة لتحسين القراءة */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/35 to-transparent" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/25 to-transparent" />
 
-        
           {/* Floaty stat chip */}
           <div className="relative z-10 mx-auto mt-24 sm:mt-32 max-w-6xl px-4">
             <div className="flex flex-wrap gap-2">

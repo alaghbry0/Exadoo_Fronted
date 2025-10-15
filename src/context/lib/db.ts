@@ -1,3 +1,4 @@
+// src/context/lib/db.ts
 import { Pool } from 'pg';
 
 // ✅ تحميل متغيرات البيئة من Vercel مع دعم SSL اختياري

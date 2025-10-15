@@ -16,7 +16,6 @@ import {
   Award, 
   Layers, 
   Sparkles,
-  ArrowLeft,
   FolderOpen
 } from 'lucide-react'
 
@@ -58,7 +57,7 @@ const formatPrice = (value?: string) => {
 const isFreeCourse = (c: Pick<Course, 'price' | 'is_free_course'>) =>
   (c.is_free_course ?? '') === '1' || c.price?.toLowerCase?.() === 'free'
 
-// Level Badge Component
+// Level Badge Component (أصغر على الجوال)
 const LevelBadge = ({ level }: { level?: string }) => {
   if (!level) return null
   
@@ -81,19 +80,19 @@ const LevelBadge = ({ level }: { level?: string }) => {
   
   return (
     <span className={cn(
-      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
+      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium',
       config.color
     )}>
-      <Sparkles className="h-2.5 w-2.5" />
+      <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
       {config.label}
     </span>
   )
 }
 
-// --- UI: Horizontal Scroll ---
+// --- UI: Horizontal Scroll (أضيق + min-w للجوال) ---
 const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = ({ 
   children, 
-  itemClassName = 'w-[75%] sm:w-[48%] lg:w-[32%]' 
+  itemClassName = 'min-w-[220px] w-[68%] xs:w-[58%] sm:w-[45%] lg:w-[30%] xl:w-[23%]' 
 }) => {
   const count = React.Children.count(children)
   if (count === 0) return null
@@ -105,12 +104,13 @@ const HScroll: React.FC<React.PropsWithChildren<{ itemClassName?: string }>> = (
             {ch}
           </div>
         ))}
+        <div className="hscroll-item w-px sm:w-2 lg:w-4" />
       </div>
     </div>
   )
 }
 
-// --- UI: Mini Course Card ---
+// --- UI: Mini Course Card (أصغر + 4:3 على الجوال) ---
 function MiniCourseCard({ 
   id, 
   title, 
@@ -145,35 +145,35 @@ function MiniCourseCard({
       aria-label={`فتح دورة ${title}`}
     >
       <Card className="group relative h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 dark:border-neutral-800/50 dark:bg-neutral-900">
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
             alt={title}
             fill
-            sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
+            sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             priority={!!priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           
           {free && (
-            <div className="absolute right-3 top-3 rounded-full bg-emerald-500/95 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
+            <div className="absolute right-2.5 sm:right-3 top-2.5 sm:top-3 rounded-full bg-emerald-500/95 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
               مجاني
             </div>
           )}
         </div>
         
-        <CardContent className="p-4">
-          <h3 className="mb-2 line-clamp-1 text-[15px] font-bold text-gray-900 dark:text-neutral-100">
+        <CardContent className="p-3 sm:p-4">
+          <h3 className="mb-1.5 sm:mb-2 line-clamp-1 text-sm sm:text-[15px] font-bold text-gray-900 dark:text-neutral-100">
             {title}
           </h3>
           
-          <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 dark:text-neutral-400">
+          <p className="mb-3 line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-gray-600 dark:text-neutral-400">
             {desc}
           </p>
           
-          <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-neutral-800">
-            <div className="flex items-center gap-3 text-[12px]">
+          <div className="flex items-center justify-between gap-2.5 sm:gap-3 border-t border-gray-100 pt-2.5 sm:pt-3 dark:border-neutral-800">
+            <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] sm:text-[12px]">
               <span className="flex items-center gap-1 text-gray-600 dark:text-neutral-400">
                 <BookOpen className="h-3.5 w-3.5" />
                 <span className="font-medium">{lessons}</span>
@@ -181,7 +181,7 @@ function MiniCourseCard({
               <LevelBadge level={level} />
             </div>
             
-            <span className="text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
+            <span className="text-sm sm:text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
               {free ? 'مجاني' : formatPrice(price)}
             </span>
           </div>
@@ -191,7 +191,7 @@ function MiniCourseCard({
   )
 }
 
-// --- UI: Mini Bundle Card ---
+// --- UI: Mini Bundle Card (أصغر + 4:3) ---
 function MiniBundleCard({ 
   id, 
   title, 
@@ -215,38 +215,38 @@ function MiniBundleCard({
       aria-label={`فتح حزمة ${title}`}
     >
       <Card className="relative h-full overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 dark:border-amber-800/50 dark:bg-neutral-900">
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
           <SmartImage
             src={img || '/image.jpg'}
             alt={title}
             fill
-            sizes="(min-width:1024px) 32vw, (min-width:640px) 48vw, 75vw"
+            sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             priority={!!priority}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           
-          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-2.5 py-1 text-white shadow-lg backdrop-blur-sm">
+          <div className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3 flex items-center gap-1.5 rounded-full bg-amber-500/95 px-2.5 sm:px-3 py-0.5 sm:py-1 text-white shadow-lg backdrop-blur-sm">
             <Award className="h-3 w-3" />
-            <span className="text-[11px] font-semibold">حزمة مميزة</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold">حزمة مميزة</span>
           </div>
         </div>
         
-        <CardContent className="p-4">
-          <h3 className="mb-2 line-clamp-1 text-[15px] font-bold text-gray-900 dark:text-neutral-100">
+        <CardContent className="p-3 sm:p-4">
+          <h3 className="mb-1.5 sm:mb-2 line-clamp-1 text-sm sm:text-[15px] font-bold text-gray-900 dark:text-neutral-100">
             {title}
           </h3>
           
-          <p className="mb-3 line-clamp-2 text-[13px] leading-relaxed text-gray-600 dark:text-neutral-400">
+          <p className="mb-3 line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-gray-600 dark:text-neutral-400">
             {(desc || '').replace(/\\r\\n/g, ' ')}
           </p>
           
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-neutral-800">
-            <span className="flex items-center gap-1.5 text-[12px] text-gray-600 dark:text-neutral-400">
+          <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 sm:pt-3 dark:border-neutral-800">
+            <span className="flex items-center gap-1.5 text-[11px] sm:text-[12px] text-gray-600 dark:text-neutral-400">
               <Award className="h-3.5 w-3.5" />
               <span className="font-medium">حزمة تعليمية</span>
             </span>
-            <span className="text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
+            <span className="text-sm sm:text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
               {formatPrice(price)}
             </span>
           </div>
@@ -485,8 +485,6 @@ export default function CategoryDetail() {
           )}
         </motion.div>
       </main>
-      
-  
     </div>
   )
 }
