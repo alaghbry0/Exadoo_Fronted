@@ -30,6 +30,7 @@ const Navbar: React.FC = () => {
 
   const validatedCount = Math.max(0, Number(displayCount)) || 0;
   const formattedCount = validatedCount > 99 ? '99+' : validatedCount;
+  const goToPaymentHistory = () => router.push('/payment-history');
 
   return (
     // تم التغيير إلى dir="ltr" لفرض التخطيط من اليسار لليمين

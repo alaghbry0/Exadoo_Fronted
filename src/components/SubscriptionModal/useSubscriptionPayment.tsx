@@ -1,3 +1,4 @@
+// src/components/SubscriptionModal/useSubscriptionPayment.tsx
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useTelegramPayment } from '@/hooks/useTelegramPayment'
@@ -204,20 +205,18 @@ export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: ()
         return true;
       } else {
         // منطق منصات التداول
+       // داخل useSubscriptionPayment.tsx — داخل try { if (method === 'exchange') { ... } }
         let payment_token = paymentSessionRef.current.paymentToken || '';
         if (!payment_token) {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/confirm_payment`, {
+          // ⬅️ نضرب BFF المحلي وليس الباكند مباشرة ولا نرسل أسرار في الـ body
+          const response = await fetch('/api/confirm_payment', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Telegram-Id': telegramId || 'unknown'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              webhookSecret: process.env.NEXT_PUBLIC_WEBHOOK_SECRET,
               planId: plan.selectedOption.id,
               telegramId,
               telegramUsername,
-              fullName
+              fullName,
             }),
           });
 
@@ -225,7 +224,6 @@ export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: ()
           const data = await response.json();
           payment_token = data.payment_token;
         }
-
         paymentSessionRef.current = {
           paymentToken: payment_token,
           planId: plan.selectedOption.id.toString()

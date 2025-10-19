@@ -10,6 +10,9 @@ export interface PlanOption {
   telegramStarsPrice?: number;
   discountPercentage?: string;
   discountDetails?: DiscountDetails;
+  // ⬅️ جديد
+  isTrial?: boolean;
+}ountDetails?: DiscountDetails;
 }
 
 export interface ModalPlanData {

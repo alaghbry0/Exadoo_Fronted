@@ -74,9 +74,6 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  env: {
-    NEXT_PUBLIC_WEBHOOK_SECRET: process.env.WEBHOOK_SECRET ?? "",
-  },
 };
 
 export default nextConfig;

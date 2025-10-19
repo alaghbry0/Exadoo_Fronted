@@ -1,3 +1,4 @@
+// src/typesPlan.ts
 import React from 'react'
 
 export type NotificationType = 
@@ -32,14 +33,17 @@ export interface Notification {
 export interface SubscriptionOption {
   id: number;
   duration: string;
-  price: string; // تم التغيير إلى نص ليتوافق مع الخادم
+  price: string;
   originalPrice?: number | null;
-  discountPercentage?: string; // تم التأكيد على أنه رقم
+  discountPercentage?: string;
   hasDiscount: boolean;
-  savings?: string;
   telegramStarsPrice: number;
   discountDetails?: DiscountDetails;
+  // ⬅️ جديد
+  isTrial?: boolean;
 }
+
+
 
 
 export type SubscriptionPlan = SubscriptionCard & {
@@ -97,14 +101,16 @@ export interface DiscountDetails {
 export interface ApiSubscriptionPlan {
   id: number;
   name: string;
-  price: string; 
+  price: string;
   original_price: string | null;
   duration_days: number;
   subscription_type_id: number;
   telegram_stars_price: number;
   created_at: string;
   is_active: boolean;
-  discount_details: DiscountDetails | null; 
+  discount_details: DiscountDetails | null;
+  // ⬅️ جديد: الخادم صار يرجع is_trial
+  is_trial: boolean;
 }
 
 export interface SubscriptionCard {
