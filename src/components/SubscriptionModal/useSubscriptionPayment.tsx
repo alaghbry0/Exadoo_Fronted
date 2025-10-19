@@ -210,15 +210,15 @@ export const useSubscriptionPayment = (plan: ModalPlanData | null, onSuccess: ()
         if (!payment_token) {
           // ⬅️ نضرب BFF المحلي وليس الباكند مباشرة ولا نرسل أسرار في الـ body
           const response = await fetch('/api/confirm_payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
               planId: plan.selectedOption.id,
               telegramId,
               telegramUsername,
               fullName,
             }),
-          });
+  });
 
           if (!response.ok) throw new Error('فشل في إنشاء طلب الدفع');
           const data = await response.json();

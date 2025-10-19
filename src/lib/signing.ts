@@ -1,9 +1,10 @@
+// src/lib/signing.ts (كما هو عندك)
 import crypto from 'crypto';
 
 export type SignInput = {
   clientId: string;
   secret: string;
-  timestamp?: number;           // افتراضي: الآن (ثواني)
+  timestamp?: number;
   fields: (string | number | null | undefined)[];
 };
 

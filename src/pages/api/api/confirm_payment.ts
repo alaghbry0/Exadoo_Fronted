@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'Server misconfigured' });
     }
 
-    // نفس الترتيب المتوقع في verify_hmac_headers لمسار /api/confirm_payment
+    // ⚠️ الترتيب المطلوب في السيرفر: [telegramId, planId]
     const sigHeaders = makeSignatureHeaders({
       clientId: CLIENT_ID,
       secret: SECRET,
