@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fields: [telegram_id, plan_id],
     });
 
-    const upstream = await fetch(`${baseUrl}/api/trials/claim`, {
+    const upstream = await fetch(`${baseUrl}/trials/claim`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...sigHeaders },
       body: JSON.stringify({ telegram_id, plan_id }),
