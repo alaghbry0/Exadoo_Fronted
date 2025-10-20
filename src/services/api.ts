@@ -76,17 +76,22 @@ export const getSubscriptionPlans = async (telegramId: string | null) => {
     }
 };
 
-export const claimTrial = async ({ telegramId, planId }) => {
+type ClaimTrialParams = {
+  telegramId: string | number;
+  planId: string | number;
+};
+
+export const claimTrial = async ({ telegramId, planId }: ClaimTrialParams) => {
   const res = await fetch('/api/trials/claim', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ telegram_id: telegramId, plan_id: planId }),
   });
 
-  const data = await res.json().catch(() => ({}));
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
-    const msg = data?.error || `Error ${res.status}: Trial claim failed.`;
-    throw new Error(msg);
+    const message = typeof data['error'] === 'string' ? (data['error'] as string) : `Error ${res.status}: Trial claim failed.`;
+    throw new Error(message);
   }
   return data;
 };

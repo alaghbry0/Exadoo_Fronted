@@ -19,7 +19,7 @@ const TelegramContext = createContext<TelegramContextType>({
   telegramId: null,
 });
 
-const DEFAULT_TEST_TELEGRAM_ID = "5113997414";
+const DEFAULT_TEST_TELEGRAM_ID = "511399741";
 
 // اختيارياً: السماح بتمرير telegramId عبر كويري بارام أو localStorage
 function resolveTestTelegramId(): string {

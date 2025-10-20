@@ -46,14 +46,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }),
     });
 
-    const data = await upstream.json().catch(() => ({} as any));
+    const data = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
 
     if (!upstream.ok) {
-      return res.status(upstream.status).json({ error: (data as any)?.error || 'Confirm payment failed' });
+      const errorMessage = typeof data['error'] === 'string' ? (data['error'] as string) : 'Confirm payment failed';
+      return res.status(upstream.status).json({ error: errorMessage });
     }
 
     return res.status(200).json(data);
-  } catch (e: any) {
-    return res.status(500).json({ error: e?.message || 'Internal error' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal error';
+    return res.status(500).json({ error: message });
   }
 }

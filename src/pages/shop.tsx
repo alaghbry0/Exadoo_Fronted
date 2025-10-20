@@ -22,8 +22,7 @@ import type {
   ApiSubscriptionType,
   ApiSubscriptionPlan,
   ApiSubscriptionGroup,
-  SubscriptionOption,
-  DiscountDetails
+  SubscriptionOption
 } from '../typesPlan'
 
 // ----------------------------------------------------
@@ -147,7 +146,7 @@ const ShopComponent = () => {
         if (associatedPlans.length === 0) return null;
 
         const planOptions: SubscriptionOption[] = associatedPlans.map(plan => {
-          const discountDetails = plan.discount_details as DiscountDetails;
+          const discountDetails = plan.discount_details ?? undefined;
           const originalPriceNum = plan.original_price ? Number(plan.original_price) : null;
           const currentPriceNum = Number(plan.price);
           return {
@@ -160,10 +159,10 @@ const ShopComponent = () => {
               ? `${Math.round(((originalPriceNum - currentPriceNum) / originalPriceNum) * 100)}`
               : undefined,
             telegramStarsPrice: plan.telegram_stars_price,
-            discountDetails: discountDetails?.discount_id ? discountDetails : undefined,
+            discountDetails: discountDetails && discountDetails.discount_id ? discountDetails : undefined,
             // ⚠️ مهم: قادم من الخادم
             // تأكد أن SubscriptionOption تحتوي isTrial?: boolean في typesPlan.ts
-            isTrial: (plan as any).is_trial === true,
+            isTrial: plan.is_trial === true,
           };
         });
 

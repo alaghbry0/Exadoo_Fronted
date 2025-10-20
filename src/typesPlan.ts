@@ -41,6 +41,7 @@ export interface SubscriptionOption {
   discountDetails?: DiscountDetails;
   // ⬅️ جديد
   isTrial?: boolean;
+  savings?: string;
 }
 
 

@@ -93,8 +93,6 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
 
   const hasTerms = !!(plan && plan.termsAndConditions && plan.termsAndConditions.length > 0)
   const isTrial = !!plan?.selectedOption?.isTrial
-  const isButtonsDisabled = loading || (hasTerms && !termsAgreed) || trialStatus === 'processing'
-
   const handleClaimTrial = async () => {
     if (!plan?.selectedOption?.id || !telegramId) return
     try {
@@ -107,8 +105,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
         queryClient.invalidateQueries({ queryKey: ['subscriptionPlans', telegramId] })
       ])
       onClose()
-    } catch (e: any) {
-      setTrialError(e?.message || 'فشل تفعيل التجربة')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'فشل تفعيل التجربة'
+      setTrialError(message)
       setTrialStatus('error')
     }
   }

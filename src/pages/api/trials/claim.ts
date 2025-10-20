@@ -39,9 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({ telegram_id, plan_id }),
     });
 
-    const data = await upstream.json().catch(() => ({}));
+    const data = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
     return res.status(upstream.status).json(data);
-  } catch (e: any) {
-    return res.status(500).json({ error: e?.message || 'Internal error' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal error';
+    return res.status(500).json({ error: message });
   }
 }
