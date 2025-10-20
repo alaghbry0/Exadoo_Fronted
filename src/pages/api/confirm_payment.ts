@@ -1,6 +1,7 @@
 // src/pages/api/confirm_payment.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { makeSignatureHeaders } from '@/lib/signing';
+import { resolveBackendConfig } from '@/lib/serverConfig';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -20,36 +21,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing planId or telegramId' });
     }
 
-    const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL!;
-    const CLIENT_ID = process.env.CLIENT_ID || 'webapp';
-    const SECRET = process.env.SECRET!;
+    const { baseUrl, clientId, secret, webhookSecret } = resolveBackendConfig({ requireWebhookSecret: true });
 
-    if (!BACKEND_BASE_URL || !SECRET) {
-      return res.status(500).json({ error: 'Server misconfigured' });
-    }
-
-    // ⚠️ الترتيب المطلوب في السيرفر: [telegramId, planId]
     const sigHeaders = makeSignatureHeaders({
-      clientId: CLIENT_ID,
-      secret: SECRET,
+      clientId,
+      secret,
       fields: [telegramId, planId],
     });
 
-    const upstream = await fetch(`${BACKEND_BASE_URL}/api/confirm_payment`, {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...sigHeaders,
+    };
+
+    if (telegramId) {
+      headers['X-Telegram-Id'] = String(telegramId);
+    }
+
+    const upstreamBody: Record<string, unknown> = {
+      planId,
+      telegramId,
+      telegramUsername,
+      fullName,
+    };
+
+    if (webhookSecret) {
+      upstreamBody.webhookSecret = webhookSecret;
+    }
+
+    const upstream = await fetch(`${baseUrl}/api/confirm_payment`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...sigHeaders },
-      body: JSON.stringify({
-        planId,
-        telegramId,
-        telegramUsername,
-        fullName,
-      }),
+      headers,
+      body: JSON.stringify(upstreamBody),
     });
 
-    const data = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
+    const responseText = await upstream.text();
+    let data: Record<string, unknown> = {};
+    if (responseText) {
+      try {
+        data = JSON.parse(responseText) as Record<string, unknown>;
+      } catch {
+        data = { raw: responseText };
+      }
+    }
 
     if (!upstream.ok) {
-      const errorMessage = typeof data['error'] === 'string' ? (data['error'] as string) : 'Confirm payment failed';
+      const errorMessage =
+        typeof data['error'] === 'string' && data['error']
+          ? (data['error'] as string)
+          : upstream.statusText || 'Confirm payment failed';
       return res.status(upstream.status).json({ error: errorMessage });
     }
 
