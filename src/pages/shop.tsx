@@ -163,6 +163,7 @@ const ShopComponent = () => {
             // ⚠️ مهم: قادم من الخادم
             // تأكد أن SubscriptionOption تحتوي isTrial?: boolean في typesPlan.ts
             isTrial: plan.is_trial === true,
+            trialDurationDays: plan.is_trial ? plan.duration_days : undefined,
           };
         });
 
@@ -440,7 +441,7 @@ const ShopComponent = () => {
                                   )}
                                 >
                                   <span className="relative flex items-center justify-center gap-3">
-                                    <span>جرّب مجانًا</span>
+                                    <span>جرب {trialPlan?.trialDurationDays || ''} {trialPlan?.trialDurationDays ? 'يوم' : ''} مجانًا</span>
                                     <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
                                   </span>
                                 </Button>
@@ -615,7 +616,7 @@ const ShopComponent = () => {
                                     onClick={() => handleSubscribeClick(sub, trialPlan)}
                                     className="mt-3 text-primary-700 hover:text-primary-800 text-sm font-bold underline underline-offset-4"
                                   >
-                                    جرّب مجانًا
+                                    جرب {trialPlan.trialDurationDays || ''} {trialPlan.trialDurationDays ? 'يوم' : ''} مجانًا
                                   </button>
                                 )}
                               </>

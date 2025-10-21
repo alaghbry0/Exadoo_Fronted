@@ -150,7 +150,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
                 {/* العنوان يتغير حسب كونها تجربة أم لا */}
                 <p className="font-medium text-white/80 mb-1 z-10 relative">
                   {isTrial ? (
-                    <>تجربة {plan.selectedOption.duration}</>
+                    <> اشترك الان مجانا لمده {plan.selectedOption.trialDurationDays || plan.selectedOption.duration} {plan.selectedOption.trialDurationDays ? 'يوم' : ''}</>
                   ) : (
                     <>السعر لخطة {plan.selectedOption.duration}</>
                   )}
@@ -167,9 +167,9 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
                   {/* لو تجربة: لا نعرض 0$، بل نص واضح */}
                   {isTrial ? (
                     <div className="flex flex-col items-center gap-2">
-                      <span className="text-4xl md:text-5xl font-extrabold tracking-tight">تجربة مجانية</span>
+                      <span className="text-3xl md:text-5xl font-extrabold tracking-tight">فترة تجريبية </span>
                       <span className="text-[11px] font-bold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">
-                        Free
+                        Free Trial
                       </span>
                     </div>
                   ) : (
@@ -189,7 +189,7 @@ const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onCl
                 {/* شارة تجربة للوضوح (اختيارية) */}
                 {isTrial && (
                   <div className="mt-3 inline-block bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow z-10 relative">
-                    بدون دفع — ابدأ الآن
+                    {plan.selectedOption.trialDurationDays ? `جرب ${plan.selectedOption.trialDurationDays} يوم مجانًا — بدون دفع` : 'بدون دفع — ابدأ الآن'}
                   </div>
                 )}
               </div>

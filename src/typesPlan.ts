@@ -41,6 +41,7 @@ export interface SubscriptionOption {
   discountDetails?: DiscountDetails;
   // ⬅️ جديد
   isTrial?: boolean;
+  trialDurationDays?: number; // عدد أيام الفترة التجريبية
   savings?: string;
 }
 

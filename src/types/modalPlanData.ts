@@ -11,6 +11,7 @@ export interface PlanOption {
   discountPercentage?: string;
   discountDetails?: DiscountDetails;
   isTrial?: boolean;
+  trialDurationDays?: number; // عدد أيام الفترة التجريبية
   savings?: string;
 }
 
