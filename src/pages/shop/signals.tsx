@@ -1,29 +1,31 @@
-// src/pages/shop.tsx
+// src/pages/shop/signals.tsx
 
 'use client'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
-import SubscriptionModal from '../components/SubscriptionModal'
+import SubscriptionModal from '../../components/SubscriptionModal'
+
 import React from 'react'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
-import Navbar from '../components/Navbar'
 import { useQuery } from '@tanstack/react-query'
-import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../services/api'
+import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../../services/api'
 import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
-import { useTelegram } from '../context/TelegramContext'
+import { useTelegram } from '@/context/TelegramContext';
+import BackHeader from '@/components/BackHeader'
 
 import type { ModalPlanData } from '@/types/modalPlanData';
 import type {
   ApiSubscriptionType,
   ApiSubscriptionPlan,
   ApiSubscriptionGroup,
-  SubscriptionOption
-} from '../typesPlan'
+  SubscriptionOption,
+  DiscountDetails
+} from '../../typesPlan'
 
 // ----------------------------------------------------
 // الأنواع المساعدة + الأيقونات
@@ -259,7 +261,7 @@ const ShopComponent = () => {
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <QueryBoundary isLoading={initialLoading} isError={hasError}>
         <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col">
-          <Navbar />
+          <BackHeader />
 
           <main className="px-4 pb-20 flex-grow">
             <section className="pt-20 pb- text-center">

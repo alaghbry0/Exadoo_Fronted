@@ -1,0 +1,275 @@
+//محتوى الكورسات والحزم
+{
+    "academy": {
+        "my_enrollments": {
+            "course_ids": [
+        "2"
+      ],
+      "bundle_ids": [
+        "6"
+      ]
+        },
+        "top_courses": [
+      "1",
+      "2"
+    ],
+        "highlight_courses": [
+      "1",
+      "2",
+      "3"
+    ],
+        "top_bundles":[
+      "6",
+      "7",
+      "8"
+    ],
+        "categories": [
+            {
+                "id": "2",
+                "code": "cfb0aeb399",
+                "name": "Advanced",
+                "parent": "1",
+                "type": null,
+                "slug": "advanced",
+                "date_added": "1665266400",
+                "last_modified": "1665266400",
+                "font_awesome_class": "fas fa-info",
+                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/category_thumbnails/d94c02d2ae0d4b189c9b9ef7bc8e2d6a.jpg",
+                "number_of_courses": 2
+            },
+            {
+                "id": "3",
+                "code": "20f020f97f",
+                "name": "Intermediate",
+                "parent": "1",
+                "type": null,
+                "slug": "intermediate",
+                "date_added": "1665266400",
+                "last_modified": "1665266400",
+                "font_awesome_class": "fas fa-info",
+                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/category_thumbnails/2a74bf5e92f1778cc4bb1ced08e49880.jpg",
+                "number_of_courses": 1
+            },
+            {
+                "id": "4",
+                "code": "45f2980c5e",
+                "name": "Beginner",
+                "parent": "1",
+                "type": null,
+                "slug": "beginner",
+                "date_added": "1665180000",
+                "last_modified": "1665266400",
+                "font_awesome_class": "fas fa-info",
+                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/category_thumbnails/94dc7c9da2701406b7ce402a10fe7a88.jpg",
+                "number_of_courses": 4
+            }
+        ],
+        "all_courses": [
+            {
+                "id": "1",
+                "title": "Technical Analysis |  كورس احتراف التحليل الفني ",
+                "short_description": "باشتراكك في هذه الدورة ستخرج منها ان شاء الله مؤهلا علي قراءة الشارت لأي عملة أو سهم فنيا بكل النظريات من وايكوف وداو والدعوم والمقومات وأغلب المؤشرات الفنية والأشكال الفنية",
+                "description": "<p xss=\"removed\"><br></p><p xss=\"removed\"> </p>",
+                "outcomes": [],
+                "language": "english",
+                "category_id": "1",
+                "sub_category_id": "4",
+                "section": "[3,4,7,23,25]",
+                "requirements": [],
+                "price": "399",
+                "discount_flag": null,
+                "discounted_price": "399",
+                "level": "beginner",
+                "user_id": "4",
+                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_1.jpg",
+                "video_url": "",
+                "expiry_days": "99999",
+                "date_added": "1665180000",
+                "last_modified": "1752181200",
+                "course_type": "general",
+                "is_top_course": "1",
+                "is_highlight_course": "1",
+                "is_admin": "1",
+                "is_disabled": "0",
+                "status": "active",
+                "course_overview_provider": "",
+                "meta_keywords": "",
+                "meta_description": "",
+                "is_free_course": null,
+                "is_limit_working": "1",
+                "multi_instructor": "0",
+                "creator": "4",
+                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_1.jpg",
+                "rating": 0,
+                "number_of_ratings": 0,
+                "instructor_name": "Mohamed Mahdy",
+                "total_enrollment": 48,
+                "total_number_of_lessons": 121
+            },
+            {
+                "id": "2",
+                "title": "دورة احتراف الإدارة المالية | On Chain Analysis",
+                "short_description": "باشتراكك في هذه الدورة ستكون مؤهل بشكل كامل للتعامل مع أقوي المؤشرات التي تقرأ حركة السوق ككل \r\n\r\n",
+                "description": "<p xss=removed><span xss=removed><span xss=removed><span xss=removed><br class=\"Apple-interchange-newline\">هذه الدورة مكونة من 45 درس وقد تزيد ومده الدرس من 15 : 30دقيقة</span></span></span></p><p xss=removed><span xss=removed><span xss=removed><span xss=removed>وهناك لايفات  مسجلة كانت مع المتدربين السابقين للإجابة علي أغلب الأسئلة وهي مهمة</span></span></span></p><p xss=removed> </p><ol xss=removed><li xss=removed><span xss=removed><span xss=removed>(chapter 3&4)وهنا بعض العناوين الهامة لما سيتم دراسته بهذه الدورة </span></span></li><li xss=removed> </li></ol><p xss=removed><span xss=removed>    C3 | الدرس 1 | تعريف الدومنناس - Dominance |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 2 | قواعد الدومنناس |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 3 | العملات الرقمية سوق موسمي |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 4 | ماذا يحدث بعد الهالفنج وقبله |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 5 | كيف نربط الماضي بالحاضر للدومنناس |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 6 | BTC Rainbow |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 7 | ETH Rainbow |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 8 | BTC LOG Rainbow |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 9 | Altcoin season index |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 10 | Tweets on chart |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 11 | Viewbase |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 12 | Bitinfochart |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 13 | Reserve - Cryptoquant |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 14 | Netflow - Cryptoquant |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 15 | inflow & outflow - Cryptoquant |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 16 | MVRV |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 17 | NVT Golden cross |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 18 | Puell indicator |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 19 | Coin360 |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 20 | loointobitcoin - market cycle |        </span></p><p xss=removed><span xss=removed>    C3 | الدرس 21 | lookintobitcoin - on chain |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 1 | مقدمة عن الادارة المالية |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 2 | Risk Ratio |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 3 | مقدمة عن استراتيجية متوسطة المدي |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 4 | Bearish Trader |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 5 | bullish trader |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 6 | مميزات وعيوب التداول بوقف الخسارة |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 7 | التداول دون وقف الخسارة |        </span></p><p xss=removed><span xss=removed>    C4 | الدرس 8 | التداول دون وقف خسارة 2 |        </span></p><p xss=removed> </p><p xss=removed><br><span xss=removed><span xss=removed><span xss=removed>وهنا بعض العناوين الهامة لما سيتم دراسته بهذه الدورة</span></span></span></p><p xss=removed><span xss=removed><span xss=removed><em><span xss=removed> </span></em></span><span xss=removed><span xss=removed>وهنا تستطيع اكمال الدفع والاشتراك</span></span></span></p><p xss=removed><span xss=removed><span xss=removed><span xss=removed>وبعد تأكيد الدفع سيصلك ايميل باتمام الدفع ولينكات  الايفات باليوتيوب وجروب التلجرام  </span></span></span></p>",
+                "outcomes": [
+                    "باشتراكك في هذه الدورة ستكون مؤهل بشكل كامل للتعامل مع أقوي المؤشرات التي تقرأ حركة السوق ككل "
+                ],
+                "language": "english",
+                "category_id": "1",
+                "sub_category_id": "3",
+                "section": "[1,2,16,24]",
+                "requirements": [
+                    "good internet connection 💕"
+                ],
+                "price": "399",
+                "discount_flag": null,
+                "discounted_price": "399",
+                "level": "intermediate",
+                "user_id": "4",
+                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_2.jpg",
+                "video_url": "",
+                "expiry_days": "99999",
+                "date_added": "1665352800",
+                "last_modified": "1752181200",
+                "course_type": "general",
+                "is_top_course": "1",
+                "is_highlight_course": "1",
+                "is_admin": "1",
+                "is_disabled": "0",
+                "status": "active",
+                "course_overview_provider": "",
+                "meta_keywords": "",
+                "meta_description": "",
+                "is_free_course": null,
+                "is_limit_working": "1",
+                "multi_instructor": "0",
+                "creator": "4",
+                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_2.jpg",
+                "rating": 0,
+                "number_of_ratings": 0,
+                "instructor_name": "Mohamed Mahdy",
+                "total_enrollment": 20,
+                "total_number_of_lessons": 59
+            },
+            {
+                "id": "3",
+                "title": "دورة التحليل الزمني والرقمي | Gann Tools",
+                "short_description": "باشتراكك في هذه الدورة ستكون مؤهل وبقوة علي احتراف استخراج الفواصل الزمنية التي تؤثر علي حركة السعر \r\n",
+                "description": "<p xss=\"removed\"><span class=\"marker\"><span xss=\"removed\"><span xss=\"removed\"><br class=\"Apple-interchange-newline\">هذه الدورة مكونة من 45 درس وقد تزيد ومده الدرس من 15 : 30دقيقة</span></span></span></p><p xss=\"removed\"><span class=\"marker\"><span xss=\"removed\"><span xss=\"removed\">وهناك لايفات  مسجلة كانت مع المتدربين السابقين للإجابة علي أغلب الأسئلة وهي مهمة</span></span></span><br> </p>",
+                "outcomes": [
+                    "باشتراكك في هذه الدورة ستكون مؤهل وبقوة علي احتراف استخراج الفواصل الزمنية التي تؤثر علي حركة السعر "
+                ],
+                "language": "english",
+                "category_id": "1",
+                "sub_category_id": "2",
+                "section": "[5,6,15,22,23]",
+                "requirements": [
+                    "good internet connection ❤️"
+                ],
+                "price": "399",
+                "discount_flag": null,
+                "discounted_price": "399",
+                "level": "advanced",
+                "user_id": "4",
+                "thumbnail": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_thumbnail_default_3.jpg",
+                "video_url": "",
+                "expiry_days": "99999",
+                "date_added": "1665352800",
+                "last_modified": "1752181200",
+                "course_type": "general",
+                "is_top_course": "0",
+                "is_highlight_course": "1",
+                "is_admin": "1",
+                "is_disabled": "0",
+                "status": "active",
+                "course_overview_provider": "",
+                "meta_keywords": "",
+                "meta_description": "",
+                "is_free_course": null,
+                "is_limit_working": "1",
+                "multi_instructor": "0",
+                "creator": "4",
+                "cover_image": "https://exaado.plebits.com/uploads/thumbnails/course_thumbnails/course_cover_default_3.jpg",
+                "rating": 5,
+                "number_of_ratings": 2,
+                "instructor_name": "Mohamed Mahdy",
+                "total_enrollment": 59,
+                "total_number_of_lessons": 45
+            }
+        ],
+        "all_bundles": [
+            {
+                "id": "6",
+                "title": "SMC PRO",
+                "description": "هذا المستوي سيمكنك من مشاهدة جميع مستويات دورة الاموال الذكية من اكسادو مدي الحياة - لكن دون الجروب الخاص ودون اللايفات المباشرة اليومية ",
+                "course_ids": "[\"13\",\"14\",\"15\",\"16\",\"17\"]",
+                "free_sessions_count": "0",
+                "price": "299",
+                "discounted_price": "0",
+                "image": "https://exaado.plebits.com/uploads/course_bundles/f87855a5b29ab04c0cdca4f19b14b0a6_image.jpg",
+                "cover_image": "https://exaado.plebits.com/uploads/course_bundles/d3136c44394286a30dcb611f6b917bed_cover.jpg",
+                "telegram_url": "",
+                "status": "active",
+                "sub_category_id": "4",
+                "is_top": "1",
+                "is_highlight": "0",
+                "requirements": [
+                    "لابد من مشاهدة الكورس المجاني بقناة اليوتيوب لتأسيس الفوركس"
+                ],
+                "outcomes": [
+                    "متوقع تخرج من هذه الدورة محترف في التحليل بعلم الاموال الذكية "
+                ],
+                "is_disabled": "0",
+                "date_added": "1703366659"
+            },
+            {
+                "id": "7",
+                "title": "SMC PLUS",
+                "description": "جروب خاص علي التلجرام لنشر تحليلاتك وتقيميها والرد عليها مني شخصيا علي مدار الساعة -\r\n بث مباشر للتداول الحقيقي معك مباشرة بسوق العملات الرقمية والفوركس - \r\nشهادة موثقة من اكسادو باجتيازك الدورة بالكامل -\r\nامتحانات دورية لتقييم مستوي استيعابك -\r\nحقيقة اكسبرتات التداول الآلي كاملة - \r\nجميع الايفات المباشرة مسجلة - ",
+                "course_ids": "[\"13\",\"14\",\"15\",\"16\",\"17\"]",
+                "free_sessions_count": "0",
+                "price": "499",
+                "discounted_price": "0",
+                "image": "https://exaado.plebits.com/uploads/course_bundles/035c3ea3d7e40b7e5afc0eb792b404b4_image.jpg",
+                "cover_image": "https://exaado.plebits.com/uploads/course_bundles/d95375a3b6be7bc96b42e186ea830dbd_cover.jpg",
+                "telegram_url": "https://t.me/+CvKbZFKiClBkYmM0",
+                "status": "active",
+                "sub_category_id": "3",
+                "is_top": "1",
+                "is_highlight": "0",
+                "requirements": [
+                    "لابد من مشاهدة الكورس المجاني بقناة اليوتيوب لتأسيس الفوركس"
+                ],
+                "outcomes": [
+                    "متوقع تخرج من هذه الدورة محترف في التحليل بعلم الاموال الذكية "
+                ],
+                "is_disabled": "0",
+                "date_added": "1703366967"
+            },
+            {
+                "id": "8",
+                "title": "SMC PREMIUM",
+                "description": "- ستحصل علي 4 جلسات خاصة مع د محمد مهدي\r\nجروب خاص علي التلجرام لنشر تحليلاتك وتقيميها والرد عليها مني شخصيا علي مدار الساعة -\r\n بث مباشر للتداول الحقيقي معك مباشرة بسوق العملات الرقمية والفوركس - \r\nشهادة موثقة من اكسادو باجتيازك الدورة بالكامل -\r\nامتحانات دورية لتقييم مستوي استيعابك -\r\nحقيقة اكسبرتات التداول الآلي كاملة - \r\nجميع الايفات المباشرة مسجلة - ",
+                "course_ids": "[\"13\",\"14\",\"15\",\"16\",\"17\"]",
+                "free_sessions_count": "4",
+                "price": "799",
+                "discounted_price": "0",
+                "image": "https://exaado.plebits.com/uploads/course_bundles/769ded46a20a55fb9e21c7660dda03e6_image.jpg",
+                "cover_image": "https://exaado.plebits.com/uploads/course_bundles/7db170323e15b652d245c3b938c0f863_cover.jpg",
+                "telegram_url": "https://t.me/+CvKbZFKiClBkYmM0",
+                "status": "active",
+                "sub_category_id": "2",
+                "is_top": "1",
+                "is_highlight": "0",
+                "requirements": [
+                    "لابد من مشاهدة الكورس المجاني بقناة اليوتيوب لتأسيس الفوركس"
+                ],
+                "outcomes": [
+                    "متوقع تخرج من هذه الدورة محترف في التحليل بعلم الاموال الذكية "
+                ],
+                "is_disabled": "0",
+                "date_added": "1703367403"
+            }
+        ]
+    }
+}

@@ -18,6 +18,9 @@ import { PaymentSuccessModal } from '../components/PaymentSuccessModal'
 import { PaymentExchangeSuccess } from '../components/PaymentExchangeSuccess'
 import { claimTrial } from '@/services/api'
 
+// ====================================================================
+// المكون الرئيسي لمودال شراء اشتراكات الاشارات 
+// ====================================================================
 const SubscriptionModal = ({ plan, onClose }: { plan: ModalPlanData | null; onClose: () => void }) => {
   const { telegramId } = useTelegram()
   const queryClient = useQueryClient()

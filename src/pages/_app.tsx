@@ -1,5 +1,6 @@
+﻿// src/pages/_app.tsx
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
@@ -13,9 +14,50 @@ import { useProfileStore } from '../stores/profileStore'
 import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
-import { useNotificationStream } from '@/hooks/useNotificationStream' // ✨ 1. استيراد الـ hook الجديد
+import { useNotificationStream } from '@/hooks/useNotificationStream'
+import GlobalAuthSheet from '@/components/GlobalAuthSheet'
+import { TonConnectUIProvider } from '@tonconnect/ui-react'
 
-// ❌ تم إزالة استيراد: useNotificationsSocket, useNotificationsContext, showToast, useCallback, useRef
+// ===================== startapp helpers =====================
+type StartAppParam = string | null;
+
+const ROUTE_MAP: Record<string, string> = {
+  shop: '/shop',
+  plans: '/plans',
+  profile: '/profile',
+  notifications: '/notifications',
+};
+
+function readStartAppParam(): StartAppParam {
+  const tg = (globalThis as any)?.Telegram?.WebApp;
+  const tgParam =
+    tg?.initDataUnsafe?.start_param ||
+    tg?.initDataUnsafe?.startapp ||
+    tg?.initData?.start_param;
+  if (tgParam && typeof tgParam === 'string') return tgParam;
+
+  try {
+    const sp = new URLSearchParams(globalThis.location?.search || '');
+    return sp.get('startapp') || sp.get('tgWebAppStartParam') || sp.get('start_param');
+  } catch {
+    return null;
+  }
+}
+
+function resolveTargetRoute(startParam: string): string | null {
+  if (ROUTE_MAP[startParam]) return ROUTE_MAP[startParam];
+
+  if (startParam.startsWith('route:')) {
+    const raw = decodeURIComponent(startParam.slice('route:'.length));
+    if (raw.startsWith('/')) return raw;
+  }
+
+  const [name, qs] = startParam.split('?');
+  if (ROUTE_MAP[name]) return qs ? `${ROUTE_MAP[name]}?${qs}` : ROUTE_MAP[name];
+
+  return null;
+}
+// ============================================================
 
 export interface NotificationExtraData {
   invite_link?: string | null;
@@ -48,62 +90,55 @@ const globalQueryClient = new QueryClient({
   }
 })
 
-// Hook مخصص لجلب عنوان المحفظة مع استخدام React Query
-const useWalletAddress = () => {
-  return useQuery({
+// Hook مخصص لجلب عنوان المحفظة
+const useWalletAddress = () =>
+  useQuery({
     queryKey: ['walletAddress'],
     queryFn: fetchBotWalletAddress,
     retry: 3,
     staleTime: 15 * 60 * 1000,
-  });
-}
+  })
 
-// المكون الذي يحتوي على منطق التطبيق الرئيسي وشاشة البداية
-function AppContent({ children }: { children: React.ReactNode }) {
+// ===================== AppContent =====================
+function AppContent({ children, hideFooter }: { children: React.ReactNode; hideFooter?: boolean }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false);
   const { setSubscriptions } = useProfileStore();
   const { isTelegramApp, isTelegramReady, isLoading: isTelegramLoading, telegramId } = useTelegram();
   const { setWalletAddress } = useTariffStore();
   const router = useRouter();
   const queryClient = useTanstackQueryClient();
+  const didRouteRef = useRef(false);
 
-  // ✨ 2. تشغيل الـ hook الخاص بـ SSE في الخلفية ✨
-  // هذا الـ hook سيعالج الآن كل ما يتعلق بالإشعارات (الاتصال، استقبال الرسائل، التوست، تحديث الحالة)
+  // ===== 1) تطبيع المسار عند الإقلاع =====
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      // في بعض WebView النادر، pathname يطلع '' أو ما يبدأ بـ '/'.
+      let p = window.location.pathname || '/';
+      if (!p.startsWith('/')) p = `/${p}`;
+      if (p === '' || p === '/index' || p === '/index.html') p = '/';
+      // لو الـURL الأصلي جاء بدون سلاش نهائي، المتصفح عادةً يرصد '/'، بس نضمن توحيده:
+      const finalUrl = p + window.location.search + window.location.hash;
+      if (window.location.pathname !== p) {
+        window.history.replaceState({}, '', finalUrl);
+      }
+    } catch {/* no-op */}
+  }, []);
+
+  // ==== إشعارات SSE ====
   useNotificationStream();
 
-  // ❌ 3. تم إزالة كل المنطق المتعلق بـ WebSocket بالكامل ❌
-  // - تم حذف useRef لـ handleWebSocketMessageRef
-  // - تم حذف useEffect لمعالجة رسائل WebSocket
-  // - تم حذف useCallback لـ stableWebSocketMessageHandler
-  // - تم حذف استدعاء useNotificationsSocket
-  // - تم حذف useEffect لمراقبة connectionState
-
-  // useEffect لتحديد اكتمال الحد الأدنى لوقت عرض شاشة البداية
+  // ==== سبلاش مينيوم ====
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMinDelayCompleted(true);
-      console.log("⏱️ Minimum splash delay completed.");
-    }, 1500);
+    const timer = setTimeout(() => setMinDelayCompleted(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  // جلب عنوان المحفظة باستخدام Hook المخصص
-  const {
-    data: walletAddress,
-    isLoading: isWalletLoading,
-    isError: isWalletError,
-    error: walletError
-  } = useWalletAddress();
+  // ==== جلب المحفظة ====
+  const { data: walletAddress, isLoading: isWalletLoading, isError: isWalletError, error: walletError } = useWalletAddress();
+  useEffect(() => { if (walletAddress) setWalletAddress(walletAddress); }, [walletAddress, setWalletAddress]);
 
-  // useEffect لتحديث عنوان المحفظة في Zustand store عند جلبه بنجاح
-  useEffect(() => {
-    if (walletAddress) {
-        console.log("🏦 Wallet address fetched:", walletAddress);
-        setWalletAddress(walletAddress);
-    }
-  }, [walletAddress, setWalletAddress]);
-
-  // الكود الحالي لجلب الاشتراكات (يبقى كما هو)
+  // ==== الاشتراكات (كاش محلي) ====
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!telegramId) return;
@@ -112,15 +147,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
         if (cached) {
           const { data, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < 5 * 60 * 1000) {
-            console.log("📦 Using cached subscriptions for:", telegramId);
             setSubscriptions(data);
             return;
-          } else {
-            console.log("🗑️ Cached subscriptions expired for:", telegramId);
           }
         }
       } catch (error) {
-        console.error(`❌ Failed to fetch/load subscriptions for ${telegramId}:`, error);
+        console.error(`❌ Failed to load subscriptions for ${telegramId}:`, error);
       }
     };
     fetchSubscriptions();
@@ -128,48 +160,87 @@ function AppContent({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [telegramId, setSubscriptions]);
 
-  // useEffect لجلب الصفحات الهامة مسبقًا لتحسين الأداء
+  // ==== Prefetch ====
   useEffect(() => {
     const prefetchPages = async () => {
       try {
-        const pagesToPrefetch = ['/', '/plans', '/profile', '/notifications'];
+        const pagesToPrefetch = ['/', '/shop', '/plans', '/profile', '/notifications'];
         await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
-        console.log("🔄 Prefetched important pages:", pagesToPrefetch.join(', '));
       } catch (error) {
-        console.error('⚠️ Error during page prefetch:', error);
+        console.error('⚠️ Prefetch error:', error);
       }
     };
     prefetchPages();
   }, [router]);
 
-  // شرط إظهار شاشة البداية (يبقى كما هو)
+  // ===== 2) حساب مسار ثابت وموحَّد (fallback على window.location) =====
+  const stablePath = useMemo(() => {
+    try {
+      const routerPath = (router.asPath || '').split('?')[0].split('#')[0];
+      const locPath = typeof window !== 'undefined' ? (window.location.pathname || '') : '';
+      let p = routerPath || locPath || '/';
+      if (!p.startsWith('/')) p = `/${p}`;
+      if (p === '' || p === '/index' || p === '/index.html') p = '/';
+      return p;
+    } catch {
+      return '/';
+    }
+  }, [router.asPath, router.isReady]);
+
+  // ==== سياسة الفوتر المرنة (مع حالة فشل محسوبة) ====
+  const showFooter = useMemo(() => {
+    if (hideFooter) return false;
+    // لو لسه مش واضح لأي سبب (حافة نادرة)، عدّه '/'
+    const p = stablePath || '/';
+    const allowPrefixes = ['/', '/shop', '/profile', '/plans', '/notifications'];
+    return allowPrefixes.some(prefix => p === prefix || p.startsWith(`${prefix}/`));
+  }, [hideFooter, stablePath]);
+
+  // ==== شرط السبلاتش ====
   const showSplashScreen =
     !minDelayCompleted ||
     isWalletLoading ||
     isTelegramLoading ||
     (isTelegramApp && !isTelegramReady);
 
-  console.log("⏳ Splash Screen Conditions:", {
-      minDelayCompleted,
-      isWalletLoading,
-      isTelegramLoading,
-      isTelegramApp,
-      isTelegramReady,
-      showSplashScreen
-  });
+  // ==== توجيه startapp بعد الجاهزية ====
+  useEffect(() => {
+    if (didRouteRef.current) return;
+    const ready = !showSplashScreen && (!isTelegramApp || isTelegramReady);
+    if (!ready) return;
+
+    const raw = readStartAppParam();
+    if (!raw) return;
+
+    const target = resolveTargetRoute(raw);
+    if (!target) return;
+
+    const targetPath = (target.split('?')[0] || '/');
+    if (stablePath === targetPath) {
+      didRouteRef.current = true;
+      return;
+    }
+
+    didRouteRef.current = true;
+    router.replace(target).catch(console.error);
+
+    try {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    } catch {}
+  }, [isTelegramApp, isTelegramReady, showSplashScreen, router, stablePath]);
 
   if (showSplashScreen) {
     return <SplashScreen />;
   }
 
-  // التعامل مع خطأ تحميل المحفظة (يبقى كما هو)
   if (isWalletError) {
     console.error("❌ Wallet Address fetch error:", walletError);
     return (
       <div className="flex flex-col justify-center items-center h-screen text-red-500 text-center px-4">
         <p className="mb-2">حدث خطأ أثناء تحميل بيانات المحفظة.</p>
         {process.env.NODE_ENV === 'development' && (
-            <p className="text-xs text-gray-400 mb-4">{(walletError as Error)?.message || String(walletError)}</p>
+          <p className="text-xs text-gray-400 mb-4">{(walletError as Error)?.message || String(walletError)}</p>
         )}
         <button
           onClick={() => queryClient.refetchQueries({ queryKey: ['walletAddress'] })}
@@ -181,31 +252,35 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  console.log(`✅ App Ready. Running inside Telegram: ${isTelegramApp}. Telegram ID: ${telegramId || 'N/A'}`);
-
   return (
     <>
-      {children}
-      <FooterNav />
+      <div className={showFooter ? 'pb-16' : undefined}>
+        {children}
+      </div>
+      {showFooter && <FooterNav currentPath={stablePath} />}
       <NotificationToast />
     </>
   );
 }
-
-// المكون الرئيسي للتطبيق (يبقى كما هو)
+// ===================== MyApp =====================
 function MyApp({ Component, pageProps }: AppProps) {
+  const hideFooter = Boolean((Component as any).hideFooter)
+
   return (
-    <TelegramProvider>
-      <QueryClientProvider client={globalQueryClient}>
-        <NotificationsProvider>
-          <AppContent>
-            <Component {...pageProps} />
-          </AppContent>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </NotificationsProvider>
-      </QueryClientProvider>
-    </TelegramProvider>
+    <TonConnectUIProvider manifestUrl={process.env.NEXT_PUBLIC_TON_MANIFEST_URL ?? 'https://exadooo-plum.vercel.app/tonconnect-manifest.json'}>
+      <TelegramProvider>
+        <QueryClientProvider client={globalQueryClient}>
+          <NotificationsProvider>
+            <AppContent hideFooter={hideFooter}>
+              <Component {...pageProps} />
+            </AppContent>
+            <GlobalAuthSheet />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </NotificationsProvider>
+        </QueryClientProvider>
+      </TelegramProvider>
+    </TonConnectUIProvider>
   );
 }
 
-export default MyApp;
+export default MyApp

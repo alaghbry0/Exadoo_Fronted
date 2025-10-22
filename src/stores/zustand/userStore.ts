@@ -2,32 +2,45 @@
 import { create } from 'zustand';
 
 interface UserData {
+    telegramId?: string | null;
+    telegramUsername?: string | null;
+    fullName?: string | null;
+    photoUrl?: string | null;
+    joinDate?: string | null;
+    isLinked?: boolean;
+    gmail?: string | null;
+}
+
+interface UserState {
     telegramId: string | null;
     telegramUsername: string | null;
     fullName: string | null;
     photoUrl: string | null;
-    joinDate: string | null; // ✅ إضافة joinDate هنا
-    gmail: string | null;
+    joinDate: string | null;
     isLinked: boolean;
-}
-
-interface UserState extends UserData {
+    gmail: string | null;
     setUserData: (userData: Partial<UserData>) => void;
     clearUserData: () => void;
+    setLinked: (isLinked: boolean, gmail?: string | null) => void;
 }
 
-const initialState: UserData = {
+export const useUserStore = create<UserState>((set) => ({
     telegramId: null,
     telegramUsername: null,
     fullName: null,
     photoUrl: null,
     joinDate: null,
-    gmail: null,
     isLinked: false,
-};
-
-export const useUserStore = create<UserState>((set) => ({
-    ...initialState,
-    setUserData: (userData) => set(userData),
-    clearUserData: () => set({ ...initialState }),
+    gmail: null,
+    setUserData: (userData) => set((state) => ({ ...state, ...userData })),
+    clearUserData: () => set({
+        telegramId: null,
+        telegramUsername: null,
+        fullName: null,
+        photoUrl: null,
+        joinDate: null,
+        isLinked: false,
+        gmail: null,
+    }),
+    setLinked: (isLinked, gmail = null) => set({ isLinked, gmail }),
 }));

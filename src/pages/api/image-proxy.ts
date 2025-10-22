@@ -1,62 +1,163 @@
-// pages/api/image-proxy.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import fetch from 'node-fetch'; // أو استخدم fetch العالمي إذا كان Node.js >= 18
+// src/pages/api/image-proxy.ts
+import type { NextApiRequest, NextApiResponse } from "next";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { url } = req.query;
+// تخزين الصور في الذاكرة لمدة قصيرة لتقليل الطلبات المتكررة
+const memoryCache = new Map<string, { buffer: Buffer; headers: Record<string, string>; timestamp: number }>();
+const MEMORY_CACHE_TTL = 5 * 60 * 1000 // 5 دقائق (بدلاً من 1)
+const MAX_CACHE_SIZE = 100 // حد أقصى 50 صورة في الذاكرة
 
-  if (!url || typeof url !== 'string') {
-    return res.status(400).json({ error: 'Image URL is required' });
+const ALLOWED_DOMAINS = ['exaado.plebits.com'];
+const CACHE_MAX_AGE = 60 * 60 * 24 * 30; // 30 يوم
+const FETCH_TIMEOUT = 15000; // 15 ثانية
+
+function isAllowedDomain(hostname: string): boolean {
+  return ALLOWED_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+}
+
+function cleanMemoryCache() {
+  const now = Date.now();
+  const entries = Array.from(memoryCache.entries());
+  
+  // حذف العناصر القديمة
+  for (const [key, value] of entries) {
+    if (now - value.timestamp > MEMORY_CACHE_TTL) {
+      memoryCache.delete(key);
+    }
   }
-
-  try {
-    console.log(`Proxying image from: ${url}`); // تسجيل URL المطلوب
-    const imageRes = await fetch(url);
-
-    if (!imageRes.ok) {
-      console.error(`Failed to fetch image from ${url}. Status: ${imageRes.status} ${imageRes.statusText}`);
-      // حاول قراءة نص الخطأ من المصدر إذا كان متاحًا
-      let errorBody = `Failed to fetch image: ${imageRes.statusText}`;
-       try {
-         const bodyText = await imageRes.text();
-         if (bodyText) errorBody += ` - Body: ${bodyText}`;
-      } catch { /* ignore if can't read body */ }
-
-      return res.status(imageRes.status).json({ error: errorBody });
-    }
-
-    const contentType = imageRes.headers.get('content-type');
-    if (!contentType || !contentType.startsWith('image/')) {
-        console.error(`Invalid content type from ${url}: ${contentType}`);
-        return res.status(500).json({ error: 'Invalid content type, not an image.' });
-    }
-
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400, immutable'); // تخزين مؤقت لمدة يوم
-
-    // تحويل الجسم إلى Buffer وإرساله
-    const imageBuffer = await imageRes.arrayBuffer(); // استخدام arrayBuffer للحصول على البيانات الثنائية
-    res.status(200).send(Buffer.from(imageBuffer)); // إرسال الـ Buffer
-
-    // --- طريقة الـ Stream (احتفظ بها كبديل إذا لم تعمل طريقة Buffer لسبب ما) ---
-    // if (imageRes.body) {
-    //   imageRes.body.pipe(res);
-    //   // يجب التأكد من معالجة أخطاء الـ stream أيضًا
-    //   imageRes.body.on('error', (streamError) => {
-    //     console.error('Stream error during piping:', streamError);
-    //     // قد يكون من الصعب إرسال استجابة خطأ هنا لأن الرؤوس قد أُرسلت بالفعل
-    //     res.end(); // إنهاء الاستجابة
-    //   });
-    // } else {
-    //   console.error('Image response body is null');
-    //   return res.status(500).json({ error: 'Image response body is null' });
-    // }
-    // -------------------------------------------------------------------------
-
-
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Image proxy CATCH error:', err.message, err.stack);
-    res.status(500).json({ error: 'Internal server error fetching image', details: err.message });
+  
+  // إذا تجاوز الحد، احذف الأقدم
+  if (memoryCache.size > MAX_CACHE_SIZE) {
+    const sorted = entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toDelete = sorted.slice(0, memoryCache.size - MAX_CACHE_SIZE);
+    toDelete.forEach(([key]) => memoryCache.delete(key));
   }
 }
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // دعم OPTIONS للـ CORS
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const { url } = req.query;
+
+  if (!url || Array.isArray(url)) {
+    res.status(400).json({ error: "Invalid url parameter" });
+    return;
+  }
+
+  let targetUrl: URL;
+  try {
+    targetUrl = new URL(url);
+  } catch {
+    res.status(400).json({ error: "Invalid URL format" });
+    return;
+  }
+
+  // فحص النطاق المسموح
+  if (!isAllowedDomain(targetUrl.hostname)) {
+    res.status(403).json({ error: "Domain not allowed" });
+    return;
+  }
+
+  // فحص البروتوكول
+  if (targetUrl.protocol !== "https:") {
+    res.status(400).json({ error: "Only HTTPS is allowed" });
+    return;
+  }
+
+  // تنظيف الكاش بشكل دوري
+  if (Math.random() < 0.1) {
+    cleanMemoryCache();
+  }
+
+  // التحقق من الكاش في الذاكرة
+  const cached = memoryCache.get(url);
+  if (cached && Date.now() - cached.timestamp < MEMORY_CACHE_TTL) {
+    res.setHeader("Content-Type", cached.headers.contentType);
+    res.setHeader("Content-Length", cached.buffer.length);
+    res.setHeader("Cache-Control", `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=604800`);
+    res.setHeader("X-Cache", "HIT");
+    if (cached.headers.etag) {
+      res.setHeader("ETag", cached.headers.etag);
+    }
+    res.status(200).send(cached.buffer);
+    return;
+  }
+
+  // جلب الصورة
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+  try {
+    const response = await fetch(targetUrl.toString(), {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "ExaadoImageProxy/2.0",
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      },
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      res.status(response.status).json({ 
+        error: `Upstream error: ${response.status}` 
+      });
+      return;
+    }
+
+    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    const etag = response.headers.get("etag");
+    
+    // التأكد من أن المحتوى صورة
+    if (!contentType.startsWith("image/")) {
+      res.status(400).json({ error: "Content is not an image" });
+      return;
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // حفظ في الكاش
+    memoryCache.set(url, {
+      buffer,
+      headers: { contentType, etag: etag || "" },
+      timestamp: Date.now(),
+    });
+
+    // إرسال الاستجابة
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Length", buffer.length);
+    res.setHeader("Cache-Control", `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=604800`);
+    res.setHeader("X-Cache", "MISS");
+    
+    if (etag) {
+      res.setHeader("ETag", etag);
+    }
+
+    res.status(200).send(buffer);
+  } catch (error) {
+    clearTimeout(timeout);
+    
+    const isAborted = error instanceof Error && error.name === "AbortError";
+    console.error(`[image-proxy] Error fetching ${url}:`, error);
+    
+    res.status(isAborted ? 504 : 502).json({ 
+      error: isAborted ? "Request timeout" : "Failed to fetch image" 
+    });
+  }
+}
+
+// تكوين Next.js API
+export const config = {
+  api: {
+    responseLimit: '8mb',
+  },
+};
