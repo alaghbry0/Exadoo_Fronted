@@ -185,7 +185,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     } catch {
       return '/';
     }
-  }, [router.asPath, router.isReady]);
+  }, [router.asPath]);
 
   // ==== سياسة الفوتر المرنة (مع حالة فشل محسوبة) ====
   const showFooter = useMemo(() => {

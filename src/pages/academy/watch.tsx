@@ -96,7 +96,7 @@ export default function WatchLessonPage() {
   const lessonTitleFromQuery = (router.query.lessonTitle as string) || ''
 
   const { mutateAsync, isPending, isError, error, data: watchData } = useStartWatching()
-  const { data: courseDetails } = useCourseDetails(telegramId, courseId)
+  const { data: courseDetails } = useCourseDetails(telegramId ?? undefined, courseId || undefined)
 
   useEffect(() => {
     if (telegramId && lessonId) {

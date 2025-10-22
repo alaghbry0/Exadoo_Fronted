@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ShoppingCart, Star, Play, BookOpen } from 'lucide-react'
+import { ShoppingCart, Star, Play, BookOpen } from 'lucide-react'
 import type { Course } from '@/types/academy'
 import { formatPrice } from '@/lib/academy'
 

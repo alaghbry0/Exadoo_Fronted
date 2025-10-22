@@ -126,6 +126,7 @@ export interface StartWatchingResult {
   iframe_url: string | null
   headers?: Record<string,string>
   note?: string
+  thumbnails_vtt_url?: string | null
 }
 
 export function useStartWatching() {

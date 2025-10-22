@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Home, CreditCard, User } from 'lucide-react'
 
@@ -43,7 +43,7 @@ export default function FooterNav({
     return pathname === itemPath || pathname.startsWith(`${itemPath}/`)
   }
 
-  const tabVariants = {
+  const tabVariants: Variants = {
     active: { y: -2, transition: { type: 'spring', stiffness: 400, damping: 25 } },
     inactive: { y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } },
   }

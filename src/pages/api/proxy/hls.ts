@@ -119,7 +119,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(status)
 
-    // @ts-expect-error: Node Response has body as Readable
     const body = upstream.body
     if (!body) return res.end()
 

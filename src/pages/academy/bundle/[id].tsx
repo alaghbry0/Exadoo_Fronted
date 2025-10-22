@@ -4,7 +4,7 @@
 import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { useAcademyData } from '@/services/academy'
 import { useTelegram } from '@/context/TelegramContext'
 import AuthPrompt from '@/components/AuthFab'

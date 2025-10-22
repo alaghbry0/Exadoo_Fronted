@@ -34,7 +34,7 @@ export default function RealCurriculum({
           <div className="px-4 py-3 font-bold bg-neutral-50 dark:bg-neutral-900">{s.title}</div>
 
           <div>
-            {s.lessons.map((l, i) => {
+            {s.lessons.map((l) => {
               const isVideo = (l.lesson_type || '').toLowerCase() === 'video'
               const locked = l.user_validity === false
 

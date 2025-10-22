@@ -23,8 +23,7 @@ import type {
   ApiSubscriptionType,
   ApiSubscriptionPlan,
   ApiSubscriptionGroup,
-  SubscriptionOption,
-  DiscountDetails
+  SubscriptionOption
 } from '../../typesPlan'
 
 // ----------------------------------------------------

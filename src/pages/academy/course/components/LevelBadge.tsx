@@ -11,10 +11,10 @@ export default function LevelBadge({ level }: { level?: Course['level'] }) {
     advanced: { label: 'متقدم', cls: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30', icon: '🚀' },
   } as const
 
+  const levelKey = typeof level === 'string' && level in cfg ? (level as keyof typeof cfg) : undefined
+
   const c =
-    // @ts-ignore
-    cfg[(level as keyof typeof cfg) ?? 'beginner'] ??
-    ({ label: String(level), cls: 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-900/20 dark:text-neutral-300 dark:border-neutral-800/30', icon: '🎯' } as const)
+    levelKey ? cfg[levelKey] : ({ label: String(level), cls: 'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-900/20 dark:text-neutral-300 dark:border-neutral-800/30', icon: '🎯' } as const)
 
   return (
     <span className={cn('inline-flex items-center gap-2 rounded-xl border px-2 py-1 text-sm font-semibold', c.cls)}>

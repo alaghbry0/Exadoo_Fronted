@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useCallback, useRef, forwardRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Transition } from 'framer-motion';
 import { Zap, RefreshCcw, Star, Package, ArrowUpRight, ChevronDown, Link as LinkIcon } from 'lucide-react';
 import { Subscription, SubChannelLink } from '@/types';
 import { cn } from '@/lib/utils';
@@ -12,8 +12,8 @@ import { SkeletonLoader } from '@/components/SkeletonLoader';
 
 // ✨ تعديل: 1. إضافة إعدادات الأنيميشن الجديدة
 // Advanced spring config for natural motion
-const expansionSpring = {
-  type: "spring",
+const expansionSpring: Transition = {
+  type: 'spring',
   damping: 25, // More resistance = less bouncy
   stiffness: 200, // Faster snap
   mass: 0.5, // Lightweight feel
