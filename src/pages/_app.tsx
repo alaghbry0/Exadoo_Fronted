@@ -16,11 +16,11 @@ import {
   useQueryClient as useTanstackQueryClient,
 } from "@tanstack/react-query";
 import { useUserStore } from "../stores/zustand/userStore";
-import { NotificationToast } from "../components/NotificationToast";
+import { NotificationToast } from "../features/notifications/components/NotificationToast";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NotificationsProvider } from "@/context/NotificationsContext";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
-import GlobalAuthSheet from "@/components/GlobalAuthSheet";
+import GlobalAuthSheet from "@/features/auth/components/GlobalAuthSheet";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import logger from "@/core/utils/logger";

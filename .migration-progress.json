@@ -1,0 +1,156 @@
+{
+  "lastUpdated": "2025-10-23T23:22:43.624Z",
+  "files": [
+    {
+      "path": "src/components/PaymentHistoryItem.tsx",
+      "status": "completed",
+      "priority": 1,
+      "category": "Payment"
+    },
+    {
+      "path": "src/features/payments/components/DetailRow.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Payment"
+    },
+    {
+      "path": "src/features/payments/components/PaymentCard.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Payment"
+    },
+    {
+      "path": "src/features/notifications/components/NotificationItem.tsx",
+      "status": "completed",
+      "priority": 1,
+      "category": "Notification"
+    },
+    {
+      "path": "src/features/notifications/components/NotificationFilter.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Notification"
+    },
+    {
+      "path": "src/features/profile/components/ProfileHeader.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Profile"
+    },
+    {
+      "path": "src/features/profile/components/SubscriptionsSection.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Profile"
+    },
+    {
+      "path": "src/features/auth/components/GlobalAuthSheet.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Auth"
+    },
+    {
+      "path": "src/features/auth/components/UnlinkedStateBanner.tsx",
+      "status": "pending",
+      "priority": 1,
+      "category": "Auth"
+    },
+    {
+      "path": "src/pages/academy/index.tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Academy"
+    },
+    {
+      "path": "src/pages/academy/course/[id].tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Academy"
+    },
+    {
+      "path": "src/pages/academy/bundle/[id].tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Academy"
+    },
+    {
+      "path": "src/pages/academy/category/[id].tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Academy"
+    },
+    {
+      "path": "src/pages/shop/index.tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Shop"
+    },
+    {
+      "path": "src/pages/shop/signals.tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Shop"
+    },
+    {
+      "path": "src/pages/forex.tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Trading"
+    },
+    {
+      "path": "src/pages/indicators.tsx",
+      "status": "pending",
+      "priority": 2,
+      "category": "Trading"
+    },
+    {
+      "path": "src/shared/components/common/ServiceCardV2.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Common"
+    },
+    {
+      "path": "src/shared/components/common/SkeletonLoaders.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Common"
+    },
+    {
+      "path": "src/shared/components/common/InviteAlert.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Common"
+    },
+    {
+      "path": "src/shared/components/layout/Navbar.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Layout"
+    },
+    {
+      "path": "src/shared/components/layout/NavbarEnhanced.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Layout"
+    },
+    {
+      "path": "src/shared/components/layout/BackHeader.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Layout"
+    },
+    {
+      "path": "src/shared/components/layout/FooterNav.tsx",
+      "status": "pending",
+      "priority": 3,
+      "category": "Layout"
+    }
+  ],
+  "stats": {
+    "total": 24,
+    "completed": 2,
+    "inProgress": 0,
+    "pending": 22,
+    "failed": 0
+  }
+}

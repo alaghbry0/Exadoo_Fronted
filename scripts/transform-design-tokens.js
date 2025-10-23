@@ -186,10 +186,16 @@ function removeClassesBySet(classes, removeSet) {
 }
 
 // -------- Transformer --------
-module.exports = function transformer(fileInfo, api) {
+module.exports = function transformer(fileInfo, api, options) {
   const j = api.jscodeshift;
   const root = j(fileInfo.source);
   let changed = false;
+  const dryRun = options?.dryRun || false;
+
+  // Skip files that don't contain JSX
+  if (!root.find(j.JSXElement).length) {
+    return null;
+  }
 
   // امسح كل JSX elements
   root.find(j.JSXOpeningElement).forEach((p) => {
@@ -328,6 +334,11 @@ module.exports = function transformer(fileInfo, api) {
   });
 
   if (changed) {
+    if (dryRun) {
+      console.log(`[DRY RUN] Would transform: ${fileInfo.path}`);
+      return null;
+    }
+    
     // inject imports
     ensureImport(
       j,
