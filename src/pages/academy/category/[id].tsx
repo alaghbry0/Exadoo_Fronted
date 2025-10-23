@@ -7,7 +7,7 @@ import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
-import SmartImage from '@/components/SmartImage'
+import SmartImage from '@/shared/components/common/SmartImage'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import PageLayout from '@/shared/components/layout/PageLayout'
@@ -153,6 +153,7 @@ function MiniCourseCard({
             src={img || '/image.jpg'}
             alt={title}
             fill
+            blurType="secondary"
             sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             priority={!!priority}
@@ -223,6 +224,7 @@ function MiniBundleCard({
             src={img || '/image.jpg'}
             alt={title}
             fill
+            blurType="secondary"
             sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             priority={!!priority}
@@ -347,6 +349,8 @@ export default function CategoryDetail() {
                   <SmartImage
                     src={category.thumbnail}
                     alt={category.name}
+                    blurType="secondary"
+                    autoQuality
                     width={96}
                     height={96}
                     className="object-cover"

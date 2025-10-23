@@ -1,8 +1,8 @@
 // ProfileHeader.tsx
 import React, { useMemo } from 'react';
-import Image from 'next/image';
 import { User, FileText, Award, Copy, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import SmartImage from '@/shared/components/common/SmartImage';
 
 // --- دالة مساعدة للتحقق من رابط الصورة ---
 export function getValidPhotoUrl(url: string | null, defaultAvatar: string = '/logo.png'): string {
@@ -95,14 +95,16 @@ export default function ProfileHeader({
         {/* الصورة الشخصية */}
         <div className="relative inline-block">
           <div className="w-24 h-24 rounded-full border-4 border-white/80 shadow-lg overflow-hidden bg-slate-700">
-            <Image
+            <SmartImage
               src={avatarSrc}
               alt={`صورة ${fullName}`}
               width={96}
               height={96}
+              blurType="primary"
+              autoQuality
+              fallbackSrc="/logo.png"
               className="object-cover w-full h-full"
               priority
-              onError={(e) => { (e.target as HTMLImageElement).src = '/logo.png'; }}
             />
           </div>
         </div>

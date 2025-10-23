@@ -9,10 +9,11 @@ import React, {
   useDeferredValue,
 } from 'react'
 import Link from 'next/link'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import BackHeader from '@/components/BackHeader'
 import AuthPrompt from '@/features/auth/components/AuthFab'
 import { Button } from '@/components/ui/button'
+import { componentVariants } from '@/components/ui/variants'
 import { cn } from '@/lib/utils'
 import {
   Search,
@@ -194,16 +195,21 @@ const MiniCourseCard = memo(function MiniCourseCard({
         whileHover={{ y: -6 }}
         transition={{ type: 'spring', stiffness: 300 }}
       >
-        <div className={cn(
-          'relative h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50',
-          'sm:[&_*]:text-[inherit]',
-          borderVariant,
-        )}>
+        <div
+          className={cn(
+            componentVariants.card.base,
+            componentVariants.card.elevated,
+            componentVariants.card.interactive,
+            'relative h-full overflow-hidden rounded-3xl backdrop-blur-sm sm:[&_*]:text-[inherit]',
+            borderVariant,
+          )}
+        >
           <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
             <SmartImage
               src={img || '/image.jpg'}
               alt={title}
               fill
+              blurType="secondary"
               sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
               priority={!!priority}
               className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -289,17 +295,23 @@ const MiniBundleCard = memo(function MiniBundleCard({
         whileHover={{ y: -6 }}
         transition={{ type: 'spring', stiffness: 300 }}
       >
-        <div className={cn(
-          'relative h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50',
-          variant === 'highlight'
-            ? 'border-purple-400/30 hover:border-purple-500/50'
-            : 'hover:border-blue-500/30',
-        )}>
+        <div
+          className={cn(
+            componentVariants.card.base,
+            componentVariants.card.elevated,
+            componentVariants.card.interactive,
+            'relative h-full overflow-hidden rounded-3xl backdrop-blur-sm',
+            variant === 'highlight'
+              ? 'border-purple-400/30 hover:border-purple-500/50'
+              : 'hover:border-blue-500/30',
+          )}
+        >
           <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
             <SmartImage
               src={img || '/image.jpg'}
               alt={title}
               fill
+              blurType="secondary"
               sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
               priority={!!priority}
               className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -365,11 +377,19 @@ const CategoryCard = memo(function CategoryCard({
         whileHover={{ y: -6 }}
         transition={{ type: 'spring', stiffness: 300 }}
       >
-        <div className="relative h-full min-h-[130px] sm:min_h-[180px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white transition-all duration-300 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50">
+        <div
+          className={cn(
+            componentVariants.card.base,
+            componentVariants.card.elevated,
+            componentVariants.card.interactive,
+            'relative h-full min-h-[130px] sm:min-h-[180px] overflow-hidden rounded-3xl'
+          )}
+        >
           <SmartImage
             src={thumbnail || '/image.jpg'}
             alt={`تصنيف: ${name}`}
             fill
+            blurType="secondary"
             sizes="(min-width:1024px) 22vw, (min-width:640px) 38vw, 50vw"
             priority={!!priority}
             className="object-cover transition-transform duration-500 group-hover:scale-105"

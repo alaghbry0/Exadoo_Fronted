@@ -9,7 +9,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { ArrowLeft, BookOpen, Clock, FileText, Star, Award, Loader2 } from 'lucide-react'
 
 import AuthPrompt from '@/features/auth/components/AuthFab'
-import SmartImage from '@/components/SmartImage'
+import SmartImage from '@/shared/components/common/SmartImage'
 
 // Dynamic import لـ AcademyPurchaseModal
 const AcademyPurchaseModal = dynamic(
@@ -156,6 +156,7 @@ export default function CourseDetail() {
               src={course.cover_image || course.thumbnail || '/image.jpg'}
               alt={course.title}
               fill
+              blurType="secondary"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
               className="object-cover"
               style={{ borderRadius: '0 0 0rem 0rem' }}

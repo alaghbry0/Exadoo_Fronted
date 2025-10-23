@@ -9,7 +9,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useAcademyData } from '@/services/academy'
 import { useTelegram } from '@/context/TelegramContext'
 import AuthPrompt from '@/features/auth/components/AuthFab'
-import SmartImage from '@/components/SmartImage'
+import SmartImage from '@/shared/components/common/SmartImage'
 import { Card, CardContent } from '@/components/ui/card'
 // Dynamic import لـ AcademyPurchaseModal
 const AcademyPurchaseModal = dynamic(
@@ -144,6 +144,7 @@ function MiniCourseCard({
             src={img || '/image.jpg'}
             alt={`${title} — ${lessons} درس${level ? ` • ${level}` : ''}`}
             fill
+            blurType="secondary"
             sizes="(min-width:1280px) 28vw, (min-width:640px) 45vw, 60vw"
             className="object-cover md:group-hover:scale-105 transition-transform duration-300"
             priority={!!priority}
@@ -389,14 +390,15 @@ export default function BundleDetail() {
         {/* ===== HERO (صورة فقط + بارالاكس خفيف) ===== */}
         <header ref={heroRef} className="relative w-full overflow-hidden text-white pt-20 md:pt-24 pb-16">
           <motion.div style={{ y, scale }} className="absolute inset-0 will-change-transform">
-            <SmartImage
-              src={bundle.cover_image || bundle.image || '/image.jpg'}
-              alt={bundle.title}
-              fill
-              className="object-cover"
-              sizes="100vw"
-              priority
-            />
+          <SmartImage
+            src={bundle.cover_image || bundle.image || '/image.jpg'}
+            alt={bundle.title}
+            fill
+            blurType="secondary"
+            className="object-cover"
+            sizes="100vw"
+            priority
+          />
           </motion.div>
 
           <div className="absolute top-6 left-6 z-10">

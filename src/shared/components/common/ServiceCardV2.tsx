@@ -2,12 +2,12 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
 import { ReactNode } from 'react'
+import SmartImage from '@/shared/components/common/SmartImage'
 
 type Accent = 'primary' | 'secondary' | 'success'
 type Variant = 'minimal' | 'glass' | 'dark' | 'compact' | 'split'
@@ -118,7 +118,14 @@ export function ServiceCardV2({
           <div className="relative min-h-[180px] md:min-h-full bg-gradient-to-tr from-primary/10 to-fuchsia-500/10 dark:from-primary/20 dark:to-fuchsia-500/20">
             {imageUrl && (
               <>
-                <Image alt="" src={imageUrl} fill className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]" priority />
+                <SmartImage
+                  alt=""
+                  src={imageUrl}
+                  fill
+                  blurType="secondary"
+                  className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+                  priority
+                />
                 <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white/80 to-transparent dark:from-neutral-900/80" />
               </>
             )}
