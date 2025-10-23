@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { useClipboard } from '@/hooks/useClipboard'
@@ -51,11 +50,8 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
   const txHash = payment.tx_hash || 'N/A'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="border rounded-lg shadow-sm p-4 mb-4 bg-white hover:shadow-md transition-shadow"
-
+    <div
+      className="animate-slide-up border rounded-lg shadow-sm p-4 mb-4 bg-white hover:shadow-md transition-shadow"
     >
       <div className="flex justify-between items-center">
         {/* القسم الأيسر: البيانات الأساسية */}
@@ -99,12 +95,7 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
       </div>
 
       {expanded && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          transition={{ duration: 0.2 }}
-          className="overflow-hidden mt-3 pt-3 border-t"
-        >
+        <div className="animate-fade-in mt-3 pt-3 border-t">
           <div className="flex flex-col gap-3 text-sm text-gray-700">
             {/* Message و tx Hash بنفس السطر */}
             <div className="flex flex-row justify-between items-center">
@@ -135,8 +126,8 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   )
 }

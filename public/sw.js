@@ -1,10 +1,26 @@
 // public/sw.js
 const CACHE_NAME = 'exaado-images-v2'
+const STATIC_CACHE = 'static-cache-v1'
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/script.js',
+  '/images/logo.png',
+  // Add more static assets as needed
+]
 const MAX_CACHE_SIZE = 100
 const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7 // 7 أيام
 
-// تثبيت SW
+// تثبيت SW وتخزين الملفات الثابتة
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('Failed to cache static assets:', err)
+      })
+    })
+  )
   self.skipWaiting()
 })
 

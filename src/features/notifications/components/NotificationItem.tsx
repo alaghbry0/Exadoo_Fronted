@@ -4,7 +4,6 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { motion } from 'framer-motion';
 import {
   Calendar,
   CreditCard,
@@ -109,17 +108,12 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
     locale: ar,
   });
 
-  const containerClasses = `relative rounded-xl shadow-sm border p-4 flex items-start gap-3 transition-colors duration-200 hover:shadow-md cursor-pointer ${
+  const containerClasses = `animate-slide-up relative rounded-xl shadow-sm border p-4 flex items-start gap-3 transition-colors duration-200 hover:shadow-md cursor-pointer ${
     notification.read_status ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
   }`;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.3 }}
+    <div
       className={containerClasses}
       onClick={handleNotificationClick}
     >
@@ -146,19 +140,17 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
       {/* زر "تمييز كمقروء" */}
       <div className="flex-shrink-0 flex items-center gap-1">
         {!notification.read_status && (
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={handleMarkAsReadClick}
-            className="p-2 text-blue-600 hover:bg-blue-100 rounded-full"
+            className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-transform duration-200 hover:scale-[1.05] active:scale-95"
             aria-label="تحديد كمقروء"
           >
             <Check className="w-5 h-5" />
-          </motion.button>
+          </button>
         )}
         <ChevronRight className="w-5 h-5 text-gray-400" />
       </div>
-    </motion.div>
+    </div>
   );
 };
 

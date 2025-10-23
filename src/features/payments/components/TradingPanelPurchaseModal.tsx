@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -161,16 +160,14 @@ export default function TradingPanelPurchaseModal() {
         </SheetContent>
       </Sheet>
 
-      <AnimatePresence>
-        {step === 'choose_method' && (
-          <UsdtPaymentMethodModal
-            loading={loading}
-            onClose={() => setStep('details')}
-            onWalletSelect={onWallet}
-            onExchangeSelect={onExchange}
-          />
-        )}
-      </AnimatePresence>
+      {step === 'choose_method' && (
+        <UsdtPaymentMethodModal
+          loading={loading}
+          onClose={() => setStep('details')}
+          onWalletSelect={onWallet}
+          onExchangeSelect={onExchange}
+        />
+      )}
 
       {step === 'show_exchange' && exchangeDetails && (
         <ExchangePaymentModal

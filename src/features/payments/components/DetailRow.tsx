@@ -3,7 +3,6 @@
 import React from 'react';
 import { useClipboard } from '@/hooks/useClipboard'; // استيراد الـ hook الجديد
 import { Check, Copy } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface DetailRowProps {
   icon: React.ReactNode;
@@ -43,36 +42,21 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, label, value, valueClass, i
 
         {/* زر النسخ (يظهر فقط إذا كانت الخاصية isCopyable صحيحة) */}
         {isCopyable && (
-          <motion.button
+          <button
             onClick={handleCopy}
-            className="p-1 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800 flex-shrink-0"
+            className="p-1 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800 flex-shrink-0 transition-transform duration-200 active:scale-95"
             aria-label="Copy to clipboard"
-            whileTap={{ scale: 0.9 }}
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {isCopied ? (
-                <motion.div
-                  key="check"
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.5, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Check className="w-4 h-4 text-emerald-500" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="copy"
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.5, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Copy className="w-4 h-4" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
+            {isCopied ? (
+              <span className="inline-flex animate-scale-in">
+                <Check className="w-4 h-4 text-emerald-500" />
+              </span>
+            ) : (
+              <span className="inline-flex animate-scale-in">
+                <Copy className="w-4 h-4" />
+              </span>
+            )}
+          </button>
         )}
       </div>
     </div>

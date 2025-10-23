@@ -1,7 +1,6 @@
 // ProfileHeader.tsx
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { User, FileText, Award, Copy, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -70,29 +69,25 @@ export default function ProfileHeader({
         <div className="flex justify-between items-start">
             {/* إضافة حركة بسيطة للزر مع التحقق من وجود الدالة */}
             {onPaymentHistoryClick && (
-              <motion.button
+              <button
                 onClick={onPaymentHistoryClick}
-                className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md transition-all hover:bg-white/20 active:scale-95 touch-manipulation"
+                className="animate-scale-in p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md transition-all hover:bg-white/20 active:scale-95 touch-manipulation"
+                style={{ animationDelay: '0.2s' }}
                 title="سجلات الدفعات"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
               >
                 <FileText className="w-5 h-5 text-white" />
-              </motion.button>
+              </button>
             )}
             {/* عنصر نائب للحفاظ على التنسيق إذا لم يكن الزر موجودًا */}
             {!onPaymentHistoryClick && <div />}
 
-            <motion.div
-              className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md"
+            <div
+              className="animate-scale-in p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md"
+              style={{ animationDelay: '0.3s' }}
               title="الإنجازات (قريباً)"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
             >
               <Award className="w-5 h-5 text-white/80" />
-            </motion.div>
+            </div>
         </div>
 
         {/* معلومات المستخدم الأساسية */}

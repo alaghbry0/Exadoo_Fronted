@@ -1,7 +1,6 @@
 // PaymentExchangeSuccess.tsx
 'use client'
 import React from 'react'
-import { motion } from 'framer-motion'
 import { Check, X } from 'lucide-react'
 
 interface PaymentExchangeSuccessProps {
@@ -28,14 +27,9 @@ export const PaymentExchangeSuccess: React.FC<PaymentExchangeSuccessProps> = ({
         </button>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', duration: 0.5 }}
-          className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6"
-        >
+        <div className="animate-scale-in w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
           <Check className="w-10 h-10 text-green-600" />
-        </motion.div>
+        </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-3">تمت عملية الدفع بنجاح!</h2>
         <p className="text-gray-600 mb-8 max-w-md">
           تم استلام المبلغ وتفعيل اشتراكك. يمكنك الآن الاستمتاع بخدماتنا.

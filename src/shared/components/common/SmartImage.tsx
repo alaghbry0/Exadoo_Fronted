@@ -3,10 +3,10 @@
 import Image, { type ImageProps, type StaticImageData } from 'next/image'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
+import { blurPlaceholders, getOptimalQuality, generateSizesAttribute } from '@/utils/imageUtils'
 
-// Blur placeholder خفيف جدًا (يُستخدم فقط إن لم نطفئه)
-const BLUR_DATA_URL =
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4='
+// استخدام blur placeholders المحسّنة
+const BLUR_DATA_URL = blurPlaceholders.light
 
 // التحقق من الروابط الخارجية
 function needsProxy(src: string | undefined): boolean {
@@ -39,6 +39,10 @@ type SmartImageProps = Omit<ImageProps, 'placeholder' | 'blurDataURL' | 'loading
   disableSkeleton?: boolean
   /** تحميل مُبكّر فعليًا: priority + loading="eager" */
   eager?: boolean
+  /** نوع blur placeholder (light, dark, primary, secondary) */
+  blurType?: 'light' | 'dark' | 'primary' | 'secondary' | 'neutral'
+  /** تحسين تلقائي للجودة بناءً على العرض */
+  autoQuality?: boolean
 }
 
 export default function SmartImage({
@@ -52,6 +56,9 @@ export default function SmartImage({
   disableSkeleton = false,
   eager = false,
   priority, // سيُتجاهل إن لم يكن eager
+  blurType = 'light',
+  autoQuality = true,
+  width,
   ...props
 }: SmartImageProps) {
   // src النهائي (proxy/normalize)
@@ -99,6 +106,14 @@ export default function SmartImage({
   const loading: ImageProps['loading'] = eager ? 'eager' : undefined
   const placeholder = noFade ? 'empty' : 'blur'
   const wrapperClasses = cn('relative h-full w-full overflow-hidden')
+  
+  // اختيار blur placeholder المناسب
+  const blurDataURL = noFade ? undefined : blurPlaceholders[blurType]
+  
+  // تحسين الجودة تلقائياً
+  const quality = autoQuality && typeof width === 'number' 
+    ? getOptimalQuality(width) 
+    : (props.quality || 85)
 
   return (
     <div className={wrapperClasses}>
@@ -114,6 +129,7 @@ export default function SmartImage({
         {...props}
         src={imageSrc}
         alt={alt}
+        width={width}
         className={cn(
           // منع وميض GPU أثناء التحريك/التمرير:
           '[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform',
@@ -124,10 +140,10 @@ export default function SmartImage({
           className
         )}
         placeholder={placeholder}
-        blurDataURL={noFade ? undefined : BLUR_DATA_URL}
+        blurDataURL={blurDataURL}
         onLoad={handleLoad}
         onError={handleError}
-        quality={85}
+        quality={quality}
         unoptimized={false}
         priority={!!finalPriority}
         loading={loading}

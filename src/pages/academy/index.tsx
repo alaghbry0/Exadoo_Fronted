@@ -9,7 +9,7 @@ import React, {
   useDeferredValue,
 } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import BackHeader from '@/components/BackHeader'
 import AuthPrompt from '@/features/auth/components/AuthFab'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ import {
   BookOpen,
   Sparkles,
 } from 'lucide-react'
-import SmartImage from '@/components/SmartImage'
+import SmartImage from '@/shared/components/common/SmartImage'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
 import { LazyLoad } from '@/components/common/LazyLoad'

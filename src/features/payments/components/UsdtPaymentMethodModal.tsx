@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import clsx from 'clsx'
 import { Wallet, ArrowRightLeft, X, Loader2 } from 'lucide-react'
 
 // --- تعريف Props المكون ---
@@ -17,24 +17,17 @@ export const UsdtPaymentMethodModal = ({
   onWalletSelect,
   onExchangeSelect,
 }: UsdtPaymentMethodModal) => (
-  <motion.div
+  <div
     dir="rtl"
-    className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 z-[99]"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
+    className="animate-fade-in fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 z-[99]"
     onClick={onClose}
     role="dialog"
     aria-modal="true"
     aria-labelledby="usdt-payment-title"
   >
-    <motion.div
+    <div
       // تعديل 1: استخدام خلفية رمادية فاتحة جدًا لإبراز البطاقات البيضاء
-      className="bg-gray-50 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-200/50"
-      initial={{ scale: 0.95, opacity: 0, y: 20 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.95, opacity: 0, y: 20 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      className="animate-slide-up bg-gray-50 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-200/50"
       onClick={(e) => e.stopPropagation()}
     >
       {/* الهيدر: يبقى نظيفًا */}
@@ -54,12 +47,15 @@ export const UsdtPaymentMethodModal = ({
         {/* ========================================================= */}
         {/* تعديل 2: زر محفظة ويب 3 بتصميم جذاب وممتلئ بالتدرج اللوني */}
         {/* ========================================================= */}
-        <motion.button
-          className="relative w-full p-3 bg-gradient-to-br from-primary-500 to-primary-600 hover:shadow-primary-500/40 text-white transition-all duration-300 rounded-xl flex items-center gap-4 text-right disabled:opacity-70 disabled:cursor-wait shadow-lg"
+        <button
+          className={clsx(
+            'relative w-full p-3 bg-gradient-to-br from-primary-500 to-primary-600 text-white transition-transform duration-300 rounded-xl flex items-center gap-4 text-right disabled:opacity-70 disabled:cursor-wait shadow-lg',
+            !loading && 'hover:-translate-y-1 hover:shadow-primary-500/40 hover:scale-[1.02]',
+            loading && 'cursor-progress'
+          )}
           onClick={onWalletSelect}
           disabled={loading}
-          whileHover={{ scale: loading ? 1 : 1.03, y: loading ? 0 : -3 }}
-          whileTap={{ scale: loading ? 1 : 0.98 }}
+          type="button"
         >
           {/* دائرة الأيقونة تبقى بيضاء لتبرز */}
            <div className="w-12 h-12 bg-white/20 flex-shrink-0 rounded-lg flex items-center justify-center border border-white/30">
@@ -71,17 +67,20 @@ export const UsdtPaymentMethodModal = ({
           </div>
           {/* اقتراح إضافي: شارة "موصى به" */}
 
-        </motion.button>
+        </button>
 
         {/* ========================================================= */}
         {/* تعديل 3: زر منصات التداول بتصميم "شبح" (outline) ليكون الخيار الثانوي */}
         {/* ========================================================= */}
-        <motion.button
-          className="w-full p-3 bg-white hover:bg-gray-100 border border-gray-300 transition-all duration-300 rounded-xl flex items-center gap-4 text-right disabled:opacity-60 disabled:cursor-wait"
+        <button
+          className={clsx(
+            'w-full p-3 bg-white border border-gray-300 transition-transform duration-300 rounded-xl flex items-center gap-4 text-right disabled:opacity-60 disabled:cursor-wait',
+            !loading && 'hover:bg-gray-100 hover:-translate-y-1 hover:scale-[1.02]',
+            loading && 'cursor-progress'
+          )}
           onClick={onExchangeSelect}
           disabled={loading}
-          whileHover={{ scale: loading ? 1 : 1.03, y: loading ? 0 : -3 }}
-          whileTap={{ scale: loading ? 1 : 0.98 }}
+          type="button"
         >
           <div className="w-12 h-12 bg-gray-100 flex-shrink-0 rounded-lg flex items-center justify-center border">
             {loading ? <Loader2 className="w-6 h-6 animate-spin text-gray-500" /> : <ArrowRightLeft className="w-6 h-6 text-gray-600" />}
@@ -90,8 +89,8 @@ export const UsdtPaymentMethodModal = ({
             <p className="font-semibold text-gray-800">منصة تداول</p>
             <p className="text-sm text-gray-500">مثل Binance, OKX, Bybit</p>
           </div>
-        </motion.button>
+        </button>
       </div>
-    </motion.div>
-  </motion.div>
+    </div>
+  </div>
 )

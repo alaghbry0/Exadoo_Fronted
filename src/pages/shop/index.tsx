@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { componentVariants } from '@/components/ui/variants'
 // import { ServiceCard } from '@/shared/components/common/EnhancedCard' // غير مستخدم
 import {
   TrendingUp,
@@ -151,7 +152,12 @@ const HalfCard = React.memo<{ meta: TileMeta }>(({ meta }) => (
     aria-label={meta.title}
     prefetch={false}
   >
-    <Card className="flex flex-col h-full rounded-card-lg bg-white border border-gray-100 shadow-card transition-all duration-200 group-hover:shadow-card-hover group-hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
+    <Card className={cn(
+      componentVariants.card.base,
+      componentVariants.card.elevated,
+      componentVariants.card.interactive,
+      "flex flex-col h-full rounded-card-lg"
+    )}>
       <CardContent className="p-5 flex flex-col flex-grow">
         <div className="flex items-start gap-4">
           <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
@@ -205,7 +211,12 @@ const WideIndicators = React.memo<{ meta: TileMeta }>(({ meta }) => {
       aria-label={meta.title}
       prefetch={false}
     >
-      <Card className="rounded-card-lg bg-white border border-gray-100 shadow-card transition-all duration-200 group-hover:shadow-card-hover group-hover:-translate-y-0.5 dark:bg-neutral-900 dark:border-neutral-800">
+      <Card className={cn(
+        componentVariants.card.base,
+        componentVariants.card.elevated,
+        componentVariants.card.interactive,
+        "rounded-card-lg"
+      )}>
         <CardContent className="p-5 md:p-6">
           <div className="flex flex-col sm:flex-row items-start gap-4">
             <div className={cn('h-12 w-12 rounded-2xl grid place-items-center shrink-0', iconWrap(meta.accent))}>
