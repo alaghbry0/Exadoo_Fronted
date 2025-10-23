@@ -1,26 +1,5 @@
 // src/components/AuthFab.tsx
-'use client';
-
-import React from 'react';
-import { useUserStore } from '@/stores/zustand/userStore';
-import { useUIStore } from '@/stores/zustand/uiStore';
-import UnlinkedStateBanner from './UnlinkedStateBanner';
-
-/**
- * هذا المكون يعرض فقط البانر التشجيعي للمستخدم غير المرتبط.
- * عند النقر، فإنه يستدعي دالة من المتجر العالمي لفتح النافذة المنبثقة.
- */
-const AuthPrompt: React.FC = () => {
-  const { isLinked } = useUserStore();
-  const { openAuthPrompt } = useUIStore();
-
-  // لا نعرض أي شيء إذا كان المستخدم مرتبطاً
-  if (isLinked) {
-    return null;
-  }
-
-  // نعرض فقط البانر، ونمرر له دالة فتح النافذة
-  return <UnlinkedStateBanner onLinkClick={() => openAuthPrompt('generic')} />;
-};
-
-export default AuthPrompt;
+// Re-export for backward compatibility
+// TODO: Update imports to use @/features/auth/components/AuthFab
+export { default } from '@/features/auth/components/AuthFab';
+export * from '@/features/auth/components/AuthFab';

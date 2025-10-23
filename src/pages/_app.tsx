@@ -1,4 +1,4 @@
-﻿// src/pages/_app.tsx
+// src/pages/_app.tsx
 'use client'
 import React, { useEffect, useState, useRef, useMemo } from 'react'
 import type { AppProps } from 'next/app'
@@ -10,13 +10,15 @@ import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useTariffStore } from '../stores/zustand'
 import { fetchBotWalletAddress } from '../services/api'
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient as useTanstackQueryClient } from '@tanstack/react-query'
-import { useProfileStore } from '../stores/profileStore'
+import { useUserStore } from '../stores/zustand/userStore'
 import { NotificationToast } from '../components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
 import { useNotificationStream } from '@/hooks/useNotificationStream'
 import GlobalAuthSheet from '@/components/GlobalAuthSheet'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
+import ErrorBoundary from '@/shared/components/ErrorBoundary'
+import logger from '@/core/utils/logger'
 
 // ===================== startapp helpers =====================
 type StartAppParam = string | null;
@@ -102,7 +104,7 @@ const useWalletAddress = () =>
 // ===================== AppContent =====================
 function AppContent({ children, hideFooter }: { children: React.ReactNode; hideFooter?: boolean }) {
   const [minDelayCompleted, setMinDelayCompleted] = useState(false);
-  const { setSubscriptions } = useProfileStore();
+  const { setSubscriptions } = useUserStore();
   const { isTelegramApp, isTelegramReady, isLoading: isTelegramLoading, telegramId } = useTelegram();
   const { setWalletAddress } = useTariffStore();
   const router = useRouter();
@@ -152,7 +154,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
           }
         }
       } catch (error) {
-        console.error(`❌ Failed to load subscriptions for ${telegramId}:`, error);
+        logger.error(`Failed to load subscriptions for ${telegramId}`, error);
       }
     };
     fetchSubscriptions();
@@ -167,7 +169,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
         const pagesToPrefetch = ['/', '/shop', '/plans', '/profile', '/notifications'];
         await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
       } catch (error) {
-        console.error('⚠️ Prefetch error:', error);
+        logger.warn('Prefetch error', error);
       }
     };
     prefetchPages();
@@ -222,7 +224,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     }
 
     didRouteRef.current = true;
-    router.replace(target).catch(console.error);
+    router.replace(target).catch((err) => logger.error('Route replace failed', err));
 
     try {
       const cleanUrl = window.location.pathname;
@@ -235,7 +237,7 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
   }
 
   if (isWalletError) {
-    console.error("❌ Wallet Address fetch error:", walletError);
+    logger.error('Wallet Address fetch error', walletError);
     return (
       <div className="flex flex-col justify-center items-center h-screen text-red-500 text-center px-4">
         <p className="mb-2">حدث خطأ أثناء تحميل بيانات المحفظة.</p>
@@ -267,19 +269,21 @@ function MyApp({ Component, pageProps }: AppProps) {
   const hideFooter = Boolean((Component as any).hideFooter)
 
   return (
-    <TonConnectUIProvider manifestUrl={process.env.NEXT_PUBLIC_TON_MANIFEST_URL ?? 'https://exadooo-plum.vercel.app/tonconnect-manifest.json'}>
-      <TelegramProvider>
-        <QueryClientProvider client={globalQueryClient}>
-          <NotificationsProvider>
-            <AppContent hideFooter={hideFooter}>
-              <Component {...pageProps} />
-            </AppContent>
-            <GlobalAuthSheet />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </NotificationsProvider>
-        </QueryClientProvider>
-      </TelegramProvider>
-    </TonConnectUIProvider>
+    <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+      <TonConnectUIProvider manifestUrl={process.env.NEXT_PUBLIC_TON_MANIFEST_URL ?? 'https://exadooo-plum.vercel.app/tonconnect-manifest.json'}>
+        <TelegramProvider>
+          <QueryClientProvider client={globalQueryClient}>
+            <NotificationsProvider>
+              <AppContent hideFooter={hideFooter}>
+                <Component {...pageProps} />
+              </AppContent>
+              <GlobalAuthSheet />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </NotificationsProvider>
+          </QueryClientProvider>
+        </TelegramProvider>
+      </TonConnectUIProvider>
+    </ErrorBoundary>
   );
 }
 

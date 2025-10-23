@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
-import { useProfileStore } from '../stores/profileStore';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
@@ -16,8 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function Profile() {
-  const { fullName, telegramUsername, photoUrl, telegramId } = useUserStore();
-  const { subscriptions, setSubscriptions } = useProfileStore();
+  const { fullName, telegramUsername, photoUrl, telegramId, subscriptions, setSubscriptions } = useUserStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
