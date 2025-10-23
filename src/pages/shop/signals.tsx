@@ -4,7 +4,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
-import SubscriptionModal from '../../components/SubscriptionModal'
+
+// Dynamic import للـ SubscriptionModal
+const SubscriptionModal = dynamic(
+  () => import('@/features/subscriptions/components/SubscriptionModal').then(mod => mod.default),
+  { ssr: false }
+)
 
 import React from 'react'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
@@ -14,9 +19,13 @@ import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Gem, Star, RefreshCw, AlertTriangle, Layers, Tag, Loader2, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
+import { Crown, Zap, Gem, Star, AlertTriangle, Layers, Tag, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
 import { useTelegram } from '@/context/TelegramContext';
-import BackHeader from '@/components/BackHeader'
+import PageLayout from '@/shared/components/layout/PageLayout'
+import { GridSkeleton, PageLoader } from '@/shared/components/common/LoadingStates'
+import { EmptyState } from '@/shared/components/common/EmptyState'
+import { LazyLoad } from '@/components/common/LazyLoad'
+import { SubscriptionCardSkeleton } from '@/components/skeletons/SubscriptionCardSkeleton'
 
 import type { ModalPlanData } from '@/types/modalPlanData';
 import type {
@@ -53,52 +62,14 @@ const getCardIcon = (type: ApiSubscriptionType): React.ElementType => {
   return iconMap['default'];
 };
 
-const CardSkeleton = () => (
-  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-md animate-pulse">
-    <div className="flex flex-col items-center">
-      <div className="w-16 h-16 bg-gray-300 rounded-xl mb-5"></div>
-      <div className="h-7 w-3/4 bg-gray-300 rounded-md mb-3"></div>
-      <div className="h-4 w-1/2 bg-gray-200 rounded-md mb-8"></div>
-    </div>
-    <div className="mb-6">
-      <div className="h-10 bg-gray-200 rounded-full mb-8"></div>
-    </div>
-    <div className="flex items-baseline justify-center gap-2 mb-8">
-      <div className="h-10 w-24 bg-gray-300 rounded-md"></div>
-    </div>
-    <div className="h-12 w-full bg-gray-300 rounded-xl"></div>
-  </div>
-);
-
 interface QueryBoundaryProps {
   isLoading: boolean;
   isError: boolean;
   children: React.ReactNode;
 }
 const QueryBoundary: React.FC<QueryBoundaryProps> = ({ isLoading, isError, children }) => {
-  if (isLoading) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
-        <Loader2 className="w-16 h-16 text-primary-600 animate-spin" />
-        <p className="text-gray-700 font-arabic mt-4 text-lg">جاري تحميل البيانات...</p>
-      </div>
-    );
-  }
-  if (isError) {
-    return (
-      <div dir="rtl" className="flex flex-col justify-center items-center min-h-screen bg-gray-50 p-6 text-center">
-        <div className="bg-red-100 p-4 rounded-full mb-4">
-          <AlertTriangle className="h-12 w-12 text-red-600" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">عذراً, حدث خطأ</h3>
-        <p className="text-gray-600 mb-6 max-w-md font-arabic">لم نتمكن من جلب البيانات. يرجى تحديث الصفحة والمحاولة مرة أخرى.</p>
-        <Button onClick={() => window.location.reload()} size="lg" variant="destructive">
-          <RefreshCw className="h-5 w-5 ml-2" />
-          إعادة المحاولة
-        </Button>
-      </div>
-    );
-  }
+  if (isLoading) return <PageLoader />;
+  if (isError) return <EmptyState icon={AlertTriangle} title="عذراً, حدث خطأ" description="لم نتمكن من جلب البيانات. يرجى تحديث الصفحة والمحاولة مرة أخرى." />;
   return <>{children}</>;
 };
 
@@ -260,9 +231,7 @@ const ShopComponent = () => {
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <QueryBoundary isLoading={initialLoading} isError={hasError}>
         <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col">
-          <BackHeader />
-
-          <main className="px-4 pb-20 flex-grow">
+          <PageLayout maxWidth="2xl">
             <section className="pt-20 pb- text-center">
               <div className="relative z-10 max-w-4xl mx-auto px-6">
                 <motion.h1
@@ -350,24 +319,25 @@ const ShopComponent = () => {
             )}
 
             <section className="max-w-7xl mx-auto">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {isFetchingTypes ? (
-                  Array.from({ length: 3 }).map((_, index) => <CardSkeleton key={index} />)
-                ) : subscriptions.length === 0 ? (
-                  <div className="md:col-span-2 lg:col-span-3">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-white rounded-2xl shadow-sm border"
-                    >
-                      <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">لا توجد باقات متاحة حاليًا</h3>
-                      <p className="text-gray-600 max-w-md mx-auto font-arabic">
-                        يرجى التحقق مرة أخرى في وقت لاحق أو اختيار فئة أخرى.
-                      </p>
-                    </motion.div>
-                  </div>
-                ) : (
-                  subscriptions.map((sub, index) => {
+              {isFetchingTypes ? (
+                <GridSkeleton count={3} />
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {subscriptions.length === 0 ? (
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-16 bg-white rounded-2xl shadow-sm border"
+                      >
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">لا توجد باقات متاحة حاليًا</h3>
+                        <p className="text-gray-600 max-w-md mx-auto font-arabic">
+                          يرجى التحقق مرة أخرى في وقت لاحق أو اختيار فئة أخرى.
+                        </p>
+                      </motion.div>
+                    </div>
+                  ) : (
+                    subscriptions.map((sub, index) => {
                     // استبعاد التجريبية من العرض
                     const displayPlans = sub.plans.filter(p => !p.isTrial);
                     const trialPlan = sub.plans.find(p => p.isTrial) || null;
@@ -390,6 +360,7 @@ const ShopComponent = () => {
                     }
 
                     return (
+                      <LazyLoad key={`${sub.id}-${selectedGroupId}`} fallback={<SubscriptionCardSkeleton />}>
                       <motion.div
                         key={`${sub.id}-${selectedGroupId}`}
                         layout
@@ -625,21 +596,23 @@ const ShopComponent = () => {
                           </CardContent>
                         </Card>
                       </motion.div>
+                    </LazyLoad>
                     );
                   })
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </section>
-          </main>
 
-          <AnimatePresence>
-            {selectedPlanForModal && (
-              <SubscriptionModal
-                plan={selectedPlanForModal}
-                onClose={() => setSelectedPlanForModal(null)}
-              />
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {selectedPlanForModal && (
+                <SubscriptionModal
+                  plan={selectedPlanForModal}
+                  onClose={() => setSelectedPlanForModal(null)}
+                />
+              )}
+            </AnimatePresence>
+          </PageLayout>
         </div>
       </QueryBoundary>
     </TonConnectUIProvider>

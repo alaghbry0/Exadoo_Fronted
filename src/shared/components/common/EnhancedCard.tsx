@@ -1,5 +1,5 @@
 // src/shared/components/common/EnhancedCard.tsx
-import { Card as ShadcnCard, CardContent, CardHeader } from '@/components/ui/card'
+import { Card as ShadcnCard, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ReactNode } from 'react'
 import { LucideIcon } from 'lucide-react'
@@ -41,9 +41,13 @@ interface ServiceCardProps {
   description: string
   icon: LucideIcon
   href: string
+  badge?: {
+    text: string
+    variant?: 'default' | 'success' | 'warning'
+  }
 }
 
-export function ServiceCard({ title, description, icon: Icon, href }: ServiceCardProps) {
+export function ServiceCard({ title, description, icon: Icon, href, badge }: ServiceCardProps) {
   return (
     <Link href={href}>
       <EnhancedCard hover>
@@ -53,7 +57,19 @@ export function ServiceCard({ title, description, icon: Icon, href }: ServiceCar
               <Icon className="h-6 w-6 text-primary-600 dark:text-primary-400" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-lg mb-2">{title}</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-bold text-lg">{title}</h3>
+                {badge && (
+                  <span className={cn(
+                    'text-xs px-2 py-0.5 rounded-full font-semibold',
+                    badge.variant === 'success' && 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                    badge.variant === 'warning' && 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                    !badge.variant && 'bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-neutral-300'
+                  )}>
+                    {badge.text}
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-gray-600 dark:text-neutral-400">
                 {description}
               </p>

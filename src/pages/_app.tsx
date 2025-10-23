@@ -4,18 +4,18 @@ import React, { useEffect, useState, useRef, useMemo } from 'react'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
-import FooterNav from '../components/FooterNav'
-import SplashScreen from '../components/SplashScreen'
+import FooterNav from '../shared/components/layout/FooterNav'
+import SplashScreen from '../shared/components/common/SplashScreen'
 import { TelegramProvider, useTelegram } from '../context/TelegramContext'
 import { useTariffStore } from '../stores/zustand'
 import { fetchBotWalletAddress } from '../services/api'
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient as useTanstackQueryClient } from '@tanstack/react-query'
 import { useUserStore } from '../stores/zustand/userStore'
-import { NotificationToast } from '../components/NotificationToast'
+import { NotificationToast } from '../features/notifications/components/NotificationToast'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NotificationsProvider } from '@/context/NotificationsContext'
 import { useNotificationStream } from '@/hooks/useNotificationStream'
-import GlobalAuthSheet from '@/components/GlobalAuthSheet'
+import GlobalAuthSheet from '@/features/auth/components/GlobalAuthSheet'
 import { TonConnectUIProvider } from '@tonconnect/ui-react'
 import ErrorBoundary from '@/shared/components/ErrorBoundary'
 import logger from '@/core/utils/logger'
@@ -162,17 +162,37 @@ function AppContent({ children, hideFooter }: { children: React.ReactNode; hideF
     return () => clearInterval(interval);
   }, [telegramId, setSubscriptions]);
 
-  // ==== Prefetch ====
+  // ==== Prefetch محسّن مع requestIdleCallback ====
   useEffect(() => {
-    const prefetchPages = async () => {
-      try {
-        const pagesToPrefetch = ['/', '/shop', '/plans', '/profile', '/notifications'];
-        await Promise.all(pagesToPrefetch.map(page => router.prefetch(page)));
-      } catch (error) {
-        logger.warn('Prefetch error', error);
+    const prefetchOnIdle = () => {
+      // استخدام requestIdleCallback للتحميل في وقت الفراغ
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          // Prefetch الصفحات الأساسية فقط
+          router.prefetch('/shop').catch(() => {});
+          router.prefetch('/profile').catch(() => {});
+        }, { timeout: 2000 });
+        
+        // Prefetch الصفحات الثانوية بعد تأخير
+        requestIdleCallback(() => {
+          router.prefetch('/plans').catch(() => {});
+          router.prefetch('/notifications').catch(() => {});
+        }, { timeout: 5000 });
+      } else {
+        // Fallback للمتصفحات القديمة
+        setTimeout(() => {
+          router.prefetch('/shop').catch(() => {});
+          router.prefetch('/profile').catch(() => {});
+        }, 1000);
+        
+        setTimeout(() => {
+          router.prefetch('/plans').catch(() => {});
+          router.prefetch('/notifications').catch(() => {});
+        }, 3000);
       }
     };
-    prefetchPages();
+    
+    prefetchOnIdle();
   }, [router]);
 
   // ===== 2) حساب مسار ثابت وموحَّد (fallback على window.location) =====

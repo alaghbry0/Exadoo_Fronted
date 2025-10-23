@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Star, Play, BookOpen } from 'lucide-react'
 import type { Course } from '@/types/academy'
@@ -37,11 +38,15 @@ export default function StickyHeader({
           {/* Course Info */}
           <div className="flex items-center gap-4 min-w-0 flex-1">
             {/* Course Image */}
-            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-md">
-              <img
+            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-md relative">
+              <Image
                 src={course.thumbnail || course.cover_image || '/image.jpg'}
                 alt={course.title}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                quality={85}
               />
             </div>
 

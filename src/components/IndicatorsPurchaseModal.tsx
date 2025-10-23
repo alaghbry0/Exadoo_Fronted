@@ -7,10 +7,25 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { X, Loader2, ShieldCheck } from 'lucide-react';
-import { UsdtPaymentMethodModal } from '@/components/UsdtPaymentMethodModal';
-import { ExchangePaymentModal } from '@/components/ExchangePaymentModal';
-import { PaymentSuccessModal } from '@/components/PaymentSuccessModal';
-import { PaymentExchangeSuccess } from '@/components/PaymentExchangeSuccess';
+import dynamic from 'next/dynamic';
+
+// Dynamic imports للـ Modals
+const UsdtPaymentMethodModal = dynamic(
+  () => import('@/features/payments/components/UsdtPaymentMethodModal').then(mod => ({ default: mod.UsdtPaymentMethodModal })),
+  { ssr: false }
+);
+const ExchangePaymentModal = dynamic(
+  () => import('@/features/payments/components/ExchangePaymentModal').then(mod => ({ default: mod.ExchangePaymentModal })),
+  { ssr: false }
+);
+const PaymentSuccessModal = dynamic(
+  () => import('@/features/payments/components/PaymentSuccessModal').then(mod => ({ default: mod.PaymentSuccessModal })),
+  { ssr: false }
+);
+const PaymentExchangeSuccess = dynamic(
+  () => import('@/features/payments/components/PaymentExchangeSuccess').then(mod => ({ default: mod.PaymentExchangeSuccess })),
+  { ssr: false }
+);
 import { useServicePayment } from '@/hooks/useServicePayment';
 import { showToast } from '@/components/ui/showToast';
 

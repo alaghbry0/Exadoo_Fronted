@@ -43,3 +43,7 @@ package-lock.json
 next-env.d.ts
 
 .vercel
+
+# archived components
+archived_components/
+assets/

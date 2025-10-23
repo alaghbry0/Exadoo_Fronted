@@ -7,14 +7,15 @@ import { useRouter } from 'next/router';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, ArrowLeft, Bell, Check, RefreshCw } from 'lucide-react';
-import NotificationFilter from '@/components/NotificationFilter';
+import NotificationFilter from '@/features/notifications/components/NotificationFilter';
 import { useTelegram } from '../context/TelegramContext';
 import { useNotificationsContext } from '@/context/NotificationsContext';
 import { useNotifications } from '@/hooks/useNotifications';
+// import PageLayout from '@/shared/components/layout/PageLayout' // غير مستخدم;
 
 // استيراد ديناميكي لمكون NotificationItem مع هيكل تحميل محسن
 const NotificationItem = dynamic(
-  () => import('@/components/NotificationItem'),
+  () => import('@/features/notifications/components/NotificationItem'),
   {
     loading: () => <NotificationSkeleton />
   }

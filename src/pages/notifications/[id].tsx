@@ -25,8 +25,8 @@ import { Button } from '@/components/ui/button';
 import { NotificationType } from '@/types/notification';
 
 // استيراد المكونات الجديدة
-import PaymentDetailsCard from '@/components/details/PaymentDetailsCard';
-import SubscriptionDetailsCard from '@/components/details/SubscriptionDetailsCard';
+import PaymentDetailsCard from '@/features/payments/components/PaymentDetailsCard';
+import SubscriptionDetailsCard from '@/features/payments/components/SubscriptionDetailsCard';
 
 
 // --- الدوال المساعدة ومكونات الواجهة (تبقى كما هي) ---

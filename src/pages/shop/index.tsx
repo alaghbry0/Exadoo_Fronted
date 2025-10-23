@@ -4,12 +4,13 @@
 import React, { useRef, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import Navbar from '@/components/Navbar'
-import AuthPrompt from '@/components/AuthFab'
+import PageLayout from '@/shared/components/layout/PageLayout'
+import AuthPrompt from '@/features/auth/components/AuthFab'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+// import { ServiceCard } from '@/shared/components/common/EnhancedCard' // غير مستخدم
 import {
   TrendingUp,
   BarChart3,
@@ -24,7 +25,8 @@ import { useTelegram } from '@/context/TelegramContext'
 import { useIndicatorsData } from '@/services/indicators'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useKeyboardSearch } from '@/hooks/useKeyboardSearch'
-import { HalfCardSkeleton, WideCardSkeleton } from '@/components/shared/SkeletonLoaders'
+import { HalfCardSkeleton, WideCardSkeleton } from '@/shared/components/common/SkeletonLoaders'
+// import { GridSkeleton } from '@/shared/components/common/LoadingStates' // غير مستخدم
 import { useUserStore } from '@/stores/zustand/userStore'
 import { useUIStore } from '@/stores/zustand/uiStore'
 import { useUnifiedSearchHook } from '@/hooks/useUnifiedSearch'          // ⬅️ جديد
@@ -409,9 +411,7 @@ export default function ShopHome() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 dark:bg-neutral-950 dark:text-neutral-200 font-arabic">
-      <Navbar />
-
-      <main className="max-w-6xl mx-auto px-4 pb-12">
+      <PageLayout maxWidth="2xl">
         {/* Hero */}
         <section className="text-center pt-20 pb-12" aria-labelledby="page-title">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -551,7 +551,7 @@ export default function ShopHome() {
         </AnimatePresence>
 
         <div className="max-w-7xl mx-auto mt-12" />
-      </main>
+      </PageLayout>
     </div>
   )
 }

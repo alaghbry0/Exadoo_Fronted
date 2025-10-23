@@ -2,7 +2,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiCheckCircle, FiExternalLink, FiX } from 'react-icons/fi';
+import { CheckCircle, ExternalLink, X } from 'lucide-react';
 import { sanitizeHtml } from '@/utils/safeHtml';
 
 const InviteAlert: React.FC = () => {
@@ -38,7 +38,7 @@ const InviteAlert: React.FC = () => {
         className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg"
       >
         <div className="flex items-center gap-3">
-          <FiCheckCircle className="text-green-600 text-xl" />
+          <CheckCircle className="text-green-600 text-xl" />
           <div>
             <p
               className="text-green-800 font-medium"
@@ -48,10 +48,10 @@ const InviteAlert: React.FC = () => {
               onClick={() => window.open(subscriptionData.invite_link, '_blank')}
               className="mt-2 inline-flex items-center gap-2 text-green-700 hover:text-green-900"
             >
-              <FiExternalLink /> انقر للانضمام الآن
+              <ExternalLink /> انقر للانضمام الآن
             </button>
           </div>
-          <FiX
+          <X
             onClick={() => setVisible(false)}
             className="cursor-pointer text-green-700 hover:text-green-900"
           />

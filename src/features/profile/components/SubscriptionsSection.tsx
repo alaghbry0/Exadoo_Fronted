@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress-custom';
-import { SkeletonLoader } from '@/components/SkeletonLoader';
+import { SkeletonLoader } from '@/shared/components/common/SkeletonLoader';
 
 // ✨ تعديل: 1. إضافة إعدادات الأنيميشن الجديدة
 // Advanced spring config for natural motion

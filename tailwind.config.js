@@ -347,50 +347,5 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    // إضافة plugins مفيدة
-    require('flowbite/plugin')({
-      charts: true,
-    }),
-    
-    // Plugin مخصص للتدرجات النصية
-    function({ addUtilities, theme, e }) {
-      const colors = theme('colors');
-      const gradientUtilities = {};
-      
-      Object.keys(colors).forEach(colorName => {
-        if (typeof colors[colorName] === 'object') {
-          gradientUtilities[`.${e(`text-gradient-${colorName}`)}`] = {
-            background: `linear-gradient(135deg, ${colors[colorName][400]}, ${colors[colorName][600]})`,
-            '-webkit-background-clip': 'text',
-            'background-clip': 'text',
-            '-webkit-text-fill-color': 'transparent',
-          };
-        }
-      });
-      
-      addUtilities(gradientUtilities);
-    },
-    
-    // Plugin مخصص للظلال الملونة
-    function({ addUtilities, theme }) {
-      addUtilities({
-        '.shadow-primary': {
-          'box-shadow': `0 10px 25px -5px ${theme('colors.primary.500')}25`,
-        },
-        '.shadow-secondary': {
-          'box-shadow': `0 10px 25px -5px ${theme('colors.secondary.500')}25`,
-        },
-        '.shadow-success': {
-          'box-shadow': `0 10px 25px -5px ${theme('colors.success.500')}25`,
-        },
-        '.shadow-warning': {
-          'box-shadow': `0 10px 25px -5px ${theme('colors.warning.500')}25`,
-        },
-        '.shadow-error': {
-          'box-shadow': `0 10px 25px -5px ${theme('colors.error.500')}25`,
-        },
-      });
-    },
-  ],
+  plugins: [],
 }

@@ -2,7 +2,7 @@
 'use client'
 import { useMemo } from 'react'
 import BackHeader from '@/components/BackHeader'
-import AuthPrompt from '@/components/AuthFab'
+import AuthPrompt from '@/features/auth/components/AuthFab'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

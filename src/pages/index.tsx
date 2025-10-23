@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
 import { Activity, BadgePercent, MessagesSquare, ArrowLeft, Target } from 'lucide-react'
-import Navbar from '../components/Navbar'
+import PageLayout from '@/shared/components/layout/PageLayout'
 // استيراد المكونات الرئيسية من نظام التصميم الخاص بك
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card' // استيراد مكونات Card الفرعية للتنظيم
@@ -34,13 +34,9 @@ const Home: React.FC = () => {
     // تحسين: تم تغيير تصميم زر الاتصال ليصبح أكثر بروزًا واحترافية
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic">
-        <Navbar />
-
-
-
-        <main className="px-4 pb-8">
+        <PageLayout maxWidth="2xl">
           {/* Hero Section */}
-          <section className="relative pt-20 pb-24 text-center">
+          <section aria-label="القسم الرئيسي" className="relative pt-20 pb-24 text-center">
             <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-primary-50/50 to-transparent rounded-3xl mx-4"></div>
 
             <div className="relative z-10 max-w-4xl mx-auto px-6">
@@ -147,21 +143,7 @@ const Home: React.FC = () => {
               </div>
             </div>
           </section>
-        </main>
-
-
-        {/* Footer */}
-        <footer className="border-t border-gray-200 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col items-center justify-between py-4 md:flex-row">
-              <p className="text-gray-500 text-sm">
-                © {new Date().getFullYear()} Exaado™. جميع الحقوق محفوظة.
-              </p>
-              <div className="flex gap-5 mt-4 md:mt-0">
-              </div>
-            </div>
-          </div>
-        </footer>
+        </PageLayout>
       </div>
 
       {/* تحسين: استخدام CSS global لضمان استدارة زر المحفظة بشكل مثالي */}

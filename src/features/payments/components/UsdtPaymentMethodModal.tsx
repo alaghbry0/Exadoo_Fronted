@@ -24,6 +24,9 @@ export const UsdtPaymentMethodModal = ({
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
     onClick={onClose}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="usdt-payment-title"
   >
     <motion.div
       // تعديل 1: استخدام خلفية رمادية فاتحة جدًا لإبراز البطاقات البيضاء
@@ -36,13 +39,14 @@ export const UsdtPaymentMethodModal = ({
     >
       {/* الهيدر: يبقى نظيفًا */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="font-bold text-lg text-gray-900">إتمام الدفع بـ USDT</h3>
+        <h3 id="usdt-payment-title" className="font-bold text-lg text-gray-900" role="heading" aria-level={2}>إتمام الدفع بـ USDT</h3>
         <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-900 transition-colors p-1 rounded-full disabled:opacity-50"
           disabled={loading}
+          aria-label="إغلاق نافذة الدفع"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
 

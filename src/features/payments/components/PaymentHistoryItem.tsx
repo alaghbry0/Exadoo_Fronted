@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiChevronDown, FiChevronUp, FiCheckCircle, FiXCircle } from 'react-icons/fi'
+import { ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { useClipboard } from '@/hooks/useClipboard'
 
@@ -28,13 +28,13 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
 
   const statusConfig = {
     completed: {
-      icon: <FiCheckCircle className="text-green-500 ml-2" />,
+      icon: <CheckCircle className="text-green-500 ml-2" />,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       label: 'مكتمل'
     },
     failed: {
-      icon: <FiXCircle className="text-red-500 ml-2" />,
+      icon: <XCircle className="text-red-500 ml-2" />,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       label: 'فاشل'
@@ -94,7 +94,7 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
           className="text-gray-500 hover:text-gray-700 p-1 transition-colors"
           aria-label={expanded ? 'إغلاق التفاصيل' : 'عرض التفاصيل'}
         >
-          {expanded ? <FiChevronUp className="w-5 h-5" /> : <FiChevronDown className="w-5 h-5" />}
+          {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
       </div>
 

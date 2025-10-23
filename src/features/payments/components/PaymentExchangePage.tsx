@@ -1,6 +1,6 @@
 'use client';
 import React, { useState} from 'react';
-import { FiCopy } from 'react-icons/fi';
+import { Copy } from 'lucide-react';
 
 
 interface PaymentExchangePageProps {
@@ -40,7 +40,7 @@ const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
             <div className="flex items-center justify-between bg-gray-200 p-2 rounded">
               <span className="text-gray-800 break-all">{recipientAddress}</span>
               <button onClick={() => copyText(recipientAddress, 'address')}>
-                <FiCopy className="w-5 h-5 text-gray-600" />
+                <Copy className="w-5 h-5 text-gray-600" />
               </button>
             </div>
             {copied === 'address' && <p className="text-green-600 text-sm">تم النسخ!</p>}
@@ -51,7 +51,7 @@ const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
             <div className="flex items-center justify-between bg-gray-200 p-2 rounded">
               <span className="text-gray-800">{amount}</span>
               <button onClick={() => copyText(amount, 'amount')}>
-                <FiCopy className="w-5 h-5 text-gray-600" />
+                <Copy className="w-5 h-5 text-gray-600" />
               </button>
             </div>
             {copied === 'amount' && <p className="text-green-600 text-sm">تم النسخ!</p>}
@@ -62,7 +62,7 @@ const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
             <div className="flex items-center justify-between bg-gray-200 p-2 rounded">
               <span className="text-gray-800">{network}</span>
               <button onClick={() => copyText(network, 'network')}>
-                <FiCopy className="w-5 h-5 text-gray-600" />
+                <Copy className="w-5 h-5 text-gray-600" />
               </button>
             </div>
             {copied === 'network' && <p className="text-green-600 text-sm">تم النسخ!</p>}
@@ -73,7 +73,7 @@ const PaymentExchangePage: React.FC<PaymentExchangePageProps> = ({
             <div className="flex items-center justify-between bg-gray-200 p-2 rounded">
               <span className="text-gray-800 break-all">{paymentToken}</span>
               <button onClick={() => copyText(paymentToken, 'paymentToken')}>
-                <FiCopy className="w-5 h-5 text-gray-600" />
+                <Copy className="w-5 h-5 text-gray-600" />
               </button>
             </div>
             {copied === 'paymentToken' && <p className="text-green-600 text-sm">تم النسخ!</p>}

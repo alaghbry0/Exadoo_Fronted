@@ -1,7 +1,7 @@
 // PaymentButtons.tsx
 'use client'
 import { motion } from 'framer-motion'
-import { Spinner } from '@/components/Spinner'
+import { Spinner } from '@/shared/components/common/Spinner'
 // افترض أن PaymentStatus معرفة بشكل صحيح، مثلاً:
 // export type PaymentStatus = 'idle' | 'processing' | 'processing_usdt' | 'processing_stars' | 'success' | 'error' | 'exchange_pending' | 'exchange_success';
 import type { PaymentStatus } from '@/types/payment' // تأكد من أن هذا النوع يتضمن 'idle'

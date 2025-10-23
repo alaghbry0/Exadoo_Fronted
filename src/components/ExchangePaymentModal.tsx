@@ -7,7 +7,7 @@ import { QrCode, CheckCircle2, Copy, X, Clock, AlertTriangle } from 'lucide-reac
 import QRCode from 'react-qr-code'
 import type { PaymentStatus } from '@/types/payment' // تأكد من أن هذا المسار صحيح
 import toast from 'react-hot-toast'
-import { PaymentExchangeSuccess } from './PaymentExchangeSuccess'
+import { PaymentExchangeSuccess } from '@/features/payments/components/PaymentExchangeSuccess'
 import { Separator } from '@/components/ui/separator' // استيراد Separator
 
 // --- الواجهات والأنواع (لا تغيير) ---

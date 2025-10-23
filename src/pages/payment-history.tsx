@@ -5,7 +5,8 @@ import axios from 'axios'
 import { useTelegram } from '../context/TelegramContext'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/router'
-import { FiArrowLeft } from 'react-icons/fi'
+import { ArrowLeft } from 'lucide-react'
+import { TableSkeleton } from '@/shared/components/common/LoadingStates'
 
 type Payment = {
   tx_hash: string
@@ -58,30 +59,14 @@ export default function PaymentHistory() {
 
   if (isLoading && payments.length === 0) {
     return (
-      <div className="container mx-auto p-4 min-h-[60vh] space-y-6">
-        {/* هيكل Skeleton للرأس */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
-          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse" />
+      <div className="container mx-auto p-4 min-h-[60vh]">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="icon" className="rounded-full" disabled>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>
         </div>
-        
-        {/* هيكل Skeleton للعناصر */}
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="p-6 bg-white rounded-lg shadow space-y-4">
-            <div className="flex justify-between">
-              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
-            </div>
-            <div className="flex justify-between">
-              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
-            </div>
-            <div className="flex justify-between">
-              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
-            </div>
-          </div>
-        ))}
+        <TableSkeleton rows={5} />
       </div>
     )
   }
@@ -90,7 +75,7 @@ export default function PaymentHistory() {
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
       <div className="flex items-center mb-6">
         <Button onClick={handleGoBack} variant="ghost" size="icon" className="rounded-full">
-          <FiArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>
       </div>

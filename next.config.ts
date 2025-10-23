@@ -1,7 +1,12 @@
 // next.config.ts
 import type { NextConfig } from "next";
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const isDev = process.env.NODE_ENV !== "production";
+
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -9,7 +14,7 @@ const nextConfig: NextConfig = {
 
   images: {
     formats: ["image/avif", "image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
@@ -40,7 +45,7 @@ const nextConfig: NextConfig = {
       "script-src-elem 'self' https://telegram.org https://alaghbry0.github.io;",
       "style-src 'self' 'unsafe-inline';",
       // 👇 سمحنا بـ ws في dev فقط
-      `connect-src 'self' https://exadoo.onrender.com https://exadoo-rxr9.onrender.com https://exaado.plebits.com http://192.168.0.96:5000 http://localhost:5002 https://exadoo-sse-server.onrender.com https://cdn.echooo.xyz https://tonhub.com https://tonapi.io https://bridge.tonapi.io https://cdn.echooo.xyz https://tonconnectbridge.mytonwallet.org https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://go-bridge.tomo.inc https://ton-bridge.tobiwallet.app https://bridge.dewallet.pro https://dapp.gateio.services https://ton-bridge.safepal.com https://toncenter.com https://*.toncdn.io https://vercel.live https://wallet-bridge.fintopio.com https://tc.architecton.su https://ton-connect.mytokenpocket.vip https://bridge.mirai.app https://wallet.binance.com https://www.okx.com https://ton-connect-bridge.bgwapi.io https://connect.tonhubapi.com https://raw.githubusercontent.com https://walletbot.me${devConnectSrc};`,
+      `connect-src 'self' https://config.ton.org https://exadoo.onrender.com https://exadoo-rxr9.onrender.com https://exaado.plebits.com http://192.168.0.96:5000 http://localhost:5002 https://exadoo-sse-server.onrender.com https://cdn.echooo.xyz https://tonhub.com https://tonapi.io https://bridge.tonapi.io https://cdn.echooo.xyz https://tonconnectbridge.mytonwallet.org https://tonhub.com https://bridge2.tonapi.io wss://*.tonapi.io https://go-bridge.tomo.inc https://ton-bridge.tobiwallet.app https://bridge.dewallet.pro https://dapp.gateio.services https://ton-bridge.safepal.com https://toncenter.com https://*.toncdn.io https://vercel.live https://wallet-bridge.fintopio.com https://tc.architecton.su https://ton-connect.mytokenpocket.vip https://bridge.mirai.app https://wallet.binance.com https://www.okx.com https://ton-connect-bridge.bgwapi.io https://connect.tonhubapi.com https://raw.githubusercontent.com https://walletbot.me${devConnectSrc};`,
       "media-src 'self' https: data: blob:;",
       "img-src 'self' https: data: blob:;",
       // 👇 سمحنا data: لأن بعض الخطوط تكون inline
@@ -113,4 +118,4 @@ const nextConfig: NextConfig = {
 
 };
 
-export default nextConfig;
+export default bundleAnalyzer(nextConfig);

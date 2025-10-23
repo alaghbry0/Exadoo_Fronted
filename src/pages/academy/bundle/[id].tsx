@@ -4,13 +4,22 @@
 import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useAcademyData } from '@/services/academy'
 import { useTelegram } from '@/context/TelegramContext'
-import AuthPrompt from '@/components/AuthFab'
+import AuthPrompt from '@/features/auth/components/AuthFab'
 import SmartImage from '@/components/SmartImage'
 import { Card, CardContent } from '@/components/ui/card'
-import AcademyPurchaseModal from '@/components/AcademyPurchaseModal'
+// Dynamic import لـ AcademyPurchaseModal
+const AcademyPurchaseModal = dynamic(
+  () => import('@/features/academy/components/AcademyPurchaseModal'),
+  { ssr: false }
+)
+import PageLayout from '@/shared/components/layout/PageLayout'
+import { Breadcrumbs } from '@/shared/components/common/Breadcrumbs'
+import { PageLoader } from '@/shared/components/common/LoadingStates'
+import { EmptyState } from '@/shared/components/common/EmptyState'
 import {
   ArrowLeft,
   Layers,
@@ -362,51 +371,19 @@ export default function BundleDetail() {
     )
   }
 
-  if (isLoading)
-    return (
-      <div className="font-arabic min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-600 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-300 flex items-center justify-center p-12">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600 dark:border-neutral-800 dark:border-t-primary-500" />
-          <p className="text-lg font-medium">جاري تحميل تفاصيل الحزمة...</p>
-        </div>
-      </div>
-    )
+  if (isLoading) return <PageLoader />
 
-  if (isError)
-    return (
-      <div className="font-arabic min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 flex items-center justify-center p-12">
-        <div className="max-w-md rounded-3xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900/50 dark:bg-red-900/10">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/30">
-            <span className="text-3xl">⚠️</span>
-          </div>
-          <p className="text-lg font-semibold text-red-600 dark:text-red-400">تعذّر التحميل</p>
-          <p className="mt-2 text-sm text-red-500 dark:text-red-300">{(error as Error)?.message}</p>
-        </div>
-      </div>
-    )
+  if (isError) return <EmptyState icon={Package} title="تعذّر التحميل" description={(error as Error)?.message} />
 
-  if (!bundle && !isLoading)
-    return (
-      <div className="font-arabic min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 flex items-center justify-center p-12">
-        <div className="max-w-md rounded-3xl border border-dashed border-gray-300 bg-white p-8 text-center dark:border-neutral-700 dark:bg-neutral-900">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-neutral-800">
-            <Package className="h-8 w-8 text-gray-400" />
-          </div>
-          <p className="text-lg font-semibold text-gray-900 dark:text-neutral-100">لم يتم العثور على الحزمة</p>
-          <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">عذرًا، الحزمة المطلوبة غير متوفرة</p>
-        </div>
-      </div>
-    )
+  if (!bundle && !isLoading) return <EmptyState icon={Package} title="لم يتم العثور على الحزمة" description="عذرًا، الحزمة المطلوبة غير متوفرة" />
 
   if (!bundle) return null
 
   return (
-    <div
-      dir="rtl"
-      className="font-arabic min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-200"
-    >
-      {/* Sticky header */}
-      <StickyHeader title={bundle.title} price={bundle.price} visible={showSticky} onCTA={onCTA} />
+    <div dir="rtl" className="font-arabic min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-200">
+      <PageLayout maxWidth="full">
+        {/* Sticky header */}
+        <StickyHeader title={bundle.title} price={bundle.price} visible={showSticky} onCTA={onCTA} />
 
       <main className="pb-28">
         {/* ===== HERO (صورة فقط + بارالاكس خفيف) ===== */}
@@ -448,6 +425,15 @@ export default function BundleDetail() {
             </div>
           </div>
         </header>
+
+        {/* Breadcrumbs */}
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <Breadcrumbs items={[
+            { label: 'الرئيسية', href: '/' },
+            { label: 'الأكاديمية', href: '/academy' },
+            { label: bundle.title }
+          ]} />
+        </div>
 
         {/* ===== Title & CTA (زجاجية) ===== */}
         <TitleMetaBundle bundle={bundle} coursesCount={coursesInBundle.length} onCTA={onCTA} />
@@ -601,6 +587,7 @@ export default function BundleDetail() {
 
       <AcademyPurchaseModal />
       <AuthPrompt />
+      </PageLayout>
     </div>
   )
 }

@@ -4,16 +4,30 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
-import { ArrowLeft, BookOpen, Clock, FileText, Star, Award } from 'lucide-react'
+import { ArrowLeft, BookOpen, Clock, FileText, Star, Award, Loader2 } from 'lucide-react'
 
-import AuthPrompt from '@/components/AuthFab'
+import AuthPrompt from '@/features/auth/components/AuthFab'
 import SmartImage from '@/components/SmartImage'
-import AcademyPurchaseModal from '@/components/AcademyPurchaseModal'
+
+// Dynamic import لـ AcademyPurchaseModal
+const AcademyPurchaseModal = dynamic(
+  () => import('@/features/academy/components/AcademyPurchaseModal'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    )
+  }
+)
 import SubscribeFab from '@/components/SubscribeFab'
 import { useAcademyData } from '@/services/academy'
 import { useCourseDetails } from '@/services/courseDetails'
 import { useTelegram } from '@/context/TelegramContext'
+import { Breadcrumbs } from '@/shared/components/common/Breadcrumbs'
 
 import { normalizeDescription, formatPrice } from '@/lib/academy'
 import type { Course, TabId } from '@/types/academy'
@@ -175,6 +189,15 @@ export default function CourseDetail() {
             </div>
           </div>
         </header>
+
+        {/* Breadcrumbs */}
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <Breadcrumbs items={[
+            { label: 'الرئيسية', href: '/' },
+            { label: 'الأكاديمية', href: '/academy' },
+            { label: course.title }
+          ]} />
+        </div>
 
         {/* Title + Meta */}
         <TitleMeta course={course} isEnrolled={isEnrolled} />

@@ -7,10 +7,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { X, Loader2, ShieldCheck } from 'lucide-react';
-import { UsdtPaymentMethodModal } from '@/components/UsdtPaymentMethodModal';
+import { UsdtPaymentMethodModal } from './UsdtPaymentMethodModal';
 import { ExchangePaymentModal } from '@/components/ExchangePaymentModal';
-import { PaymentSuccessModal } from '@/components/PaymentSuccessModal';
-import { PaymentExchangeSuccess } from '@/components/PaymentExchangeSuccess';
+import { PaymentSuccessModal } from './PaymentSuccessModal';
+import { PaymentExchangeSuccess } from './PaymentExchangeSuccess';
 import { useServicePayment } from '@/hooks/useServicePayment';
 import { showToast } from '@/components/ui/showToast';
 

@@ -1,6 +1,6 @@
 'use client'
 import { useTheme } from 'next-themes'
-import { FiSun, FiMoon } from 'react-icons/fi'
+import { Sun, Moon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const ThemeSwitcher = () => {
@@ -19,9 +19,9 @@ const ThemeSwitcher = () => {
       className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-all"
     >
       {theme === 'dark' ? (
-        <FiSun className="text-yellow-500" size={22} />
+        <Sun className="text-yellow-500" size={22} />
       ) : (
-        <FiMoon className="text-gray-800" size={22} />
+        <Moon className="text-gray-800" size={22} />
       )}
     </button>
   )

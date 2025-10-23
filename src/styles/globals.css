@@ -6,9 +6,10 @@
 @tailwind utilities;
 
 /* ==============================================
-   متغيرات ألوان وتدرجات + ظلال (كما هي عندك)
+   متغيرات ألوان وتدرجات + ظلال (محسّنة)
    ============================================== */
 :root {
+  /* Primary Colors */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-200: #bfdbfe;
@@ -20,6 +21,31 @@
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
 
+  /* Semantic Colors - Text */
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-disabled: #d1d5db;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #0084FF;
+  --color-text-link-hover: #0066CC;
+
+  /* Semantic Colors - Background */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-bg-elevated: #ffffff;
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  --color-bg-inverse: #1a1a1a;
+
+  /* Semantic Colors - Border */
+  --color-border-default: #e5e7eb;
+  --color-border-hover: #d1d5db;
+  --color-border-focus: #0084FF;
+  --color-border-disabled: #f3f4f6;
+  --color-border-error: #ef4444;
+
+  /* Gradients */
   --gradient-primary: linear-gradient(135deg, #0084FF 0%, #0066CC 100%);
   --gradient-secondary: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
   --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
@@ -34,11 +60,13 @@
     rgba(30, 41, 59, 0.8) 35%,
     rgba(51, 65, 85, 0.7) 100%);
 
+  /* Shadows */
   --shadow-soft: 0 4px 20px -2px rgba(0, 132, 255, 0.1);
   --shadow-medium: 0 8px 25px -5px rgba(0, 132, 255, 0.15);
   --shadow-strong: 0 20px 40px -12px rgba(0, 132, 255, 0.25);
   --shadow-glow: 0 0 40px rgba(0, 132, 255, 0.3);
 
+  /* Legacy */
   --dark-bg-primary: #0f172a;
   --dark-bg-secondary: #1e293b;
   --dark-text-primary: #f8fafc;
@@ -87,28 +115,100 @@
 }
 
 /* =======================
-   Keyframes (موحّدة)
+   Keyframes (موحّدة ومحسّنة)
    ======================= */
+/* Basic Animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.9); }
+}
+
+/* Legacy Animations */
 @keyframes card-appear {
   from { opacity: 0; transform: translateY(20px) scale(0.95); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+
 @keyframes shimmer {
   0%   { background-position: -1000px 0; }
   100% { background-position: 1000px 0; }
 }
-@keyframes gradient-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@keyframes pulse-glow      { 0% { box-shadow: 0 0 20px rgba(0,132,255,.4);} 100% { box-shadow: 0 0 40px rgba(0,132,255,.8);} }
-@keyframes skeleton-shimmer{ 0% { background-position: -400% 0; } 100% { background-position: 400% 0; } }
-@keyframes float-gentle    { 0%,100% { transform: translateY(0) rotate(0);} 33% { transform: translateY(-10px) rotate(1deg);} 66% { transform: translateY(-5px) rotate(-1deg);} }
-@keyframes slide-in-up     { from { transform: translateY(30px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
-@keyframes slide-in-right  { from { transform: translateX(30px); opacity: 0;} to { transform: translateX(0); opacity: 1;} }
-@keyframes scale-in        { from { transform: scale(.9); opacity: 0;} to { transform: scale(1); opacity: 1;} }
+
+@keyframes gradient-rotate { 
+  0% { transform: rotate(0deg); } 
+  100% { transform: rotate(360deg); } 
+}
+
+@keyframes pulse-glow { 
+  0% { box-shadow: 0 0 20px rgba(0,132,255,.4);} 
+  100% { box-shadow: 0 0 40px rgba(0,132,255,.8);} 
+}
+
+@keyframes skeleton-shimmer{ 
+  0% { background-position: -400% 0; } 
+  100% { background-position: 400% 0; } 
+}
+
+@keyframes float-gentle { 
+  0%,100% { transform: translateY(0) rotate(0);} 
+  33% { transform: translateY(-10px) rotate(1deg);} 
+  66% { transform: translateY(-5px) rotate(-1deg);} 
+}
+
+@keyframes slide-in-up { 
+  from { transform: translateY(30px); opacity: 0;} 
+  to { transform: translateY(0); opacity: 1;} 
+}
+
+@keyframes slide-in-right { 
+  from { transform: translateX(30px); opacity: 0;} 
+  to { transform: translateX(0); opacity: 1;} 
+}
+
 @keyframes ripple {
   0% { transform: scale(0); opacity: 0.5; }
   100% { transform: scale(2); opacity: 0; }
 }
-@keyframes featured-glow   { 0% { opacity:.6; filter: blur(8px);} 100% { opacity:.9; filter: blur(12px);} }
+
+@keyframes featured-glow { 
+  0% { opacity:.6; filter: blur(8px);} 
+  100% { opacity:.9; filter: blur(12px);} 
+}
 
 /* ==============================
    Components layer
@@ -294,6 +394,16 @@
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; } /* WebKit */
 
+  /* Animation utilities */
+  .animate-fade-in { animation: fade-in 300ms ease-out; }
+  .animate-fade-out { animation: fade-out 300ms ease-out; }
+  .animate-slide-up { animation: slide-up 400ms ease-out; }
+  .animate-slide-down { animation: slide-down 400ms ease-out; }
+  .animate-slide-left { animation: slide-left 400ms ease-out; }
+  .animate-slide-right { animation: slide-right 400ms ease-out; }
+  .animate-scale-in { animation: scale-in 300ms ease-out; }
+  .animate-scale-out { animation: scale-out 300ms ease-out; }
+
   /* Typo & transitions */
   .text-balance { text-wrap: balance; }
   .transition-smooth { transition: all .3s cubic-bezier(.4,0,.2,1); }
@@ -348,6 +458,31 @@
    Dark mode overrides
    ============================== */
 .dark {
+  /* Text Colors */
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-text-disabled: #475569;
+  --color-text-inverse: #1a1a1a;
+  --color-text-link: #60a5fa;
+  --color-text-link-hover: #93c5fd;
+
+  /* Background Colors */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+  --color-bg-elevated: #1e293b;
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  --color-bg-inverse: #ffffff;
+
+  /* Border Colors */
+  --color-border-default: #334155;
+  --color-border-hover: #475569;
+  --color-border-focus: #60a5fa;
+  --color-border-disabled: #1e293b;
+  --color-border-error: #f87171;
+
+  /* Shadows */
   --shadow-soft:   0 4px 20px -2px rgba(0,0,0,0.3);
   --shadow-medium: 0 8px 25px -5px rgba(0,0,0,0.4);
   --shadow-strong: 0 20px 40px -12px rgba(0,0,0,0.5);
@@ -403,3 +538,103 @@ html, body {
 *::-webkit-scrollbar:horizontal { height: 0 !important; }
 *::-webkit-scrollbar-thumb:horizontal { background: transparent !important; }
 *::-webkit-scrollbar-track:horizontal { background: transparent !important; }
+
+/* ================================
+   Accessibility Utilities
+   ================================ */
+
+/* Screen Reader Only - إخفاء العنصر بصرياً مع بقائه متاحاً لـ Screen Readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* إظهار العنصر عند التركيز (مفيد لـ Skip Links) */
+.sr-only:focus,
+.sr-only:active {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* تحسين Focus Indicators - مرئية وواضحة */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500, #0084FF);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* إزالة outline للماوس فقط، مع الحفاظ عليه للكيبورد */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* تحسين focus للأزرار */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary-500, #0084FF);
+  outline-offset: 2px;
+}
+
+/* تحسين focus للـ inputs */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-primary-500, #0084FF);
+  outline-offset: 0;
+  border-color: var(--color-primary-500, #0084FF);
+}
+
+/* دعم Reduced Motion - تعطيل الحركات للمستخدمين الذين يفضلون ذلك */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* تحسين Contrast في Dark Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary-500: #0099FF;
+  }
+  
+  button,
+  a {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Skip to Content Link Styling */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary-500, #0084FF);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  z-index: 100;
+  font-weight: 600;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}

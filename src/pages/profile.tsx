@@ -1,11 +1,10 @@
 // src/pages/Profile.tsx
 'use client'
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useUserStore } from "../stores/zustand/userStore";
-import ProfileHeader from '../components/Profile/ProfileHeader';
-import SubscriptionsSection from '../components/Profile/SubscriptionsSection';
+import ProfileHeader from '@/features/profile/components/ProfileHeader';
+import SubscriptionsSection from '@/features/profile/components/SubscriptionsSection';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { getUserSubscriptions } from '../services/api';
 import { useRouter } from 'next/navigation';
@@ -13,6 +12,7 @@ import { toast, Toaster } from 'react-hot-toast';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import PageLayout from '@/shared/components/layout/PageLayout';
 
 export default function Profile() {
   const { fullName, telegramUsername, photoUrl, telegramId, subscriptions, setSubscriptions } = useUserStore();
@@ -84,20 +84,22 @@ export default function Profile() {
   if (isError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-sm text-center shadow-lg">
-          <CardHeader>
-            <div className="mx-auto w-12 h-12 flex items-center justify-center bg-red-100 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
-            </div>
-            <CardTitle className="text-red-700 pt-2 font-arabic">حدث خطأ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 mb-6 font-arabic">فشل تحميل بياناتك. يرجى المحاولة مرة أخرى.</p>
-            <Button onClick={() => refetch()} size="lg" className="font-arabic">
-              إعادة المحاولة
-            </Button>
-          </CardContent>
-        </Card>
+        <PageLayout maxWidth="2xl">
+          <Card className="w-full max-w-sm text-center shadow-lg">
+            <CardHeader>
+              <div className="mx-auto w-12 h-12 flex items-center justify-center bg-red-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <CardTitle className="text-red-700 pt-2 font-arabic">حدث خطأ</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-6 font-arabic">فشل تحميل بياناتك. يرجى المحاولة مرة أخرى.</p>
+              <Button onClick={() => refetch()} size="lg" className="font-arabic">
+                إعادة المحاولة
+              </Button>
+            </CardContent>
+          </Card>
+        </PageLayout>
       </div>
     );
   }
@@ -111,21 +113,16 @@ export default function Profile() {
           className: 'font-arabic', // تطبيق الخط العربي على كل التنبيهات
           success: { duration: 3000 },
           error: { duration: 4000 },
-      }}/>
-      <motion.div
-        key="profile-page"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        // استخدام خلفية وخط متناسقين
-        className="min-h-screen bg-gray-50 text-gray-800 font-arabic pb-12"
-      >
-        <ProfileHeader
-          fullName={fullName}
-          username={telegramUsername}
-          profilePhoto={photoUrl}
-          telegramId={telegramId}
-          onPaymentHistoryClick={goToPaymentHistory}
+        }}
+      />
+      <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic">
+        <PageLayout maxWidth="2xl">
+          <ProfileHeader
+            fullName={fullName}
+            username={telegramUsername}
+            profilePhoto={photoUrl}
+            telegramId={telegramId}
+            onPaymentHistoryClick={goToPaymentHistory}
         />
         {/* إضافة تباعد أفضل للمحتوى الرئيسي */}
         <div className="px-4 md:px-6 py-8 max-w-4xl mx-auto ">
@@ -138,7 +135,8 @@ export default function Profile() {
             onRefreshClick={handleRefresh}
           />
         </div>
-      </motion.div>
+        </PageLayout>
+      </div>
     </TonConnectUIProvider>
   );
 }

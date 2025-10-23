@@ -29,5 +29,5 @@
     ".next/types/**/*.ts",
     "src/telegram-web-app.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "archived_components"]
 }

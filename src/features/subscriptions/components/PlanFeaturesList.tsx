@@ -1,7 +1,7 @@
 // PlanFeaturesList.tsx
 'use client'
 import { motion } from 'framer-motion'
-import { FiCheckCircle } from 'react-icons/fi'
+import { CheckCircle } from 'lucide-react'
 
 interface PlanFeaturesListProps {
   features?: string[]
@@ -25,7 +25,7 @@ export const PlanFeaturesList = ({ features }: PlanFeaturesListProps) => (
           transition={{ delay: index * 0.1 }}
           className="flex items-start gap-5 p-3 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow"
         >
-          <FiCheckCircle className="text-blue-500 mt-1 flex-shrink-0" />
+          <CheckCircle className="text-blue-500 mt-1 flex-shrink-0" />
           <span className="text-gray-700 text-sm leading-relaxed">{feature}</span>
         </motion.li>
       ))}

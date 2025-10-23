@@ -11,7 +11,7 @@ import React, {
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import BackHeader from '@/components/BackHeader'
-import AuthPrompt from '@/components/AuthFab'
+import AuthPrompt from '@/features/auth/components/AuthFab'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -27,6 +27,8 @@ import {
 import SmartImage from '@/components/SmartImage'
 import { useTelegram } from '@/context/TelegramContext'
 import { useAcademyData } from '@/services/academy'
+import { LazyLoad } from '@/components/common/LazyLoad'
+import { CourseSkeleton } from '@/components/skeletons/CourseSkeleton'
 
 /* =========================
    Types
@@ -678,26 +680,28 @@ export default function AcademyIndex() {
                 <>
                   {/* Top Courses */}
                   {filteredData.topCourses.length > 0 && (
-                    <section aria-labelledby="top-courses">
-                      <SectionHeader icon={TrendingUp} title="الأكثر طلباً" id="top-courses" />
-                      <HScroll>
-                        {filteredData.topCourses.map((c, i) => (
-                          <MiniCourseCard
-                            key={c.id}
-                            id={c.id}
-                            title={c.title}
-                            desc={c.short_description}
-                            price={c.discounted_price || c.price}
-                            lessons={c.total_number_of_lessons}
-                            level={c.level}
-                            img={c.thumbnail}
-                            free={isFreeCourse(c)}
-                            variant="top"
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HScroll>
-                    </section>
+                    <LazyLoad fallback={<div className="h-64"><CourseSkeleton /></div>}>
+                      <section aria-labelledby="top-courses">
+                        <SectionHeader icon={TrendingUp} title="الأكثر طلباً" id="top-courses" />
+                        <HScroll>
+                          {filteredData.topCourses.map((c, i) => (
+                            <MiniCourseCard
+                              key={c.id}
+                              id={c.id}
+                              title={c.title}
+                              desc={c.short_description}
+                              price={c.discounted_price || c.price}
+                              lessons={c.total_number_of_lessons}
+                              level={c.level}
+                              img={c.thumbnail}
+                              free={isFreeCourse(c)}
+                              variant="top"
+                              priority={i === 0}
+                            />
+                          ))}
+                        </HScroll>
+                      </section>
+                    </LazyLoad>
                   )}
 
                   {/* Categories */}
@@ -714,23 +718,25 @@ export default function AcademyIndex() {
 
                   {/* Top Bundles */}
                   {filteredData.topBundles.length > 0 && (
-                    <section aria-labelledby="top-bundles">
-                      <SectionHeader icon={Award} title="حزم مميزة" id="top-bundles" />
-                      <HScroll>
-                        {filteredData.topBundles.map((b, i) => (
-                          <MiniBundleCard
-                            key={b.id}
-                            id={b.id}
-                            title={b.title}
-                            desc={b.description}
-                            price={b.price}
-                            img={b.image || b.cover_image}
-                            variant="highlight"
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HScroll>
-                    </section>
+                    <LazyLoad fallback={<div className="h-64"><CourseSkeleton /></div>}>
+                      <section aria-labelledby="top-bundles">
+                        <SectionHeader icon={Award} title="حزم مميزة" id="top-bundles" />
+                        <HScroll>
+                          {filteredData.topBundles.map((b, i) => (
+                            <MiniBundleCard
+                              key={b.id}
+                              id={b.id}
+                              title={b.title}
+                              desc={b.description}
+                              price={b.price}
+                              img={b.image || b.cover_image}
+                              variant="highlight"
+                              priority={i === 0}
+                            />
+                          ))}
+                        </HScroll>
+                      </section>
+                    </LazyLoad>
                   )}
 
                   {/* Highlight Courses */}
