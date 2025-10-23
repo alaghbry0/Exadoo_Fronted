@@ -1,13 +1,13 @@
 export type ProductType =
-  | 'signals_subscription'
-  | 'course'
-  | 'bundle'
-  | 'buy_indicators'
-  | 'utility_trading_panel';
+  | "signals_subscription"
+  | "course"
+  | "bundle"
+  | "buy_indicators"
+  | "utility_trading_panel";
 
-export type Currency = 'USDT' | 'Stars';
+export type Currency = "USDT" | "Stars";
 
-export type PaymentMethod = 'USDT (TON)' | 'Telegram Stars';
+export type PaymentMethod = "USDT (TON)" | "Telegram Stars";
 
 export interface PaymentIntentRequest {
   webhookSecret: string;
@@ -15,16 +15,16 @@ export interface PaymentIntentRequest {
   telegramUsername?: string | null;
   fullName?: string | null;
   productType: ProductType;
-  productId?: number;               // للمنتجات غير الاشتراك
-  subscriptionPlanId?: number;      // للاشتراكات
-  amount: number | string;          // المبلغ النهائي (بنفس عملة currency)
-  currency: Currency;               // 'USDT' أو 'Stars'
-  paymentMethod: PaymentMethod;     // مطابق لما في الباك
+  productId?: number; // للمنتجات غير الاشتراك
+  subscriptionPlanId?: number; // للاشتراكات
+  amount: number | string; // المبلغ النهائي (بنفس عملة currency)
+  currency: Currency; // 'USDT' أو 'Stars'
+  paymentMethod: PaymentMethod; // مطابق لما في الباك
   extraMetadata?: {
     trading_view_id?: string;
     forex_addresses?: string[];
     [k: string]: any;
-  }; 
+  };
 }
 
 export interface PaymentIntentResponse {

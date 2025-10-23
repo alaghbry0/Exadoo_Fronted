@@ -1,39 +1,64 @@
 // src/pages/shop/signals.tsx
 
-'use client'
-import { useState, useEffect, useMemo, useRef } from 'react'
-import dynamic from 'next/dynamic'
-import { motion, AnimatePresence } from 'framer-motion'
+"use client";
+import { componentVariants, mergeVariants } from "@/components/ui/variants";
+import { useState, useEffect, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Dynamic import للـ SubscriptionModal
 const SubscriptionModal = dynamic(
-  () => import('@/features/subscriptions/components/SubscriptionModal').then(mod => mod.default),
-  { ssr: false }
-)
+  () =>
+    import("@/features/subscriptions/components/SubscriptionModal").then(
+      (mod) => mod.default,
+    ),
+  { ssr: false },
+);
 
-import React from 'react'
-import { TonConnectUIProvider } from '@tonconnect/ui-react'
-import { useQuery } from '@tanstack/react-query'
-import { getSubscriptionTypes, getSubscriptionPlans, getSubscriptionGroups } from '../../services/api'
-import { cn } from "@/lib/utils"
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Gem, Star, AlertTriangle, Layers, Tag, ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, ShieldCheck, Flame } from 'lucide-react'
-import { useTelegram } from '@/context/TelegramContext';
-import PageLayout from '@/shared/components/layout/PageLayout'
-import { GridSkeleton, PageLoader } from '@/shared/components/common/LoadingStates'
-import { EmptyState } from '@/shared/components/common/EmptyState'
-import { LazyLoad } from '@/components/common/LazyLoad'
-import { SubscriptionCardSkeleton } from '@/components/skeletons/SubscriptionCardSkeleton'
+import React from "react";
+import { TonConnectUIProvider } from "@tonconnect/ui-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getSubscriptionTypes,
+  getSubscriptionPlans,
+  getSubscriptionGroups,
+} from "../../services/api";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Crown,
+  Zap,
+  Gem,
+  Star,
+  AlertTriangle,
+  Layers,
+  Tag,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  ShieldCheck,
+  Flame,
+} from "lucide-react";
+import { useTelegram } from "@/context/TelegramContext";
+import PageLayout from "@/shared/components/layout/PageLayout";
+import {
+  GridSkeleton,
+  PageLoader,
+} from "@/shared/components/common/LoadingStates";
+import { EmptyState } from "@/shared/components/common/EmptyState";
+import { LazyLoad } from "@/components/common/LazyLoad";
+import { SubscriptionCardSkeleton } from "@/components/skeletons/SubscriptionCardSkeleton";
 
-import type { ModalPlanData } from '@/types/modalPlanData';
+import type { ModalPlanData } from "@/types/modalPlanData";
 import type {
   ApiSubscriptionType,
   ApiSubscriptionPlan,
   ApiSubscriptionGroup,
-  SubscriptionOption
-} from '../../typesPlan'
+  SubscriptionOption,
+} from "../../typesPlan";
 
 // ----------------------------------------------------
 // الأنواع المساعدة + الأيقونات
@@ -50,16 +75,16 @@ interface Subscription {
   plans: SubscriptionOption[]; // (يحتوي المدفوعة + التجريبية)
 }
 const iconMap: { [key: string]: React.ElementType } = {
-  'default': Star,
-  'forex': Zap,
-  'crypto': Gem,
-  'vip': Crown,
+  default: Star,
+  forex: Zap,
+  crypto: Gem,
+  vip: Crown,
 };
 const getCardIcon = (type: ApiSubscriptionType): React.ElementType => {
-  if (type.is_recommended) return iconMap['vip'];
-  if (type.name.toLowerCase().includes('forex')) return iconMap['forex'];
-  if (type.name.toLowerCase().includes('crypto')) return iconMap['crypto'];
-  return iconMap['default'];
+  if (type.is_recommended) return iconMap["vip"];
+  if (type.name.toLowerCase().includes("forex")) return iconMap["forex"];
+  if (type.name.toLowerCase().includes("crypto")) return iconMap["crypto"];
+  return iconMap["default"];
 };
 
 interface QueryBoundaryProps {
@@ -67,9 +92,20 @@ interface QueryBoundaryProps {
   isError: boolean;
   children: React.ReactNode;
 }
-const QueryBoundary: React.FC<QueryBoundaryProps> = ({ isLoading, isError, children }) => {
+const QueryBoundary: React.FC<QueryBoundaryProps> = ({
+  isLoading,
+  isError,
+  children,
+}) => {
   if (isLoading) return <PageLoader />;
-  if (isError) return <EmptyState icon={AlertTriangle} title="عذراً, حدث خطأ" description="لم نتمكن من جلب البيانات. يرجى تحديث الصفحة والمحاولة مرة أخرى." />;
+  if (isError)
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="عذراً, حدث خطأ"
+        description="لم نتمكن من جلب البيانات. يرجى تحديث الصفحة والمحاولة مرة أخرى."
+      />
+    );
   return <>{children}</>;
 };
 
@@ -77,73 +113,102 @@ const QueryBoundary: React.FC<QueryBoundaryProps> = ({ isLoading, isError, child
 // الصفحة
 // ----------------------------------------------------
 const ShopComponent = () => {
-  const [selectedPlanForModal, setSelectedPlanForModal] = useState<ModalPlanData | null>(null);
-  const [selectedPlanIds, setSelectedPlanIds] = useState<{ [key: number]: number }>({});
+  const [selectedPlanForModal, setSelectedPlanForModal] =
+    useState<ModalPlanData | null>(null);
+  const [selectedPlanIds, setSelectedPlanIds] = useState<{
+    [key: number]: number;
+  }>({});
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [initialGroupSelected, setInitialGroupSelected] = useState(false);
 
   const { telegramId } = useTelegram();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const [showScrollButtons, setShowScrollButtons] = useState({ left: false, right: false });
+  const [showScrollButtons, setShowScrollButtons] = useState({
+    left: false,
+    right: false,
+  });
 
-  const { data: groupsData, isLoading: groupsLoading, isError: groupsError } =
-    useQuery<ApiSubscriptionGroup[]>({ queryKey: ['subscriptionGroups'], queryFn: getSubscriptionGroups, staleTime: 5 * 60 * 1000 });
+  const {
+    data: groupsData,
+    isLoading: groupsLoading,
+    isError: groupsError,
+  } = useQuery<ApiSubscriptionGroup[]>({
+    queryKey: ["subscriptionGroups"],
+    queryFn: getSubscriptionGroups,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const { data: typesData, isFetching: isFetchingTypes, isError: typesError } =
-    useQuery<ApiSubscriptionType[]>({
-      queryKey: ['subscriptionTypes', selectedGroupId],
-      queryFn: () => getSubscriptionTypes(selectedGroupId),
-      enabled: !!initialGroupSelected,
-      staleTime: 5 * 60 * 1000,
-      placeholderData: (previousData) => previousData
-    });
+  const {
+    data: typesData,
+    isFetching: isFetchingTypes,
+    isError: typesError,
+  } = useQuery<ApiSubscriptionType[]>({
+    queryKey: ["subscriptionTypes", selectedGroupId],
+    queryFn: () => getSubscriptionTypes(selectedGroupId),
+    enabled: !!initialGroupSelected,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
 
-  const { data: plansData, isLoading: plansLoading, isError: plansError } =
-    useQuery<ApiSubscriptionPlan[]>({
-      queryKey: ['subscriptionPlans', telegramId],
-      queryFn: () => getSubscriptionPlans(telegramId),
-      staleTime: 10 * 1000
-    });
+  const {
+    data: plansData,
+    isLoading: plansLoading,
+    isError: plansError,
+  } = useQuery<ApiSubscriptionPlan[]>({
+    queryKey: ["subscriptionPlans", telegramId],
+    queryFn: () => getSubscriptionPlans(telegramId),
+    staleTime: 10 * 1000,
+  });
 
   // بناء بيانات البطاقات (تضم خطط مدفوعة + تجريبية)
   const subscriptions: Subscription[] = useMemo(() => {
     if (!typesData || !plansData) return [];
     return typesData
-      .filter(type => selectedGroupId === null || type.group_id === selectedGroupId)
-      .map(type => {
+      .filter(
+        (type) => selectedGroupId === null || type.group_id === selectedGroupId,
+      )
+      .map((type) => {
         const associatedPlans = plansData
-          .filter(plan => plan.subscription_type_id === type.id)
+          .filter((plan) => plan.subscription_type_id === type.id)
           .sort((a, b) => Number(a.price) - Number(b.price));
 
         if (associatedPlans.length === 0) return null;
 
-        const planOptions: SubscriptionOption[] = associatedPlans.map(plan => {
-          const discountDetails = plan.discount_details ?? undefined;
-          const originalPriceNum = plan.original_price ? Number(plan.original_price) : null;
-          const currentPriceNum = Number(plan.price);
-          return {
-            id: plan.id,
-            duration: plan.name,
-            price: String(currentPriceNum),
-            originalPrice: originalPriceNum,
-            hasDiscount: originalPriceNum !== null && originalPriceNum > currentPriceNum,
-            discountPercentage: originalPriceNum
-              ? `${Math.round(((originalPriceNum - currentPriceNum) / originalPriceNum) * 100)}`
-              : undefined,
-            telegramStarsPrice: plan.telegram_stars_price,
-            discountDetails: discountDetails && discountDetails.discount_id ? discountDetails : undefined,
-            // ⚠️ مهم: قادم من الخادم
-            // تأكد أن SubscriptionOption تحتوي isTrial?: boolean في typesPlan.ts
-            isTrial: plan.is_trial === true,
-            trialDurationDays: plan.is_trial ? plan.duration_days : undefined,
-          };
-        });
+        const planOptions: SubscriptionOption[] = associatedPlans.map(
+          (plan) => {
+            const discountDetails = plan.discount_details ?? undefined;
+            const originalPriceNum = plan.original_price
+              ? Number(plan.original_price)
+              : null;
+            const currentPriceNum = Number(plan.price);
+            return {
+              id: plan.id,
+              duration: plan.name,
+              price: String(currentPriceNum),
+              originalPrice: originalPriceNum,
+              hasDiscount:
+                originalPriceNum !== null && originalPriceNum > currentPriceNum,
+              discountPercentage: originalPriceNum
+                ? `${Math.round(((originalPriceNum - currentPriceNum) / originalPriceNum) * 100)}`
+                : undefined,
+              telegramStarsPrice: plan.telegram_stars_price,
+              discountDetails:
+                discountDetails && discountDetails.discount_id
+                  ? discountDetails
+                  : undefined,
+              // ⚠️ مهم: قادم من الخادم
+              // تأكد أن SubscriptionOption تحتوي isTrial?: boolean في typesPlan.ts
+              isTrial: plan.is_trial === true,
+              trialDurationDays: plan.is_trial ? plan.duration_days : undefined,
+            };
+          },
+        );
 
         const CardIcon = getCardIcon(type);
         return {
           id: type.id,
           name: type.name,
-          tagline: type.description || 'اكتشف مزايا هذا الاشتراك',
+          tagline: type.description || "اكتشف مزايا هذا الاشتراك",
           features: type.features || [],
           isRecommended: type.is_recommended || false,
           terms_and_conditions: type.terms_and_conditions || [],
@@ -158,20 +223,23 @@ const ShopComponent = () => {
   // اختيار افتراضي لخطة "مدفوعة" (استبعاد التجريبية)
   useEffect(() => {
     if (subscriptions.length > 0) {
-      const initialPlanIds = subscriptions.reduce((acc, sub) => {
-        if (!selectedPlanIds[sub.id]) {
-          const paidPlans = sub.plans.filter(p => !p.isTrial);
-          const defaultPlan =
-            paidPlans.find(p => p.duration.includes('شهر')) || paidPlans[0]; // أول خطة مدفوعة مناسبة
-          if (defaultPlan) {
-            acc[sub.id] = defaultPlan.id;
+      const initialPlanIds = subscriptions.reduce(
+        (acc, sub) => {
+          if (!selectedPlanIds[sub.id]) {
+            const paidPlans = sub.plans.filter((p) => !p.isTrial);
+            const defaultPlan =
+              paidPlans.find((p) => p.duration.includes("شهر")) || paidPlans[0]; // أول خطة مدفوعة مناسبة
+            if (defaultPlan) {
+              acc[sub.id] = defaultPlan.id;
+            }
           }
-        }
-        return acc;
-      }, {} as { [key: number]: number });
+          return acc;
+        },
+        {} as { [key: number]: number },
+      );
 
       if (Object.keys(initialPlanIds).length > 0) {
-        setSelectedPlanIds(prev => ({ ...prev, ...initialPlanIds }));
+        setSelectedPlanIds((prev) => ({ ...prev, ...initialPlanIds }));
       }
     }
   }, [subscriptions, selectedPlanIds]);
@@ -193,21 +261,25 @@ const ShopComponent = () => {
         const hasOverflow = el.scrollWidth > el.clientWidth;
         setShowScrollButtons({
           left: el.scrollLeft > 0,
-          right: hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
+          right:
+            hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
         });
       }
     };
     checkScroll();
     const el = tabsContainerRef.current;
-    el?.addEventListener('scroll', checkScroll);
-    window.addEventListener('resize', checkScroll);
+    el?.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
     return () => {
-      el?.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
+      el?.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
     };
   }, [groupsData]);
 
-  const handleSubscribeClick = (subscription: Subscription, selectedPlan: SubscriptionOption) => {
+  const handleSubscribeClick = (
+    subscription: Subscription,
+    selectedPlan: SubscriptionOption,
+  ) => {
     const modalData: ModalPlanData = {
       id: subscription.id,
       name: subscription.name,
@@ -215,14 +287,18 @@ const ShopComponent = () => {
       features: subscription.features,
       isRecommended: subscription.isRecommended,
       termsAndConditions: subscription.terms_and_conditions,
-      selectedOption: selectedPlan
+      selectedOption: selectedPlan,
     };
     setSelectedPlanForModal(modalData);
   };
 
-  const handleGroupSelect = (groupId: number | null) => setSelectedGroupId(groupId);
-  const scrollTabs = (direction: 'left' | 'right') =>
-    tabsContainerRef.current?.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: 'smooth' });
+  const handleGroupSelect = (groupId: number | null) =>
+    setSelectedGroupId(groupId);
+  const scrollTabs = (direction: "left" | "right") =>
+    tabsContainerRef.current?.scrollBy({
+      left: direction === "left" ? -200 : 200,
+      behavior: "smooth",
+    });
 
   const initialLoading = groupsLoading || (plansLoading && !plansData);
   const hasError = !!(groupsError || typesError || plansError);
@@ -230,7 +306,10 @@ const ShopComponent = () => {
   return (
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
       <QueryBoundary isLoading={initialLoading} isError={hasError}>
-        <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col">
+        <div
+          dir="rtl"
+          className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col"
+        >
           <PageLayout maxWidth="2xl">
             <section className="pt-20 pb- text-center">
               <div className="relative z-10 max-w-4xl mx-auto px-6">
@@ -240,7 +319,9 @@ const ShopComponent = () => {
                   transition={{ delay: 0.2, duration: 0.5 }}
                   className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight"
                 >
-                  <span className="block text-primary-600">اختر الاشتراك الأنسب لك!</span>
+                  <span className="block text-primary-600">
+                    اختر الاشتراك الأنسب لك!
+                  </span>
                   واستثمر بذكاء مع خبرائنا
                 </motion.h1>
                 <motion.div
@@ -258,22 +339,29 @@ const ShopComponent = () => {
             </section>
 
             <div className="relative my-12 md:my-16 px-4">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+              <div
+                className="absolute inset-0 flex items-center"
+                aria-hidden="true"
+              >
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-gray-50 px-4 text-primary-600"><Gem className="h-7 w-7" /></span>
+                <span className="bg-gray-50 px-4 text-primary-600">
+                  <Gem className="h-7 w-7" />
+                </span>
               </div>
             </div>
 
-            {(groupsData && groupsData.length > 1) && (
+            {groupsData && groupsData.length > 1 && (
               <section className="sticky top-[60px] z-30 bg-gray-50/80 backdrop-blur-sm pt-4 pb-3 -mt-12 mb-8">
                 <div className="container mx-auto px-4 relative">
                   <AnimatePresence>
                     {showScrollButtons.left && (
                       <motion.button
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={() => scrollTabs('left')}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => scrollTabs("left")}
                         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/70 backdrop-blur-sm rounded-full shadow-md w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors"
                       >
                         <ChevronRight className="w-5 h-5" />
@@ -285,16 +373,21 @@ const ShopComponent = () => {
                     ref={tabsContainerRef}
                     className="flex justify-start lg:justify-center items-center overflow-x-auto gap-2 md:gap-4 pb-2 scrollbar-hide -mx-4 px-4"
                   >
-                    {[{ id: null, name: 'الكل', icon: Layers }, ...groupsData.map(g => ({ ...g, icon: Tag }))].map(group => (
+                    {[
+                      { id: null, name: "الكل", icon: Layers },
+                      ...groupsData.map((g) => ({ ...g, icon: Tag })),
+                    ].map((group) => (
                       <button
-                        key={group.id ?? 'all'}
+                        key={group.id ?? "all"}
                         onClick={() => handleGroupSelect(group.id)}
                         className={cn(
                           "flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2",
                           {
-                            'bg-primary-600 text-white shadow-md': selectedGroupId === group.id,
-                            'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60': selectedGroupId !== group.id
-                          }
+                            "bg-primary-600 text-white shadow-md":
+                              selectedGroupId === group.id,
+                            "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60":
+                              selectedGroupId !== group.id,
+                          },
                         )}
                       >
                         <group.icon className="w-4 h-4" />
@@ -306,8 +399,10 @@ const ShopComponent = () => {
                   <AnimatePresence>
                     {showScrollButtons.right && (
                       <motion.button
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={() => scrollTabs('right')}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => scrollTabs("right")}
                         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/70 backdrop-blur-sm rounded-full shadow-md w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors"
                       >
                         <ChevronLeft className="w-5 h-5" />
@@ -328,9 +423,14 @@ const ShopComponent = () => {
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-16 bg-white rounded-2xl shadow-sm border"
+                        className={cn(
+                          componentVariants.card.elevated,
+                          "text-center py-16",
+                        )}
                       >
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">لا توجد باقات متاحة حاليًا</h3>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">
+                          لا توجد باقات متاحة حاليًا
+                        </h3>
                         <p className="text-gray-600 max-w-md mx-auto font-arabic">
                           يرجى التحقق مرة أخرى في وقت لاحق أو اختيار فئة أخرى.
                         </p>
@@ -338,267 +438,350 @@ const ShopComponent = () => {
                     </div>
                   ) : (
                     subscriptions.map((sub, index) => {
-                    // استبعاد التجريبية من العرض
-                    const displayPlans = sub.plans.filter(p => !p.isTrial);
-                    const trialPlan = sub.plans.find(p => p.isTrial) || null;
+                      // استبعاد التجريبية من العرض
+                      const displayPlans = sub.plans.filter((p) => !p.isTrial);
+                      const trialPlan =
+                        sub.plans.find((p) => p.isTrial) || null;
 
-                    // اختيار الخطة المدفوعة المحددة
-                    const selectedPaidPlanId = selectedPlanIds[sub.id];
-                    const selectedPlan = displayPlans.find(p => p.id === selectedPaidPlanId) || displayPlans[0];
+                      // اختيار الخطة المدفوعة المحددة
+                      const selectedPaidPlanId = selectedPlanIds[sub.id];
+                      const selectedPlan =
+                        displayPlans.find((p) => p.id === selectedPaidPlanId) ||
+                        displayPlans[0];
 
-                    const CardIcon = sub.icon;
+                      const CardIcon = sub.icon;
 
-                    // حالة خاصة: لا توجد خطط مدفوعة (تجريبية فقط)
-                    const trialOnly = displayPlans.length === 0 && !!trialPlan;
+                      // حالة خاصة: لا توجد خطط مدفوعة (تجريبية فقط)
+                      const trialOnly =
+                        displayPlans.length === 0 && !!trialPlan;
 
-                    // لرسالة التخفيض المتدرّج (فقط إن كان لدينا خطة مدفوعة مختارة)
-                    const isTieredDiscount = !!selectedPlan?.discountDetails?.is_tiered;
-                    let nextPrice: number | null = null;
-                    if (selectedPlan && isTieredDiscount && selectedPlan.discountDetails?.next_tier_info?.message) {
-                      const match = selectedPlan.discountDetails.next_tier_info.message.match(/(\d+(\.\d+)?)/);
-                      if (match) nextPrice = Number(match[0]);
-                    }
+                      // لرسالة التخفيض المتدرّج (فقط إن كان لدينا خطة مدفوعة مختارة)
+                      const isTieredDiscount =
+                        !!selectedPlan?.discountDetails?.is_tiered;
+                      let nextPrice: number | null = null;
+                      if (
+                        selectedPlan &&
+                        isTieredDiscount &&
+                        selectedPlan.discountDetails?.next_tier_info?.message
+                      ) {
+                        const match =
+                          selectedPlan.discountDetails.next_tier_info.message.match(
+                            /(\d+(\.\d+)?)/,
+                          );
+                        if (match) nextPrice = Number(match[0]);
+                      }
 
-                    return (
-                      <LazyLoad key={`${sub.id}-${selectedGroupId}`} fallback={<SubscriptionCardSkeleton />}>
-                      <motion.div
-                        key={`${sub.id}-${selectedGroupId}`}
-                        layout
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1, type: 'spring', stiffness: 200, damping: 25 }}
-                      >
-                        <Card
-                          className={cn(
-                            "h-full flex flex-col border-gray-200/80 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 bg-white/70 backdrop-blur-sm rounded-2xl text-center",
-                            sub.isRecommended && "ring-2 ring-primary-500"
-                          )}
+                      return (
+                        <LazyLoad
+                          key={`${sub.id}-${selectedGroupId}`}
+                          fallback={<SubscriptionCardSkeleton />}
                         >
-                          <CardHeader className="flex flex-col items-center pt-8">
-                            {sub.isRecommended && (
-                              <Badge
-                                variant="secondary"
-                                className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 px-2 py-1 text-xs font-bold shadow-lg"
-                              >
-                                <Crown className="w-3.5 h-3.5 ml-1" /> موصى به
-                              </Badge>
-                            )}
-                            <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                              <CardIcon className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-900">{sub.name}</h3>
-                            <p className="text-gray-500 text-sm min-h-10 px-2">{sub.tagline}</p>
-                          </CardHeader>
-
-                          <CardContent className="p-6 flex-1 flex flex-col justify-between">
-                            {/* ====== حالة "تجريبية فقط" ====== */}
-                            {trialOnly ? (
-                              <div className="flex-1 flex flex-col items-center justify-center">
-                                <div className="text-center mb-4">
-                                  <span className="inline-block px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-100 rounded-full">
-                                    تجربة مجانية
-                                  </span>
+                          <motion.div
+                            key={`${sub.id}-${selectedGroupId}`}
+                            layout
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay: index * 0.1,
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 25,
+                            }}
+                          >
+                            <Card
+                              className={cn(
+                                "h-full flex flex-col border-gray-200/80 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 bg-white/70 backdrop-blur-sm rounded-2xl text-center",
+                                sub.isRecommended && "ring-2 ring-primary-500",
+                              )}
+                            >
+                              <CardHeader className="flex flex-col items-center pt-8">
+                                {sub.isRecommended && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 px-2 py-1 text-xs font-bold shadow-lg"
+                                  >
+                                    <Crown className="w-3.5 h-3.5 ml-1" /> موصى
+                                    به
+                                  </Badge>
+                                )}
+                                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                  <CardIcon className="w-8 h-8 text-white" />
                                 </div>
-                                <p className="text-gray-600 text-sm mb-6">هذه الباقة متاحة كتجربة مجانية حاليًا.</p>
-                                <Button
-                                  onClick={() => trialPlan && handleSubscribeClick(sub, trialPlan)}
-                                  size="lg"
-                                  className={cn(
-                                    "w-full relative overflow-hidden group",
-                                    "bg-emerald-600 hover:bg-emerald-700",
-                                    "text-white px-4 py-4 rounded-2xl",
-                                    "font-semibold text-lg",
-                                    "shadow-xl shadow-emerald-300/25",
-                                    "transition-all duration-300"
-                                  )}
-                                >
-                                  <span className="relative flex items-center justify-center gap-3">
-                                    <span>جرب {trialPlan?.trialDurationDays || ''} {trialPlan?.trialDurationDays ? 'يوم' : ''} مجانًا</span>
-                                    <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
-                                  </span>
-                                </Button>
-                              </div>
-                            ) : (
-                              <>
-                                {/* ====== Tabs لخطط مدفوعة فقط ====== */}
-                                {displayPlans.length > 1 && (
-                                  <div className="mb-6">
-                                    <div className="flex w-full bg-primary-100/70 p-1 rounded-full">
-                                      {displayPlans.map((option) => (
-                                        <button
-                                          key={option.id}
-                                          onClick={() => setSelectedPlanIds((prev) => ({ ...prev, [sub.id]: option.id }))}
-                                          className="relative flex-1 text-sm font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                                        >
-                                          {selectedPlan?.id === option.id && (
-                                            <motion.div
-                                              layoutId={`pill-switch-${sub.id}`}
-                                              className="absolute inset-0 bg-white rounded-full shadow"
-                                              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                            />
-                                          )}
-                                          <span
-                                            className={cn(
-                                              "relative z-10",
-                                              {
-                                                "text-primary-600": selectedPlan?.id === option.id,
-                                                "text-gray-700 hover:text-gray-900": selectedPlan?.id !== option.id,
-                                              }
-                                            )}
-                                          >
-                                            {option.duration}
-                                          </span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                                <h3 className="text-2xl font-bold text-gray-900">
+                                  {sub.name}
+                                </h3>
+                                <p className="text-gray-500 text-sm min-h-10 px-2">
+                                  {sub.tagline}
+                                </p>
+                              </CardHeader>
 
-                                {/* ====== السعر ====== */}
-                                {selectedPlan && (
-                                  <div className="text-center mb-3">
-                                    <div className="flex items-baseline justify-center gap-2">
-                                      {selectedPlan.hasDiscount && !isTieredDiscount && selectedPlan.originalPrice && (
-                                        <span className="text-xl font-medium text-gray-500 line-through">
-                                          ${Number(selectedPlan.originalPrice).toFixed(0)}
-                                        </span>
+                              <CardContent className="p-6 flex-1 flex flex-col justify-between">
+                                {/* ====== حالة "تجريبية فقط" ====== */}
+                                {trialOnly ? (
+                                  <div className="flex-1 flex flex-col items-center justify-center">
+                                    <div className="text-center mb-4">
+                                      <span className="inline-block px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-100 rounded-full">
+                                        تجربة مجانية
+                                      </span>
+                                    </div>
+                                    <p className="text-gray-600 text-sm mb-6">
+                                      هذه الباقة متاحة كتجربة مجانية حاليًا.
+                                    </p>
+                                    <Button
+                                      onClick={() =>
+                                        trialPlan &&
+                                        handleSubscribeClick(sub, trialPlan)
+                                      }
+                                      size="lg"
+                                      className={cn(
+                                        "w-full relative overflow-hidden group",
+                                        "bg-emerald-600 hover:bg-emerald-700",
+                                        "text-white px-4 py-4 rounded-2xl",
+                                        "font-semibold text-lg",
+                                        "shadow-xl shadow-emerald-300/25",
+                                        "transition-all duration-300",
                                       )}
-                                      <motion.div
-                                        key={selectedPlan.price}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                      >
-                                        <span
-                                          className={cn(
-                                            "text-4xl font-extrabold tracking-tight",
-                                            isTieredDiscount
-                                              ? "text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-500"
-                                              : "text-gray-900"
-                                          )}
-                                        >
-                                          ${Number(selectedPlan.price).toFixed(0)}
+                                    >
+                                      <span className="relative flex items-center justify-center gap-3">
+                                        <span>
+                                          جرب{" "}
+                                          {trialPlan?.trialDurationDays || ""}{" "}
+                                          {trialPlan?.trialDurationDays
+                                            ? "يوم"
+                                            : ""}{" "}
+                                          مجانًا
                                         </span>
-                                      </motion.div>
-                                    </div>
-                                    <span className="text-sm text-gray-500"> / {selectedPlan.duration} </span>
+                                        <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
+                                      </span>
+                                    </Button>
                                   </div>
-                                )}
+                                ) : (
+                                  <>
+                                    {/* ====== Tabs لخطط مدفوعة فقط ====== */}
+                                    {displayPlans.length > 1 && (
+                                      <div className="mb-6">
+                                        <div className="flex w-full bg-primary-100/70 p-1 rounded-full">
+                                          {displayPlans.map((option) => (
+                                            <button
+                                              key={option.id}
+                                              onClick={() =>
+                                                setSelectedPlanIds((prev) => ({
+                                                  ...prev,
+                                                  [sub.id]: option.id,
+                                                }))
+                                              }
+                                              className="relative flex-1 text-sm font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                                            >
+                                              {selectedPlan?.id ===
+                                                option.id && (
+                                                <motion.div
+                                                  layoutId={`pill-switch-${sub.id}`}
+                                                  className="absolute inset-0 bg-white rounded-full shadow"
+                                                  transition={{
+                                                    type: "spring",
+                                                    stiffness: 300,
+                                                    damping: 30,
+                                                  }}
+                                                />
+                                              )}
+                                              <span
+                                                className={cn("relative z-10", {
+                                                  "text-primary-600":
+                                                    selectedPlan?.id ===
+                                                    option.id,
+                                                  "text-gray-700 hover:text-gray-900":
+                                                    selectedPlan?.id !==
+                                                    option.id,
+                                                })}
+                                              >
+                                                {option.duration}
+                                              </span>
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
 
-                                {/* ====== معلومات الخصم ====== */}
-                                {selectedPlan && (
-                                  <div className="h-auto flex flex-col items-center justify-center">
-                                    <AnimatePresence mode="wait">
-                                      {isTieredDiscount ? (
-                                        <motion.div
-                                          key="tiered-info-box"
-                                          initial={{ opacity: 0, y: 10 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                          exit={{ opacity: 0, y: -10 }}
-                                          className="w-full space-y-2 text-sm bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-3 border border-orange-200"
-                                        >
-                                          {(selectedPlan.discountDetails?.remaining_slots ?? 0) > 0 && (
-                                            <div className="flex flex-col items-center justify-center text-center gap-2 font-medium text-gray-700">
-                                              <div className="flex items-center gap-2">
-                                                <Flame className="w-6 h-6 text-red-400 animate-pulse" />
-                                                <span>
-                                                  متبقي{" "}
-                                                  <span className="font-bold text-lg text-primary-600">
-                                                    {selectedPlan.discountDetails?.remaining_slots}
-                                                  </span>{" "}
-                                                  مقاعد فقط بهذا السعر
-                                                </span>
-                                              </div>
+                                    {/* ====== السعر ====== */}
+                                    {selectedPlan && (
+                                      <div className="text-center mb-3">
+                                        <div className="flex items-baseline justify-center gap-2">
+                                          {selectedPlan.hasDiscount &&
+                                            !isTieredDiscount &&
+                                            selectedPlan.originalPrice && (
+                                              <span className="text-xl font-medium text-gray-500 line-through">
+                                                $
+                                                {Number(
+                                                  selectedPlan.originalPrice,
+                                                ).toFixed(0)}
+                                              </span>
+                                            )}
+                                          <motion.div
+                                            key={selectedPlan.price}
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.3 }}
+                                          >
+                                            <span
+                                              className={cn(
+                                                "text-4xl font-extrabold tracking-tight",
+                                                isTieredDiscount
+                                                  ? "text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-500"
+                                                  : "text-gray-900",
+                                              )}
+                                            >
+                                              $
+                                              {Number(
+                                                selectedPlan.price,
+                                              ).toFixed(0)}
+                                            </span>
+                                          </motion.div>
+                                        </div>
+                                        <span className="text-sm text-gray-500">
+                                          {" "}
+                                          / {selectedPlan.duration}{" "}
+                                        </span>
+                                      </div>
+                                    )}
 
-                                              {nextPrice !== null && (
-                                                <div className="flex items-center gap-1 text-red-600">
-                                                  <TrendingUp className="w-4 h-4" />
-                                                  <span>
-                                                    بعد ذلك سيكون السعر{" "}
-                                                    <span className="font-bold text-lg">
-                                                      ${nextPrice.toFixed(0)}
+                                    {/* ====== معلومات الخصم ====== */}
+                                    {selectedPlan && (
+                                      <div className="h-auto flex flex-col items-center justify-center">
+                                        <AnimatePresence mode="wait">
+                                          {isTieredDiscount ? (
+                                            <motion.div
+                                              key="tiered-info-box"
+                                              initial={{ opacity: 0, y: 10 }}
+                                              animate={{ opacity: 1, y: 0 }}
+                                              exit={{ opacity: 0, y: -10 }}
+                                              className="w-full space-y-2 text-sm bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-3 border border-orange-200"
+                                            >
+                                              {(selectedPlan.discountDetails
+                                                ?.remaining_slots ?? 0) > 0 && (
+                                                <div className="flex flex-col items-center justify-center text-center gap-2 font-medium text-gray-700">
+                                                  <div className="flex items-center gap-2">
+                                                    <Flame className="w-6 h-6 text-red-400 animate-pulse" />
+                                                    <span>
+                                                      متبقي{" "}
+                                                      <span className="font-bold text-lg text-primary-600">
+                                                        {
+                                                          selectedPlan
+                                                            .discountDetails
+                                                            ?.remaining_slots
+                                                        }
+                                                      </span>{" "}
+                                                      مقاعد فقط بهذا السعر
                                                     </span>
-                                                  </span>
+                                                  </div>
+
+                                                  {nextPrice !== null && (
+                                                    <div className="flex items-center gap-1 text-red-600">
+                                                      <TrendingUp className="w-4 h-4" />
+                                                      <span>
+                                                        بعد ذلك سيكون السعر{" "}
+                                                        <span className="font-bold text-lg">
+                                                          $
+                                                          {nextPrice.toFixed(0)}
+                                                        </span>
+                                                      </span>
+                                                    </div>
+                                                  )}
                                                 </div>
                                               )}
-                                            </div>
-                                          )}
 
-                                          {selectedPlan.discountDetails?.lock_in_price && (
-                                            <div className="flex items-center justify-center gap-2 text-green-700 pt-2 border-top border-orange-200/60 mt-2">
-                                              <ShieldCheck className="w-4 h-4 text-green-600 animate-bounce" />
-                                              <p className="text-sm font-medium">
-                                                سيتم تثبيت سعر اشتراكك للشهور القادمة
-                                              </p>
-                                            </div>
-                                          )}
-                                        </motion.div>
-                                      ) : selectedPlan.hasDiscount ? (
-                                        <motion.div
-                                          key="standard-info"
-                                          initial={{ opacity: 0 }}
-                                          animate={{ opacity: 1 }}
-                                          exit={{ opacity: 0 }}
-                                        >
-                                          <Badge variant="destructive" className="font-bold">
-                                            خصم {selectedPlan.discountPercentage}%
-                                          </Badge>
-                                        </motion.div>
-                                      ) : null}
-                                    </AnimatePresence>
-                                  </div>
+                                              {selectedPlan.discountDetails
+                                                ?.lock_in_price && (
+                                                <div className="flex items-center justify-center gap-2 text-green-700 pt-2 border-top border-orange-200/60 mt-2">
+                                                  <ShieldCheck className="w-4 h-4 text-green-600 animate-bounce" />
+                                                  <p className="text-sm font-medium">
+                                                    سيتم تثبيت سعر اشتراكك
+                                                    للشهور القادمة
+                                                  </p>
+                                                </div>
+                                              )}
+                                            </motion.div>
+                                          ) : selectedPlan.hasDiscount ? (
+                                            <motion.div
+                                              key="standard-info"
+                                              initial={{ opacity: 0 }}
+                                              animate={{ opacity: 1 }}
+                                              exit={{ opacity: 0 }}
+                                            >
+                                              <Badge
+                                                variant="destructive"
+                                                className="font-bold"
+                                              >
+                                                خصم{" "}
+                                                {
+                                                  selectedPlan.discountPercentage
+                                                }
+                                                %
+                                              </Badge>
+                                            </motion.div>
+                                          ) : null}
+                                        </AnimatePresence>
+                                      </div>
+                                    )}
+
+                                    {isTieredDiscount && (
+                                      <div className="mt-4 text-center">
+                                        <span className="inline-block px-3 py-1 text-xs font-bold text-orange-700 bg-orange-100 rounded-full">
+                                          عرض محدود
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* زر اشتراك الآن (مدفوع) */}
+                                    <Button
+                                      onClick={() =>
+                                        selectedPlan &&
+                                        handleSubscribeClick(sub, selectedPlan)
+                                      }
+                                      size="lg"
+                                      className={cn(
+                                        "w-full relative overflow-hidden group mt-4",
+                                        "bg-gradient-to-r from-primary-500 to-primary-700",
+                                        "text-white px-4 py-4 rounded-2xl",
+                                        "font-semibold text-lg",
+                                        "shadow-xl shadow-primary-300/25",
+                                        "transition-all duration-300",
+                                        "hover:shadow-2xl hover:shadow-primary-500/30",
+                                        "hover:-translate-y-1",
+                                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                                      )}
+                                      disabled={!selectedPlan}
+                                    >
+                                      <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                      <span className="relative flex items-center justify-center gap-3">
+                                        <span>اشترك الآن</span>
+                                        <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
+                                      </span>
+                                    </Button>
+
+                                    {/* سطر "جرّب مجانًا" يظهر فقط للتجربة */}
+                                    {trialPlan && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleSubscribeClick(sub, trialPlan)
+                                        }
+                                        className="mt-3 text-primary-700 hover:text-primary-800 text-sm font-bold underline underline-offset-4"
+                                      >
+                                        جرب {trialPlan.trialDurationDays || ""}{" "}
+                                        {trialPlan.trialDurationDays
+                                          ? "يوم"
+                                          : ""}{" "}
+                                        مجانًا
+                                      </button>
+                                    )}
+                                  </>
                                 )}
-
-                                {isTieredDiscount && (
-                                  <div className="mt-4 text-center">
-                                    <span className="inline-block px-3 py-1 text-xs font-bold text-orange-700 bg-orange-100 rounded-full">
-                                      عرض محدود
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* زر اشتراك الآن (مدفوع) */}
-                                <Button
-                                  onClick={() => selectedPlan && handleSubscribeClick(sub, selectedPlan)}
-                                  size="lg"
-                                  className={cn(
-                                    "w-full relative overflow-hidden group mt-4",
-                                    "bg-gradient-to-r from-primary-500 to-primary-700",
-                                    "text-white px-4 py-4 rounded-2xl",
-                                    "font-semibold text-lg",
-                                    "shadow-xl shadow-primary-300/25",
-                                    "transition-all duration-300",
-                                    "hover:shadow-2xl hover:shadow-primary-500/30",
-                                    "hover:-translate-y-1",
-                                    "disabled:opacity-50 disabled:cursor-not-allowed"
-                                  )}
-                                  disabled={!selectedPlan}
-                                >
-                                  <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                  <span className="relative flex items-center justify-center gap-3">
-                                    <span>اشترك الآن</span>
-                                    <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
-                                  </span>
-                                </Button>
-
-                                {/* سطر "جرّب مجانًا" يظهر فقط للتجربة */}
-                                {trialPlan && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSubscribeClick(sub, trialPlan)}
-                                    className="mt-3 text-primary-700 hover:text-primary-800 text-sm font-bold underline underline-offset-4"
-                                  >
-                                    جرب {trialPlan.trialDurationDays || ''} {trialPlan.trialDurationDays ? 'يوم' : ''} مجانًا
-                                  </button>
-                                )}
-                              </>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    </LazyLoad>
-                    );
-                  })
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        </LazyLoad>
+                      );
+                    })
                   )}
                 </div>
               )}
@@ -617,7 +800,7 @@ const ShopComponent = () => {
       </QueryBoundary>
     </TonConnectUIProvider>
   );
-}
+};
 
 const Shop = dynamic(() => Promise.resolve(ShopComponent), { ssr: false });
 export default Shop;

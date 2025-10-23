@@ -2,48 +2,48 @@
  * Error Boundary Component
  * يلتقط الأخطاء في React tree ويعرض UI بديل
  */
-'use client'
+"use client";
 
-import React, { Component, ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
-import logger from '@/core/utils/logger'
+import React, { Component, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import logger from "@/core/utils/logger";
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onReset?: () => void
-  showDetails?: boolean
+  children: ReactNode;
+  fallback?: ReactNode;
+  onReset?: () => void;
+  showDetails?: boolean;
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
-  errorInfo?: React.ErrorInfo
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: React.ErrorInfo;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('ErrorBoundary caught an error:', error)
-    logger.error('Error Info:', errorInfo)
+    logger.error("ErrorBoundary caught an error:", error);
+    logger.error("Error Info:", errorInfo);
 
     this.setState({
       error,
       errorInfo,
-    })
+    });
 
     // يمكن إرسال الخطأ إلى خدمة مراقبة (Sentry, LogRocket, etc.)
-    this.reportError(error, errorInfo)
+    this.reportError(error, errorInfo);
   }
 
   private reportError(_error: Error, _errorInfo: React.ErrorInfo) {
@@ -52,18 +52,18 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
-    this.props.onReset?.()
-  }
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.props.onReset?.();
+  };
 
   private handleGoHome = () => {
-    window.location.href = '/'
-  }
+    window.location.href = "/";
+  };
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
@@ -81,7 +81,8 @@ export class ErrorBoundary extends Component<Props, State> {
               </h2>
 
               <p className="text-gray-600 dark:text-neutral-400 mb-6 leading-relaxed">
-                نعتذر عن الإزعاج. حدث خطأ أثناء عرض هذه الصفحة. يرجى المحاولة مرة أخرى.
+                نعتذر عن الإزعاج. حدث خطأ أثناء عرض هذه الصفحة. يرجى المحاولة
+                مرة أخرى.
               </p>
 
               {this.props.showDetails && this.state.error && (
@@ -118,10 +119,10 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardContent>
           </Card>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
@@ -130,17 +131,17 @@ export class ErrorBoundary extends Component<Props, State> {
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
+  errorBoundaryProps?: Omit<Props, "children">,
 ) {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary {...errorBoundaryProps}>
       <Component {...props} />
     </ErrorBoundary>
-  )
+  );
 
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
 
-  return WrappedComponent
+  return WrappedComponent;
 }
 
-export default ErrorBoundary
+export default ErrorBoundary;

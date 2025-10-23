@@ -1,17 +1,12 @@
 // src/features/auth/components/UnlinkedStateBanner.tsx
-'use client';
+"use client";
+import { cn } from "@/lib/utils";
+import { componentVariants, mergeVariants } from "@/components/ui/variants";
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useUserStore } from '@/stores/zustand/userStore';
-import { 
-  Smartphone, 
-  CheckCircle2, 
-  Gift, 
-  Zap, 
-  X,
-  Sparkles 
-} from 'lucide-react';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useUserStore } from "@/stores/zustand/userStore";
+import { Smartphone, CheckCircle2, Gift, Zap, X, Sparkles } from "lucide-react";
 
 interface UnlinkedStateBannerProps {
   onLinkClick: () => void;
@@ -30,18 +25,18 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
   const features = [
     {
       icon: Zap,
-      title: 'وصول فوري',
-      description: 'استعراض جميع الخدمات والأدوات',
+      title: "وصول فوري",
+      description: "استعراض جميع الخدمات والأدوات",
     },
     {
       icon: Gift,
-      title: 'عروض حصرية',
-      description: 'خصومات خاصة للمستخدمين المربوطين',
+      title: "عروض حصرية",
+      description: "خصومات خاصة للمستخدمين المربوطين",
     },
     {
       icon: Sparkles,
-      title: 'تجربة محسنة',
-      description: 'مزامنة سلسة بين الموبايل والويب',
+      title: "تجربة محسنة",
+      description: "مزامنة سلسة بين الموبايل والويب",
     },
   ];
 
@@ -55,7 +50,12 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
         className="relative"
       >
         {/* Mobile Version */}
-        <div className="md:hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
+        <div
+          className={cn(
+            componentVariants.card.elevated,
+            "md:hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white p-5 relative overflow-hidden",
+          )}
+        >
           <button
             onClick={() => setIsDismissed(true)}
             className="absolute top-3 left-3 p-1 text-white/80 hover:text-white transition-colors"
@@ -85,7 +85,12 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
         </div>
 
         {/* Desktop Version */}
-        <div className="hidden md:block bg-gradient-to-br from-primary-50 via-white to-primary-50/50 dark:from-primary-950/30 dark:via-neutral-900 dark:to-primary-950/30 border-2 border-primary-200 dark:border-primary-800/50 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+        <div
+          className={cn(
+            componentVariants.card.elevated,
+            "hidden md:block bg-gradient-to-br from-primary-50 via-white to-primary-50/50 dark:from-primary-950/30 dark:via-neutral-900 dark:to-primary-950/30 dark: /50 p-8 relative overflow-hidden",
+          )}
+        >
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
@@ -109,7 +114,8 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
                   اربط حسابك للوصول الكامل
                 </h2>
                 <p className="text-lg text-gray-600 dark:text-neutral-400 mb-6 max-w-xl">
-                  قم بمزامنة حسابك مع تطبيق الموبايل للاستفادة من جميع الخدمات والحصول على تجربة متكاملة
+                  قم بمزامنة حسابك مع تطبيق الموبايل للاستفادة من جميع الخدمات
+                  والحصول على تجربة متكاملة
                 </p>
 
                 {showFeatures && (
@@ -120,7 +126,10 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 * index }}
-                        className="flex items-start gap-3 bg-white dark:bg-neutral-800/50 p-4 rounded-xl border border-gray-100 dark:border-neutral-700"
+                        className={cn(
+                          componentVariants.card.base,
+                          "flex items-start gap-3 /50 p-4 rounded-xl dark:",
+                        )}
                       >
                         <div className="bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg">
                           <feature.icon className="w-5 h-5 text-primary-600 dark:text-primary-400" />

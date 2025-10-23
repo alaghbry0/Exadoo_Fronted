@@ -1,5 +1,5 @@
 // SkeletonLoader.tsx
-import React from 'react';
+import React from "react";
 
 export function SkeletonLoader() {
   return (

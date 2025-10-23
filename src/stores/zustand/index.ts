@@ -1,7 +1,7 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 // تعريف حالة الدفع
-type PaymentStatus = 'idle' | 'pending' | 'success' | 'failed';
+type PaymentStatus = "idle" | "pending" | "success" | "failed";
 
 interface ExchangeState {
   paymentStatus: PaymentStatus;
@@ -27,6 +27,6 @@ export const useTariffStore = create<TariffState>((set) => ({
   walletAddress: null,
   setWalletAddress: (walletAddress) => set({ walletAddress }),
 
-  exchangeDetails: { paymentStatus: 'idle' },
+  exchangeDetails: { paymentStatus: "idle" },
   setExchangeDetails: (details) => set({ exchangeDetails: details }),
 }));

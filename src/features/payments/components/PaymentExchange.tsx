@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { ExchangePaymentModal } from './ExchangePaymentModal';
-import { useToast } from '@/hooks/use-toast';
+import React from "react";
+import { ExchangePaymentModal } from "./ExchangePaymentModal";
+import { useToast } from "@/hooks/use-toast";
 
 interface PaymentExchangeProps {
   depositAddress: string;
@@ -15,10 +14,10 @@ interface PaymentExchangeProps {
 const PaymentExchange: React.FC<PaymentExchangeProps> = ({
   depositAddress,
   amount,
-  network = 'TON',
+  network = "TON",
   paymentToken,
   planName,
-  onClose
+  onClose,
 }) => {
   const { toast } = useToast();
 
@@ -50,7 +49,9 @@ const PaymentExchange: React.FC<PaymentExchangeProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center p-8 max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">خطأ في تحميل البيانات</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            خطأ في تحميل البيانات
+          </h1>
           <p className="text-gray-600">يرجى التأكد من صحة رابط الدفع</p>
         </div>
       </div>
@@ -64,7 +65,7 @@ const PaymentExchange: React.FC<PaymentExchangeProps> = ({
         amount,
         network,
         paymentToken,
-        planName
+        planName,
       }}
       onClose={handleClose}
       onSuccess={handleSuccess}

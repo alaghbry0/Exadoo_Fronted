@@ -1,5 +1,5 @@
 // notificationsStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface NotificationsState {
   unreadCount: number;

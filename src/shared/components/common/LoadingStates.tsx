@@ -1,7 +1,7 @@
 // src/shared/components/common/LoadingStates.tsx
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 // Full page loader
 export function PageLoader() {
@@ -12,7 +12,7 @@ export function PageLoader() {
         <p className="text-gray-600 dark:text-neutral-400">جاري التحميل...</p>
       </div>
     </div>
-  )
+  );
 }
 
 // Card skeleton
@@ -25,7 +25,7 @@ export function CardSkeleton() {
         <Skeleton className="h-4 w-1/2" />
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Grid skeleton
@@ -36,12 +36,12 @@ export function GridSkeleton({ count = 6 }: { count?: number }) {
         <CardSkeleton key={i} />
       ))}
     </div>
-  )
+  );
 }
 
 // Inline loader (for buttons)
 export function InlineLoader() {
-  return <Loader2 className="h-4 w-4 animate-spin" />
+  return <Loader2 className="h-4 w-4 animate-spin" />;
 }
 
 // Table skeleton
@@ -58,5 +58,5 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
         </div>
       ))}
     </div>
-  )
+  );
 }

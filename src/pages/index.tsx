@@ -1,42 +1,56 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { TonConnectButton, TonConnectUIProvider } from '@tonconnect/ui-react'
-import { Activity, BadgePercent, MessagesSquare, ArrowLeft, Target } from 'lucide-react'
-import PageLayout from '@/shared/components/layout/PageLayout'
+import React from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { TonConnectButton, TonConnectUIProvider } from "@tonconnect/ui-react";
+import {
+  Activity,
+  BadgePercent,
+  MessagesSquare,
+  ArrowLeft,
+  Target,
+} from "lucide-react";
+import PageLayout from "@/shared/components/layout/PageLayout";
 // استيراد المكونات الرئيسية من نظام التصميم الخاص بك
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card' // استيراد مكونات Card الفرعية للتنظيم
-
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"; // استيراد مكونات Card الفرعية للتنظيم
 
 const Home: React.FC = () => {
   const featuresData = [
     {
       icon: <Activity className="w-8 h-8 text-white" />,
       title: "تحليلات مباشرة للأسواق",
-      description: "تحليلات يومية وأسبوعية لأهم العملات الرقمية وأزواج سوق الفوركس."
+      description:
+        "تحليلات يومية وأسبوعية لأهم العملات الرقمية وأزواج سوق الفوركس.",
     },
     {
       icon: <BadgePercent className="w-8 h-8 text-white" />,
       title: "توصيات تداول رابحة",
-      description: "توصيات مدروسة المخاطرة وذات نسب نجاح عالية تضمن لك أرباحاً في نهاية كل شهر."
+      description:
+        "توصيات مدروسة المخاطرة وذات نسب نجاح عالية تضمن لك أرباحاً في نهاية كل شهر.",
     },
     {
       icon: <MessagesSquare className="w-8 h-8 text-white" />,
       title: "خدمة عملاء 24/7",
-      description: "دعم فوري وسريع للرد على أي استفسار أو لحل أي مشكلة على مدار اليوم."
-    }
-  ]
+      description:
+        "دعم فوري وسريع للرد على أي استفسار أو لحل أي مشكلة على مدار اليوم.",
+    },
+  ];
 
   return (
     // تحسين: تم تغيير تصميم زر الاتصال ليصبح أكثر بروزًا واحترافية
     <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
-      <div dir="rtl" className="min-h-screen bg-gray-50 text-gray-800 font-arabic">
+      <div
+        dir="rtl"
+        className="min-h-screen bg-gray-50 text-gray-800 font-arabic"
+      >
         <PageLayout maxWidth="2xl">
           {/* Hero Section */}
-          <section aria-label="القسم الرئيسي" className="relative pt-20 pb-24 text-center">
+          <section
+            aria-label="القسم الرئيسي"
+            className="relative pt-20 pb-24 text-center"
+          >
             <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-primary-50/50 to-transparent rounded-3xl mx-4"></div>
 
             <div className="relative z-10 max-w-4xl mx-auto px-6">
@@ -44,10 +58,10 @@ const Home: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="mb-8 flex justify-center">
-                 <TonConnectButton className="!px-6 !py-2 !text-sm !rounded-xl" />
+                className="mb-8 flex justify-center"
+              >
+                <TonConnectButton className="!px-6 !py-2 !text-sm !rounded-xl" />
               </motion.div>
-
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -65,7 +79,8 @@ const Home: React.FC = () => {
                 transition={{ delay: 0.4 }}
                 className="text-lg text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto"
               >
-                احصل على وصول فوري إلى تحليلات مباشرة وتوصيات تداول بنسب نجاح عالية!
+                احصل على وصول فوري إلى تحليلات مباشرة وتوصيات تداول بنسب نجاح
+                عالية!
               </motion.p>
 
               <motion.div
@@ -74,7 +89,11 @@ const Home: React.FC = () => {
                 transition={{ delay: 0.5 }}
               >
                 {/* تم التعديل: استخدام مكون Button مع asChild للحفاظ على وظيفة Link */}
-                <Button asChild size="lg" className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:-translate-y-1">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:-translate-y-1"
+                >
                   <Link href="/shop">
                     اشترك معنا الآن
                     <ArrowLeft className="w-5 h-5 mr-2" />
@@ -87,8 +106,12 @@ const Home: React.FC = () => {
           {/* Features Section */}
           <section className="py-6">
             <div className="text-center mb-12 max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">كل ما تحتاجه للربح بثقة</h2>
-              <p className="text-gray-600 text-lg">نقدم لك الأدوات والتحليلات اللازمة لاتخاذ قرارات تداول مدروسة.</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                كل ما تحتاجه للربح بثقة
+              </h2>
+              <p className="text-gray-600 text-lg">
+                نقدم لك الأدوات والتحليلات اللازمة لاتخاذ قرارات تداول مدروسة.
+              </p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -131,13 +154,16 @@ const Home: React.FC = () => {
                     انضم إلينا اليوم وحقق دخل إضافي من التداول!
                   </h2>
                   <p className="text-lg mb-8 opacity-90 max-w-xl mx-auto">
-                    ابدأ رحلتك نحو دخل إضافي من التداول مع خطط اشتراك مرنة ومناسبة للجميع.
+                    ابدأ رحلتك نحو دخل إضافي من التداول مع خطط اشتراك مرنة
+                    ومناسبة للجميع.
                   </p>
                   {/* تم التعديل: استخدام مكون Button مرة أخرى */}
-                  <Button asChild size="lg" className="bg-white text-primary-600 hover:bg-gray-100 px-8 py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300">
-                    <Link href="/shop">
-                      استعراض خطط الاشتراك
-                    </Link>
+                  <Button
+                    asChild
+                    size="lg"
+                    className="bg-white text-primary-600 hover:bg-gray-100 px-8 py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Link href="/shop">استعراض خطط الاشتراك</Link>
                   </Button>
                 </div>
               </div>
@@ -163,7 +189,6 @@ const Home: React.FC = () => {
         }
       `}</style>
     </TonConnectUIProvider>
-  )
-}
-export default Home
-
+  );
+};
+export default Home;

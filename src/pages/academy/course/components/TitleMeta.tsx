@@ -1,17 +1,17 @@
 // src/features/academy/course/components/TitleMeta.tsx
-import React from 'react'
-import { motion } from 'framer-motion'
-import { CheckCircle2 } from 'lucide-react'
-import type { Course } from '@/types/academy'
-import LevelBadge from './LevelBadge'
-import { cn } from '@/lib/utils'
+import React from "react";
+import { motion } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
+import type { Course } from "@/types/academy";
+import LevelBadge from "./LevelBadge";
+import { cn } from "@/lib/utils";
 
 export default function TitleMeta({
   course,
   isEnrolled,
 }: {
-  course: Course
-  isEnrolled: boolean
+  course: Course;
+  isEnrolled: boolean;
 }) {
   return (
     <motion.section
@@ -22,12 +22,12 @@ export default function TitleMeta({
     >
       <div
         className={cn(
-          'rounded-2xl md:rounded-3xl',
-          'bg-white/80 dark:bg-neutral-900/80',
-          'backdrop-blur-xl',
-          'border border-neutral-200/70 dark:border-neutral-800/60',
-          'shadow-[0_10px_40px_-10px_rgba(0,0,0,0.25)]',
-          'p-4 sm:p-6 md:p-8'
+          "rounded-2xl md:rounded-3xl",
+          "bg-white/80 dark:bg-neutral-900/80",
+          "backdrop-blur-xl",
+          "border border-neutral-200/70 dark:border-neutral-800/60",
+          "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.25)]",
+          "p-4 sm:p-6 md:p-8",
         )}
       >
         <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -61,5 +61,5 @@ export default function TitleMeta({
         </div>
       </div>
     </motion.section>
-  )
+  );
 }

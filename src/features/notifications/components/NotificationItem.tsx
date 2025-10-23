@@ -1,9 +1,9 @@
 // src/components/NotificationItem.tsx (النسخة النهائية والمبسطة)
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { formatDistanceToNow } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
 import {
   Calendar,
   CreditCard,
@@ -16,10 +16,10 @@ import {
   Check,
   ChevronRight,
   AlertTriangle,
-  AlertOctagon
-} from 'lucide-react';
-import { NotificationType } from '@/types/notification';
-import { useNotificationsContext } from '@/context/NotificationsContext'; // ✨ استيراد السياق
+  AlertOctagon,
+} from "lucide-react";
+import { NotificationType } from "@/types/notification";
+import { useNotificationsContext } from "@/context/NotificationsContext"; // ✨ استيراد السياق
 
 interface NotificationItemProps {
   notification: NotificationType;
@@ -28,23 +28,29 @@ interface NotificationItemProps {
 // دالة مساعدة لتحديد أيقونة الإشعار (تبقى كما هي)
 const getNotificationIcon = (type: string) => {
   switch (type) {
-    case 'subscription_renewal':
+    case "subscription_renewal":
       return <Calendar className="w-5 h-5 text-blue-500" strokeWidth={2} />;
-    case 'payment_success':
-      return <CreditCard className="w-5 h-5 text-emerald-500" strokeWidth={2} />;
-    case 'payment_warning':
-      return <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={2} />;
-    case 'payment_failed':
+    case "payment_success":
+      return (
+        <CreditCard className="w-5 h-5 text-emerald-500" strokeWidth={2} />
+      );
+    case "payment_warning":
+      return (
+        <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={2} />
+      );
+    case "payment_failed":
       return <AlertOctagon className="w-5 h-5 text-red-500" strokeWidth={2} />;
-    case 'subscription_expiry':
+    case "subscription_expiry":
       return <Clock className="w-5 h-5 text-amber-500" strokeWidth={2} />;
-    case 'system_notification':
+    case "system_notification":
       return <Info className="w-5 h-5 text-blue-500" strokeWidth={2} />;
-    case 'message':
-      return <MessageSquare className="w-5 h-5 text-indigo-500" strokeWidth={2} />;
-    case 'promotion':
+    case "message":
+      return (
+        <MessageSquare className="w-5 h-5 text-indigo-500" strokeWidth={2} />
+      );
+    case "promotion":
       return <Gift className="w-5 h-5 text-pink-500" strokeWidth={2} />;
-    case 'alert':
+    case "alert":
       return <AlertCircle className="w-5 h-5 text-red-500" strokeWidth={2} />;
     default:
       return <Bell className="w-5 h-5 text-gray-500" strokeWidth={2} />;
@@ -56,19 +62,19 @@ const getTypeBadge = (type: string) => {
   let className = "inline-block text-xs px-2 py-1 rounded-full ";
   let label = "";
   switch (type) {
-    case 'payment_success':
+    case "payment_success":
       className += "bg-emerald-100 text-emerald-800";
       label = "دفع ناجح";
       break;
-    case 'payment_warning':
+    case "payment_warning":
       className += "bg-amber-100 text-amber-800";
       label = "تحذير دفع";
       break;
-    case 'payment_failed':
+    case "payment_failed":
       className += "bg-red-100 text-red-800";
       label = "فشل الدفع";
       break;
-    case 'system_notification':
+    case "system_notification":
       className += "bg-blue-100 text-blue-800";
       label = "إشعار نظام";
       break;
@@ -78,7 +84,9 @@ const getTypeBadge = (type: string) => {
   return <span className={className}>{label}</span>;
 };
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({
+  notification,
+}) => {
   const router = useRouter();
   const { markAsRead } = useNotificationsContext(); // ✨ استخدام السياق مباشرةً
 
@@ -109,26 +117,32 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification }) => 
   });
 
   const containerClasses = `animate-slide-up relative rounded-xl shadow-sm border p-4 flex items-start gap-3 transition-colors duration-200 hover:shadow-md cursor-pointer ${
-    notification.read_status ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
+    notification.read_status
+      ? "bg-white border-gray-200"
+      : "bg-blue-50 border-blue-200"
   }`;
 
   return (
-    <div
-      className={containerClasses}
-      onClick={handleNotificationClick}
-    >
+    <div className={containerClasses} onClick={handleNotificationClick}>
       {/* أيقونة الإشعار */}
-      <div className={`flex-shrink-0 p-2 rounded-full ${notification.read_status ? 'bg-gray-100' : 'bg-blue-100'}`}>
+      <div
+        className={`flex-shrink-0 p-2 rounded-full ${notification.read_status ? "bg-gray-100" : "bg-blue-100"}`}
+      >
         {getNotificationIcon(notification.type)}
       </div>
 
       {/* محتوى الإشعار */}
       <div className="flex-1 min-w-0">
-        <h3 className={`font-semibold truncate ${!notification.read_status ? 'text-blue-800' : 'text-gray-800'}`}>
+        <h3
+          className={`font-semibold truncate ${!notification.read_status ? "text-blue-800" : "text-gray-800"}`}
+        >
           {notification.title}
         </h3>
-        <p className={`mt-1 text-sm ${notification.read_status ? 'text-gray-600' : 'text-gray-700'}`}>
-          {notification.message.substring(0, 100)}{notification.message.length > 100 ? '...' : ''}
+        <p
+          className={`mt-1 text-sm ${notification.read_status ? "text-gray-600" : "text-gray-700"}`}
+        >
+          {notification.message.substring(0, 100)}
+          {notification.message.length > 100 ? "..." : ""}
         </p>
         <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
           <Clock className="w-3 h-3" />

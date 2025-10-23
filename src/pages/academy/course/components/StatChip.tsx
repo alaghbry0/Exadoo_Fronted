@@ -1,7 +1,13 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React from "react";
+import { motion } from "framer-motion";
 
-export default function StatChip({ icon: Icon, label }: { icon: any; label: string | number }) {
+export default function StatChip({
+  icon: Icon,
+  label,
+}: {
+  icon: any;
+  label: string | number;
+}) {
   return (
     <motion.span
       whileHover={{ scale: 1.05, y: -2 }}
@@ -10,5 +16,5 @@ export default function StatChip({ icon: Icon, label }: { icon: any; label: stri
       <Icon className="h-4 w-4 opacity-90" />
       <span>{label}</span>
     </motion.span>
-  )
+  );
 }

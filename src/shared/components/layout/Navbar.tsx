@@ -1,27 +1,26 @@
 // src/shared/components/layout/Navbar.tsx
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Bell, Menu, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Bell, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const unreadCount = 5 // من الـ store
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const unreadCount = 5; // من الـ store
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 dark:bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <nav className="container flex h-16 items-center justify-between px-4">
         {/* Logo Section */}
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
+        <Link
+          href="/"
+          className="flex items-center gap-2 hover:opacity-80 transition"
+        >
           <Image
             src="/logo.png"
             alt="Exaado"
@@ -45,20 +44,15 @@ export default function Navbar() {
         {/* Actions Section */}
         <div className="flex items-center gap-3">
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            asChild
-          >
+          <Button variant="ghost" size="icon" className="relative" asChild>
             <Link href="/notifications" aria-label="الإشعارات">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
+                <Badge
+                  variant="destructive"
                   className="absolute -top-1 -left-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                 >
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </Badge>
               )}
             </Link>
@@ -73,13 +67,22 @@ export default function Navbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px]">
               <nav className="flex flex-col gap-4 mt-8">
-                <MobileNavLink href="/shop" onClick={() => setMobileMenuOpen(false)}>
+                <MobileNavLink
+                  href="/shop"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   المتجر
                 </MobileNavLink>
-                <MobileNavLink href="/academy" onClick={() => setMobileMenuOpen(false)}>
+                <MobileNavLink
+                  href="/academy"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   الأكاديمية
                 </MobileNavLink>
-                <MobileNavLink href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                <MobileNavLink
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   حسابي
                 </MobileNavLink>
               </nav>
@@ -88,10 +91,16 @@ export default function Navbar() {
         </div>
       </nav>
     </header>
-  )
+  );
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
@@ -99,17 +108,17 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     >
       {children}
     </Link>
-  )
+  );
 }
 
-function MobileNavLink({ 
-  href, 
-  children, 
-  onClick 
-}: { 
-  href: string
-  children: React.ReactNode
-  onClick?: () => void
+function MobileNavLink({
+  href,
+  children,
+  onClick,
+}: {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
 }) {
   return (
     <Link
@@ -119,5 +128,5 @@ function MobileNavLink({
     >
       {children}
     </Link>
-  )
+  );
 }

@@ -1,62 +1,64 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
-import { format } from 'date-fns'
-import { useClipboard } from '@/hooks/useClipboard'
+import { useState } from "react";
+import { ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
+import { format } from "date-fns";
+import { useClipboard } from "@/hooks/useClipboard";
 import {
   colors,
   componentRadius,
   shadowClasses,
   spacing,
   typography,
-} from '@/styles/tokens'
-
+} from "@/styles/tokens";
 
 type PaymentHistoryItemProps = {
   payment: {
-    tx_hash: string | null
-    amount_received: number
-    subscription_plan_id: number
-    status: 'completed' | 'failed'
-    processed_at: string
-    payment_token: string | null
-    error_message?: string | null
-    plan_name: string
-    subscription_name: string
-  }
-}
+    tx_hash: string | null;
+    amount_received: number;
+    subscription_plan_id: number;
+    status: "completed" | "failed";
+    processed_at: string;
+    payment_token: string | null;
+    error_message?: string | null;
+    plan_name: string;
+    subscription_name: string;
+  };
+};
 
 export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
-  const [expanded, setExpanded] = useState(false)
-  const { copy } = useClipboard()
+  const [expanded, setExpanded] = useState(false);
+  const { copy } = useClipboard();
 
   // تنسيق التاريخ كما طلبت
-  const formattedDate = format(new Date(payment.processed_at), 'MMM dd, yyyy, hh:mm:ss a')
+  const formattedDate = format(
+    new Date(payment.processed_at),
+    "MMM dd, yyyy, hh:mm:ss a",
+  );
 
   const statusConfig = {
     completed: {
       icon: CheckCircle,
       color: colors.status.success,
       background: colors.status.successBg,
-      label: 'مكتمل',
+      label: "مكتمل",
     },
     failed: {
       icon: XCircle,
       color: colors.status.error,
       background: colors.status.errorBg,
-      label: 'فاشل',
+      label: "فاشل",
     },
-  } as const
+  } as const;
 
   // عند النقر على القيمة يتم النسخ
   const handleCopy = (text: string) => {
-    copy(text)
-  }
+    copy(text);
+  };
 
   // إعطاء قيم افتراضية لتجنب Null
-  const paymentToken = payment.payment_token || 'N/A'
-  const txHash = payment.tx_hash || 'N/A'
+  const paymentToken = payment.payment_token || "N/A";
+  const txHash = payment.tx_hash || "N/A";
 
-  const status = statusConfig[payment.status]
+  const status = statusConfig[payment.status];
 
   return (
     <div
@@ -73,7 +75,10 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
         {/* القسم الأيسر: البيانات الأساسية */}
         <div className="flex flex-col w-full">
           <div className="flex justify-between items-center">
-            <span className={typography.heading.md} style={{ color: colors.text.primary }}>
+            <span
+              className={typography.heading.md}
+              style={{ color: colors.text.primary }}
+            >
               {payment.amount_received} USDT
             </span>
             <span
@@ -91,9 +96,10 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
             className="flex flex-row justify-between items-center"
             style={{ marginTop: spacing[3] }}
           >
-
-
-            <span className={typography.body.sm} style={{ color: colors.text.secondary }}>
+            <span
+              className={typography.body.sm}
+              style={{ color: colors.text.secondary }}
+            >
               {formattedDate}
             </span>
             <span
@@ -120,9 +126,13 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
           style={{
             color: colors.text.secondary,
           }}
-          aria-label={expanded ? 'إغلاق التفاصيل' : 'عرض التفاصيل'}
+          aria-label={expanded ? "إغلاق التفاصيل" : "عرض التفاصيل"}
         >
-          {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          {expanded ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
         </button>
       </div>
 
@@ -145,7 +155,10 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
             {/* Message و tx Hash بنفس السطر */}
             <div className="flex flex-row justify-between items-center">
               <div className="flex flex-col">
-                <span className="font-medium" style={{ color: colors.text.primary }}>
+                <span
+                  className="font-medium"
+                  style={{ color: colors.text.primary }}
+                >
                   tx Hash:
                 </span>
                 <span
@@ -157,11 +170,16 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
                   }}
                   onClick={() => handleCopy(txHash)}
                 >
-                  {paymentToken !== 'N/A' ? `${paymentToken.slice(0, 8)}...${paymentToken.slice(-4)}` : 'N/A'}
+                  {paymentToken !== "N/A"
+                    ? `${paymentToken.slice(0, 8)}...${paymentToken.slice(-4)}`
+                    : "N/A"}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="font-medium" style={{ color: colors.text.primary }}>
+                <span
+                  className="font-medium"
+                  style={{ color: colors.text.primary }}
+                >
                   Message:
                 </span>
                 <span
@@ -173,7 +191,9 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
                   }}
                   onClick={() => handleCopy(paymentToken)}
                 >
-                  {txHash !== 'N/A' ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : 'N/A'}
+                  {txHash !== "N/A"
+                    ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}`
+                    : "N/A"}
                 </span>
               </div>
             </div>
@@ -187,7 +207,10 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
                   padding: spacing[3],
                 }}
               >
-                <span className="font-medium" style={{ color: colors.status.error }}>
+                <span
+                  className="font-medium"
+                  style={{ color: colors.status.error }}
+                >
                   ملاحظة:
                 </span>
                 <p>{payment.error_message}</p>
@@ -197,5 +220,5 @@ export const PaymentHistoryItem = ({ payment }: PaymentHistoryItemProps) => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};

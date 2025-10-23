@@ -1,17 +1,21 @@
+import { cn } from "@/lib/utils";
+import { componentVariants, mergeVariants } from "@/components/ui/variants";
 // components/shared/SkeletonLoaders.tsx
 
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * Skeleton Loader لبطاقة نصف عرض (Half Card)
  */
 export const HalfCardSkeleton = () => (
-  <Card className="h-full rounded-card-lg bg-white border border-gray-100 dark:bg-neutral-900 dark:border-neutral-800">
+  <Card
+    className={cn(componentVariants.card.base, "h-full rounded-card-lg dark:")}
+  >
     <CardContent className="p-5">
       <div className="flex items-start gap-4 animate-pulse">
         {/* Icon Skeleton */}
         <div className="h-12 w-12 rounded-2xl bg-gray-200 dark:bg-neutral-800 shrink-0" />
-        
+
         {/* Content Skeleton */}
         <div className="flex-1 space-y-3">
           <div className="h-5 bg-gray-200 dark:bg-neutral-800 rounded w-3/4" />
@@ -21,20 +25,20 @@ export const HalfCardSkeleton = () => (
           </div>
         </div>
       </div>
-      
+
       {/* CTA Skeleton */}
       <div className="mt-4 pt-4">
         <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-24" />
       </div>
     </CardContent>
   </Card>
-)
+);
 
 /**
  * Skeleton Loader لبطاقة كامل العرض (Wide Card)
  */
 export const WideCardSkeleton = () => (
-  <Card className="rounded-card-lg bg-white border border-gray-100 dark:bg-neutral-900 dark:border-neutral-800">
+  <Card className={cn(componentVariants.card.base, "rounded-card-lg dark:")}>
     <CardContent className="p-5 md:p-6">
       <div className="animate-pulse">
         {/* Header */}
@@ -48,7 +52,7 @@ export const WideCardSkeleton = () => (
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-2">
@@ -60,13 +64,13 @@ export const WideCardSkeleton = () => (
       </div>
     </CardContent>
   </Card>
-)
+);
 
 /**
  * Skeleton Loader لبطاقة الأكاديمية
  */
 export const AcademyCardSkeleton = () => (
-  <Card className="rounded-card-lg bg-white border border-gray-100 dark:bg-neutral-900 dark:border-neutral-800">
+  <Card className={cn(componentVariants.card.base, "rounded-card-lg dark:")}>
     <CardContent className="p-6">
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 dark:bg-neutral-800 rounded w-1/2" />
@@ -82,18 +86,21 @@ export const AcademyCardSkeleton = () => (
       </div>
     </CardContent>
   </Card>
-)
+);
 
 /**
  * Grid Skeleton - لعرض عدة بطاقات
  */
 interface GridSkeletonProps {
-  count?: number
-  variant?: 'half' | 'wide' | 'mixed'
+  count?: number;
+  variant?: "half" | "wide" | "mixed";
 }
 
-export const GridSkeleton = ({ count = 4, variant = 'mixed' }: GridSkeletonProps) => {
-  if (variant === 'half') {
+export const GridSkeleton = ({
+  count = 4,
+  variant = "mixed",
+}: GridSkeletonProps) => {
+  if (variant === "half") {
     return (
       <div className="grid grid-cols-12 gap-4 sm:gap-5">
         {Array.from({ length: count }).map((_, i) => (
@@ -102,17 +109,17 @@ export const GridSkeleton = ({ count = 4, variant = 'mixed' }: GridSkeletonProps
           </div>
         ))}
       </div>
-    )
+    );
   }
 
-  if (variant === 'wide') {
+  if (variant === "wide") {
     return (
       <div className="space-y-4">
         {Array.from({ length: count }).map((_, i) => (
           <WideCardSkeleton key={i} />
         ))}
       </div>
-    )
+    );
   }
 
   // Mixed: 1 wide + 2 half
@@ -128,8 +135,8 @@ export const GridSkeleton = ({ count = 4, variant = 'mixed' }: GridSkeletonProps
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 /**
  * Search Skeleton - أثناء البحث
@@ -141,4 +148,4 @@ export const SearchSkeleton = () => (
       <GridSkeleton count={3} variant="mixed" />
     </div>
   </div>
-)
+);

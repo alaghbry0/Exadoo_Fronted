@@ -6,10 +6,10 @@
 /**
  * إنشاء blur placeholder ديناميكي بناءً على اللون
  */
-export function generateBlurDataURL(color: string = '#f5f5f5'): string {
+export function generateBlurDataURL(color: string = "#f5f5f5"): string {
   // تحويل اللون إلى RGB
   const rgb = hexToRgb(color);
-  
+
   // إنشاء SVG blur placeholder
   const svg = `
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -27,7 +27,7 @@ export function generateBlurDataURL(color: string = '#f5f5f5'): string {
     </svg>
   `.trim();
 
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
 /**
@@ -48,19 +48,19 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
  * Blur placeholders جاهزة للاستخدام
  */
 export const blurPlaceholders = {
-  light: generateBlurDataURL('#f5f5f5'),
-  dark: generateBlurDataURL('#1a1a1a'),
-  primary: generateBlurDataURL('#0084FF'),
-  secondary: generateBlurDataURL('#8B5CF6'),
-  neutral: generateBlurDataURL('#e5e7eb'),
+  light: generateBlurDataURL("#f5f5f5"),
+  dark: generateBlurDataURL("#1a1a1a"),
+  primary: generateBlurDataURL("#0084FF"),
+  secondary: generateBlurDataURL("#8B5CF6"),
+  neutral: generateBlurDataURL("#e5e7eb"),
 } as const;
 
 /**
  * إنشاء shimmer effect SVG
  */
 export function generateShimmerDataURL(
-  baseColor: string = '#f5f5f5',
-  shimmerColor: string = '#ffffff'
+  baseColor: string = "#f5f5f5",
+  shimmerColor: string = "#ffffff",
 ): string {
   const svg = `
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -81,7 +81,7 @@ export function generateShimmerDataURL(
     </svg>
   `.trim();
 
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
 /**
@@ -106,14 +106,12 @@ export function getOptimalQuality(width: number): number {
 /**
  * تحديد sizes attribute بناءً على breakpoints
  */
-export function generateSizesAttribute(
-  sizes?: {
-    mobile?: string;
-    tablet?: string;
-    desktop?: string;
-  }
-): string {
-  const { mobile = '100vw', tablet = '50vw', desktop = '33vw' } = sizes || {};
-  
+export function generateSizesAttribute(sizes?: {
+  mobile?: string;
+  tablet?: string;
+  desktop?: string;
+}): string {
+  const { mobile = "100vw", tablet = "50vw", desktop = "33vw" } = sizes || {};
+
   return `(max-width: 640px) ${mobile}, (max-width: 1024px) ${tablet}, ${desktop}`;
 }

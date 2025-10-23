@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 
 interface CustomSpinnerProps {
-  shouldReduceMotion: boolean
+  shouldReduceMotion: boolean;
 }
 
 const CustomSpinner = ({ shouldReduceMotion }: CustomSpinnerProps) => {
@@ -13,10 +13,10 @@ const CustomSpinner = ({ shouldReduceMotion }: CustomSpinnerProps) => {
     transition: {
       duration: 1.2,
       repeat: Infinity,
-      ease: "linear" as const
+      ease: "linear" as const,
     },
-    className: "flex items-center justify-center"
-  }
+    className: "flex items-center justify-center",
+  };
 
   return (
     <motion.div {...motionProps}>
@@ -40,7 +40,7 @@ const CustomSpinner = ({ shouldReduceMotion }: CustomSpinnerProps) => {
         <span className="sr-only">جاري التحميل...</span>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
-export default CustomSpinner
+export default CustomSpinner;

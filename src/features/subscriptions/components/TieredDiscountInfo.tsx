@@ -1,9 +1,9 @@
 // src/components/TieredDiscountInfo.tsx
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Flame, TrendingUp, ShieldCheck } from 'lucide-react';
-import type { DiscountDetails } from '@/typesPlan';
+import React from "react";
+import { motion } from "framer-motion";
+import { Flame, TrendingUp, ShieldCheck } from "lucide-react";
+import type { DiscountDetails } from "@/typesPlan";
 
 interface Props {
   details: DiscountDetails;
@@ -27,11 +27,15 @@ const TieredDiscountInfo: React.FC<Props> = ({ details }) => {
         <div className="flex items-center justify-center gap-2 font-semibold">
           <Flame className="w-5 h-5 text-red-500" />
           <p>
-            عرض حصري لـ <span className="font-bold text-lg text-red-600 tracking-wider">{details.remaining_slots}</span> مقاعد فقط!
+            عرض حصري لـ{" "}
+            <span className="font-bold text-lg text-red-600 tracking-wider">
+              {details.remaining_slots}
+            </span>{" "}
+            مقاعد فقط!
           </p>
         </div>
       )}
-      
+
       {/* 2. رسالة السعر التالي (إن وجدت) */}
       {details.next_tier_info?.message && (
         <div className="flex items-center justify-center gap-2 text-amber-800">
@@ -39,15 +43,17 @@ const TieredDiscountInfo: React.FC<Props> = ({ details }) => {
           <p>{details.next_tier_info.message}</p>
         </div>
       )}
-      
+
       {/* 3. رسالة تثبيت السعر */}
       {details.lock_in_price && (
         <div className="flex items-center justify-center gap-2 text-green-700 pt-2">
-           <ShieldCheck className="w-4 h-4" />
-           <p className="font-semibold">
-             اشتر الآن وثبّت هذا السعر
-             {details.price_lock_duration_months ? ` لمدة ${details.price_lock_duration_months} أشهر!` : ' للأبد!'}
-           </p>
+          <ShieldCheck className="w-4 h-4" />
+          <p className="font-semibold">
+            اشتر الآن وثبّت هذا السعر
+            {details.price_lock_duration_months
+              ? ` لمدة ${details.price_lock_duration_months} أشهر!`
+              : " للأبد!"}
+          </p>
         </div>
       )}
     </motion.div>

@@ -1,25 +1,25 @@
 // PaymentSuccessModal.tsx
-'use client'
-import { motion } from 'framer-motion'
-import { CheckCircle } from 'lucide-react'
+"use client";
+import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
 
 interface PaymentSuccessModalProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
   return (
     <motion.div
-  className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
-  style={{
-    zIndex: 924, // أعلى من ExchangePaymentModal
-    position: 'fixed',
-    isolation: 'isolate'
-  }}
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
->
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4"
+      style={{
+        zIndex: 924, // أعلى من ExchangePaymentModal
+        position: "fixed",
+        isolation: "isolate",
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <motion.div
         className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
         initial={{ scale: 0.9 }}
@@ -30,7 +30,9 @@ export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">تمت عملية الدفع بنجاح!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            تمت عملية الدفع بنجاح!
+          </h2>
           <p className="text-gray-600 mb-6">
             تم ارسال المبلغ وجاري معالجه طلبك, سيتم تجديد اشتراكك خلال دقائق.
           </p>
@@ -45,5 +47,5 @@ export const PaymentSuccessModal = ({ onClose }: PaymentSuccessModalProps) => {
         </div>
       </motion.div>
     </motion.div>
-  )
-}
+  );
+};

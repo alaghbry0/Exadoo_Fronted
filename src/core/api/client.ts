@@ -4,11 +4,17 @@
  */
 
 // Re-export من fetchClient الجديد
-export { fetchClient as apiClient, api, createFetchClient, type FetchError as ApiError, type FetchConfig } from './fetchClient'
+export {
+  fetchClient as apiClient,
+  api,
+  createFetchClient,
+  type FetchError as ApiError,
+  type FetchConfig,
+} from "./fetchClient";
 
 // Re-export Logger من utils
-export { default as Logger } from '@/core/utils/logger'
+export { default as Logger } from "@/core/utils/logger";
 
 // Default export
-import { api } from './fetchClient'
-export default api
+import { api } from "./fetchClient";
+export default api;

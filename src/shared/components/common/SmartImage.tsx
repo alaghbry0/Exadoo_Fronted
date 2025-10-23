@@ -1,119 +1,130 @@
-'use client'
+"use client";
 
-import Image, { type ImageProps, type StaticImageData } from 'next/image'
-import { useState, useEffect, useMemo, useRef } from 'react'
-import { cn } from '@/lib/utils'
-import { blurPlaceholders, getOptimalQuality, generateSizesAttribute } from '@/utils/imageUtils'
+import Image, { type ImageProps, type StaticImageData } from "next/image";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { cn } from "@/lib/utils";
+import {
+  blurPlaceholders,
+  getOptimalQuality,
+  generateSizesAttribute,
+} from "@/utils/imageUtils";
 
 // استخدام blur placeholders المحسّنة
-const BLUR_DATA_URL = blurPlaceholders.light
+const BLUR_DATA_URL = blurPlaceholders.light;
 
 // التحقق من الروابط الخارجية
 function needsProxy(src: string | undefined): boolean {
-  if (!src || typeof src !== 'string') return false
+  if (!src || typeof src !== "string") return false;
   try {
-    const url = new URL(src)
-    return url.hostname === 'exaado.plebits.com'
+    const url = new URL(src);
+    return url.hostname === "exaado.plebits.com";
   } catch {
-    return false
+    return false;
   }
 }
 
 // تحويل الرابط للـ proxy (مع normalization لإزالة الـ query params)
 function toProxiedUrl(src: string): string {
-  if (!needsProxy(src)) return src
+  if (!needsProxy(src)) return src;
   try {
-    const url = new URL(src)
-    const cleanUrl = `${url.origin}${url.pathname}`
-    return `/api/image-proxy?url=${encodeURIComponent(cleanUrl)}`
+    const url = new URL(src);
+    const cleanUrl = `${url.origin}${url.pathname}`;
+    return `/api/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
   } catch {
-    return `/api/image-proxy?url=${encodeURIComponent(src)}`
+    return `/api/image-proxy?url=${encodeURIComponent(src)}`;
   }
 }
 
-type SmartImageProps = Omit<ImageProps, 'placeholder' | 'blurDataURL' | 'loading'> & {
-  fallbackSrc?: string
+type SmartImageProps = Omit<
+  ImageProps,
+  "placeholder" | "blurDataURL" | "loading"
+> & {
+  fallbackSrc?: string;
   /** ألغِ انتقالات الفيد/البلور نهائيًا (مفيد للـ Hero) */
-  noFade?: boolean
+  noFade?: boolean;
   /** عطّل سكيليتون الطبقة فوق الصورة */
-  disableSkeleton?: boolean
+  disableSkeleton?: boolean;
   /** تحميل مُبكّر فعليًا: priority + loading="eager" */
-  eager?: boolean
+  eager?: boolean;
   /** نوع blur placeholder (light, dark, primary, secondary) */
-  blurType?: 'light' | 'dark' | 'primary' | 'secondary' | 'neutral'
+  blurType?: "light" | "dark" | "primary" | "secondary" | "neutral";
   /** تحسين تلقائي للجودة بناءً على العرض */
-  autoQuality?: boolean
-}
+  autoQuality?: boolean;
+};
 
 export default function SmartImage({
   src,
   alt,
   className,
-  fallbackSrc = '/image.jpg',
+  fallbackSrc = "/image.jpg",
   onError,
   onLoad,
   noFade = false,
   disableSkeleton = false,
   eager = false,
   priority, // سيُتجاهل إن لم يكن eager
-  blurType = 'light',
+  blurType = "light",
   autoQuality = true,
   width,
   ...props
 }: SmartImageProps) {
   // src النهائي (proxy/normalize)
   const normalizedSrc = useMemo(() => {
-    if (typeof src === 'string') return toProxiedUrl(src)
-    if (src && typeof src === 'object' && 'src' in src) {
-      return (src as StaticImageData).src
+    if (typeof src === "string") return toProxiedUrl(src);
+    if (src && typeof src === "object" && "src" in src) {
+      return (src as StaticImageData).src;
     }
-    return typeof src === 'undefined' ? '' : String(src)
-  }, [src])
+    return typeof src === "undefined" ? "" : String(src);
+  }, [src]);
 
-  const normalizedFallback = useMemo(() => toProxiedUrl(fallbackSrc), [fallbackSrc])
+  const normalizedFallback = useMemo(
+    () => toProxiedUrl(fallbackSrc),
+    [fallbackSrc],
+  );
 
   // لا نعيد تعيين isLoaded إذا لم يتغير normalizedSrc فعليًا
-  const prevSrcRef = useRef<string | null>(null)
+  const prevSrcRef = useRef<string | null>(null);
 
-  const [imageSrc, setImageSrc] = useState<string>(normalizedSrc)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
+  const [imageSrc, setImageSrc] = useState<string>(normalizedSrc);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (prevSrcRef.current !== normalizedSrc) {
-      prevSrcRef.current = normalizedSrc
-      setImageSrc(normalizedSrc)
-      setIsLoaded(false)
-      setHasError(false)
+      prevSrcRef.current = normalizedSrc;
+      setImageSrc(normalizedSrc);
+      setIsLoaded(false);
+      setHasError(false);
     }
-  }, [normalizedSrc])
+  }, [normalizedSrc]);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError && normalizedFallback && imageSrc !== normalizedFallback) {
-      setHasError(true)
-      setImageSrc(normalizedFallback)
+      setHasError(true);
+      setImageSrc(normalizedFallback);
     }
-    onError?.(e)
-  }
+    onError?.(e);
+  };
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setIsLoaded(true)
-    onLoad?.(e)
-  }
+    setIsLoaded(true);
+    onLoad?.(e);
+  };
 
   // التحميل المبكّر
-  const finalPriority = eager ? true : priority
-  const loading: ImageProps['loading'] = eager ? 'eager' : undefined
-  const placeholder = noFade ? 'empty' : 'blur'
-  const wrapperClasses = cn('relative h-full w-full overflow-hidden')
-  
+  const finalPriority = eager ? true : priority;
+  const loading: ImageProps["loading"] = eager ? "eager" : undefined;
+  const placeholder = noFade ? "empty" : "blur";
+  const wrapperClasses = cn("relative h-full w-full overflow-hidden");
+
   // اختيار blur placeholder المناسب
-  const blurDataURL = noFade ? undefined : blurPlaceholders[blurType]
-  
+  const blurDataURL = noFade ? undefined : blurPlaceholders[blurType];
+
   // تحسين الجودة تلقائياً
-  const quality = autoQuality && typeof width === 'number' 
-    ? getOptimalQuality(width) 
-    : (props.quality || 85)
+  const quality =
+    autoQuality && typeof width === "number"
+      ? getOptimalQuality(width)
+      : props.quality || 85;
 
   return (
     <div className={wrapperClasses}>
@@ -132,12 +143,13 @@ export default function SmartImage({
         width={width}
         className={cn(
           // منع وميض GPU أثناء التحريك/التمرير:
-          '[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform',
+          "[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform",
           noFade
-            ? 'opacity-100'
-            : 'transition-opacity duration-300 ' + (isLoaded ? 'opacity-100' : 'opacity-0'),
-          'object-cover',
-          className
+            ? "opacity-100"
+            : "transition-opacity duration-300 " +
+                (isLoaded ? "opacity-100" : "opacity-0"),
+          "object-cover",
+          className,
         )}
         placeholder={placeholder}
         blurDataURL={blurDataURL}
@@ -148,8 +160,8 @@ export default function SmartImage({
         priority={!!finalPriority}
         loading={loading}
         draggable={false}
-        decoding={eager ? 'sync' : 'async'}
+        decoding={eager ? "sync" : "async"}
       />
     </div>
-  )
+  );
 }

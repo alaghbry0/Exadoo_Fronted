@@ -1,43 +1,45 @@
 // src/pages/api/forex.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from "next";
 
 export interface MyForexSubscription {
-  id: string
-  trading_panel_id: string
-  user_id: string
-  forex_addresses: string // JSON string: ["11237841", ...]
-  enroll_by: string
-  status: string // e.g. "lifetime"
-  expiration_date: string
-  date_added: string // unix seconds
-  download_link?: string | null
-  setup_guide_link?: string | null
+  id: string;
+  trading_panel_id: string;
+  user_id: string;
+  forex_addresses: string; // JSON string: ["11237841", ...]
+  enroll_by: string;
+  status: string; // e.g. "lifetime"
+  expiration_date: string;
+  date_added: string; // unix seconds
+  download_link?: string | null;
+  setup_guide_link?: string | null;
 }
 
 export interface ForexSubscriptionPlan {
-  id: string
-  name: string
-  price: string
-  discounted_price: string | null
-  duration_in_months: string // "0" => lifetime
-  date_added: string
+  id: string;
+  name: string;
+  price: string;
+  discounted_price: string | null;
+  duration_in_months: string; // "0" => lifetime
+  date_added: string;
 }
 
 export interface ForexData {
-  my_subscription?: MyForexSubscription
-  subscriptions: ForexSubscriptionPlan[]
+  my_subscription?: MyForexSubscription;
+  subscriptions: ForexSubscriptionPlan[];
 }
 
 /* ===== Helpers ===== */
-const S = (v: any, fb = '') => (v ?? fb).toString()
-const A = <T = any,>(v: any, fb: T[] = [] as T[]) => (Array.isArray(v) ? v : fb)
+const S = (v: any, fb = "") => (v ?? fb).toString();
+const A = <T = any>(v: any, fb: T[] = [] as T[]) => (Array.isArray(v) ? v : fb);
 
 /* ===== Normalizer ===== */
 function normalizeForexPayload(payload: any): ForexData {
-  const root = payload && typeof payload === 'object' ? payload : {}
-  const fx = root.utility_trading_panels && typeof root.utility_trading_panels === 'object'
-    ? root.utility_trading_panels
-    : root
+  const root = payload && typeof payload === "object" ? payload : {};
+  const fx =
+    root.utility_trading_panels &&
+    typeof root.utility_trading_panels === "object"
+      ? root.utility_trading_panels
+      : root;
 
   const my: MyForexSubscription | undefined = fx.my_subscription
     ? {
@@ -58,68 +60,83 @@ function normalizeForexPayload(payload: any): ForexData {
             ? null
             : S(fx.my_subscription.setup_guide_link),
       }
-    : undefined
+    : undefined;
 
   const plans: ForexSubscriptionPlan[] = A(fx.subscriptions).map((p: any) => ({
     id: S(p.id),
     name: S(p.name),
-    price: S(p.price, '0'),
+    price: S(p.price, "0"),
     discounted_price: p.discounted_price == null ? null : S(p.discounted_price),
-    duration_in_months: S(p.duration_in_months, '0'),
+    duration_in_months: S(p.duration_in_months, "0"),
     date_added: S(p.date_added),
-  }))
+  }));
 
-  return { my_subscription: my, subscriptions: plans }
+  return { my_subscription: my, subscriptions: plans };
 }
 
 /* ===== API handler ===== */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
-    const telegramId = (req.query.telegramId ?? '').toString().trim()
-    if (!telegramId) return res.status(400).json({ error: 'Missing telegramId' })
+    const telegramId = (req.query.telegramId ?? "").toString().trim();
+    if (!telegramId)
+      return res.status(400).json({ error: "Missing telegramId" });
 
-    const BASE = process.env.NEXT_PUBLIC_APPLICATION_URL
-    const SECRET = process.env.NEXT_PUBLIC_APPLICATION_SECRET
+    const BASE = process.env.NEXT_PUBLIC_APPLICATION_URL;
+    const SECRET = process.env.NEXT_PUBLIC_APPLICATION_SECRET;
     if (!BASE || !SECRET) {
-      return res.status(500).json({ error: 'Server misconfigured', has_BASE: !!BASE, has_SECRET: !!SECRET })
+      return res.status(500).json({
+        error: "Server misconfigured",
+        has_BASE: !!BASE,
+        has_SECRET: !!SECRET,
+      });
     }
 
-    const url = `${BASE}/api/getAllServicesForMiniApp/${encodeURIComponent(telegramId)}/utility_trading_panels`
+    const url = `${BASE}/api/getAllServicesForMiniApp/${encodeURIComponent(telegramId)}/utility_trading_panels`;
 
     const upstream = await fetch(url, {
       headers: {
-        Accept: 'application/json',
+        Accept: "application/json",
         secret: `Bearer ${SECRET}`, // <-- مهم
       },
-    })
+    });
 
-    const text = await upstream.text()
-    let raw: any = null
-    try { raw = JSON.parse(text) } catch {}
+    const text = await upstream.text();
+    let raw: any = null;
+    try {
+      raw = JSON.parse(text);
+    } catch {}
 
     if (!upstream.ok) {
       return res.status(upstream.status).json({
-        error: 'Upstream failed',
+        error: "Upstream failed",
         upstream_status: upstream.status,
         details_snippet: text.slice(0, 600),
-      })
+      });
     }
 
-    const data = normalizeForexPayload(raw)
+    const data = normalizeForexPayload(raw);
 
-    if (req.query.debug === '1') {
+    if (req.query.debug === "1") {
       return res.status(200).json({
         upstream_url: url,
         upstream_status: upstream.status,
         my_sub_present: !!data.my_subscription,
         plans_count: data.subscriptions.length,
         sample_plan: data.subscriptions[0] ?? null,
-      })
+      });
     }
 
-    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=600')
-    return res.status(200).json({ forex: data })
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=60, stale-while-revalidate=600",
+    );
+    return res.status(200).json({ forex: data });
   } catch (e: any) {
-    return res.status(500).json({ error: 'Internal error', message: e?.message })
+    return res
+      .status(500)
+      .json({ error: "Internal error", message: e?.message });
   }
 }

@@ -27,7 +27,7 @@ export interface SubChannelLink {
 export interface Subscription {
   id: number;
   name: string;
-  status: 'نشط' | 'منتهي' | 'unknown';
+  status: "نشط" | "منتهي" | "unknown";
   expiry: string; // تم إرسالها من الخادم
   start_date: string; // تم إرسالها من الخادم
   progress: number; // تم إرسالها من الخادم

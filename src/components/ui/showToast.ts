@@ -1,54 +1,54 @@
-﻿import { toast } from '@/hooks/use-toast'
+﻿import { toast } from "@/hooks/use-toast";
 
 type ToastInput =
   | string
   | {
-      message?: string
-      title?: string
-      description?: string
-      duration?: number
-    }
+      message?: string;
+      title?: string;
+      description?: string;
+      duration?: number;
+    };
 
 const normalizeToastInput = (input: ToastInput) => {
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     return {
       title: input,
       description: undefined,
       duration: undefined,
-    }
+    };
   }
 
-  const title = input.title ?? input.message ?? ''
+  const title = input.title ?? input.message ?? "";
 
   return {
     title,
     description: input.description,
     duration: input.duration,
-  }
-}
+  };
+};
 
 const showToast = {
   success: (input: ToastInput) => {
-    const { title, description, duration } = normalizeToastInput(input)
+    const { title, description, duration } = normalizeToastInput(input);
 
     toast({
       title,
       description,
       duration,
-      variant: 'default',
-    })
+      variant: "default",
+    });
   },
   error: (input: ToastInput) => {
-    const { title, description, duration } = normalizeToastInput(input)
+    const { title, description, duration } = normalizeToastInput(input);
 
     toast({
       title,
       description,
       duration,
-      variant: 'destructive',
-    })
+      variant: "destructive",
+    });
   },
-}
+};
 
-export { showToast }
-export type { ToastInput }
+export { showToast };
+export type { ToastInput };

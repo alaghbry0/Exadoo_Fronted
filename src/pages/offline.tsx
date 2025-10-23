@@ -1,10 +1,12 @@
+import { cn } from "@/lib/utils";
+import { componentVariants, mergeVariants } from "@/components/ui/variants";
 /**
  * Offline Page - PWA Support
  * تظهر عندما يكون المستخدم غير متصل بالإنترنت
  */
 
-import Head from 'next/head';
-import { WifiOff } from 'lucide-react';
+import Head from "next/head";
+import { WifiOff } from "lucide-react";
 
 export default function OfflinePage() {
   return (
@@ -12,7 +14,6 @@ export default function OfflinePage() {
       <Head>
         <title>غير متصل - Exaado</title>
       </Head>
-
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-950 px-4">
         <div className="text-center max-w-md">
           {/* Icon */}
@@ -29,7 +30,8 @@ export default function OfflinePage() {
 
           {/* Description */}
           <p className="text-gray-600 dark:text-neutral-400 mb-8 leading-relaxed">
-            يبدو أنك غير متصل بالإنترنت حالياً. يرجى التحقق من اتصالك والمحاولة مرة أخرى.
+            يبدو أنك غير متصل بالإنترنت حالياً. يرجى التحقق من اتصالك والمحاولة
+            مرة أخرى.
           </p>
 
           {/* Action Button */}
@@ -41,7 +43,12 @@ export default function OfflinePage() {
           </button>
 
           {/* Additional Info */}
-          <div className="mt-12 p-4 bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700">
+          <div
+            className={cn(
+              componentVariants.card.base,
+              "mt-12 p-4 rounded-xl dark:",
+            )}
+          >
             <p className="text-sm text-gray-600 dark:text-neutral-400">
               💡 نصيحة: بعض المحتوى قد يكون متاحاً في وضع عدم الاتصال
             </p>

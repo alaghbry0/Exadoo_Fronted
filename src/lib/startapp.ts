@@ -9,15 +9,15 @@ export function readStartAppParam(): StartAppParam {
     tg?.initDataUnsafe?.startapp ||
     tg?.initData?.start_param;
 
-  if (fromTG && typeof fromTG === 'string') return fromTG;
+  if (fromTG && typeof fromTG === "string") return fromTG;
 
   // 2) كاختبار عبر المتصفح
   try {
-    const sp = new URLSearchParams(globalThis.location?.search || '');
+    const sp = new URLSearchParams(globalThis.location?.search || "");
     return (
-      sp.get('startapp') ||
-      sp.get('tgWebAppStartParam') ||
-      sp.get('start_param')
+      sp.get("startapp") ||
+      sp.get("tgWebAppStartParam") ||
+      sp.get("start_param")
     );
   } catch {
     return null;
@@ -26,10 +26,10 @@ export function readStartAppParam(): StartAppParam {
 
 // خريطة آمنة للأسماء المختصرة → مسارات التطبيق
 export const ROUTE_MAP: Record<string, string> = {
-  shop: '/shop',
-  plans: '/plans',
-  profile: '/profile',
-  notifications: '/notifications',
+  shop: "/shop",
+  plans: "/plans",
+  profile: "/profile",
+  notifications: "/notifications",
 };
 
 // يحوّل القيمة لوجهة نهائية داخل Next.js
@@ -39,14 +39,14 @@ export function resolveTargetRoute(startParam: string): string | null {
 
   // دعم تمرير مسار صريح: startapp=route:/shop?plan=pro
   // (ننصح تستخدم هذا لو تبغى صفحة + كويري مرّة وحدة)
-  if (startParam.startsWith('route:')) {
-    const raw = decodeURIComponent(startParam.slice('route:'.length));
+  if (startParam.startsWith("route:")) {
+    const raw = decodeURIComponent(startParam.slice("route:".length));
     // أمان بسيط: لازم يبدأ بشرطة مائلة
-    if (raw.startsWith('/')) return raw;
+    if (raw.startsWith("/")) return raw;
   }
 
   // دعم شكل namespaced: shop?plan=pro  (يترجمه إلى /shop?plan=pro)
-  const [name, qs] = startParam.split('?');
+  const [name, qs] = startParam.split("?");
   if (ROUTE_MAP[name]) return qs ? `${ROUTE_MAP[name]}?${qs}` : ROUTE_MAP[name];
 
   return null;

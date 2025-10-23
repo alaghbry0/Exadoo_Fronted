@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useMemo } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type BackMode = 'always' | 'fallback' | 'replace';
+type BackMode = "always" | "fallback" | "replace";
 
 type BackHeaderProps = {
   title?: string;
@@ -15,20 +15,20 @@ type BackHeaderProps = {
   className?: string;
   sticky?: boolean;
   /** الوجهة المفضلة للرجوع */
-  backTo?: string;                 // جديد
+  backTo?: string; // جديد
   /** كيف نتصرف عند الرجوع */
-  backMode?: BackMode;             // جديد: 'always' | 'fallback' | 'replace' (افتراضي 'fallback')
-  fallbackUrl?: string;            // ما زالت مدعومة (كاحتياط)
+  backMode?: BackMode; // جديد: 'always' | 'fallback' | 'replace' (افتراضي 'fallback')
+  fallbackUrl?: string; // ما زالت مدعومة (كاحتياط)
   hideWhenNoHistory?: boolean;
   preferTelegramBackButton?: boolean;
-  hideIfTgBackButton?: boolean;    // legacy
+  hideIfTgBackButton?: boolean; // legacy
   topOffsetPx?: number;
   logoSrc?: string;
   centerLogo?: boolean;
   onLogoClick?: () => void;
   rightSlot?: React.ReactNode;
   /** لو حاب تمرر onBack مخصص، سنستدعيه بدل السلوك الافتراضي */
-  onBack?: () => void;             // جديد (اختياري)
+  onBack?: () => void; // جديد (اختياري)
 };
 
 type TelegramWebAppBackButton = {
@@ -44,62 +44,63 @@ const BackHeader: React.FC<BackHeaderProps> = ({
   subtitle,
   className,
   sticky = true,
-  backTo,                      // ← جديد
-  backMode = 'fallback',       // ← جديد
-  fallbackUrl = '/shop',
+  backTo, // ← جديد
+  backMode = "fallback", // ← جديد
+  fallbackUrl = "/shop",
   hideWhenNoHistory = false,
   preferTelegramBackButton,
   hideIfTgBackButton,
   topOffsetPx = 0,
-  logoSrc = '/logo.png',
+  logoSrc = "/logo.png",
   centerLogo = true,
   onLogoClick,
   rightSlot,
-  onBack,                      // ← جديد
+  onBack, // ← جديد
 }) => {
   const router = useRouter();
 
   const tg = useMemo<TelegramWebApp | null>(() => {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     return (window as any)?.Telegram?.WebApp ?? null;
   }, []);
 
   const goTo = (href: string, mode: BackMode) => {
     if (!href) return;
-    if (mode === 'replace') router.replace(href);
+    if (mode === "replace") router.replace(href);
     else router.push(href);
   };
 
   const handleBack = () => {
     // أولوية لأي onBack مخصص
-    if (typeof onBack === 'function') {
+    if (typeof onBack === "function") {
       onBack();
       return;
     }
 
     const target = backTo || fallbackUrl;
-    const hasHistory = typeof window !== 'undefined' && window.history.length > 1;
+    const hasHistory =
+      typeof window !== "undefined" && window.history.length > 1;
 
-    if (backMode === 'always') {
+    if (backMode === "always") {
       // تجاهل التاريخ دائمًا
-      return goTo(target, 'push' as any); // نستخدم push هنا
+      return goTo(target, "push" as any); // نستخدم push هنا
     }
 
-    if (backMode === 'replace') {
-      return goTo(target, 'replace');
+    if (backMode === "replace") {
+      return goTo(target, "replace");
     }
 
     // fallback (السلوك القديم): جرّب التاريخ، وإلا ارجع للهدف
     if (hasHistory) {
       window.history.back();
     } else {
-      goTo(target, 'push' as any);
+      goTo(target, "push" as any);
     }
   };
 
   useEffect(() => {
     const preferTg =
-      (typeof preferTelegramBackButton === 'boolean'
+      (typeof preferTelegramBackButton === "boolean"
         ? preferTelegramBackButton
         : !!hideIfTgBackButton) || false;
 
@@ -115,7 +116,8 @@ const BackHeader: React.FC<BackHeaderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tg, preferTelegramBackButton, hideIfTgBackButton, backTo, backMode]);
 
-  const noHistory = typeof window !== 'undefined' ? window.history.length <= 1 : false;
+  const noHistory =
+    typeof window !== "undefined" ? window.history.length <= 1 : false;
   const shouldShowLocalBtn = !(hideWhenNoHistory && noHistory);
 
   return (
@@ -123,11 +125,11 @@ const BackHeader: React.FC<BackHeaderProps> = ({
       dir="ltr"
       role="banner"
       className={cn(
-        sticky && 'sticky z-40',
-        'top-0',
-        'backdrop-blur-md border-b border-gray-200/70',
-        'bg-white/70 supports-[backdrop-filter]:bg-white/50',
-        className
+        sticky && "sticky z-40",
+        "top-0",
+        "backdrop-blur-md border-b border-gray-200/70",
+        "bg-white/70 supports-[backdrop-filter]:bg-white/50",
+        className,
       )}
       style={{ top: sticky ? topOffsetPx : undefined }}
     >
@@ -158,7 +160,7 @@ const BackHeader: React.FC<BackHeaderProps> = ({
               {centerLogo && (
                 <button
                   type="button"
-                  onClick={onLogoClick ?? (() => router.push('/'))}
+                  onClick={onLogoClick ?? (() => router.push("/"))}
                   aria-label="الانتقال للصفحة الرئيسية"
                   className="flex items-center gap-2 rounded-xl px-2 py-1 transition hover:bg-gray-100/60"
                 >
@@ -205,7 +207,9 @@ const BackHeader: React.FC<BackHeaderProps> = ({
 
           {/* يمين */}
           <div className="mr-auto flex items-center">
-            {rightSlot ?? <div className="h-10 w-10 opacity-0" aria-hidden="true" />}
+            {rightSlot ?? (
+              <div className="h-10 w-10 opacity-0" aria-hidden="true" />
+            )}
           </div>
         </div>
       </div>

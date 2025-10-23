@@ -11,13 +11,19 @@ const ALLOWED_HOSTS = new Set(["exaado.plebits.com"]);
 function okUrl(raw: string) {
   try {
     const u = new URL(raw);
-    return (u.protocol === "https:" || u.protocol === "http:") && ALLOWED_HOSTS.has(u.hostname);
+    return (
+      (u.protocol === "https:" || u.protocol === "http:") &&
+      ALLOWED_HOSTS.has(u.hostname)
+    );
   } catch {
     return false;
   }
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   const url = typeof req.query.url === "string" ? req.query.url : "";
   if (!okUrl(url)) {
     res.status(400).json({ error: "Invalid or not allowed url" });
@@ -38,7 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!upstream.ok) {
       clearTimeout(to);
-      res.status(upstream.status).json({ error: `Upstream ${upstream.status}` });
+      res
+        .status(upstream.status)
+        .json({ error: `Upstream ${upstream.status}` });
       return;
     }
 
@@ -50,10 +58,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    const tiny = await sharp(buf).resize(WIDTH, HEIGHT, { fit: "cover" }).toFormat("webp", { quality: 30 }).toBuffer();
+    const tiny = await sharp(buf)
+      .resize(WIDTH, HEIGHT, { fit: "cover" })
+      .toFormat("webp", { quality: 30 })
+      .toBuffer();
     const base64 = `data:image/webp;base64,${tiny.toString("base64")}`;
 
-    res.setHeader("Cache-Control", "public, max-age=2592000, stale-while-revalidate=2592000"); // 30d
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=2592000, stale-while-revalidate=2592000",
+    ); // 30d
     res.status(200).json({ blurDataURL: base64 });
   } catch (e: any) {
     const aborted = e?.name === "AbortError";

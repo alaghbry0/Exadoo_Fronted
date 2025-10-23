@@ -1,21 +1,21 @@
 // src/features/auth/components/GlobalAuthSheet.tsx
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useUserStore } from '@/stores/zustand/userStore';
-import { useUIStore } from '@/stores/zustand/uiStore';
-import { useRouter } from 'next/router';
-import { ArrowLeft, X, ShieldAlert, Zap, Gift, Sparkles } from 'lucide-react';
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useUserStore } from "@/stores/zustand/userStore";
+import { useUIStore } from "@/stores/zustand/uiStore";
+import { useRouter } from "next/router";
+import { ArrowLeft, X, ShieldAlert, Zap, Gift, Sparkles } from "lucide-react";
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 30000;
 const ROUTE_MAP: Record<string, string> = {
-  '/shop': 'shop',
-  '/plans': 'plans',
-  '/profile': 'profile',
-  '/notifications': 'notifications',
+  "/shop": "shop",
+  "/plans": "plans",
+  "/profile": "profile",
+  "/notifications": "notifications",
 };
 
 function buildTelegramDeepLinkForReturn(pathWithQuery: string) {
@@ -23,15 +23,17 @@ function buildTelegramDeepLinkForReturn(pathWithQuery: string) {
   const shortName = process.env.NEXT_PUBLIC_MINIAPP_SHORT;
   if (!bot || !shortName) return null;
 
-  const onlyPath = pathWithQuery.split('#')[0];
-  const [purePath, queryPart] = onlyPath.split('?');
+  const onlyPath = pathWithQuery.split("#")[0];
+  const [purePath, queryPart] = onlyPath.split("?");
   const short = ROUTE_MAP[purePath];
 
   let startappParam: string;
   if (short && !queryPart) {
     startappParam = short;
   } else {
-    const rawRoute = pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
+    const rawRoute = pathWithQuery.startsWith("/")
+      ? pathWithQuery
+      : `/${pathWithQuery}`;
     startappParam = `route:${encodeURIComponent(rawRoute)}`;
   }
 
@@ -53,7 +55,9 @@ const GlobalAuthSheet: React.FC = () => {
   const router = useRouter();
 
   const [isClient, setIsClient] = useState(false);
-  useEffect(() => { setIsClient(true); }, []);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -65,12 +69,16 @@ const GlobalAuthSheet: React.FC = () => {
     if (!telegramId) return null;
     try {
       const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(telegramId)}`;
-      const res = await fetch(url, { credentials: 'include' });
-      if (!res.ok) { return null; }
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) {
+        return null;
+      }
       const data = await res.json();
       setLinked(Boolean(data.linked), data.gmail ?? null);
       return data;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   };
 
   const stopPolling = () => {
@@ -87,13 +95,13 @@ const GlobalAuthSheet: React.FC = () => {
     const tick = async () => {
       const data = await checkLinkStatus();
       if (data && data.linked) {
-        setToast('تم الربط بنجاح 🎉');
+        setToast("تم الربط بنجاح 🎉");
         stopPolling();
         closeAuthPrompt();
         return;
       }
       if (Date.now() > (pollDeadlineRef.current ?? 0)) {
-        setToast('لم يصل تأكيد الربط بعد.');
+        setToast("لم يصل تأكيد الربط بعد.");
         stopPolling();
         return;
       }
@@ -104,33 +112,36 @@ const GlobalAuthSheet: React.FC = () => {
 
   const handleLink = () => {
     if (!telegramId) {
-      setToast('لم نتمكن من الحصول على معرف تيليجرام.');
+      setToast("لم نتمكن من الحصول على معرف تيليجرام.");
       return;
     }
     setLoading(true);
     try {
       const bot = process.env.NEXT_PUBLIC_BOT_USERNAME;
       const botOpenUrl = bot ? `https://t.me/${bot}` : null;
-      const currentPath = router.asPath || '/';
+      const currentPath = router.asPath || "/";
       const telegramReturn = buildTelegramDeepLinkForReturn(currentPath);
-      const fallbackUrl = typeof window !== 'undefined' ? window.location.href : '';
+      const fallbackUrl =
+        typeof window !== "undefined" ? window.location.href : "";
       const redirectTarget = botOpenUrl || telegramReturn || fallbackUrl;
       const redirectUrl = safeEncodeOnce(redirectTarget);
-      const uname = encodeURIComponent(telegramUsername || '');
+      const uname = encodeURIComponent(telegramUsername || "");
       const deepLink = `https://app.exaado.com/link_telegram?id=${encodeURIComponent(
-        telegramId
+        telegramId,
       )}&uname=${uname}&redirect_url=${redirectUrl}`;
 
-      window.open(deepLink, '_blank', 'noopener,noreferrer');
+      window.open(deepLink, "_blank", "noopener,noreferrer");
       setTimeout(startShortPolling, 2000);
     } catch {
-      setToast('حدث خطأ أثناء إنشاء الرابط.');
+      setToast("حدث خطأ أثناء إنشاء الرابط.");
     } finally {
       setTimeout(() => setLoading(false), 1000);
     }
   };
 
-  useEffect(() => { return () => stopPolling(); }, []);
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(null), 4000);
@@ -138,16 +149,16 @@ const GlobalAuthSheet: React.FC = () => {
   }, [toast]);
 
   const features = [
-    { icon: Zap, text: 'وصول فوري لجميع الخدمات' },
-    { icon: Gift, text: 'عروض وخصومات حصرية' },
-    { icon: Sparkles, text: 'تجربة استخدام متكاملة وسلسة' },
+    { icon: Zap, text: "وصول فوري لجميع الخدمات" },
+    { icon: Gift, text: "عروض وخصومات حصرية" },
+    { icon: Sparkles, text: "تجربة استخدام متكاملة وسلسة" },
   ];
 
   if (!isClient || !isAuthPromptOpen || isLinked) {
     return null;
   }
 
-  const isLockedContext = authContext === 'locked';
+  const isLockedContext = authContext === "locked";
 
   return createPortal(
     <AnimatePresence>
@@ -160,10 +171,10 @@ const GlobalAuthSheet: React.FC = () => {
         aria-hidden="true"
       />
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: '0%' }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+        initial={{ y: "100%" }}
+        animate={{ y: "0%" }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 400, damping: 40 }}
         className="fixed bottom-0 left-0 right-0 z-[1000] bg-white dark:bg-neutral-900 rounded-t-3xl p-6 pb-8 shadow-2xl max-w-lg mx-auto"
         dir="rtl"
         role="dialog"
@@ -228,13 +239,15 @@ const GlobalAuthSheet: React.FC = () => {
             disabled={!telegramId || loading}
             className={`w-full flex items-center justify-center gap-3 shadow-lg rounded-xl px-4 py-3.5 transform transition-all duration-300 font-bold ${
               telegramId
-                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:-translate-y-1'
-                : 'bg-gray-200 text-gray-600 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500'
+                ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:-translate-y-1"
+                : "bg-gray-200 text-gray-600 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500"
             }`}
           >
             {loading
-              ? 'جارٍ التحويل...'
-              : (isLockedContext ? 'ربط الحساب والمتابعة' : 'ربط الحساب الآن')}
+              ? "جارٍ التحويل..."
+              : isLockedContext
+                ? "ربط الحساب والمتابعة"
+                : "ربط الحساب الآن"}
             {!loading && <ArrowLeft className="w-5 h-5" />}
           </button>
 
@@ -250,7 +263,7 @@ const GlobalAuthSheet: React.FC = () => {
         </div>
       </motion.div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 };
 

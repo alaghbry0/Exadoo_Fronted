@@ -1,9 +1,9 @@
 // components/InviteAlert.tsx
-'use client';
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle, ExternalLink, X } from 'lucide-react';
-import { sanitizeHtml } from '@/utils/safeHtml';
+"use client";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { CheckCircle, ExternalLink, X } from "lucide-react";
+import { sanitizeHtml } from "@/utils/safeHtml";
 
 const InviteAlert: React.FC = () => {
   const [subscriptionData, setSubscriptionData] = useState<{
@@ -20,10 +20,16 @@ const InviteAlert: React.FC = () => {
       // يبقى الإشعار مرئيًا حتى النقر على الرابط أو زر الإغلاق
     };
 
-    window.addEventListener('subscription_update', handleStorageUpdate as EventListener);
+    window.addEventListener(
+      "subscription_update",
+      handleStorageUpdate as EventListener,
+    );
 
     return () => {
-      window.removeEventListener('subscription_update', handleStorageUpdate as EventListener);
+      window.removeEventListener(
+        "subscription_update",
+        handleStorageUpdate as EventListener,
+      );
     };
   }, []);
 
@@ -42,10 +48,14 @@ const InviteAlert: React.FC = () => {
           <div>
             <p
               className="text-green-800 font-medium"
-              dangerouslySetInnerHTML={sanitizeHtml(subscriptionData.formatted_message)}
+              dangerouslySetInnerHTML={sanitizeHtml(
+                subscriptionData.formatted_message,
+              )}
             />
             <button
-              onClick={() => window.open(subscriptionData.invite_link, '_blank')}
+              onClick={() =>
+                window.open(subscriptionData.invite_link, "_blank")
+              }
               className="mt-2 inline-flex items-center gap-2 text-green-700 hover:text-green-900"
             >
               <ExternalLink /> انقر للانضمام الآن

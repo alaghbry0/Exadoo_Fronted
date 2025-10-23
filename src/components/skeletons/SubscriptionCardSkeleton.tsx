@@ -1,5 +1,5 @@
-import React from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import React from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export function SubscriptionCardSkeleton() {
   return (
@@ -10,7 +10,7 @@ export function SubscriptionCardSkeleton() {
           <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-xl" />
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20" />
         </div>
-        
+
         {/* Title Skeleton */}
         <div className="space-y-2">
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
@@ -18,7 +18,7 @@ export function SubscriptionCardSkeleton() {
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Features Skeleton */}
         <div className="space-y-2">
@@ -29,20 +29,20 @@ export function SubscriptionCardSkeleton() {
             </div>
           ))}
         </div>
-        
+
         {/* Price Skeleton */}
         <div className="pt-4 border-t space-y-3">
           <div className="flex items-baseline gap-2">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24" />
             <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16" />
           </div>
-          
+
           {/* Button Skeleton */}
           <div className="h-11 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-xl w-full" />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export function SubscriptionGridSkeleton({ count = 3 }: { count?: number }) {
@@ -52,5 +52,5 @@ export function SubscriptionGridSkeleton({ count = 3 }: { count?: number }) {
         <SubscriptionCardSkeleton key={i} />
       ))}
     </div>
-  )
+  );
 }

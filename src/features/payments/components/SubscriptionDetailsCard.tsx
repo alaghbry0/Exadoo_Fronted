@@ -1,10 +1,10 @@
 // components/details/SubscriptionDetailsCard.tsx (النسخة النهائية والمحدثة)
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Gift, Hash } from 'lucide-react';
-import DetailRow from './DetailRow'; // استيراد المكون المحسن
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, Gift, Hash } from "lucide-react";
+import DetailRow from "./DetailRow"; // استيراد المكون المحسن
 
 interface SubscriptionDetailsCardProps {
   extraData: {
@@ -15,15 +15,21 @@ interface SubscriptionDetailsCardProps {
   };
 }
 
-const SubscriptionDetailsCard: React.FC<SubscriptionDetailsCardProps> = ({ extraData }) => {
+const SubscriptionDetailsCard: React.FC<SubscriptionDetailsCardProps> = ({
+  extraData,
+}) => {
   // لا تعرض البطاقة إذا لم يكن هناك بيانات مفيدة لعرضها
-  if (!extraData.main_invite_link && !extraData.history_id && !extraData.payment_token) {
+  if (
+    !extraData.main_invite_link &&
+    !extraData.history_id &&
+    !extraData.payment_token
+  ) {
     return null;
   }
 
   const handleJoinClick = () => {
     if (extraData.main_invite_link) {
-      window.open(extraData.main_invite_link, '_blank', 'noopener,noreferrer');
+      window.open(extraData.main_invite_link, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -37,7 +43,6 @@ const SubscriptionDetailsCard: React.FC<SubscriptionDetailsCardProps> = ({ extra
       </CardHeader>
       <CardContent>
         <div className="space-y-2 mb-4">
-
           {extraData.payment_token && (
             <DetailRow
               icon={<Hash size={16} />}
@@ -50,7 +55,10 @@ const SubscriptionDetailsCard: React.FC<SubscriptionDetailsCardProps> = ({ extra
         </div>
 
         {extraData.main_invite_link && (
-          <Button onClick={handleJoinClick} className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-white">
+          <Button
+            onClick={handleJoinClick}
+            className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-white"
+          >
             <ExternalLink className="w-5 h-5 ml-2" />
             الانضمام إلى القناة
           </Button>

@@ -1,24 +1,24 @@
 // pages/notifications.tsx (النسخة النهائية والمحسنة)
 
-'use client';
-import { useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router';
-import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, Bell, Check, RefreshCw } from 'lucide-react';
-import NotificationFilter from '@/features/notifications/components/NotificationFilter';
-import { useTelegram } from '../context/TelegramContext';
-import { useNotificationsContext } from '@/context/NotificationsContext';
-import { useNotifications } from '@/hooks/useNotifications';
+"use client";
+import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, ArrowLeft, Bell, Check, RefreshCw } from "lucide-react";
+import NotificationFilter from "@/features/notifications/components/NotificationFilter";
+import { useTelegram } from "../context/TelegramContext";
+import { useNotificationsContext } from "@/context/NotificationsContext";
+import { useNotifications } from "@/hooks/useNotifications";
 // import PageLayout from '@/shared/components/layout/PageLayout' // غير مستخدم;
 
 // استيراد ديناميكي لمكون NotificationItem مع هيكل تحميل محسن
 const NotificationItem = dynamic(
-  () => import('@/features/notifications/components/NotificationItem'),
+  () => import("@/features/notifications/components/NotificationItem"),
   {
-    loading: () => <NotificationSkeleton />
-  }
+    loading: () => <NotificationSkeleton />,
+  },
 );
 
 // هيكل تحميل محسن للإشعارات
@@ -57,7 +57,7 @@ const PageSkeleton = () => (
 export default function NotificationsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const filter = (searchParams.get('filter') || 'all') as 'all' | 'unread';
+  const filter = (searchParams.get("filter") || "all") as "all" | "unread";
   const { telegramId } = useTelegram();
 
   // ✨ استخدام السياق والـ hook المبسطين
@@ -68,7 +68,7 @@ export default function NotificationsPage() {
     hasNextPage,
     isFetching, // ✨ استخدام isFetching لتتبع أي جلب للبيانات (أولي أو تحديث)
     isFetchingNextPage,
-    isLoading,   // للتحميل الأولي فقط
+    isLoading, // للتحميل الأولي فقط
     error,
     refetch,
   } = useNotifications(telegramId, filter);
@@ -78,30 +78,33 @@ export default function NotificationsPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const notifications = data?.pages.flat() || [];
 
-
   // تلقائي تحميل المزيد عند الوصول إلى نهاية الصفحة
   useEffect(() => {
     const handleScroll = () => {
       if (scrollRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-        if (scrollHeight - scrollTop - clientHeight < 200 && hasNextPage && !isFetchingNextPage) {
+        if (
+          scrollHeight - scrollTop - clientHeight < 200 &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
           fetchNextPage();
         }
       }
     };
     const scrollContainer = scrollRef.current;
-    scrollContainer?.addEventListener('scroll', handleScroll);
-    return () => scrollContainer?.removeEventListener('scroll', handleScroll);
+    scrollContainer?.addEventListener("scroll", handleScroll);
+    return () => scrollContainer?.removeEventListener("scroll", handleScroll);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleGoBack = () => {
-    router.push('/');
+    router.push("/");
   };
 
   const themeColors = {
-    primary: 'blue',
-    accent: 'indigo',
-    background: 'gray-50',
+    primary: "blue",
+    accent: "indigo",
+    background: "gray-50",
   };
 
   // حالة التحميل الأولية
@@ -119,8 +122,12 @@ export default function NotificationsPage() {
           className="bg-red-50 p-6 rounded-xl text-red-600 mb-6 text-center max-w-md w-full border border-red-100 shadow-sm"
         >
           <AlertCircle className="mx-auto h-12 w-12 mb-4 text-red-500" />
-          <h3 className="text-lg font-bold mb-2">حدث خطأ أثناء تحميل الإشعارات</h3>
-          <p className="mb-4 text-sm text-red-500">تعذر الاتصال بالخادم. حاول مرة أخرى.</p>
+          <h3 className="text-lg font-bold mb-2">
+            حدث خطأ أثناء تحميل الإشعارات
+          </h3>
+          <p className="mb-4 text-sm text-red-500">
+            تعذر الاتصال بالخادم. حاول مرة أخرى.
+          </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -144,7 +151,7 @@ export default function NotificationsPage() {
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 16, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="absolute top-0 left-1/2 -translate-x-1/2 z-30"
           >
             <div className="p-2 bg-white rounded-full shadow-lg">
@@ -172,7 +179,9 @@ export default function NotificationsPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
-          <h1 className="text-xl font-bold flex-1 text-center text-gray-800">الإشعارات</h1>
+          <h1 className="text-xl font-bold flex-1 text-center text-gray-800">
+            الإشعارات
+          </h1>
           <div className="w-8"></div>
         </motion.div>
 
@@ -184,8 +193,13 @@ export default function NotificationsPage() {
           className={`mb-5 bg-gradient-to-r from-${themeColors.primary}-50 to-${themeColors.accent}-50 p-4 rounded-xl shadow-sm border border-${themeColors.primary}-100 flex items-center justify-between`}
         >
           <div className="flex items-center">
-            <Bell size={20} className={`text-${themeColors.primary}-500 mr-2`} />
-            <span className="font-semibold text-gray-700">الإشعارات غير المقروءة:</span>
+            <Bell
+              size={20}
+              className={`text-${themeColors.primary}-500 mr-2`}
+            />
+            <span className="font-semibold text-gray-700">
+              الإشعارات غير المقروءة:
+            </span>
           </div>
           <motion.span
             key={unreadCount}
@@ -199,7 +213,11 @@ export default function NotificationsPage() {
         </motion.div>
 
         {/* مكون التصفية */}
-        <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <NotificationFilter
             currentFilter={filter}
             unreadCount={unreadCount}
@@ -212,18 +230,23 @@ export default function NotificationsPage() {
           {notifications.length > 0 ? (
             <AnimatePresence>
               {notifications.map((notification) => (
-                <NotificationItem key={notification.id} notification={notification} />
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                />
               ))}
             </AnimatePresence>
           ) : (
-             !isFetching && (
+            !isFetching && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-16 mt-6 text-gray-500 bg-white rounded-xl shadow-sm border"
               >
                 <Bell size={80} className="text-gray-400 mb-6" />
-                <p className="text-lg font-medium">لا توجد إشعارات {filter === 'unread' ? 'غير مقروءة' : ''}</p>
+                <p className="text-lg font-medium">
+                  لا توجد إشعارات {filter === "unread" ? "غير مقروءة" : ""}
+                </p>
                 <p className="text-sm text-gray-400 mt-2 max-w-xs text-center">
                   ستظهر الإشعارات الجديدة هنا فور وصولها.
                 </p>
@@ -237,20 +260,30 @@ export default function NotificationsPage() {
                   تحديث
                 </motion.button>
               </motion.div>
-             )
+            )
           )}
         </div>
 
         {/* مؤشر تحميل المزيد */}
         {isFetchingNextPage && (
-          <motion.div className="my-6 space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {[...Array(3)].map((_, i) => <NotificationSkeleton key={`loading-${i}`} />)}
+          <motion.div
+            className="my-6 space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {[...Array(3)].map((_, i) => (
+              <NotificationSkeleton key={`loading-${i}`} />
+            ))}
           </motion.div>
         )}
 
         {/* رسالة نهاية القائمة */}
         {!hasNextPage && notifications.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center my-6 pb-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center my-6 pb-4"
+          >
             <div className="inline-flex items-center text-gray-400 text-sm bg-gray-100 px-4 py-2 rounded-full">
               <Check size={16} className="mr-2" />
               لقد شاهدت جميع الإشعارات

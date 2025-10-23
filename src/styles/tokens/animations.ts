@@ -6,36 +6,36 @@
 export const animations = {
   // Duration
   duration: {
-    instant: '0ms',
-    fast: '150ms',
-    normal: '300ms',
-    slow: '500ms',
-    slower: '700ms',
+    instant: "0ms",
+    fast: "150ms",
+    normal: "300ms",
+    slow: "500ms",
+    slower: "700ms",
   },
 
   // Easing functions
   easing: {
-    default: 'cubic-bezier(0.4, 0, 0.2, 1)',
-    linear: 'linear',
-    in: 'cubic-bezier(0.4, 0, 1, 1)',
-    out: 'cubic-bezier(0, 0, 0.2, 1)',
-    inOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-    spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+    default: "cubic-bezier(0.4, 0, 0.2, 1)",
+    linear: "linear",
+    in: "cubic-bezier(0.4, 0, 1, 1)",
+    out: "cubic-bezier(0, 0, 0.2, 1)",
+    inOut: "cubic-bezier(0.4, 0, 0.2, 1)",
+    spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
   },
 
   // Preset animations
   presets: {
-    fadeIn: 'animate-fade-in',
-    fadeOut: 'animate-fade-out',
-    slideUp: 'animate-slide-up',
-    slideDown: 'animate-slide-down',
-    slideLeft: 'animate-slide-left',
-    slideRight: 'animate-slide-right',
-    scaleIn: 'animate-scale-in',
-    scaleOut: 'animate-scale-out',
-    spin: 'animate-spin',
-    pulse: 'animate-pulse',
-    bounce: 'animate-bounce',
+    fadeIn: "animate-fade-in",
+    fadeOut: "animate-fade-out",
+    slideUp: "animate-slide-up",
+    slideDown: "animate-slide-down",
+    slideLeft: "animate-slide-left",
+    slideRight: "animate-slide-right",
+    scaleIn: "animate-scale-in",
+    scaleOut: "animate-scale-out",
+    spin: "animate-spin",
+    pulse: "animate-pulse",
+    bounce: "animate-bounce",
   },
 } as const;
 

@@ -1,9 +1,21 @@
-'use client';
-import { motion, AnimatePresence, useSpring, useTransform, useMotionValue, Variants } from 'framer-motion';
-import dynamic from 'next/dynamic';
-import Image from 'next/image';
-import { useState, useEffect, useRef, MouseEvent as ReactMouseEvent } from 'react';
-import AuroraBackground from '@/components/splash-screen/AuroraBackground'; // استيراد الخلفية الجديدة
+"use client";
+import {
+  motion,
+  AnimatePresence,
+  useSpring,
+  useTransform,
+  useMotionValue,
+  Variants,
+} from "framer-motion";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import {
+  useState,
+  useEffect,
+  useRef,
+  MouseEvent as ReactMouseEvent,
+} from "react";
+import AuroraBackground from "@/components/splash-screen/AuroraBackground"; // استيراد الخلفية الجديدة
 
 // الخطاف المساعد لمحاكاة التحميل (يبقى كما هو)
 const useLoadingSimulator = () => {
@@ -11,7 +23,7 @@ const useLoadingSimulator = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPercentValue(prev => {
+      setPercentValue((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           return 100;
@@ -40,24 +52,24 @@ const SplashScreen = () => {
   const CONFIG = {
     MESSAGE_INTERVAL_MS: 2500,
     EXIT_DELAY_MS: 800,
-    LOGO_PERSPECTIVE: '1000px',
+    LOGO_PERSPECTIVE: "1000px",
   };
   const { percent } = useLoadingSimulator();
   const [isDone, setIsDone] = useState(false);
 
   // رسائل تحميل أكثر احترافية
   const loadingMessages = [
-    'جارٍ بدء الاتصال بالخوادم...',
-    'تحميل بيانات المستخدم...',
-    'صقل وحدات البكسل النهائية...',
-    'نوشك على الانتهاء...',
+    "جارٍ بدء الاتصال بالخوادم...",
+    "تحميل بيانات المستخدم...",
+    "صقل وحدات البكسل النهائية...",
+    "نوشك على الانتهاء...",
   ];
 
   const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
     const messageInterval = setInterval(() => {
-      setMessageIndex(prev => (prev + 1) % loadingMessages.length);
+      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
     }, CONFIG.MESSAGE_INTERVAL_MS);
     return () => clearInterval(messageInterval);
   }, [CONFIG.MESSAGE_INTERVAL_MS, loadingMessages.length]);
@@ -66,7 +78,10 @@ const SplashScreen = () => {
     const unsubscribe = percent.on("change", (latest) => {
       if (latest >= 100) {
         const timer = setTimeout(() => setIsDone(true), CONFIG.EXIT_DELAY_MS);
-        return () => { clearTimeout(timer); unsubscribe(); }
+        return () => {
+          clearTimeout(timer);
+          unsubscribe();
+        };
       }
     });
     return () => unsubscribe();
@@ -93,17 +108,31 @@ const SplashScreen = () => {
 
   const containerVariants: Variants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { staggerChildren: 0.25, delayChildren: 0.2 } },
-    exit: { opacity: 0, transition: { duration: 0.6, ease: 'easeOut', when: "afterChildren" } }
+    animate: {
+      opacity: 1,
+      transition: { staggerChildren: 0.25, delayChildren: 0.2 },
+    },
+    exit: {
+      opacity: 0,
+      transition: { duration: 0.6, ease: "easeOut", when: "afterChildren" },
+    },
   };
 
   const itemVariants: Variants = {
     initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.4, ease: [0.87, 0, 0.13, 1] } },
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: { duration: 0.4, ease: [0.87, 0, 0.13, 1] },
+    },
   };
 
-  const progressBarWidth = useTransform(percent, value => `${value}%`);
+  const progressBarWidth = useTransform(percent, (value) => `${value}%`);
 
   return (
     <AnimatePresence>
@@ -119,12 +148,12 @@ const SplashScreen = () => {
           <AuroraBackground />
 
           <div className="absolute top-0 left-0 w-full h-1 bg-gray-200/50">
-    <motion.div
-      // التعديل: تحديث ألوان التدرج لتطابق الهوية البصرية الجديدة
-      className="h-1 bg-gradient-to-r from-[#3899f2] to-[#54c8e6]"
-      style={{ width: progressBarWidth }}
-    />
-</div>
+            <motion.div
+              // التعديل: تحديث ألوان التدرج لتطابق الهوية البصرية الجديدة
+              className="h-1 bg-gradient-to-r from-[#3899f2] to-[#54c8e6]"
+              style={{ width: progressBarWidth }}
+            />
+          </div>
 
           <div className="flex flex-col items-center">
             <motion.div
@@ -135,14 +164,27 @@ const SplashScreen = () => {
               variants={itemVariants}
               className="relative  flex justify-center  shadow-xl shadow-slate-500/10 rounded-full overflow-hidden"
             >
-              <Image src="/logo-288.png" alt="Exaado Logo" width={132} height={132} className="object-contain" priority />
+              <Image
+                src="/logo-288.png"
+                alt="Exaado Logo"
+                width={132}
+                height={132}
+                className="object-contain"
+                priority
+              />
               <motion.div
                 className="absolute inset-0"
-                initial={{ x: '-150%' }}
-                animate={{ x: '150%' }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'linear', delay: 3.5 }}
+                initial={{ x: "-150%" }}
+                animate={{ x: "150%" }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: 3.5,
+                }}
                 style={{
-                  background: 'linear-gradient(to right, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%)'
+                  background:
+                    "linear-gradient(to right, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%)",
                 }}
               />
             </motion.div>
@@ -154,7 +196,11 @@ const SplashScreen = () => {
               Exaado
             </motion.h1>
 
-            <div className="relative mt-4 h-6 w-full max-w-xs text-center" aria-live="polite" aria-atomic="true">
+            <div
+              className="relative mt-4 h-6 w-full max-w-xs text-center"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <AnimatePresence mode="wait">
                 <motion.p
                   key={messageIndex}

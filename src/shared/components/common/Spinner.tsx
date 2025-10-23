@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
 export const Spinner = ({ className }: { className?: string }) => (
   <div className={`flex items-center justify-center ${className}`}>

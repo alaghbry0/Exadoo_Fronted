@@ -1,30 +1,35 @@
 // src/typesPlan.ts
-import React from 'react'
+import React from "react";
 
-export type NotificationType = 
-  | 'info'
-  | 'success' 
-  | 'warning'
-  | 'error'
-  | 'invite';
+export type NotificationType =
+  | "info"
+  | "success"
+  | "warning"
+  | "error"
+  | "invite";
 
-export type PaymentStatus = 'idle' | 'processing' | 'success' | 'failed' | 'exchange_success';
+export type PaymentStatus =
+  | "idle"
+  | "processing"
+  | "success"
+  | "failed"
+  | "exchange_success";
 
 export interface ToastAction {
-  text: string
-  onClick: () => void
+  text: string;
+  onClick: () => void;
 }
 
 export interface Notification {
-  id: string
-  type: NotificationType
-  message: string
-  _seq?: number
-  timestamp: number
-  duration?: number
-  invite_link?: string
-  formatted_message?: string
-  action?: ToastAction
+  id: string;
+  type: NotificationType;
+  message: string;
+  _seq?: number;
+  timestamp: number;
+  duration?: number;
+  invite_link?: string;
+  formatted_message?: string;
+  action?: ToastAction;
 }
 
 // ⭐ --- التعديل الأول ---
@@ -45,13 +50,9 @@ export interface SubscriptionOption {
   savings?: string;
 }
 
-
-
-
 export type SubscriptionPlan = SubscriptionCard & {
   selectedOption: SubscriptionOption;
-}
-
+};
 
 export interface ApiSubscriptionGroup {
   id: number;

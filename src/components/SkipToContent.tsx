@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 /**
  * مكون Skip to Content - يسمح لمستخدمي الكيبورد بتخطي التنقل والذهاب مباشرة للمحتوى

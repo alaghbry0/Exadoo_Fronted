@@ -1,8 +1,8 @@
 // components/details/DetailRow.tsx (النسخة النهائية مع ميزة النسخ)
 
-import React from 'react';
-import { useClipboard } from '@/hooks/useClipboard'; // استيراد الـ hook الجديد
-import { Check, Copy } from 'lucide-react';
+import React from "react";
+import { useClipboard } from "@/hooks/useClipboard"; // استيراد الـ hook الجديد
+import { Check, Copy } from "lucide-react";
 
 interface DetailRowProps {
   icon: React.ReactNode;
@@ -12,9 +12,15 @@ interface DetailRowProps {
   isCopyable?: boolean; // خاصية جديدة لتحديد إذا كان النص قابلاً للنسخ
 }
 
-const DetailRow: React.FC<DetailRowProps> = ({ icon, label, value, valueClass, isCopyable = false }) => {
+const DetailRow: React.FC<DetailRowProps> = ({
+  icon,
+  label,
+  value,
+  valueClass,
+  isCopyable = false,
+}) => {
   const { copy, isCopied } = useClipboard();
-  const textValue = typeof value === 'string' ? value : '';
+  const textValue = typeof value === "string" ? value : "";
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation(); // منع أي أحداث أخرى
@@ -36,7 +42,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, label, value, valueClass, i
         className="flex items-center gap-2 font-mono text-sm font-medium text-right min-w-0" // min-w-0 مهمة جدًا لـ flexbox
       >
         {/* حاوية القيمة لتطبيق truncate بشكل صحيح */}
-        <span className={`truncate ${valueClass || 'text-gray-800'}`}>
+        <span className={`truncate ${valueClass || "text-gray-800"}`}>
           {value}
         </span>
 

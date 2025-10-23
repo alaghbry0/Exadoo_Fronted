@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -10,10 +10,16 @@ const Footer: React.FC = () => {
           © {currentYear} Exado. جميع الحقوق محفوظة.
         </p>
         <div className="mt-4 flex justify-center space-x-6">
-          <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors">
+          <a
+            href="#"
+            className="text-gray-400 hover:text-primary-600 transition-colors"
+          >
             شروط الخدمة
           </a>
-          <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors">
+          <a
+            href="#"
+            className="text-gray-400 hover:text-primary-600 transition-colors"
+          >
             سياسة الخصوصية
           </a>
         </div>

@@ -6,53 +6,53 @@
 export const colors = {
   // Text colors
   text: {
-    primary: 'var(--color-text-primary)',
-    secondary: 'var(--color-text-secondary)',
-    tertiary: 'var(--color-text-tertiary)',
-    disabled: 'var(--color-text-disabled)',
-    inverse: 'var(--color-text-inverse)',
-    link: 'var(--color-text-link)',
-    linkHover: 'var(--color-text-link-hover)',
+    primary: "var(--color-text-primary)",
+    secondary: "var(--color-text-secondary)",
+    tertiary: "var(--color-text-tertiary)",
+    disabled: "var(--color-text-disabled)",
+    inverse: "var(--color-text-inverse)",
+    link: "var(--color-text-link)",
+    linkHover: "var(--color-text-link-hover)",
   },
 
   // Background colors
   bg: {
-    primary: 'var(--color-bg-primary)',
-    secondary: 'var(--color-bg-secondary)',
-    tertiary: 'var(--color-bg-tertiary)',
-    elevated: 'var(--color-bg-elevated)',
-    overlay: 'var(--color-bg-overlay)',
-    inverse: 'var(--color-bg-inverse)',
+    primary: "var(--color-bg-primary)",
+    secondary: "var(--color-bg-secondary)",
+    tertiary: "var(--color-bg-tertiary)",
+    elevated: "var(--color-bg-elevated)",
+    overlay: "var(--color-bg-overlay)",
+    inverse: "var(--color-bg-inverse)",
   },
 
   // Border colors
   border: {
-    default: 'var(--color-border-default)',
-    hover: 'var(--color-border-hover)',
-    focus: 'var(--color-border-focus)',
-    disabled: 'var(--color-border-disabled)',
-    error: 'var(--color-border-error)',
+    default: "var(--color-border-default)",
+    hover: "var(--color-border-hover)",
+    focus: "var(--color-border-focus)",
+    disabled: "var(--color-border-disabled)",
+    error: "var(--color-border-error)",
   },
 
   // Brand colors
   brand: {
-    primary: 'var(--color-primary-500)',
-    primaryHover: 'var(--color-primary-600)',
-    primaryActive: 'var(--color-primary-700)',
-    secondary: 'var(--color-secondary-500)',
-    secondaryHover: 'var(--color-secondary-600)',
+    primary: "var(--color-primary-500)",
+    primaryHover: "var(--color-primary-600)",
+    primaryActive: "var(--color-primary-700)",
+    secondary: "var(--color-secondary-500)",
+    secondaryHover: "var(--color-secondary-600)",
   },
 
   // Status colors
   status: {
-    success: 'var(--color-success-500)',
-    successBg: 'var(--color-success-50)',
-    warning: 'var(--color-warning-500)',
-    warningBg: 'var(--color-warning-50)',
-    error: 'var(--color-error-500)',
-    errorBg: 'var(--color-error-50)',
-    info: 'var(--color-primary-500)',
-    infoBg: 'var(--color-primary-50)',
+    success: "var(--color-success-500)",
+    successBg: "var(--color-success-50)",
+    warning: "var(--color-warning-500)",
+    warningBg: "var(--color-warning-50)",
+    error: "var(--color-error-500)",
+    errorBg: "var(--color-error-50)",
+    info: "var(--color-primary-500)",
+    infoBg: "var(--color-primary-50)",
   },
 } as const;
 

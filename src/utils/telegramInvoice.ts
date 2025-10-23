@@ -1,9 +1,11 @@
-import type { TelegramInvoiceCreateRequest } from '@/types/payments';
+import type { TelegramInvoiceCreateRequest } from "@/types/payments";
 
-export async function createTelegramInvoice(req: TelegramInvoiceCreateRequest): Promise<{ invoice_url?: string; error?: string }> {
-  const res = await fetch('/api/create-invoice', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export async function createTelegramInvoice(
+  req: TelegramInvoiceCreateRequest,
+): Promise<{ invoice_url?: string; error?: string }> {
+  const res = await fetch("/api/create-invoice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
   if (!res.ok) {

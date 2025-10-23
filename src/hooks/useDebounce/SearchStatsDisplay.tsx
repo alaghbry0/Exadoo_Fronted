@@ -1,8 +1,8 @@
-import type { FC } from 'react'
+import type { FC } from "react";
 
-import type { SearchStats } from './useDebounce'
+import type { SearchStats } from "./useDebounce";
 
-type SearchStatsDisplayProps = SearchStats
+type SearchStatsDisplayProps = SearchStats;
 
 export const SearchStatsDisplay: FC<SearchStatsDisplayProps> = ({
   totalResults,
@@ -14,15 +14,15 @@ export const SearchStatsDisplay: FC<SearchStatsDisplayProps> = ({
       <div className="text-xs text-gray-500 dark:text-neutral-400 animate-pulse">
         جارٍ البحث...
       </div>
-    )
+    );
   }
 
   return (
     <div className="text-xs text-gray-500 dark:text-neutral-400">
       {totalResults === 0 ? (
-        'لا توجد نتائج'
+        "لا توجد نتائج"
       ) : totalResults === 1 ? (
-        'نتيجة واحدة'
+        "نتيجة واحدة"
       ) : (
         <>
           {totalResults} نتيجة
@@ -32,5 +32,5 @@ export const SearchStatsDisplay: FC<SearchStatsDisplayProps> = ({
         </>
       )}
     </div>
-  )
-}
+  );
+};

@@ -1,13 +1,16 @@
 // src/pages/api/trials/claim.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { makeSignatureHeaders } from '@/lib/signing';
-import { resolveBackendConfig } from '@/lib/serverConfig';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { makeSignatureHeaders } from "@/lib/signing";
+import { resolveBackendConfig } from "@/lib/serverConfig";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
-    if (req.method !== 'POST') {
-      res.setHeader('Allow', 'POST');
-      return res.status(405).json({ error: 'Method Not Allowed' });
+    if (req.method !== "POST") {
+      res.setHeader("Allow", "POST");
+      return res.status(405).json({ error: "Method Not Allowed" });
     }
 
     const { telegram_id, plan_id } = (req.body ?? {}) as {
@@ -16,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
 
     if (!telegram_id || !plan_id) {
-      return res.status(400).json({ error: 'Missing telegram_id or plan_id' });
+      return res.status(400).json({ error: "Missing telegram_id or plan_id" });
     }
 
     const { baseUrl, clientId, secret } = resolveBackendConfig();
@@ -28,8 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const upstream = await fetch(`${baseUrl}/trials/claim`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...sigHeaders },
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...sigHeaders },
       body: JSON.stringify({ telegram_id, plan_id }),
     });
 
@@ -45,15 +48,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!upstream.ok) {
       const errorMessage =
-        typeof data['error'] === 'string' && data['error']
-          ? (data['error'] as string)
-          : upstream.statusText || 'Trial claim failed';
+        typeof data["error"] === "string" && data["error"]
+          ? (data["error"] as string)
+          : upstream.statusText || "Trial claim failed";
       return res.status(upstream.status).json({ error: errorMessage });
     }
 
     return res.status(200).json(data);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal error';
+    const message = error instanceof Error ? error.message : "Internal error";
     return res.status(500).json({ error: message });
   }
 }

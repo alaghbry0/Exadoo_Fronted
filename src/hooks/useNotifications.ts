@@ -1,9 +1,9 @@
 // hooks/useNotifications.ts (النسخة النهائية المبسطة)
 
-import { useInfiniteQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { useInfiniteQuery } from "@tanstack/react-query";
+import axios from "axios";
 // تأكد من أن هذا المسار صحيح وأن الملف يحتوي على تعريف لنوع NotificationData
-import type { NotificationType } from '@/types/notification';
+import type { NotificationType } from "@/types/notification";
 
 /**
  * Hook مخصص لجلب الإشعارات مع التمرير اللانهائي (Infinite Scrolling).
@@ -13,10 +13,13 @@ import type { NotificationType } from '@/types/notification';
  * @param filter - فلتر لعرض الإشعارات 'all' (الكل) أو 'unread' (غير المقروءة).
  * @returns كائن الاستعلام من useInfiniteQuery.
  */
-export function useNotifications(telegramId: string | null, filter: 'all' | 'unread' = 'all') {
+export function useNotifications(
+  telegramId: string | null,
+  filter: "all" | "unread" = "all",
+) {
   const query = useInfiniteQuery<NotificationType[], Error>({
     // مفتاح الاستعلام يتضمن المعرف والفلتر لضمان تخزين البيانات بشكل فريد
-    queryKey: ['notifications', telegramId, filter],
+    queryKey: ["notifications", telegramId, filter],
 
     // الدالة المسؤولة عن جلب البيانات
     queryFn: async ({ pageParam = 0 }) => {
@@ -33,7 +36,7 @@ export function useNotifications(telegramId: string | null, filter: 'all' | 'unr
             telegram_id: telegramId,
             filter,
           },
-        }
+        },
       );
       return data;
     },

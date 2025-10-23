@@ -1,5 +1,5 @@
 // TelegramContext.dev.tsx — نسخة متصفح/اختبار (لا تتطلب Telegram WebApp)
-'use client';
+"use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useUserStore } from "../stores/zustand/userStore";
@@ -34,7 +34,11 @@ function resolveTestTelegramId(): string {
   return DEFAULT_TEST_TELEGRAM_ID;
 }
 
-export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
+export const TelegramProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const { setUserData, telegramId: contextTelegramId } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
@@ -75,8 +79,8 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
           console.log("🔗 [DEV] Checking link status...");
           const resp = await fetch(
             `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(
-              testId
-            )}`
+              testId,
+            )}`,
           );
           if (resp.ok) {
             const data = await resp.json();
@@ -88,7 +92,11 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
               setUserData({ isLinked: false, gmail: null });
             }
           } else {
-            console.warn("⚠️ [DEV] Link check failed:", resp.status, resp.statusText);
+            console.warn(
+              "⚠️ [DEV] Link check failed:",
+              resp.status,
+              resp.statusText,
+            );
           }
         } catch (e) {
           console.warn("⚠️ [DEV] Error checking link status:", e);
@@ -97,7 +105,9 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
         if (!isMounted) return;
         setIsTelegramReady(true);
         setIsLoading(false);
-        console.log("🚀 [DEV] Ready. App can render Services Hub gated by isLinked.");
+        console.log(
+          "🚀 [DEV] Ready. App can render Services Hub gated by isLinked.",
+        );
       } catch (e) {
         console.error("❌ [DEV] Unexpected boot error:", e);
         if (!isMounted) return;
@@ -123,8 +133,8 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(
-            contextTelegramId
-          )}`
+            contextTelegramId,
+          )}`,
         );
         if (!res.ok) {
           console.warn("⚠️ [DEV] Re-check failed with HTTP error.");
@@ -166,7 +176,11 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
     telegramId: contextTelegramId,
   };
 
-  return <TelegramContext.Provider value={value}>{children}</TelegramContext.Provider>;
+  return (
+    <TelegramContext.Provider value={value}>
+      {children}
+    </TelegramContext.Provider>
+  );
 };
 
 export const useTelegram = () => {

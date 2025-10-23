@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from "react";
 
 interface KeyboardNavigationOptions {
   /** دالة تُستدعى عند الضغط على Escape */
@@ -20,9 +20,9 @@ interface KeyboardNavigationOptions {
 /**
  * Hook لإدارة التنقل بالكيبورد
  * يوفر دعم كامل لمفاتيح الأسهم و Escape و Enter
- * 
+ *
  * @param options - خيارات التنقل
- * 
+ *
  * @example
  * ```tsx
  * const Dropdown = ({ isOpen, onClose }) => {
@@ -32,7 +32,7 @@ interface KeyboardNavigationOptions {
  *     onArrowUp: () => focusPreviousItem(),
  *     isActive: isOpen
  *   });
- *   
+ *
  *   return <div>...</div>;
  * };
  * ```
@@ -53,37 +53,37 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions) => {
       if (!isActive) return;
 
       switch (event.key) {
-        case 'Escape':
+        case "Escape":
           if (onEscape) {
             event.preventDefault();
             onEscape();
           }
           break;
-        case 'Enter':
+        case "Enter":
           if (onEnter) {
             event.preventDefault();
             onEnter();
           }
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           if (onArrowUp) {
             event.preventDefault();
             onArrowUp();
           }
           break;
-        case 'ArrowDown':
+        case "ArrowDown":
           if (onArrowDown) {
             event.preventDefault();
             onArrowDown();
           }
           break;
-        case 'ArrowLeft':
+        case "ArrowLeft":
           if (onArrowLeft) {
             event.preventDefault();
             onArrowLeft();
           }
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           if (onArrowRight) {
             event.preventDefault();
             onArrowRight();
@@ -91,28 +91,36 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions) => {
           break;
       }
     },
-    [isActive, onEscape, onEnter, onArrowUp, onArrowDown, onArrowLeft, onArrowRight]
+    [
+      isActive,
+      onEscape,
+      onEnter,
+      onArrowUp,
+      onArrowDown,
+      onArrowLeft,
+      onArrowRight,
+    ],
   );
 
   useEffect(() => {
     if (!isActive) return;
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isActive, handleKeyDown]);
 };
 
 /**
  * Hook للتنقل بين عناصر قائمة باستخدام مفاتيح الأسهم
- * 
+ *
  * @param itemsCount - عدد العناصر في القائمة
  * @param onSelect - دالة تُستدعى عند اختيار عنصر
  * @param isActive - هل الـ Hook نشط
  * @returns الفهرس الحالي المحدد
- * 
+ *
  * @example
  * ```tsx
  * const List = ({ items }) => {
@@ -121,7 +129,7 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions) => {
  *     (index) => selectItem(items[index]),
  *     true
  *   );
- *   
+ *
  *   return items.map((item, i) => (
  *     <div key={i} className={i === selectedIndex ? 'selected' : ''}>
  *       {item}
@@ -133,7 +141,7 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions) => {
 export const useListNavigation = (
   itemsCount: number,
   onSelect?: (index: number) => void,
-  isActive = true
+  isActive = true,
 ) => {
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
@@ -156,4 +164,4 @@ export const useListNavigation = (
 };
 
 // Import React for useState
-import React from 'react';
+import React from "react";

@@ -1,9 +1,9 @@
 // src/hooks/useNotificationStream.ts
 
-import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useTelegram } from '@/context/TelegramContext'; // تأكد من المسار
-import { sseService } from '@/services/sseService'; // استيراد الخدمة الجديدة
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTelegram } from "@/context/TelegramContext"; // تأكد من المسار
+import { sseService } from "@/services/sseService"; // استيراد الخدمة الجديدة
 
 export function useNotificationStream() {
   const { telegramId } = useTelegram();
@@ -23,6 +23,5 @@ export function useNotificationStream() {
 
     // لا حاجة لدالة تنظيف هنا لأننا نريد الاتصال أن يستمر
     // طوال حياة التطبيق. الخدمة نفسها تدير قطع الاتصال.
-
   }, [telegramId, queryClient]);
 }

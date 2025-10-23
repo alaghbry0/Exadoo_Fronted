@@ -1,8 +1,8 @@
 // src/services/sseService.ts
 
-import { QueryClient } from '@tanstack/react-query';
-import { showToast } from '@/components/ui/showToast'; // تأكد من أن هذا المسار صحيح
-import type { NotificationType } from '@/types/notification'; // تأكد من أن هذا المسار صحيح
+import { QueryClient } from "@tanstack/react-query";
+import { showToast } from "@/components/ui/showToast"; // تأكد من أن هذا المسار صحيح
+import type { NotificationType } from "@/types/notification"; // تأكد من أن هذا المسار صحيح
 
 // ثوابت للتحكم في سلوك إعادة الاتصال
 const RECONNECT_DELAY_MS = 5000;
@@ -27,7 +27,7 @@ class SseService {
 
   public initialize(queryClient: QueryClient) {
     if (!this.queryClient) {
-      console.log('🔌 SSE Service Initialized.');
+      console.log("🔌 SSE Service Initialized.");
       this.queryClient = queryClient;
     }
   }
@@ -36,7 +36,7 @@ class SseService {
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
-      console.log('🔌 SSE Service: Connection closed.');
+      console.log("🔌 SSE Service: Connection closed.");
     }
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     if (this.heartbeatTimeout) clearTimeout(this.heartbeatTimeout);
@@ -44,7 +44,9 @@ class SseService {
 
   public connect(telegramId: string) {
     if (!this.queryClient) {
-      return console.error('SSE Service: Not initialized. Call initialize() first.');
+      return console.error(
+        "SSE Service: Not initialized. Call initialize() first.",
+      );
     }
     if (this.eventSource && this.currentTelegramId === telegramId) {
       return; // متصل بالفعل بنفس المستخدم
@@ -58,13 +60,16 @@ class SseService {
     this.eventSource = new EventSource(sseUrl);
 
     this.eventSource.onopen = () => {
-      console.log('✅ SSE Service: Connection Established!');
+      console.log("✅ SSE Service: Connection Established!");
       this.resetHeartbeatTimeout();
     };
 
     this.eventSource.onerror = () => {
       this.cleanup();
-      this.reconnectTimeout = setTimeout(() => this.connect(telegramId), RECONNECT_DELAY_MS);
+      this.reconnectTimeout = setTimeout(
+        () => this.connect(telegramId),
+        RECONNECT_DELAY_MS,
+      );
     };
 
     this.registerEventListeners();
@@ -85,28 +90,37 @@ class SseService {
   private registerEventListeners() {
     if (!this.eventSource || !this.queryClient) return;
 
-    this.eventSource.addEventListener('new_notification', (event) => {
+    this.eventSource.addEventListener("new_notification", (event) => {
       this.resetHeartbeatTimeout();
       try {
         const notification = JSON.parse(event.data) as NotificationType;
         showToast.success({ message: ` ${notification.title}` });
-        this.queryClient?.invalidateQueries({ queryKey: ['notifications', this.currentTelegramId] });
+        this.queryClient?.invalidateQueries({
+          queryKey: ["notifications", this.currentTelegramId],
+        });
         this.queryClient?.setQueryData<number>(
-          ['unreadNotificationsCount', this.currentTelegramId],
-          (count) => (count ?? 0) + 1
+          ["unreadNotificationsCount", this.currentTelegramId],
+          (count) => (count ?? 0) + 1,
         );
-      } catch (e) { console.error('SSE new_notification error', e); }
+      } catch (e) {
+        console.error("SSE new_notification error", e);
+      }
     });
 
-    this.eventSource.addEventListener('unread_update', (event) => {
+    this.eventSource.addEventListener("unread_update", (event) => {
       this.resetHeartbeatTimeout();
       try {
         const data = JSON.parse(event.data) as { count: number };
-        this.queryClient?.setQueryData(['unreadNotificationsCount', this.currentTelegramId], data.count);
-      } catch (e) { console.error('SSE unread_update error', e); }
+        this.queryClient?.setQueryData(
+          ["unreadNotificationsCount", this.currentTelegramId],
+          data.count,
+        );
+      } catch (e) {
+        console.error("SSE unread_update error", e);
+      }
     });
 
-    this.eventSource.addEventListener('heartbeat', this.resetHeartbeatTimeout);
+    this.eventSource.addEventListener("heartbeat", this.resetHeartbeatTimeout);
   }
 }
 

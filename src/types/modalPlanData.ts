@@ -1,5 +1,5 @@
 // src/types/modalPlanData.ts
-import type { DiscountDetails } from '../typesPlan';
+import type { DiscountDetails } from "../typesPlan";
 
 export interface PlanOption {
   id: number;

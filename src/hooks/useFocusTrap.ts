@@ -1,17 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 /**
  * Hook لحبس التركيز (Focus Trap) داخل عنصر معين
  * مفيد للـ Modals و Dialogs لضمان عدم خروج التركيز خارج النافذة
- * 
+ *
  * @param isActive - هل الـ Focus Trap نشط
  * @returns ref للعنصر الذي سيحتوي على الـ Focus Trap
- * 
+ *
  * @example
  * ```tsx
  * const Modal = ({ isOpen, onClose }) => {
  *   const trapRef = useFocusTrap(isOpen);
- *   
+ *
  *   return (
  *     <div ref={trapRef} role="dialog">
  *       <button onClick={onClose}>إغلاق</button>
@@ -28,13 +28,14 @@ export const useFocusTrap = (isActive: boolean) => {
     if (!isActive || !containerRef.current) return;
 
     const container = containerRef.current;
-    
+
     // جميع العناصر القابلة للتركيز
-    const focusableSelector = 
+    const focusableSelector =
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    
-    const focusableElements = container.querySelectorAll<HTMLElement>(focusableSelector);
-    
+
+    const focusableElements =
+      container.querySelectorAll<HTMLElement>(focusableSelector);
+
     if (focusableElements.length === 0) return;
 
     const firstElement = focusableElements[0];
@@ -47,7 +48,7 @@ export const useFocusTrap = (isActive: boolean) => {
     firstElement?.focus();
 
     const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
+      if (e.key !== "Tab") return;
 
       if (e.shiftKey) {
         // Shift + Tab - الرجوع للخلف
@@ -64,11 +65,11 @@ export const useFocusTrap = (isActive: boolean) => {
       }
     };
 
-    container.addEventListener('keydown', handleTab);
+    container.addEventListener("keydown", handleTab);
 
     // Cleanup: إرجاع التركيز للعنصر السابق
     return () => {
-      container.removeEventListener('keydown', handleTab);
+      container.removeEventListener("keydown", handleTab);
       previouslyFocusedElement?.focus();
     };
   }, [isActive]);

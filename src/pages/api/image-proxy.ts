@@ -2,29 +2,34 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 // تخزين الصور في الذاكرة لمدة قصيرة لتقليل الطلبات المتكررة
-const memoryCache = new Map<string, { buffer: Buffer; headers: Record<string, string>; timestamp: number }>();
-const MEMORY_CACHE_TTL = 5 * 60 * 1000 // 5 دقائق (بدلاً من 1)
-const MAX_CACHE_SIZE = 100 // حد أقصى 50 صورة في الذاكرة
+const memoryCache = new Map<
+  string,
+  { buffer: Buffer; headers: Record<string, string>; timestamp: number }
+>();
+const MEMORY_CACHE_TTL = 5 * 60 * 1000; // 5 دقائق (بدلاً من 1)
+const MAX_CACHE_SIZE = 100; // حد أقصى 50 صورة في الذاكرة
 
-const ALLOWED_DOMAINS = ['exaado.plebits.com'];
+const ALLOWED_DOMAINS = ["exaado.plebits.com"];
 const CACHE_MAX_AGE = 60 * 60 * 24 * 30; // 30 يوم
 const FETCH_TIMEOUT = 15000; // 15 ثانية
 
 function isAllowedDomain(hostname: string): boolean {
-  return ALLOWED_DOMAINS.some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+  return ALLOWED_DOMAINS.some(
+    (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+  );
 }
 
 function cleanMemoryCache() {
   const now = Date.now();
   const entries = Array.from(memoryCache.entries());
-  
+
   // حذف العناصر القديمة
   for (const [key, value] of entries) {
     if (now - value.timestamp > MEMORY_CACHE_TTL) {
       memoryCache.delete(key);
     }
   }
-  
+
   // إذا تجاوز الحد، احذف الأقدم
   if (memoryCache.size > MAX_CACHE_SIZE) {
     const sorted = entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
@@ -33,7 +38,10 @@ function cleanMemoryCache() {
   }
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   // دعم OPTIONS للـ CORS
   if (req.method === "OPTIONS") {
     res.status(200).end();
@@ -82,7 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (cached && Date.now() - cached.timestamp < MEMORY_CACHE_TTL) {
     res.setHeader("Content-Type", cached.headers.contentType);
     res.setHeader("Content-Length", cached.buffer.length);
-    res.setHeader("Cache-Control", `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=604800`);
+    res.setHeader(
+      "Cache-Control",
+      `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=604800`,
+    );
     res.setHeader("X-Cache", "HIT");
     if (cached.headers.etag) {
       res.setHeader("ETag", cached.headers.etag);
@@ -100,22 +111,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       signal: controller.signal,
       headers: {
         "User-Agent": "ExaadoImageProxy/2.0",
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        Accept:
+          "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
       },
     });
 
     clearTimeout(timeout);
 
     if (!response.ok) {
-      res.status(response.status).json({ 
-        error: `Upstream error: ${response.status}` 
+      res.status(response.status).json({
+        error: `Upstream error: ${response.status}`,
       });
       return;
     }
 
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    const contentType =
+      response.headers.get("content-type") || "application/octet-stream";
     const etag = response.headers.get("etag");
-    
+
     // التأكد من أن المحتوى صورة
     if (!contentType.startsWith("image/")) {
       res.status(400).json({ error: "Content is not an image" });
@@ -135,9 +148,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // إرسال الاستجابة
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Length", buffer.length);
-    res.setHeader("Cache-Control", `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=604800`);
+    res.setHeader(
+      "Cache-Control",
+      `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=604800`,
+    );
     res.setHeader("X-Cache", "MISS");
-    
+
     if (etag) {
       res.setHeader("ETag", etag);
     }
@@ -145,12 +161,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).send(buffer);
   } catch (error) {
     clearTimeout(timeout);
-    
+
     const isAborted = error instanceof Error && error.name === "AbortError";
     console.error(`[image-proxy] Error fetching ${url}:`, error);
-    
-    res.status(isAborted ? 504 : 502).json({ 
-      error: isAborted ? "Request timeout" : "Failed to fetch image" 
+
+    res.status(isAborted ? 504 : 502).json({
+      error: isAborted ? "Request timeout" : "Failed to fetch image",
     });
   }
 }
@@ -158,6 +174,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // تكوين Next.js API
 export const config = {
   api: {
-    responseLimit: '8mb',
+    responseLimit: "8mb",
   },
 };

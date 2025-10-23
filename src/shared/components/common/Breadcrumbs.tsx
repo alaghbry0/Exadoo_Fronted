@@ -1,17 +1,20 @@
 // src/shared/components/common/Breadcrumbs.tsx
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 interface BreadcrumbItem {
-  label: string
-  href?: string
+  label: string;
+  href?: string;
 }
 
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm mb-6">
+    <nav
+      aria-label="Breadcrumb"
+      className="flex items-center gap-2 text-sm mb-6"
+    >
       {items.map((item, index) => {
-        const isLast = index === items.length - 1
+        const isLast = index === items.length - 1;
 
         return (
           <div key={index} className="flex items-center gap-2">
@@ -27,13 +30,11 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                 {item.label}
               </span>
             )}
-            
-            {!isLast && (
-              <ChevronLeft className="h-4 w-4 text-gray-400" />
-            )}
+
+            {!isLast && <ChevronLeft className="h-4 w-4 text-gray-400" />}
           </div>
-        )
+        );
       })}
     </nav>
-  )
+  );
 }

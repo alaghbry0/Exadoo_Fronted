@@ -1,10 +1,10 @@
 // src/features/auth/components/AuthFab.tsx
-'use client';
+"use client";
 
-import React from 'react';
-import { useUserStore } from '@/stores/zustand/userStore';
-import { useUIStore } from '@/stores/zustand/uiStore';
-import UnlinkedStateBanner from './UnlinkedStateBanner';
+import React from "react";
+import { useUserStore } from "@/stores/zustand/userStore";
+import { useUIStore } from "@/stores/zustand/uiStore";
+import UnlinkedStateBanner from "./UnlinkedStateBanner";
 
 /**
  * هذا المكون يعرض فقط البانر التشجيعي للمستخدم غير المرتبط.
@@ -20,7 +20,7 @@ const AuthPrompt: React.FC = () => {
   }
 
   // نعرض فقط البانر، ونمرر له دالة فتح النافذة
-  return <UnlinkedStateBanner onLinkClick={() => openAuthPrompt('generic')} />;
+  return <UnlinkedStateBanner onLinkClick={() => openAuthPrompt("generic")} />;
 };
 
 export default AuthPrompt;

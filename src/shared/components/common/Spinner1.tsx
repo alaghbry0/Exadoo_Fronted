@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -11,10 +10,7 @@ export const Spinner = ({ className }: SpinnerProps) => {
     <div className={cn("relative", className)}>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="h-full w-full animate-spin">
-          <svg
-            viewBox="0 0 50 50"
-            className="h-full w-full"
-          >
+          <svg viewBox="0 0 50 50" className="h-full w-full">
             <circle
               className="opacity-20"
               cx="25"

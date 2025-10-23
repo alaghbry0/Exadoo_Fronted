@@ -2,13 +2,13 @@
 // فهرس بحث موحّد لخدمات المتجر + محتوى الأكاديمية (كورسات/حزم/تصنيفات)
 // من دون أي تبعيات خارجية. سريع وخفيف + يدعم العربية.
 
-export type UnifiedKind = 'service' | 'course' | 'bundle' | 'category';
+export type UnifiedKind = "service" | "course" | "bundle" | "category";
 
 export interface UnifiedDocBase {
   kind: UnifiedKind;
   id: string;
   title: string;
-  subtitle?: string;      // مثال: الوصف المختصر
+  subtitle?: string; // مثال: الوصف المختصر
   href: string;
   thumbnail?: string;
   // حقل اختياري يمكن استعماله لإظهار شارة "مقفل" على الخدمات
@@ -40,13 +40,13 @@ export interface UnifiedResult {
 
 // ------ Arabic normalizer ------
 export function normalizeArabic(input: string): string {
-  return (input || '')
+  return (input || "")
     .toLowerCase()
-    .replace(/[\u064B-\u0652]/g, '') // إزالة التشكيل
-    .replace(/[أإآ]/g, 'ا')          // توحيد الألف
-    .replace(/ى/g, 'ي')              // توحيد الياء
-    .replace(/ة/g, 'ه')              // توحيد التاء المربوطة
-    .replace(/\s+/g, ' ')
+    .replace(/[\u064B-\u0652]/g, "") // إزالة التشكيل
+    .replace(/[أإآ]/g, "ا") // توحيد الألف
+    .replace(/ى/g, "ي") // توحيد الياء
+    .replace(/ة/g, "ه") // توحيد التاء المربوطة
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -58,7 +58,7 @@ function scoreOne(q: string, doc: UnifiedDocBase): number {
   if (!q) return 0;
   const nq = normalizeArabic(q);
   const nt = normalizeArabic(doc.title);
-  const ns = normalizeArabic(doc.subtitle || '');
+  const ns = normalizeArabic(doc.subtitle || "");
 
   let s = 0;
   if (nt.includes(nq)) s += WEIGHTS.title;
@@ -81,7 +81,12 @@ function sortDesc<T extends ScoreHit>(arr: T[]): T[] {
 // options.lockResolver: دالة تحدد إن كانت الخدمة مقفلة (مثلاً حسب isLinked)
 export function unifiedSearch(
   query: string,
-  services: Array<{ key: string; title: string; description: string; href: string }>,
+  services: Array<{
+    key: string;
+    title: string;
+    description: string;
+    href: string;
+  }>,
   academy:
     | {
         courses?: Array<{
@@ -113,14 +118,14 @@ export function unifiedSearch(
     lockResolver?: (serviceKey: string) => boolean;
     // حد أقصى لعدد النتائج في كل قسم
     perSectionLimit?: number;
-  }
+  },
 ): UnifiedResult {
   const t0 = performance.now();
   const perLimit = options?.perSectionLimit ?? 8;
 
   // 1) خدمات المتجر -> UnifiedDoc
   const serviceDocs: UnifiedDocBase[] = services.map((s) => ({
-    kind: 'service',
+    kind: "service",
     id: s.key,
     title: s.title,
     subtitle: s.description,
@@ -131,33 +136,40 @@ export function unifiedSearch(
 
   // 2) الأكاديمية -> كورسات/حزم/تصنيفات
   const courseDocs: UnifiedDocBase[] = (academy?.courses || []).map((c) => ({
-    kind: 'course',
+    kind: "course",
     id: c.id,
     title: c.title,
-    subtitle: c.short_description || '',
+    subtitle: c.short_description || "",
     href: `/academy/course/${c.id}`,
     thumbnail: c.thumbnail,
   }));
 
   const bundleDocs: UnifiedDocBase[] = (academy?.bundles || []).map((b) => ({
-    kind: 'bundle',
+    kind: "bundle",
     id: b.id,
     title: b.title,
-    subtitle: (b.description || '').replace(/\\r\\n/g, ' '),
+    subtitle: (b.description || "").replace(/\\r\\n/g, " "),
     href: `/academy/bundle/${b.id}`,
     thumbnail: b.image || b.cover_image,
   }));
 
-  const categoryDocs: UnifiedDocBase[] = (academy?.categories || []).map((cat) => ({
-    kind: 'category',
-    id: cat.id,
-    title: cat.name,
-    subtitle: 'تصنيف',
-    href: `/academy/category/${cat.id}`,
-    thumbnail: cat.thumbnail,
-  }));
+  const categoryDocs: UnifiedDocBase[] = (academy?.categories || []).map(
+    (cat) => ({
+      kind: "category",
+      id: cat.id,
+      title: cat.name,
+      subtitle: "تصنيف",
+      href: `/academy/category/${cat.id}`,
+      thumbnail: cat.thumbnail,
+    }),
+  );
 
-  const allDocs = [...serviceDocs, ...courseDocs, ...bundleDocs, ...categoryDocs];
+  const allDocs = [
+    ...serviceDocs,
+    ...courseDocs,
+    ...bundleDocs,
+    ...categoryDocs,
+  ];
 
   if (!query.trim()) {
     return {
@@ -181,10 +193,22 @@ export function unifiedSearch(
 
   // 4) تقسيم حسب النوع + تحديد الحد
   const byKind = {
-    services: sortDesc(hits.filter((h) => h.item.kind === 'service')).slice(0, perLimit),
-    courses: sortDesc(hits.filter((h) => h.item.kind === 'course')).slice(0, perLimit),
-    bundles: sortDesc(hits.filter((h) => h.item.kind === 'bundle')).slice(0, perLimit),
-    categories: sortDesc(hits.filter((h) => h.item.kind === 'category')).slice(0, perLimit),
+    services: sortDesc(hits.filter((h) => h.item.kind === "service")).slice(
+      0,
+      perLimit,
+    ),
+    courses: sortDesc(hits.filter((h) => h.item.kind === "course")).slice(
+      0,
+      perLimit,
+    ),
+    bundles: sortDesc(hits.filter((h) => h.item.kind === "bundle")).slice(
+      0,
+      perLimit,
+    ),
+    categories: sortDesc(hits.filter((h) => h.item.kind === "category")).slice(
+      0,
+      perLimit,
+    ),
   };
 
   const t1 = performance.now();

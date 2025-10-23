@@ -1,28 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-type AnnouncementPriority = 'polite' | 'assertive';
+type AnnouncementPriority = "polite" | "assertive";
 
 /**
  * Hook لإنشاء ARIA Live Region للإعلانات الديناميكية
  * يساعد Screen Readers على قراءة التحديثات الديناميكية
- * 
+ *
  * @returns كائن يحتوي على دالة announce ومتغيرات message و priority
- * 
+ *
  * @example
  * ```tsx
  * const Component = () => {
  *   const { announce, message, priority } = useAriaAnnouncer();
- *   
+ *
  *   const handleSave = async () => {
  *     await saveData();
  *     announce('تم حفظ البيانات بنجاح', 'polite');
  *   };
- *   
+ *
  *   return (
  *     <>
  *       <button onClick={handleSave}>حفظ</button>
- *       <div role={priority === 'assertive' ? 'alert' : 'status'} 
- *            aria-live={priority} 
+ *       <div role={priority === 'assertive' ? 'alert' : 'status'}
+ *            aria-live={priority}
  *            className="sr-only">
  *         {message}
  *       </div>
@@ -32,13 +32,16 @@ type AnnouncementPriority = 'polite' | 'assertive';
  * ```
  */
 export const useAriaAnnouncer = () => {
-  const [message, setMessage] = useState('');
-  const [priority, setPriority] = useState<AnnouncementPriority>('polite');
+  const [message, setMessage] = useState("");
+  const [priority, setPriority] = useState<AnnouncementPriority>("polite");
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const announce = (text: string, announcePriority: AnnouncementPriority = 'polite') => {
+  const announce = (
+    text: string,
+    announcePriority: AnnouncementPriority = "polite",
+  ) => {
     // مسح أي رسالة سابقة
-    setMessage('');
+    setMessage("");
     setPriority(announcePriority);
 
     // تأخير صغير للسماح لـ Screen Reader بالتعرف على التغيير
@@ -50,7 +53,7 @@ export const useAriaAnnouncer = () => {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        setMessage('');
+        setMessage("");
       }, 5000);
     }, 100);
   };
