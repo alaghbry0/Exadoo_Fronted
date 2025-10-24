@@ -6,41 +6,41 @@
 import { componentRadius as _componentRadius } from "@/styles/tokens";
 
 export const componentVariants = {
-  // Card variants
+  // Card variants - موحد بـ rounded-xl
   card: {
-    base: "bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800",
+    base: "bg-white dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800 rounded-xl",
     elevated:
-      "shadow-elevation-2 hover:shadow-elevation-4 transition-shadow duration-300",
+      "bg-white dark:bg-neutral-900 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300",
     interactive:
-      "cursor-pointer hover:-translate-y-0.5 transition-all duration-300",
+      "bg-white dark:bg-neutral-900 rounded-xl shadow-md hover:shadow-2xl hover:-translate-y-0.5 cursor-pointer transition-all duration-300",
     glass:
-      "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border border-white/20 dark:border-neutral-800/20",
+      "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border border-white/20 dark:border-neutral-800/20 rounded-xl",
     gradient:
-      "bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950",
+      "bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950 rounded-xl",
   },
 
-  // Button variants
+  // Button variants - محسّن مع shadows
   button: {
-    base: "inline-flex items-center justify-center font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+    base: "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
     primary:
-      "bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 active:scale-95",
+      "bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-sm hover:shadow-md active:shadow-sm active:scale-95",
     secondary:
-      "bg-secondary-500 text-white hover:bg-secondary-600 active:scale-95",
+      "bg-secondary-500 text-white hover:bg-secondary-600 shadow-sm hover:shadow-md active:shadow-sm active:scale-95",
     outline:
-      "border-2 border-primary-500 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950 active:scale-95",
+      "border-2 border-primary-500 text-primary-500 bg-transparent hover:bg-primary-50 dark:hover:bg-primary-950 active:scale-95",
     ghost:
-      "text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950 active:scale-95",
-    danger: "bg-error-500 text-white hover:bg-error-600 active:scale-95",
+      "text-primary-500 bg-transparent hover:bg-primary-50 dark:hover:bg-primary-950 active:scale-95",
+    danger: "bg-error-500 text-white hover:bg-error-600 shadow-sm hover:shadow-md active:shadow-sm active:scale-95",
   },
 
-  // Input variants
+  // Input variants - موحد بـ rounded-xl
   input: {
-    base: "w-full px-4 py-2 border transition-colors duration-200 focus:outline-none focus:ring-2",
+    base: "w-full px-4 py-2 border rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 shadow-sm focus:shadow-md",
     default:
       "border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus:border-primary-500 focus:ring-primary-500/20",
-    error: "border-error-500 focus:border-error-500 focus:ring-error-500/20",
+    error: "border-error-500 bg-error-50 dark:bg-error-950 focus:border-error-500 focus:ring-error-500/20",
     success:
-      "border-success-500 focus:border-success-500 focus:ring-success-500/20",
+      "border-success-500 bg-success-50 dark:bg-success-950 focus:border-success-500 focus:ring-success-500/20",
   },
 
   // Badge variants

@@ -1,13 +1,7 @@
 // src/pages/academy/bundle/[id].tsx
 "use client";
 
-import React, {
-  useMemo,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -16,8 +10,7 @@ import { useAcademyData } from "@/services/academy";
 import { useTelegram } from "@/context/TelegramContext";
 import AuthPrompt from "@/features/auth/components/AuthFab";
 import SmartImage from "@/shared/components/common/SmartImage";
-import { Card, CardContent } from "@/components/ui/card";
-// Dynamic import لـ AcademyPurchaseModal
+import { Card } from "@/components/ui/card";
 const AcademyPurchaseModal = dynamic(
   () => import("@/features/academy/components/AcademyPurchaseModal"),
   { ssr: false },
@@ -26,19 +19,14 @@ import PageLayout from "@/shared/components/layout/PageLayout";
 import { Breadcrumbs } from "@/shared/components/common/Breadcrumbs";
 import { PageLoader } from "@/shared/components/common/LoadingStates";
 import { EmptyState } from "@/shared/components/common/EmptyState";
-import {
-  ArrowLeft,
-  Layers,
-  Gift,
-  MessageSquare,
-  BookOpen,
-  Award,
-  Sparkles,
-  Package,
-  ShoppingCart,
-} from "lucide-react";
+import { ArrowLeft, Layers, Sparkles, Package, BookOpen } from "lucide-react";
 import SubscribeFab from "@/components/SubscribeFab";
-import { cn } from "@/lib/utils";
+import { colors, spacing } from "@/styles/tokens";
+import { MiniCourseCard } from "./components/MiniCourseCard";
+import { TitleMetaBundle } from "./components/TitleMetaBundle";
+import { StickyHeader } from "./components/StickyHeader";
+import { BundleFeaturesSidebar } from "./components/BundleFeaturesSidebar";
+import { HScroll } from "./components/HScroll";
 
 /* ==============================
    Types
@@ -69,285 +57,16 @@ interface Bundle {
 /* ==============================
    Helpers
 ============================== */
+const isFreeCourse = (c: Pick<Course, "price" | "is_free_course">) =>
+  (c.is_free_course ?? "") === "1" || c.price?.toLowerCase?.() === "free";
+
 const formatPrice = (value?: string) => {
   if (!value) return "";
   if (value.toLowerCase?.() === "free") return "مجاني";
   const n = Number(value);
   return isNaN(n) ? value : `$${n.toFixed(0)}`;
 };
-const isFreeCourse = (c: Pick<Course, "price" | "is_free_course">) =>
-  (c.is_free_course ?? "") === "1" || c.price?.toLowerCase?.() === "free";
 
-/* ==============================
-   HScroll (أعرض قليلاً مع min-w للجوال)
-============================== */
-const HScroll: React.FC<
-  React.PropsWithChildren<{ itemClassName?: string }>
-> = ({
-  children,
-  itemClassName = "min-w-[220px] w-[68%] xs:w-[58%] sm:w-[45%] lg:w-[30%] xl:w-[23%]",
-}) => {
-  const count = React.Children.count(children);
-  if (count === 0) return null;
-  return (
-    <div className="relative -mx-4 px-4">
-      <div
-        className="hscroll hscroll-snap"
-        role="list"
-        aria-label="قائمة أفقية قابلة للتمرير"
-      >
-        {React.Children.map(children, (ch, i) => (
-          <div
-            key={i}
-            className={cn("hscroll-item", itemClassName)}
-            role="listitem"
-          >
-            {ch}
-          </div>
-        ))}
-        <div className="hscroll-item w-px sm:w-2 lg:w-4" />
-      </div>
-    </div>
-  );
-};
-
-/* ==============================
-   MiniCourseCard — أصغر على الجوال + 4:3
-============================== */
-function MiniCourseCard({
-  id,
-  title,
-  desc,
-  lessons,
-  level,
-  img,
-  free,
-  price,
-  priority,
-}: {
-  id: string;
-  title: string;
-  desc?: string;
-  lessons: number;
-  level?: string;
-  img?: string;
-  free?: boolean;
-  price?: string;
-  priority?: boolean;
-}) {
-  const router = useRouter();
-  const prefetch = useCallback(
-    () => router.prefetch(`/academy/course/${id}`),
-    [router, id],
-  );
-
-  const levelConfig = {
-    beginner: {
-      label: "مبتدئ",
-      color: "text-emerald-600 dark:text-emerald-400",
-    },
-    intermediate: {
-      label: "متوسط",
-      color: "text-amber-600 dark:text-amber-400",
-    },
-    advanced: { label: "متقدم", color: "text-rose-600 dark:text-rose-400" },
-  };
-  const levelInfo = level
-    ? levelConfig[level as keyof typeof levelConfig]
-    : null;
-
-  return (
-    <Link
-      href={`/academy/course/${id}`}
-      prefetch={false}
-      onMouseEnter={prefetch}
-      onTouchStart={prefetch}
-      className="group block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50 focus-visible:ring-offset-2"
-      aria-label={`فتح دورة ${title}`}
-    >
-      <Card className="group relative h-full overflow-hidden rounded-3xl border border-gray-100/50 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 dark:border-neutral-800/50 dark:bg-neutral-900">
-        <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
-          <SmartImage
-            src={img || "/image.jpg"}
-            alt={`${title} — ${lessons} درس${level ? ` • ${level}` : ""}`}
-            fill
-            blurType="secondary"
-            sizes="(min-width:1280px) 28vw, (min-width:640px) 45vw, 60vw"
-            className="object-cover md:group-hover:scale-105 transition-transform duration-300"
-            priority={!!priority}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          {free && (
-            <div className="absolute right-2.5 sm:right-3 top-2.5 sm:top-3 rounded-full bg-emerald-500/95 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
-              مجاني
-            </div>
-          )}
-        </div>
-
-        <CardContent className="p-3 sm:p-4">
-          <h3 className="mb-1.5 sm:mb-2 line-clamp-1 text-sm sm:text-[15px] font-bold text-gray-900 dark:text-neutral-100">
-            {title}
-          </h3>
-
-          {desc && (
-            <p className="mb-3 line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-gray-600 dark:text-neutral-400">
-              {desc}
-            </p>
-          )}
-
-          <div className="flex items-center justify-between gap-2.5 sm:gap-3 border-t border-gray-100 pt-2.5 sm:pt-3 dark:border-neutral-800">
-            <div className="flex items-center gap-2.5 sm:gap-2 text-[11px] sm:text-[12px]">
-              <BookOpen className="h-3.5 w-3.5 text-gray-500 dark:text-neutral-400" />
-              <span className="font-medium text-gray-600 dark:text-neutral-400">
-                {lessons} درس
-              </span>
-              {levelInfo && (
-                <>
-                  <span className="text-gray-300 dark:text-neutral-700">•</span>
-                  <span className={cn("font-medium", levelInfo.color)}>
-                    {levelInfo.label}
-                  </span>
-                </>
-              )}
-            </div>
-
-            <span className="text-sm sm:text-[15px] font-extrabold text-primary-600 dark:text-primary-400">
-              {free ? "مجاني" : formatPrice(price)}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-/* ==============================
-   TitleMetaBundle (زجاجية تحت الصورة + CTA)
-============================== */
-const TitleMetaBundle = ({
-  bundle,
-  coursesCount,
-  onCTA,
-}: {
-  bundle: Bundle;
-  coursesCount: number;
-  onCTA: () => void;
-}) => {
-  const isFree =
-    bundle.price?.toLowerCase?.() === "free" || Number(bundle.price) === 0;
-  const hasPrice = !!bundle.price;
-  const buttonText = isFree
-    ? "ابدأ الآن"
-    : `اشترك - ${formatPrice(bundle.price)}`;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="mx-auto -mt-10 md:-mt-12 max-w-6xl px-4"
-    >
-      <div
-        className={cn(
-          "rounded-2xl md:rounded-3xl",
-          "bg-white/80 dark:bg-neutral-900/80",
-          "backdrop-blur-xl",
-          "border border-neutral-200/70 dark:border-neutral-800/60",
-          "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.25)]",
-          "p-4 sm:p-6 md:p-8",
-        )}
-      >
-        {/* Badges */}
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/90 px-3 py-1.5 text-[11px] font-semibold text-white">
-            <Award className="h-4 w-4" />
-            حزمة تعليمية متكاملة
-          </span>
-          {parseInt(bundle.free_sessions_count || "0") > 0 && (
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/90 px-3 py-1.5 text-[11px] font-semibold text-white">
-              <Gift className="h-4 w-4" />
-              جلسات خاصة: {bundle.free_sessions_count}
-            </span>
-          )}
-          {bundle.telegram_url?.trim() && (
-            <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/90 px-3 py-1.5 text-[11px] font-semibold text-white">
-              <MessageSquare className="h-4 w-4" />
-              مجموعة تيليجرام
-            </span>
-          )}
-        </div>
-
-        {/* Title */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50">
-          {bundle.title}
-        </h1>
-
-        {/* Meta chips */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1 font-semibold text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800/70 dark:text-neutral-200">
-            <Layers className="h-4 w-4" />
-            {coursesCount} دورات تدريبية
-          </span>
-        </div>
-
-        {/* CTA Row */}
-        {hasPrice && (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              onClick={onCTA}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600/90 transition-colors"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              <span>{buttonText}</span>
-            </button>
-          </div>
-        )}
-      </div>
-    </motion.section>
-  );
-};
-
-/* ==============================
-   StickyHeader
-============================== */
-const StickyHeader = ({
-  title,
-  price,
-  visible,
-  onCTA,
-}: {
-  title: string;
-  price?: string;
-  visible: boolean;
-  onCTA: () => void;
-}) => {
-  const buttonText =
-    price?.toLowerCase?.() === "free" || Number(price) === 0
-      ? "ابدأ الآن"
-      : `اشترك - ${formatPrice(price)}`;
-
-  return (
-    <motion.div
-      initial={{ y: -100 }}
-      animate={{ y: visible ? 0 : -100 }}
-      transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-md dark:bg-neutral-900/90"
-    >
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <h2 className="min-w-0 font-bold text-sm sm:text-base text-gray-800 dark:text-neutral-100 truncate">
-          {title}
-        </h2>
-        <button
-          onClick={onCTA}
-          className="hidden sm:flex items-center justify-center gap-2 rounded-md bg-sky-500 px-4 py-2 text-sm font-bold text-white hover:bg-sky-600 transition-colors"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          <span>{buttonText}</span>
-        </button>
-      </div>
-    </motion.div>
-  );
-};
 
 /* ==============================
    Page
@@ -522,15 +241,31 @@ export default function BundleDetail() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="rounded-3xl border border-neutral-200/80 bg-white/70 backdrop-blur-xl shadow-lg dark:border-neutral-800/50 dark:bg-neutral-900/70 p-6 md:p-8"
+                  className="rounded-3xl backdrop-blur-xl shadow-lg"
+                  style={{
+                    backgroundColor: `${colors.bg.elevated}B3`,
+                    border: `1px solid ${colors.border.default}CC`,
+                    padding: `${spacing[6]} ${spacing[8]}`,
+                  }}
                 >
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600">
+                  <div
+                    className="mb-4 flex items-center"
+                    style={{ gap: spacing[4] }}
+                  >
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: colors.brand.primary }}
+                    >
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
-                    <h2 className="text-xl font-bold">عن الحزمة</h2>
+                    <h2 className="text-xl font-bold" style={{ color: colors.text.primary }}>
+                      عن الحزمة
+                    </h2>
                   </div>
-                  <p className="whitespace-pre-line text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
+                  <p
+                    className="whitespace-pre-line text-base leading-relaxed"
+                    style={{ color: colors.text.secondary }}
+                  >
                     {(bundle.description || "").replace(/\\r\\n/g, "\n")}
                   </p>
                 </motion.div>
@@ -538,84 +273,10 @@ export default function BundleDetail() {
 
               {/* مميزات الحزمة (Sidebar) */}
               <aside className="lg:col-span-1">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <Card className="overflow-hidden rounded-3xl border-0 shadow-lg">
-                    <div className="bg-gradient-to-br from-amber-50 via-amber-50/50 to-white p-6 dark:from-amber-900/10 dark:via-amber-900/5 dark:to-neutral-900">
-                      <div className="mb-6 flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-600">
-                          <Gift className="h-5 w-5 text-white" />
-                        </div>
-                        <h3 className="text-lg font-bold">مميزات الحزمة</h3>
-                      </div>
-
-                      <ul className="space-y-4">
-                        <li className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-900/30">
-                            <Layers className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-neutral-100">
-                              {coursesInBundle.length} دورات تدريبية
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-neutral-400">
-                              محتوى شامل ومتكامل
-                            </p>
-                          </div>
-                        </li>
-
-                        {parseInt(bundle.free_sessions_count || "0") > 0 && (
-                          <li className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
-                              <Gift className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900 dark:text-neutral-100">
-                                {bundle.free_sessions_count} جلسات خاصة
-                              </p>
-                              <p className="text-sm text-gray-600 dark:text-neutral-400">
-                                مع المدرب مباشرة
-                              </p>
-                            </div>
-                          </li>
-                        )}
-
-                        {bundle.telegram_url?.trim() && (
-                          <li className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
-                              <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900 dark:text-neutral-100">
-                                مجموعة تيليجرام
-                              </p>
-                              <p className="text-sm text-gray-600 dark:text-neutral-400">
-                                دعم مستمر ومتابعة
-                              </p>
-                            </div>
-                          </li>
-                        )}
-
-                        <li className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30">
-                            <Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-neutral-100">
-                              شهادة إتمام
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-neutral-400">
-                              بعد إكمال الحزمة
-                            </p>
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </Card>
-                </motion.div>
+                <BundleFeaturesSidebar
+                  bundle={bundle}
+                  coursesCount={coursesInBundle.length}
+                />
               </aside>
             </div>
 
@@ -628,15 +289,26 @@ export default function BundleDetail() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="mt-12"
               >
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-sm">
+                <div
+                  className="mb-6 flex items-center"
+                  style={{ gap: spacing[4] }}
+                >
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-xl shadow-sm"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${colors.brand.primaryHover} 100%)`,
+                    }}
+                  >
                     <BookOpen className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold md:text-3xl">
+                    <h2
+                      className="text-2xl font-bold md:text-3xl"
+                      style={{ color: colors.text.primary }}
+                    >
                       الدورات المتضمنة
                     </h2>
-                    <p className="text-sm text-gray-600 dark:text-neutral-400">
+                    <p className="text-sm" style={{ color: colors.text.secondary }}>
                       {coursesInBundle.length} دورات تدريبية متكاملة
                     </p>
                   </div>

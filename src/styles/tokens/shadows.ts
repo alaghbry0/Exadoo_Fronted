@@ -52,13 +52,37 @@ export const shadows = {
   },
 } as const;
 
-// CSS classes للاستخدام المباشر
+// CSS classes للاستخدام المباشر - موحدة
 export const shadowClasses = {
-  card: "shadow-elevation-2 hover:shadow-elevation-4 transition-shadow duration-300",
-  cardInteractive:
-    "shadow-elevation-2 hover:shadow-elevation-5 transition-shadow duration-300",
-  button:
-    "shadow-elevation-1 hover:shadow-elevation-3 active:shadow-elevation-1",
-  modal: "shadow-elevation-6",
-  dropdown: "shadow-elevation-4",
+  // Cards - البطاقات
+  card: "shadow-md hover:shadow-lg transition-shadow duration-300",
+  cardHover: "shadow-lg hover:shadow-xl transition-shadow duration-300",
+  cardElevated: "shadow-xl",
+  cardInteractive: "shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5",
+  
+  // Modals & Overlays
+  modal: "shadow-2xl",
+  dialog: "shadow-2xl",
+  
+  // Dropdowns & Popovers
+  dropdown: "shadow-lg",
+  popover: "shadow-lg",
+  tooltip: "shadow-md",
+  
+  // Buttons
+  button: "shadow-sm hover:shadow-md active:shadow-sm transition-shadow duration-200",
+  buttonElevated: "shadow-md hover:shadow-lg active:shadow-md transition-shadow duration-200",
+  
+  // Inputs & Forms
+  input: "shadow-sm focus:shadow-md transition-shadow duration-200",
+  
+  // Special effects
+  glow: "shadow-[0_0_40px_rgba(0,132,255,0.3)]",
+  glowPurple: "shadow-[0_0_40px_rgba(139,92,246,0.3)]",
+  
+  // None
+  none: "shadow-none",
 } as const;
+
+// Shadow utility للاستخدام الديناميكي
+export type ShadowType = keyof typeof shadowClasses;

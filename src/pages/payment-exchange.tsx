@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { ExchangePaymentModal } from "../components/ExchangePaymentModal";
+import { ExchangePaymentModal } from "@/features/payments/components/ExchangePaymentModal";
 
 const PaymentExchange = () => {
   const searchParams = useSearchParams();

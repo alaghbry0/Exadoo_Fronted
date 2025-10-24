@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, ShieldCheck } from "lucide-react";
 import { UsdtPaymentMethodModal } from "./UsdtPaymentMethodModal";
-import { ExchangePaymentModal } from "@/components/ExchangePaymentModal";
+import { ExchangePaymentModal } from "@/features/payments/components/ExchangePaymentModal";
 import { PaymentSuccessModal } from "./PaymentSuccessModal";
 import { PaymentExchangeSuccess } from "./PaymentExchangeSuccess";
 import { useServicePayment } from "@/hooks/useServicePayment";

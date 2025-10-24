@@ -2,6 +2,7 @@ import React from "react";
 import { CheckCircle2, Lock, PlayCircle, Clock, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { colors, spacing } from "@/styles/tokens";
 
 export default function CurriculumList({
   isEnrolled,
@@ -31,25 +32,46 @@ export default function CurriculumList({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-neutral-800/50 rounded-2xl">
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-gray-600 dark:text-gray-400">
-            {totalLessons} درس
-          </span>
-          <span className="text-gray-600 dark:text-gray-400">•</span>
-          <span className="text-gray-600 dark:text-gray-400">
-            {duration || "--:--"}
-          </span>
+      <div
+        className="flex justify-between items-center rounded-2xl"
+        style={{
+          padding: spacing[5],
+          backgroundColor: colors.bg.secondary,
+        }}
+      >
+        <div
+          className="flex items-center text-sm"
+          style={{
+            gap: spacing[5],
+            color: colors.text.secondary,
+          }}
+        >
+          <span>{totalLessons} درس</span>
+          <span>•</span>
+          <span>{duration || "--:--"}</span>
         </div>
         {!isEnrolled && (
-          <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 px-2 py-1 rounded-full">
+          <span
+            className="text-xs rounded-full"
+            style={{
+              backgroundColor: `${colors.status.warning}1A`,
+              color: colors.status.warning,
+              padding: `${spacing[2]} ${spacing[3]}`,
+            }}
+          >
             المعاينة محدودة
           </span>
         )}
       </div>
 
       {/* Lessons List */}
-      <div className="border border-gray-200 dark:border-neutral-700 rounded-2xl overflow-hidden bg-white/50 dark:bg-neutral-800/30 backdrop-blur-sm">
+      <div
+        className="rounded-2xl overflow-hidden backdrop-blur-sm"
+        style={{
+          border: `1px solid ${colors.border.default}`,
+          backgroundColor: `${colors.bg.elevated}80`,
+        }}
+      >
         {list.map((lesson, index) => {
           const isLocked = !isEnrolled && index > 1;
           const isCompleted = isEnrolled && index < 3;
@@ -67,12 +89,21 @@ export default function CurriculumList({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={cn(
-                "border-b border-gray-100 dark:border-neutral-700 last:border-b-0 group",
-                isLocked
-                  ? "bg-gray-50/50 dark:bg-neutral-900/30"
-                  : "hover:bg-gray-50 dark:hover:bg-neutral-700/30",
-              )}
+              className="border-b last:border-b-0 group"
+              style={{
+                borderColor: colors.border.default,
+                backgroundColor: isLocked ? `${colors.bg.secondary}80` : "transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isLocked) {
+                  e.currentTarget.style.backgroundColor = colors.bg.secondary;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLocked) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
             >
               <button
                 className={cn(
@@ -84,16 +115,23 @@ export default function CurriculumList({
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   {/* Lesson Icon */}
                   <div
-                    className={cn(
-                      "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300",
-                      isLocked
-                        ? "bg-gray-200 dark:bg-neutral-700 text-gray-400"
+                    className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300"
+                    style={{
+                      backgroundColor: isLocked
+                        ? colors.bg.tertiary
                         : isCompleted
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                          ? `${colors.status.success}1A`
                           : isPreview
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                            : "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400",
-                    )}
+                            ? `${colors.brand.primary}1A`
+                            : `${colors.brand.primary}1A`,
+                      color: isLocked
+                        ? colors.text.disabled
+                        : isCompleted
+                          ? colors.status.success
+                          : isPreview
+                            ? colors.brand.primary
+                            : colors.brand.primary,
+                    }}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
@@ -102,34 +140,58 @@ export default function CurriculumList({
                   <div className="min-w-0 flex-1 text-right">
                     <div className="flex items-center gap-2 mb-1">
                       <span
-                        className={cn(
-                          "font-medium truncate",
-                          isLocked
-                            ? "text-gray-500"
-                            : "text-gray-900 dark:text-white",
-                        )}
+                        className="font-medium truncate"
+                        style={{
+                          color: isLocked ? colors.text.disabled : colors.text.primary,
+                        }}
                       >
                         {lesson.title}
                       </span>
                       {lesson.type === "video" && (
-                        <Video className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                        <Video
+                          className="h-3 w-3 flex-shrink-0"
+                          style={{ color: colors.text.tertiary }}
+                        />
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1">
+                    <div
+                      className="flex items-center text-xs"
+                      style={{
+                        gap: spacing[4],
+                        color: colors.text.secondary,
+                      }}
+                    >
+                      <span
+                        className="flex items-center"
+                        style={{ gap: spacing[2] }}
+                      >
                         <Clock className="h-3 w-3" />
                         {lesson.duration}
                       </span>
 
                       {isCurrent && (
-                        <span className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 px-2 py-0.5 rounded-full font-medium">
+                        <span
+                          className="rounded-full font-medium"
+                          style={{
+                            backgroundColor: `${colors.brand.primary}1A`,
+                            color: colors.brand.primary,
+                            padding: `${spacing[1]} ${spacing[3]}`,
+                          }}
+                        >
                           الحالي
                         </span>
                       )}
 
                       {isPreview && (
-                        <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full font-medium">
+                        <span
+                          className="rounded-full font-medium"
+                          style={{
+                            backgroundColor: `${colors.brand.primary}1A`,
+                            color: colors.brand.primary,
+                            padding: `${spacing[1]} ${spacing[3]}`,
+                          }}
+                        >
                           معاينة
                         </span>
                       )}
@@ -141,7 +203,8 @@ export default function CurriculumList({
                 {!isLocked && (
                   <motion.div
                     whileHover={{ x: -5 }}
-                    className="text-gray-400 group-hover:text-primary-500 transition-colors"
+                    className="transition-colors"
+                    style={{ color: colors.text.tertiary }}
                   >
                     <PlayCircle className="h-5 w-5" />
                   </motion.div>
@@ -157,12 +220,23 @@ export default function CurriculumList({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center p-6 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-2xl border border-primary-200 dark:border-primary-800"
+          className="text-center rounded-2xl"
+          style={{
+            padding: spacing[6],
+            background: `linear-gradient(to right, ${colors.brand.primary}0D, ${colors.brand.secondary}0D)`,
+            border: `1px solid ${colors.brand.primary}33`,
+          }}
         >
-          <p className="text-gray-600 dark:text-gray-300 mb-3">
+          <p
+            className="mb-3"
+            style={{ color: colors.text.secondary }}
+          >
             سجل في الدورة للوصول إلى جميع الدروس والميزات
           </p>
-          <button className="text-primary-600 dark:text-primary-400 font-semibold text-sm hover:underline">
+          <button
+            className="font-semibold text-sm hover:underline"
+            style={{ color: colors.brand.primary }}
+          >
             اشترك الآن للوصول الكامل
           </button>
         </motion.div>

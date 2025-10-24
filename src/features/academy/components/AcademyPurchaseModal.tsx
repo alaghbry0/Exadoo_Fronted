@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { X, Loader2, ShieldCheck } from "lucide-react";
 import { useServicePayment } from "@/hooks/useServicePayment";
 import { UsdtPaymentMethodModal } from "@/features/payments/components/UsdtPaymentMethodModal";
-import { ExchangePaymentModal } from "@/components/ExchangePaymentModal";
+import { ExchangePaymentModal } from "@/features/payments/components/ExchangePaymentModal";
 import { PaymentExchangeSuccess } from "@/features/payments/components/PaymentExchangeSuccess";
 import { PaymentSuccessModal } from "@/features/payments/components/PaymentSuccessModal";
 import { useTelegram } from "@/context/TelegramContext";

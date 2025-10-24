@@ -1,401 +1,230 @@
-# 🏗️ دليل البنية المعمارية الشامل
+# 🏗️ دليل البنية المعمارية (Architecture Guide)
 
-> **التحسين:** Feature-Based Architecture  
-> **الحالة:** ✅ منفذ بالكامل  
-> **المستوى:** متوسط - متقدم
-
----
-
-## 📊 نظرة عامة
-
-تم إعادة هيكلة المشروع من **Component-Based** إلى **Feature-Based Architecture** لتحسين التنظيم وقابلية التوسع.
+> **دليل عملي لتنظيم الملفات والمجلدات في المشروع**  
+> **آخر تحديث:** 24 أكتوبر 2025
 
 ---
 
-## 🎯 لماذا Feature-Based?
+## ⚡ القاعدة الأساسية: Feature-Based Architecture
 
-### ❌ المشكلة (Component-Based):
+### لماذا Feature-Based؟
+**الفكرة:** كل ميزة (feature) في مجلد خاص بها مع كل ما تحتاجه
+
 ```
-src/components/
-├── Navbar.tsx
-├── Footer.tsx
-├── SubscriptionModal.tsx
-├── PaymentModal.tsx
-├── ProfileHeader.tsx
-├── AcademyCard.tsx
-├── ... (50+ components)
-└── NotificationItem.tsx
+✅ سهولة الإيجاد
+✅ عزل أفضل
+✅ عمل فريق موازي
+✅ صيانة أسهل
 ```
 
-**المشاكل:**
-- 🔴 صعوبة إيجاد الملفات
-- 🔴 كل شيء مختلط
-- 🔴 صعوبة الصيانة
-- 🔴 صعوبة العمل الجماعي
+---
 
-### ✅ الحل (Feature-Based):
+## 📁 الهيكل الأساسي
+
 ```
 src/
-├── features/
-│   ├── auth/          # كل ما يخص التسجيل
-│   ├── subscriptions/ # كل ما يخص الاشتراكات
-│   ├── academy/       # كل ما يخص الأكاديمية
+├── features/          # Features محددة
+│   ├── auth/         # التسجيل والدخول
+│   ├── subscriptions/ # الاشتراكات
+│   ├── academy/      # الأكاديمية
+│   ├── payments/     # المدفوعات
 │   └── ...
 │
 ├── shared/           # مكونات مشتركة
-│   ├── layout/
-│   └── common/
+│   ├── components/
+│   │   ├── layout/   # Navbar, Footer, etc.
+│   │   └── common/   # Button, Card, etc.
+│   └── hooks/        # Custom hooks
 │
-└── core/             # utilities أساسية
-    ├── api/
-    └── utils/
-```
-
-**الفوائد:**
-- ✅ تنظيم منطقي واضح
-- ✅ سهولة إيجاد الملفات
-- ✅ عزل أفضل
-- ✅ عمل فريق موازي
-
----
-
-## 🏗️ الهيكل الكامل
-
-```
-src/
-├── features/                    # Features محددة
-│   │
-│   ├── auth/                   # Authentication
-│   │   └── components/
-│   │       ├── AuthFab.tsx
-│   │       ├── GlobalAuthSheet.tsx
-│   │       └── UnlinkedStateBanner.tsx
-│   │
-│   ├── subscriptions/          # Subscriptions
-│   │   └── components/
-│   │       ├── SubscriptionModal.tsx
-│   │       ├── SubscriptionPlanCard.tsx
-│   │       ├── SubscribeFab.tsx
-│   │       ├── SubscriptionStatusListener.tsx
-│   │       ├── TieredDiscountInfo.tsx
-│   │       ├── PaymentButtons.tsx
-│   │       ├── PlanFeaturesList.tsx
-│   │       └── useSubscriptionPayment.tsx
-│   │
-│   ├── academy/                # Academy
-│   │   └── components/
-│   │       ├── AcademyHeroCard.tsx
-│   │       └── AcademyPurchaseModal.tsx
-│   │
-│   ├── payments/               # Payments
-│   │   └── components/
-│   │       ├── PaymentExchange.tsx
-│   │       ├── PaymentExchangePage.tsx
-│   │       ├── PaymentExchangeSuccess.tsx
-│   │       ├── PaymentSuccessModal.tsx
-│   │       ├── ExchangePaymentModal.tsx
-│   │       ├── Bep20PaymentModal.tsx
-│   │       ├── UsdtPaymentModal.tsx
-│   │       ├── UsdtPaymentMethodModal.tsx
-│   │       ├── IndicatorsPurchaseModal.tsx
-│   │       ├── TradingPanelPurchaseModal.tsx
-│   │       ├── PaymentHistoryItem.tsx
-│   │       ├── DetailRow.tsx
-│   │       ├── PaymentDetailsCard.tsx
-│   │       └── SubscriptionDetailsCard.tsx
-│   │
-│   ├── notifications/          # Notifications
-│   │   └── components/
-│   │       ├── NotificationItem.tsx
-│   │       ├── NotificationToast.tsx
-│   │       └── NotificationFilter.tsx
-│   │
-│   └── profile/                # Profile
-│       └── components/
-│           ├── ProfileHeader.tsx
-│           ├── SubscriptionsSection.tsx
-│           └── TelegramProfileLoader.tsx
+├── core/             # Utilities أساسية
+│   ├── api/         # API clients
+│   ├── utils/       # Helper functions
+│   └── config/      # Configuration
 │
-├── shared/                     # Shared components
-│   └── components/
-│       ├── layout/            # Layout components
-│       │   ├── Navbar.tsx
-│       │   ├── FooterNav.tsx
-│       │   ├── BackHeader.tsx
-│       │   ├── Footer.tsx
-│       │   ├── NavbarEnhanced.tsx
-│       │   ├── FooterNavEnhanced.tsx
-│       │   └── PageLayout.tsx
-│       │
-│       ├── common/            # Common components
-│       │   ├── Loader.tsx
-│       │   ├── SkeletonLoader.tsx
-│       │   ├── SmartImage.tsx
-│       │   ├── Spinner.tsx
-│       │   ├── CustomSpinner.tsx
-│       │   ├── SplashScreen.tsx
-│       │   ├── InviteAlert.tsx
-│       │   ├── ThemeToggle.tsx
-│       │   ├── LoadingStates.tsx
-│       │   ├── EmptyState.tsx
-│       │   ├── EnhancedCard.tsx
-│       │   └── Breadcrumbs.tsx
-│       │
-│       └── ErrorBoundary.tsx
+├── styles/          # Design system
+│   ├── tokens/      # Design tokens
+│   └── globals.css
 │
-├── core/                       # Core utilities
-│   ├── api/
-│   │   └── client.ts          # API client
-│   └── utils/
-│       └── logger.ts          # Logger
-│
-├── stores/                     # State management
-│   └── zustand/
-│       └── userStore.ts
-│
-├── pages/                      # Next.js pages
-├── styles/                     # Global styles
-└── types/                      # TypeScript types
+└── pages/           # Next.js pages (routing فقط)
+    └── ...
 ```
 
 ---
 
-## 💻 كيفية استخدام البنية
+## 🎯 تنظيم Feature
 
-### 1. إضافة Feature جديد
+**كل feature يحتوي:**
 
-```bash
-# إنشاء مجلد feature
-mkdir -p src/features/my-feature/components
-
-# إضافة مكون
-touch src/features/my-feature/components/MyComponent.tsx
 ```
-
-```tsx
-// src/features/my-feature/components/MyComponent.tsx
-'use client'
-
-import { Button } from '@/components/ui/button'
-import logger from '@/core/utils/logger'
-
-export default function MyComponent() {
-  logger.info('MyComponent rendered')
-  
-  return (
-    <div>
-      <h1>My Feature</h1>
-      <Button>Click me</Button>
-    </div>
-  )
-}
-```
-
-### 2. استخدام المكون في صفحة
-
-```tsx
-// pages/my-page.tsx
-import MyComponent from '@/features/my-feature/components/MyComponent'
-import { PageLayout } from '@/shared/components/layout'
-
-export default function MyPage() {
-  return (
-    <PageLayout>
-      <MyComponent />
-    </PageLayout>
-  )
-}
-```
-
-### 3. Imports المطلقة
-
-```tsx
-// ✅ استخدم مسارات مطلقة دائماً
-import { Navbar } from '@/shared/components/layout/Navbar'
-import { Loader } from '@/shared/components/common/Loader'
-import logger from '@/core/utils/logger'
-import api from '@/core/api/client'
-
-// ❌ تجنب المسارات النسبية
-import { Navbar } from '../../../shared/components/layout/Navbar'
-```
-
----
-
-## 📁 متى تضع الملف في أي مجلد؟
-
-### features/
-**متى:** مكون خاص بـ feature محدد
-
-**أمثلة:**
-- `SubscriptionModal` → `features/subscriptions/`
-- `ProfileHeader` → `features/profile/`
-- `PaymentModal` → `features/payments/`
-
-### shared/components/layout/
-**متى:** مكون layout يُستخدم في كل المشروع
-
-**أمثلة:**
-- `Navbar`
-- `Footer`
-- `PageLayout`
-
-### shared/components/common/
-**متى:** مكون عام قابل لإعادة الاستخدام
-
-**أمثلة:**
-- `Button` (إن لم يكن من shadcn)
-- `Loader`
-- `EmptyState`
-- `Card`
-
-### core/
-**متى:** utilities أساسية تُستخدم في كل المشروع
-
-**أمثلة:**
-- `logger`
-- `api client`
-- `helpers`
-
----
-
-## 🔧 Best Practices
-
-### ✅ افعل:
-
-```tsx
-// 1. استخدم imports مطلقة
-import { Component } from '@/features/auth/components/Component'
-
-// 2. ضع كل feature في مجلده
 features/auth/
+├── components/           # مكونات خاصة بالـ feature
+│   ├── LoginForm.tsx
+│   ├── SignupForm.tsx
+│   └── AuthModal.tsx
+│
+├── hooks/               # Hooks خاصة
+│   └── useAuth.ts
+│
+├── utils/               # Functions خاصة
+│   └── validation.ts
+│
+└── types.ts            # Types خاصة
+```
+
+---
+
+## 📏 القواعد
+
+### 1. الملف < 300 سطر
+```tsx
+// ❌ ملف واحد 500 سطر
+features/shop/components/ShopPage.tsx (all-in-one)
+
+// ✅ تقسيم منطقي
+features/shop/
 ├── components/
-├── hooks/      (إن وُجد)
-├── utils/      (إن وُجد)
-└── types/      (إن وُجد)
-
-// 3. أعد استخدام shared components
-import { Loader } from '@/shared/components/common'
-
-// 4. اتبع naming conventions
-MyComponent.tsx  // PascalCase
-myHook.ts        // camelCase
-MY_CONSTANT.ts   // UPPER_SNAKE_CASE
+│   ├── ShopPage.tsx      (150 سطر - layout)
+│   ├── ShopHero.tsx      (100 سطر)
+│   ├── ShopGrid.tsx      (150 سطر)
+│   └── ShopFilters.tsx   (100 سطر)
 ```
 
-### ❌ لا تفعل:
-
+### 2. استخدم index.ts للـ exports
 ```tsx
-// 1. لا تضع feature components في shared
-// ❌ shared/components/SubscriptionModal.tsx
+// features/auth/components/index.ts
+export { LoginForm } from './LoginForm';
+export { SignupForm } from './SignupForm';
+export { AuthModal } from './AuthModal';
 
-// 2. لا تستخدم مسارات نسبية
-// ❌ import from '../../../components'
+// الاستخدام
+import { LoginForm, SignupForm } from '@/features/auth/components';
+```
 
-// 3. لا تخلط features
-// ❌ features/auth/components/PaymentModal.tsx
+### 3. shared vs features
+```tsx
+// ✅ shared - يستخدم في أكثر من feature
+shared/components/common/Button.tsx
 
-// 4. لا تكرر الكود
-// إذا كان مشتركاً، ضعه في shared
+// ✅ features - خاص بـ feature واحدة
+features/auth/components/LoginForm.tsx
 ```
 
 ---
 
-## 🚀 Migration من القديم للجديد
+## 🔗 Import Paths
 
-### الخطوة 1: نقل الملف
-```bash
-# من
-src/components/SubscriptionModal.tsx
+**استخدم aliases محددة:**
 
-# إلى
-src/features/subscriptions/components/SubscriptionModal.tsx
+```tsx
+// ✅ واضح ومنظم
+import { Button } from '@/shared/components/common';
+import { LoginForm } from '@/features/auth/components';
+import { colors } from '@/styles/tokens';
+import { api } from '@/core/api';
+
+// ❌ تجنب relative paths الطويلة
+import { Button } from '../../../shared/components/common/Button';
 ```
 
-### الخطوة 2: تحديث Imports
-```tsx
-// القديم
-import SubscriptionModal from '@/components/SubscriptionModal'
-
-// الجديد
-import SubscriptionModal from '@/features/subscriptions/components/SubscriptionModal'
-```
-
-### الخطوة 3: إنشاء Re-export (اختياري)
-```tsx
-// src/components/SubscriptionModal.tsx
-export { default } from '@/features/subscriptions/components/SubscriptionModal'
-export * from '@/features/subscriptions/components/SubscriptionModal'
+**المسارات المعرّفة (tsconfig.json):**
+```json
+{
+  "paths": {
+    "@/*": ["./src/*"],
+    "@/features/*": ["./src/features/*"],
+    "@/shared/*": ["./src/shared/*"],
+    "@/core/*": ["./src/core/*"],
+    "@/styles/*": ["./src/styles/*"]
+  }
+}
 ```
 
 ---
 
-## 📈 الفوائد المحققة
+## 📋 Checklist - إضافة Feature جديدة
 
-### قبل:
-- ❌ 50+ component في مجلد واحد
-- ❌ صعوبة إيجاد الملفات
-- ❌ imports معقدة
-- ❌ صعوبة الصيانة
-
-### بعد:
-- ✅ تنظيم feature-based واضح
-- ✅ سهولة إيجاد الملفات
-- ✅ imports بسيطة ومطلقة
-- ✅ صيانة سهلة
+- [ ] إنشاء مجلد في `features/`
+- [ ] إنشاء `components/` folder
+- [ ] إضافة `index.ts` للـ exports
+- [ ] استخدام aliases للـ imports
+- [ ] كل ملف < 300 سطر
+- [ ] فحص بـ `npm run migration:scan`
 
 ---
 
-## 📚 أمثلة عملية
+## 🛠️ أمثلة عملية
 
-### مثال 1: إنشاء Payments Feature
+### مثال 1: Feature بسيطة
+```
+features/notifications/
+├── components/
+│   ├── NotificationItem.tsx   (80 سطر)
+│   ├── NotificationList.tsx   (120 سطر)
+│   └── index.ts
+├── hooks/
+│   └── useNotifications.ts    (50 سطر)
+└── types.ts                   (20 سطر)
+```
+
+### مثال 2: Feature معقدة
 ```
 features/payments/
 ├── components/
-│   ├── PaymentModal.tsx
-│   ├── PaymentForm.tsx
-│   └── PaymentHistory.tsx
+│   ├── PaymentModal.tsx       (150 سطر)
+│   ├── PaymentForm.tsx        (180 سطر)
+│   ├── PaymentSuccess.tsx     (100 سطر)
+│   ├── PaymentMethods.tsx     (120 سطر)
+│   └── index.ts
 ├── hooks/
-│   └── usePayment.ts
-├── types/
-│   └── payment.types.ts
-└── index.ts  // Re-exports
-```
-
-### مثال 2: استخدام في صفحة
-```tsx
-// pages/payments.tsx
-import { PageLayout } from '@/shared/components/layout'
-import { PaymentModal, PaymentHistory } from '@/features/payments'
-import { EmptyState } from '@/shared/components/common'
-
-export default function PaymentsPage() {
-  return (
-    <PageLayout>
-      <PaymentHistory />
-      <PaymentModal />
-    </PageLayout>
-  )
-}
+│   ├── usePayment.ts          (100 سطر)
+│   └── usePaymentMethods.ts   (80 سطر)
+├── utils/
+│   ├── validation.ts          (60 سطر)
+│   └── formatting.ts          (40 سطر)
+└── types.ts                   (30 سطر)
 ```
 
 ---
 
-## 🔍 نصائح للفريق
+## 🚀 نقل Feature من Component-Based
 
-1. **اتفقوا على الهيكل** قبل البدء
-2. **وثقوا القرارات** في README
-3. **راجعوا PRs** للحفاظ على الهيكل
-4. **استخدموا ESLint** لفرض القواعد
+### الخطوات:
+1. **تحديد ال feature**
+   - مثال: كل ما يخص "Subscriptions"
+
+2. **إنشاء المجلد**
+   ```bash
+   mkdir -p src/features/subscriptions/components
+   ```
+
+3. **نقل الملفات**
+   ```bash
+   # نقل من
+   src/components/SubscriptionModal.tsx
+   src/components/SubscriptionCard.tsx
+   
+   # إلى
+   src/features/subscriptions/components/
+   ```
+
+4. **تحديث Imports**
+   ```tsx
+   // قبل
+   import { SubscriptionModal } from '@/components/SubscriptionModal';
+   
+   // بعد
+   import { SubscriptionModal } from '@/features/subscriptions/components';
+   ```
+
+5. **إنشاء index.ts**
+   ```tsx
+   // features/subscriptions/components/index.ts
+   export { SubscriptionModal } from './SubscriptionModal';
+   export { SubscriptionCard } from './SubscriptionCard';
+   ```
 
 ---
 
-## 📚 المراجع
-
-- **الكود:** `src/features/`, `src/shared/`, `src/core/`
-- **التوثيق:** `docs/IMPROVEMENTS_IMPLEMENTED.md`
-- **Migration Guide:** `docs/archive/COMPLETE_REFACTORING_PLAN.md`
-
----
-
-**الحالة:** ✅ **الهيكل جاهز ومطبق في كل المشروع**
+**المراجع:**
+- `DESIGN_SYSTEM.md` - القواعد الشاملة
+- `docs/design/UX_ISSUES.md` - تحسينات UX

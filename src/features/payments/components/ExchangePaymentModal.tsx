@@ -1,23 +1,19 @@
-// src/components/ExchangePaymentModal.tsx
+// src/features/payments/components/ExchangePaymentModal.tsx
 "use client";
-import { cn } from "@/lib/utils";
-import { componentVariants, mergeVariants } from "@/components/ui/variants";
 
 import React, { useState, useEffect, useReducer } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  QrCode,
-  CheckCircle2,
-  Copy,
-  X,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { X } from "lucide-react";
 import QRCode from "react-qr-code";
-import type { PaymentStatus } from "@/types/payment"; // تأكد من أن هذا المسار صحيح
-import toast from "react-hot-toast";
+import type { PaymentStatus } from "@/types/payment";
+import { cn } from "@/lib/utils";
+import { componentVariants } from "@/components/ui/variants";
+import { colors, spacing } from "@/styles/tokens";
+import { Separator } from "@/components/ui/separator";
 import { PaymentExchangeSuccess } from "./PaymentExchangeSuccess";
-import { Separator } from "@/components/ui/separator"; // استيراد Separator
+import { QRDisplayModal } from "./QRDisplayModal";
+import { PaymentDetailsSection } from "./PaymentDetailsSection";
+import { PaymentAmountSection } from "./PaymentAmountSection";
 
 // --- الواجهات والأنواع (لا تغيير) ---
 interface ExchangeDetails {
@@ -46,59 +42,6 @@ function timeReducer(state: number, action: "reset" | "tick") {
 }
 
 // ====================================================================
-// المكون الفرعي: نافذة عرض QR Code (بتصميم فاتح)
-// ====================================================================
-const QRDisplayModal = ({
-  isOpen,
-  onClose,
-  title,
-  value,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  value: string;
-}) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 z-[100]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <motion.div
-          className={cn(
-            componentVariants.card.elevated,
-            "w-full max-w-xs p-6 flex flex-col items-center",
-          )}
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
-          transition={{ type: "spring", damping: 20, stiffness: 250 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3 className="font-bold text-lg text-gray-800 mb-5">{title}</h3>
-          <div className="bg-white p-3 rounded-md border">
-            <QRCode value={value} size={180} />
-          </div>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            امسح الرمز ضوئيًا باستخدام تطبيقك.
-          </p>
-          <button
-            onClick={onClose}
-            className="mt-5 w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg px-4 py-2 transition-colors"
-          >
-            إغلاق
-          </button>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
-
-// ====================================================================
 // المكون الرئيسي
 // ====================================================================
 export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
@@ -106,8 +49,7 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  // --- الحالات والـ Hooks (المنطق يبقى كما هو) ---
-  const [copied, setCopied] = useState<string | null>(null);
+  // --- الحالات والـ Hooks ---
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [localPaymentStatus] = useState<PaymentStatus>("processing");
   const [time, dispatch] = useReducer(timeReducer, 1800);
@@ -138,12 +80,6 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
-  const copyToClipboard = (text: string, type: "العنوان" | "المذكرة") => {
-    navigator.clipboard.writeText(text);
-    setCopied(type);
-    toast.success(`تم نسخ ${type} بنجاح!`);
-    setTimeout(() => setCopied(null), 2000);
-  };
 
   if (localPaymentStatus === "success") {
     return (
@@ -151,21 +87,47 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
     );
   }
 
-  const timeProgress = (time / 1800) * 100;
   const qrValue = `ton://transfer/${details.depositAddress}?amount=${details.amount}&text=${details.paymentToken}`;
 
   return (
     <>
-      <div className="fixed inset-0 bg-gray-50 text-gray-800 flex flex-col z-[100]">
+      <div
+        className="fixed inset-0 flex flex-col z-[100]"
+        style={{
+          backgroundColor: colors.bg.secondary,
+          color: colors.text.primary,
+        }}
+      >
         {/* الهيدر */}
-        <header className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-10">
-          <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+        <header
+          className="sticky top-0 backdrop-blur-sm z-10"
+          style={{
+            backgroundColor: `${colors.bg.elevated}CC`,
+            borderBottom: `1px solid ${colors.border.default}`,
+          }}
+        >
+          <div
+            className="max-w-md mx-auto flex justify-between items-center"
+            style={{
+              padding: `${spacing[4]} ${spacing[5]}`,
+            }}
+          >
             <h2 className="text-lg font-bold">
               {details.planName || "إتمام الدفع"}
             </h2>
             <button
               onClick={handleClose}
-              className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+              className="rounded-full transition-colors"
+              style={{
+                padding: spacing[3],
+                color: colors.text.secondary,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.bg.tertiary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -174,160 +136,124 @@ export const ExchangePaymentModal: React.FC<ExchangePaymentModalProps> = ({
 
         {/* المحتوى القابل للتمرير */}
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-md mx-auto p-4 space-y-6">
+          <div
+            className="max-w-md mx-auto space-y-6"
+            style={{ padding: spacing[5] }}
+          >
             {/* قسم المبلغ والمؤقت */}
-            <section className="text-center space-y-4">
-              <p className="text-gray-500">المبلغ المطلوب</p>
-              <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-extrabold text-primary-600">
-                  {details.amount}
-                </span>
-                <span className="text-2xl text-gray-400">USDT</span>
-              </div>
-              <div className="inline-block bg-primary-50 text-primary-700 px-3 py-1 text-sm rounded-full font-medium border border-primary-100">
-                شبكة: {details.network || "TON"}
-              </div>
-              <div className="pt-2">
-                <div className="flex items-center justify-center gap-2 text-gray-500 text-sm mb-2">
-                  <Clock size={16} />
-                  <span>
-                    الوقت المتبقي:{" "}
-                    <span className="font-mono text-base text-gray-800 font-bold">
-                      {formatTime(time)}
-                    </span>
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div
-                    className="bg-gradient-to-r from-primary-400 to-primary-600 h-full rounded-full transition-all duration-1000 ease-linear"
-                    style={{ width: `${timeProgress}%` }}
-                  />
-                </div>
-              </div>
-            </section>
+            <PaymentAmountSection
+              amount={details.amount}
+              network={details.network}
+              time={time}
+              formatTime={formatTime}
+            />
 
             <Separator />
 
             {/* قسم QR Code الرئيسي */}
-            <section className="flex flex-col items-center gap-4">
-              <div className="bg-white p-4 rounded-xl shadow-lg border">
+            <section
+              className="flex flex-col items-center"
+              style={{ gap: spacing[5] }}
+            >
+              <div
+                className="rounded-xl shadow-lg"
+                style={{
+                  backgroundColor: colors.bg.elevated,
+                  padding: spacing[5],
+                  border: `1px solid ${colors.border.default}`,
+                }}
+              >
                 <QRCode value={qrValue} size={190} />
               </div>
-              <p className="text-gray-500 text-sm">
+              <p
+                className="text-sm"
+                style={{ color: colors.text.secondary }}
+              >
                 امسح الرمز ضوئيًا لإتمام الدفع عبر محفظتك
               </p>
             </section>
 
-            {/* قسم تفاصيل الدفع (العنوان والمذكرة) */}
-            <section className="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
-              {/* حقل العنوان */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                  عنوان المحفظة (Address)
-                </label>
-                <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                  <p className="flex-1 font-mono text-sm break-all select-all">
-                    {details.depositAddress}
-                  </p>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(details.depositAddress, "العنوان")
-                    }
-                    className="p-2 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
-                  >
-                    {copied === "العنوان" ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <Copy className="w-5 h-5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowAddressQR(true)}
-                    className="p-2 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
-                  >
-                    <QrCode className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              {/* حقل المذكرة */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                  المذكرة (Memo)
-                </label>
-                <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                  <p className="flex-1 font-mono text-sm break-all select-all">
-                    {details.paymentToken}
-                  </p>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(details.paymentToken, "المذكرة")
-                    }
-                    className="p-2 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
-                  >
-                    {copied === "المذكرة" ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <Copy className="w-5 h-5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowMemoQR(true)}
-                    className="p-2 text-gray-500 hover:bg-gray-200 rounded-md transition-colors"
-                  >
-                    <QrCode className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              {/* تحذير المذكرة */}
-              <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <AlertTriangle className="w-8 h-8 text-red-500 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-red-700">
-                    مهم جدًا: لا تنسَ المذكرة
-                  </h4>
-                  <p className="text-xs text-red-600">
-                    عدم إرسال المذكرة (Memo) مع الدفعة سيؤدي إلى فقدان أموالك
-                    وعدم تفعيل الاشتراك.
-                  </p>
-                </div>
-              </div>
-            </section>
+            {/* قسم تفاصيل الدفع */}
+            <PaymentDetailsSection
+              depositAddress={details.depositAddress}
+              paymentToken={details.paymentToken}
+              onShowAddressQR={() => setShowAddressQR(true)}
+              onShowMemoQR={() => setShowMemoQR(true)}
+            />
           </div>
         </main>
       </div>
-      {/* مودال تأكيد الإغلاق (بتصميم فاتح) */}
+      {/* مودال تأكيد الإغلاق */}
       <AnimatePresence>
         {showConfirmation && (
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 z-[100]"
+            className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-[100]"
+            style={{
+              backgroundColor: colors.bg.overlay,
+              padding: spacing[5],
+            }}
             onClick={confirmClose}
           >
             <motion.div
-              className={cn(
-                componentVariants.card.elevated,
-                "w-full max-w-sm p-6",
-              )}
+              className={cn(componentVariants.card.elevated, "w-full max-w-sm")}
+              style={{ padding: spacing[6] }}
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-bold mb-2 text-gray-800">
+              <h3
+                className="text-lg font-bold"
+                style={{
+                  color: colors.text.primary,
+                  marginBottom: spacing[3],
+                }}
+              >
                 هل أنت متأكد؟
               </h3>
-              <p className="mb-6 text-gray-500">
+              <p
+                style={{
+                  color: colors.text.secondary,
+                  marginBottom: spacing[6],
+                }}
+              >
                 عملية الدفع لم تكتمل بعد. هل تريد حقاً إغلاق هذه الصفحة؟
               </p>
-              <div className="flex justify-end gap-3">
+              <div
+                className="flex justify-end"
+                style={{ gap: spacing[4] }}
+              >
                 <button
                   onClick={() => setShowConfirmation(false)}
-                  className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="rounded-md transition-colors"
+                  style={{
+                    padding: `${spacing[3]} ${spacing[5]}`,
+                    border: `1px solid ${colors.border.default}`,
+                    color: colors.text.primary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.bg.tertiary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                 >
                   البقاء
                 </button>
                 <button
                   onClick={confirmClose}
-                  className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  className="rounded-md transition-colors"
+                  style={{
+                    padding: `${spacing[3]} ${spacing[5]}`,
+                    backgroundColor: colors.status.error,
+                    color: colors.text.inverse,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.9";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
                 >
                   إغلاق على أي حال
                 </button>

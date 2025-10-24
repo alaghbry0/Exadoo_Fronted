@@ -1,24 +1,31 @@
-// src/features/academy/course/components/LevelBadge.tsx
+// src/pages/academy/course/components/LevelBadge.tsx
 import React from "react";
-import { cn } from "@/lib/utils";
 import type { Course } from "@/types/academy";
+import { colors, spacing } from "@/styles/tokens";
 
 export default function LevelBadge({ level }: { level?: Course["level"] }) {
   if (!level) return null;
+
   const cfg = {
     beginner: {
       label: "مبتدئ",
-      cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30",
+      bg: `${colors.status.success}0D`,
+      text: colors.status.success,
+      border: `${colors.status.success}33`,
       icon: "🌱",
     },
     intermediate: {
       label: "متوسط",
-      cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30",
+      bg: `${colors.status.warning}0D`,
+      text: colors.status.warning,
+      border: `${colors.status.warning}33`,
       icon: "⚡",
     },
     advanced: {
       label: "متقدم",
-      cls: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30",
+      bg: `${colors.status.error}0D`,
+      text: colors.status.error,
+      border: `${colors.status.error}33`,
       icon: "🚀",
     },
   } as const;
@@ -30,18 +37,24 @@ export default function LevelBadge({ level }: { level?: Course["level"] }) {
 
   const c = levelKey
     ? cfg[levelKey]
-    : ({
+    : {
         label: String(level),
-        cls: "bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-900/20 dark:text-neutral-300 dark:border-neutral-800/30",
+        bg: colors.bg.secondary,
+        text: colors.text.secondary,
+        border: colors.border.default,
         icon: "🎯",
-      } as const);
+      };
 
   return (
     <span
-      className={cn(
-        "inline-flex items-center gap-2 rounded-xl border px-2 py-1 text-sm font-semibold",
-        c.cls,
-      )}
+      className="inline-flex items-center rounded-xl border text-sm font-semibold"
+      style={{
+        backgroundColor: c.bg,
+        color: c.text,
+        borderColor: c.border,
+        padding: `${spacing[2]} ${spacing[3]}`,
+        gap: spacing[2],
+      }}
     >
       <span>{c.icon}</span>
       {c.label}

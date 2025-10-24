@@ -27,12 +27,24 @@ interface MigrationRule {
 }
 
 const MIGRATION_RULES: MigrationRule[] = [
-  // Text Colors
+  // ============ Text Colors ============
   {
     pattern: /text-gray-900\s+dark:text-white/g,
     replacement: 'style={{ color: colors.text.primary }}',
     type: 'style',
     description: 'Primary text color'
+  },
+  {
+    pattern: /text-gray-800\s+dark:text-neutral-100/g,
+    replacement: 'style={{ color: colors.text.primary }}',
+    type: 'style',
+    description: 'Primary text color (variant)'
+  },
+  {
+    pattern: /text-slate-900\s+dark:text-neutral-100/g,
+    replacement: 'style={{ color: colors.text.primary }}',
+    type: 'style',
+    description: 'Primary text color (slate)'
   },
   {
     pattern: /text-gray-600\s+dark:text-gray-400/g,
@@ -41,13 +53,37 @@ const MIGRATION_RULES: MigrationRule[] = [
     description: 'Secondary text color'
   },
   {
+    pattern: /text-gray-600\s+dark:text-neutral-400/g,
+    replacement: 'style={{ color: colors.text.secondary }}',
+    type: 'style',
+    description: 'Secondary text color (neutral)'
+  },
+  {
+    pattern: /text-slate-600\s+dark:text-neutral-400/g,
+    replacement: 'style={{ color: colors.text.secondary }}',
+    type: 'style',
+    description: 'Secondary text color (slate)'
+  },
+  {
     pattern: /text-gray-500\s+dark:text-gray-500/g,
     replacement: 'style={{ color: colors.text.tertiary }}',
     type: 'style',
     description: 'Tertiary text color'
   },
+  {
+    pattern: /text-gray-400\s+dark:text-neutral-500/g,
+    replacement: 'style={{ color: colors.text.tertiary }}',
+    type: 'style',
+    description: 'Tertiary text color (muted)'
+  },
+  {
+    pattern: /text-neutral-200\s+dark:text-neutral-200/g,
+    replacement: 'style={{ color: colors.text.primary }}',
+    type: 'style',
+    description: 'Light text'
+  },
   
-  // Background Colors
+  // ============ Background Colors ============
   {
     pattern: /bg-white\s+dark:bg-neutral-900/g,
     replacement: 'style={{ backgroundColor: colors.bg.primary }}',
@@ -55,26 +91,146 @@ const MIGRATION_RULES: MigrationRule[] = [
     description: 'Primary background'
   },
   {
+    pattern: /bg-white\s+dark:bg-neutral-950/g,
+    replacement: 'style={{ backgroundColor: colors.bg.primary }}',
+    type: 'style',
+    description: 'Primary background (darker)'
+  },
+  {
     pattern: /bg-gray-50\s+dark:bg-neutral-800/g,
     replacement: 'style={{ backgroundColor: colors.bg.secondary }}',
     type: 'style',
     description: 'Secondary background'
   },
+  {
+    pattern: /bg-slate-200\s+dark:bg-neutral-800/g,
+    replacement: 'style={{ backgroundColor: colors.bg.secondary }}',
+    type: 'style',
+    description: 'Secondary background (slate)'
+  },
+  {
+    pattern: /bg-gray-100\s+dark:bg-neutral-800/g,
+    replacement: 'style={{ backgroundColor: colors.bg.secondary }}',
+    type: 'style',
+    description: 'Secondary background (gray-100)'
+  },
+  {
+    pattern: /bg-white\/70\s+dark:bg-neutral-900\/70/g,
+    replacement: 'style={{ backgroundColor: colors.bg.elevated }}',
+    type: 'style',
+    description: 'Elevated background with opacity'
+  },
+  {
+    pattern: /bg-white\/80\s+dark:bg-neutral-900\/80/g,
+    replacement: 'style={{ backgroundColor: colors.bg.elevated }}',
+    type: 'style',
+    description: 'Elevated background'
+  },
   
-  // Border Colors
+  // ============ Border Colors ============
   {
     pattern: /border-gray-200\s+dark:border-neutral-800/g,
     replacement: 'style={{ borderColor: colors.border.default }}',
     type: 'style',
     description: 'Default border'
   },
+  {
+    pattern: /border-slate-200\/80\s+dark:border-neutral-800\/60/g,
+    replacement: 'style={{ borderColor: colors.border.default }}',
+    type: 'style',
+    description: 'Default border with opacity'
+  },
+  {
+    pattern: /border-gray-200\/80\s+dark:border-neutral-800\/80/g,
+    replacement: 'style={{ borderColor: colors.border.default }}',
+    type: 'style',
+    description: 'Default border (80% opacity)'
+  },
+  {
+    pattern: /border-gray-300\s+dark:border-neutral-700/g,
+    replacement: 'style={{ borderColor: colors.border.default }}',
+    type: 'style',
+    description: 'Default border (dashed)'
+  },
+  {
+    pattern: /border-red-200\s+dark:border-red-900\/50/g,
+    replacement: 'style={{ borderColor: colors.status.error }}',
+    type: 'style',
+    description: 'Error border'
+  },
   
-  // Shadows
+  // ============ Placeholder Colors ============
+  {
+    pattern: /placeholder:text-gray-400\s+dark:placeholder:text-neutral-500/g,
+    replacement: 'placeholder:opacity-50',
+    type: 'className',
+    description: 'Placeholder text'
+  },
+  
+  // ============ Status Colors ============
+  {
+    pattern: /bg-red-50\s+dark:bg-red-900\/10/g,
+    replacement: 'style={{ backgroundColor: colors.status.errorBg }}',
+    type: 'style',
+    description: 'Error background'
+  },
+  {
+    pattern: /text-red-600\s+dark:text-red-400/g,
+    replacement: 'style={{ color: colors.status.error }}',
+    type: 'style',
+    description: 'Error text'
+  },
+  {
+    pattern: /bg-primary-50\s+dark:bg-primary-900\/20/g,
+    replacement: 'style={{ backgroundColor: colors.status.infoBg }}',
+    type: 'style',
+    description: 'Info background'
+  },
+  {
+    pattern: /text-primary-600\s+dark:text-primary-400/g,
+    replacement: 'style={{ color: colors.brand.primary }}',
+    type: 'style',
+    description: 'Primary brand color'
+  },
+  {
+    pattern: /text-primary-700\s+dark:text-primary-300/g,
+    replacement: 'style={{ color: colors.brand.primary }}',
+    type: 'style',
+    description: 'Primary brand color (darker)'
+  },
+  
+  // ============ Badge/Level Colors ============
+  {
+    pattern: /bg-emerald-100\s+text-emerald-800\s+dark:bg-emerald-900\/30\s+dark:text-emerald-300/g,
+    replacement: 'style={{ backgroundColor: colors.status.successBg, color: colors.status.success }}',
+    type: 'style',
+    description: 'Success badge'
+  },
+  {
+    pattern: /bg-amber-100\s+text-amber-800\s+dark:bg-amber-900\/30\s+dark:text-amber-300/g,
+    replacement: 'style={{ backgroundColor: colors.status.warningBg, color: colors.status.warning }}',
+    type: 'style',
+    description: 'Warning badge'
+  },
+  {
+    pattern: /bg-rose-100\s+text-rose-800\s+dark:bg-rose-900\/30\s+dark:text-rose-300/g,
+    replacement: 'style={{ backgroundColor: colors.status.errorBg, color: colors.status.error }}',
+    type: 'style',
+    description: 'Error badge'
+  },
+  
+  // ============ Shadows ============
   {
     pattern: /shadow-md\s+hover:shadow-lg/g,
     replacement: `className={shadowClasses.card}`,
     type: 'className',
     description: 'Card shadow'
+  },
+  {
+    pattern: /shadow-lg\s+shadow-slate-200\/40\s+dark:border-neutral-800\/60/g,
+    replacement: `className={shadowClasses.card}`,
+    type: 'className',
+    description: 'Card shadow with border'
   },
 ];
 

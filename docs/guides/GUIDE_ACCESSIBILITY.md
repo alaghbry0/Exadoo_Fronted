@@ -1,49 +1,59 @@
-# ♿ دليل Accessibility للمطورين
+# ♿ دليل إمكانية الوصول (Accessibility Guide)
 
-> دليل سريع لتطبيق معايير إمكانية الوصول في المشروع
+> **دليل سريع لتطبيق معايير WCAG وأفضل ممارسات A11y**  
+> **آخر تحديث:** 24 أكتوبر 2025
 
 ---
 
-## 🎯 القواعد الأساسية
+## ⚡ القواعد الذهبية
 
-### 1. **كل زر بأيقونة فقط يحتاج aria-label**
-
+### 1. 🔘 كل زر بأيقونة فقط → aria-label
 ```tsx
-// ❌ خطأ
+// ❌ Screen reader لن يفهمه
 <button onClick={handleDelete}>
   <Trash2 />
 </button>
 
-// ✅ صحيح
+// ✅ واضح ومفهوم
 <button onClick={handleDelete} aria-label="حذف العنصر">
   <Trash2 aria-hidden="true" />
 </button>
 ```
 
-### 2. **كل input يحتاج label**
-
+### 2. 📝 كل input → label
 ```tsx
-// ❌ خطأ
+// ❌ بدون label
 <input type="text" placeholder="الاسم" />
 
-// ✅ صحيح - الطريقة الأولى
+// ✅ مع label (الطريقة الأولى)
 <label htmlFor="name">الاسم</label>
 <input id="name" type="text" />
 
-// ✅ صحيح - الطريقة الثانية
+// ✅ مع label (الطريقة الثانية)
 <label>
   الاسم
   <input type="text" />
 </label>
 ```
 
-### 3. **كل modal يحتاج Focus Trap**
+### 3. 🖼️ كل صورة → alt text
+```tsx
+// ❌ بدون alt
+<img src="/logo.png" />
 
+// ✅ مع alt
+<img src="/logo.png" alt="شعار الشركة" />
+
+// ✅ للصور الديكورية
+<img src="/decoration.png" alt="" aria-hidden="true" />
+```
+
+### 4. 🪟 كل modal → Focus trap + Escape
 ```tsx
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 
-const MyModal = ({ isOpen, onClose }) => {
+const Modal = ({ isOpen, onClose }) => {
   const trapRef = useFocusTrap(isOpen);
   
   useKeyboardNavigation({
@@ -53,28 +63,115 @@ const MyModal = ({ isOpen, onClose }) => {
   
   return (
     <div ref={trapRef} role="dialog" aria-modal="true">
+      <button onClick={onClose} aria-label="إغلاق">
+        <X aria-hidden="true" />
+      </button>
       {/* المحتوى */}
     </div>
   );
 };
 ```
 
-### 4. **كل صورة تحتاج alt text**
+---
 
+## 🎯 semantic HTML
+
+### استخدم العناصر الصحيحة
 ```tsx
-// ❌ خطأ
-<img src="/logo.png" />
+// ❌ div كزر
+<div onClick={handleClick}>انقر</div>
 
-// ✅ صحيح
-<img src="/logo.png" alt="شعار إكسادوا" />
+// ✅ button
+<button onClick={handleClick}>انقر</button>
 
-// ✅ للصور الديكورية
-<img src="/decoration.png" alt="" aria-hidden="true" />
+// ❌ div للعناوين
+<div className="text-2xl font-bold">عنوان</div>
+
+// ✅ heading tags
+<h2>عنوان</h2>
+
+// ❌ div للروابط
+<div onClick={() => router.push('/about')}>عنّا</div>
+
+// ✅ link
+<Link href="/about">عنّا</Link>
 ```
 
 ---
 
-## 🛠️ Custom Hooks المتاحة
+## ⌨️ Keyboard Navigation
+
+### كل عنصر تفاعلي يجب أن يعمل بالكيبورد
+```tsx
+// ✅ Buttons تعمل تلقائياً
+<button onClick={handleClick}>زر</button>
+
+// ✅ Links تعمل تلقائياً
+<Link href="/page">رابط</Link>
+
+// ✅ Custom elements - أضف keyboard support
+<div
+  role="button"
+  tabIndex={0}
+  onClick={handleClick}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleClick();
+    }
+  }}
+>
+  عنصر مخصص
+</div>
+```
+
+---
+
+## 🎨 Contrast & Colors
+
+### WCAG AA: Contrast ratio > 4.5:1
+```tsx
+// ✅ استخدم Design Tokens (محسّنة لـ WCAG)
+import { colors } from '@/styles/tokens';
+
+<div style={{ 
+  color: colors.text.primary,      // Contrast: 15.3:1 ✅
+  background: colors.bg.primary 
+}}>
+
+// ❌ تجنب ألوان ضعيفة
+<div className="text-gray-400 bg-white">  // Contrast: 2.8:1 ❌
+```
+
+---
+
+## 📋 Checklist - قبل Commit
+
+### الأساسيات
+- [ ] كل زر بأيقونة له `aria-label`
+- [ ] كل input له `label`
+- [ ] كل صورة لها `alt`
+- [ ] semantic HTML صحيح
+
+### Keyboard
+- [ ] Tab navigation يعمل
+- [ ] Enter/Space على الأزرار
+- [ ] Escape يغلق Modals
+- [ ] Arrows للقوائم
+
+### ARIA
+- [ ] `role` للعناصر المخصصة
+- [ ] `aria-hidden="true"` للأيقونات
+- [ ] `aria-modal="true"` للـ modals
+- [ ] `aria-label` للأزرار بأيقونات
+
+### Colors
+- [ ] Contrast ratio > 4.5:1
+- [ ] اختبار في Dark Mode
+- [ ] استخدام Design Tokens
+
+---
+
+## 🛠️ Custom Hooks
 
 ### useFocusTrap
 ```tsx
@@ -82,7 +179,6 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 const Modal = ({ isOpen }) => {
   const trapRef = useFocusTrap(isOpen);
-  
   return <div ref={trapRef}>...</div>;
 };
 ```
@@ -91,154 +187,73 @@ const Modal = ({ isOpen }) => {
 ```tsx
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 
-const Component = () => {
-  useKeyboardNavigation({
-    onEscape: () => console.log('Escape pressed'),
-    onEnter: () => console.log('Enter pressed'),
-    onArrowDown: () => console.log('Arrow Down'),
-  });
-};
-```
-
-### useAriaAnnouncer
-```tsx
-import { useAriaAnnouncer } from '@/hooks/useAriaAnnouncer';
-
-const Component = () => {
-  const { announce, message, priority } = useAriaAnnouncer();
-  
-  const handleSave = () => {
-    announce('تم الحفظ بنجاح', 'polite');
-  };
-  
-  return (
-    <>
-      <button onClick={handleSave}>حفظ</button>
-      <div 
-        role={priority === 'assertive' ? 'alert' : 'status'}
-        aria-live={priority}
-        className="sr-only"
-      >
-        {message}
-      </div>
-    </>
-  );
-};
+useKeyboardNavigation({
+  onEscape: () => console.log('Escape'),
+  onEnter: () => console.log('Enter'),
+  onArrowDown: () => console.log('Down'),
+  isActive: true
+});
 ```
 
 ---
 
-## 🎨 Utility Classes
+## ❌ الأخطاء الشائعة
 
-### Screen Reader Only
+### 1. أيقونة بدون aria-hidden
 ```tsx
-// مخفي بصرياً لكن متاح للـ Screen Readers
-<span className="sr-only">نص للـ Screen Readers فقط</span>
-```
-
-### Skip to Content
-```tsx
-// موجود بالفعل في _app.tsx
-<SkipToContent />
-```
-
----
-
-## ✅ Checklist سريع
-
-قبل كل Pull Request، تأكد من:
-
-- [ ] جميع الأزرار بأيقونات لها `aria-label`
-- [ ] جميع الـ inputs لها `<label>` مرتبطة
-- [ ] جميع الصور لها `alt` text
-- [ ] جميع الـ Modals تستخدم `useFocusTrap`
-- [ ] جميع الأيقونات الديكورية لها `aria-hidden="true"`
-- [ ] Focus indicators واضحة ومرئية
-- [ ] الألوان تحقق WCAG AA (تباين 4.5:1)
-
----
-
-## 🧪 كيفية الاختبار
-
-### 1. Keyboard Navigation
-```
-Tab       - التنقل للأمام
-Shift+Tab - التنقل للخلف
-Enter     - تفعيل
-Escape    - إغلاق
-```
-
-### 2. Screen Reader
-```bash
-# Windows - NVDA (مجاني)
-https://www.nvaccess.org/download/
-
-# macOS - VoiceOver (مدمج)
-Command + F5
-```
-
-### 3. Lighthouse
-```
-1. افتح Chrome DevTools (F12)
-2. اذهب لـ Lighthouse
-3. اختر Accessibility
-4. Run audit
-```
-
----
-
-## 🚨 أخطاء شائعة
-
-### ❌ نسيان aria-hidden للأيقونات
-```tsx
-// خطأ
+// ❌ Screen reader سيقرأ الأيقونة والـ label
 <button aria-label="حذف">
-  <Trash2 />  {/* Screen Reader سيقرأ الأيقونة أيضاً */}
+  <Trash2 />
 </button>
 
-// صحيح
+// ✅ إخفاء الأيقونة عن Screen readers
 <button aria-label="حذف">
   <Trash2 aria-hidden="true" />
 </button>
 ```
 
-### ❌ استخدام div بدل button
+### 2. div بدل button
 ```tsx
-// خطأ - لا يمكن الوصول إليه بالكيبورد
+// ❌ لا keyboard، لا screen reader
 <div onClick={handleClick}>انقر</div>
 
-// صحيح
+// ✅ button أو إضافة role + keyboard
 <button onClick={handleClick}>انقر</button>
 ```
 
-### ❌ نسيان role للعناصر المخصصة
+### 3. placeholder بدل label
 ```tsx
-// خطأ
-<div onClick={handleClick}>زر مخصص</div>
+// ❌ placeholder يختفي عند الكتابة
+<input type="text" placeholder="الاسم" />
 
-// صحيح
-<div 
-  role="button" 
-  tabIndex={0}
-  onClick={handleClick}
-  onKeyDown={(e) => e.key === 'Enter' && handleClick()}
->
-  زر مخصص
-</div>
-
-// أفضل - استخدم button
-<button onClick={handleClick}>زر مخصص</button>
+// ✅ label دائم
+<label htmlFor="name">الاسم</label>
+<input id="name" type="text" placeholder="أدخل اسمك" />
 ```
 
 ---
 
-## 📚 موارد إضافية
+## 🧪 الاختبار
 
-- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)
-- [MDN Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
-- [WebAIM](https://webaim.org/)
-- [A11y Project Checklist](https://www.a11yproject.com/checklist/)
+```bash
+# 1. اختبر بالكيبورد فقط
+# - Tab للتنقل
+# - Enter/Space للنقر
+# - Escape للإغلاق
+
+# 2. اختبر مع Screen reader
+# - NVDA (Windows)
+# - VoiceOver (Mac)
+# - TalkBack (Android)
+
+# 3. اختبر Contrast
+# - استخدم Chrome DevTools
+# - Lighthouse Accessibility audit
+```
 
 ---
 
-**تذكر:** Accessibility ليس ميزة إضافية، بل هو **حق أساسي** لجميع المستخدمين! 🌟
+**المراجع:**
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- `DESIGN_SYSTEM.md` - Design Tokens (WCAG compliant)
+- `docs/design/UI_ISSUES.md` - تحسينات UI

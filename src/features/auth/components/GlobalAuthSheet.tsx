@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { colors } from '@/styles/tokens';
 import { useUserStore } from "@/stores/zustand/userStore";
 import { useUIStore } from "@/stores/zustand/uiStore";
 import { useRouter } from "next/router";
@@ -175,13 +176,17 @@ const GlobalAuthSheet: React.FC = () => {
         animate={{ y: "0%" }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", stiffness: 400, damping: 40 }}
-        className="fixed bottom-0 left-0 right-0 z-[1000] bg-white dark:bg-neutral-900 rounded-t-3xl p-6 pb-8 shadow-2xl max-w-lg mx-auto"
+        className="fixed bottom-0 left-0 right-0 z-[1000] rounded-t-3xl p-6 pb-8 shadow-2xl max-w-lg mx-auto"
+        style={{ backgroundColor: colors.bg.primary }}
         dir="rtl"
         role="dialog"
       >
         <button
           onClick={closeAuthPrompt}
-          className="absolute top-4 left-4 p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          className="absolute top-4 left-4 p-1 transition-colors"
+          style={{ color: colors.text.tertiary }}
+          onMouseEnter={(e) => e.currentTarget.style.color = colors.text.secondary}
+          onMouseLeave={(e) => e.currentTarget.style.color = colors.text.tertiary}
           aria-label="إغلاق"
         >
           <X className="w-6 h-6" />
@@ -190,25 +195,37 @@ const GlobalAuthSheet: React.FC = () => {
         <div className="text-center">
           {isLockedContext ? (
             <>
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/40 mb-4 border-4 border-white dark:border-neutral-800">
-                <ShieldAlert className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+              <div 
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 border-4"
+                style={{ 
+                  backgroundColor: colors.status.warning + '20',
+                  borderColor: colors.bg.primary
+                }}
+              >
+                <ShieldAlert className="w-8 h-8" style={{ color: colors.status.warning }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
+              <h3 className="text-2xl font-bold mb-2" style={{ color: colors.text.primary }}>
                 يتطلب ربط الحساب
               </h3>
-              <p className="text-gray-600 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
+              <p className="mb-6 max-w-sm mx-auto" style={{ color: colors.text.secondary }}>
                 للوصول لهذه الميزة، يجب مزامنة حسابك مع تطبيق الموبايل.
               </p>
             </>
           ) : (
             <>
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/40 mb-4 border-4 border-white dark:border-neutral-800">
-                <Zap className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+              <div 
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 border-4"
+                style={{ 
+                  backgroundColor: colors.brand.primary + '20',
+                  borderColor: colors.bg.primary
+                }}
+              >
+                <Zap className="w-8 h-8" style={{ color: colors.brand.primary }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
+              <h3 className="text-2xl font-bold mb-2" style={{ color: colors.text.primary }}>
                 تجربة أفضل مع تطبيق الموبايل!
               </h3>
-              <p className="text-gray-600 dark:text-neutral-400 mb-6 max-w-sm mx-auto">
+              <p className="mb-6 max-w-sm mx-auto" style={{ color: colors.text.secondary }}>
                 اربط حسابك للوصول إلى العروض الخاصة وتجربة شراء أسرع.
               </p>
             </>
@@ -223,10 +240,13 @@ const GlobalAuthSheet: React.FC = () => {
                   transition={{ delay: 0.08 * index }}
                   className="flex items-center gap-3"
                 >
-                  <div className="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-full">
-                    <Icon className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
+                  <div 
+                    className="flex-shrink-0 p-2 rounded-full"
+                    style={{ backgroundColor: colors.status.success + '20' }}
+                  >
+                    <Icon className="w-4 h-4" style={{ color: colors.status.success }} />
                   </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                  <span className="text-sm font-medium" style={{ color: colors.text.primary }}>
                     {text}
                   </span>
                 </motion.div>
@@ -237,11 +257,21 @@ const GlobalAuthSheet: React.FC = () => {
           <button
             onClick={handleLink}
             disabled={!telegramId || loading}
-            className={`w-full flex items-center justify-center gap-3 shadow-lg rounded-xl px-4 py-3.5 transform transition-all duration-300 font-bold ${
-              telegramId
-                ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:-translate-y-1"
-                : "bg-gray-200 text-gray-600 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500"
-            }`}
+            className="w-full flex items-center justify-center gap-3 shadow-lg rounded-xl px-4 py-3.5 transform transition-all duration-300 font-bold"
+            style={{
+              background: telegramId 
+                ? `linear-gradient(to right, ${colors.brand.primary}, ${colors.brand.primary}dd)`
+                : colors.bg.tertiary,
+              color: telegramId ? '#ffffff' : colors.text.tertiary,
+              cursor: telegramId ? 'pointer' : 'not-allowed',
+              transform: telegramId ? 'translateY(0)' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (telegramId) e.currentTarget.style.transform = 'translateY(-4px)';
+            }}
+            onMouseLeave={(e) => {
+              if (telegramId) e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
             {loading
               ? "جارٍ التحويل..."
@@ -250,12 +280,12 @@ const GlobalAuthSheet: React.FC = () => {
                 : "ربط الحساب الآن"}
             {!loading && <ArrowLeft className="w-5 h-5" />}
           </button>
-
           {polling && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-4 text-sm text-gray-500 dark:text-neutral-400"
+              className="mt-4 text-sm"
+              style={{ color: colors.text.secondary }}
             >
               في انتظار تأكيد الربط...
             </motion.div>
@@ -266,5 +296,4 @@ const GlobalAuthSheet: React.FC = () => {
     document.body,
   );
 };
-
 export default GlobalAuthSheet;

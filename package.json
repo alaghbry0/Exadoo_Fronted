@@ -17,6 +17,7 @@
     "migrate:scan": "ts-node scripts/migrate-tokens-example.ts --scan",
     "migrate:dry-run": "ts-node scripts/migrate-tokens-example.ts --dry-run",
     "migration:dashboard": "ts-node scripts/migration-dashboard.ts",
+    "migration:scan": "ts-node scripts/migration-dashboard.ts --scan",
     "test:visual": "playwright test tests/visual-regression",
     "test:visual:update": "playwright test tests/visual-regression --update-snapshots"
   },

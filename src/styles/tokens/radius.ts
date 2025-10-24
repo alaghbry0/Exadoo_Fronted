@@ -17,18 +17,33 @@ export const radius = {
   full: "9999px", // دائري كامل
 } as const;
 
-// Semantic radius للمكونات
+// Semantic radius للمكونات - موحد بـ rounded-xl (16px)
 export const componentRadius = {
-  button: "rounded-xl", // 16px
-  card: "rounded-2xl", // 20px
-  modal: "rounded-3xl", // 24px
-  input: "rounded-lg", // 12px
-  badge: "rounded-full", // دائري
-  avatar: "rounded-full", // دائري
-  chip: "rounded-full", // دائري
-  image: "rounded-xl", // 16px
-  dialog: "rounded-3xl", // 24px
-  dropdown: "rounded-2xl", // 20px
-  tooltip: "rounded-lg", // 12px
-  tab: "rounded-xl", // 16px
+  // Primary Components - rounded-xl (16px) بشكل موحد
+  button: "rounded-xl",
+  card: "rounded-xl",      // ✅ موحد!
+  modal: "rounded-xl",
+  input: "rounded-xl",     // ✅ محدث من lg
+  dialog: "rounded-xl",
+  image: "rounded-xl",
+  tab: "rounded-xl",
+  dropdown: "rounded-xl",  // ✅ محدث من 2xl
+  
+  // Small Components - rounded-lg (12px)
+  tooltip: "rounded-lg",
+  
+  // Circular Components - rounded-full
+  badge: "rounded-full",
+  avatar: "rounded-full",
+  chip: "rounded-full",
+} as const;
+
+// Radius Classes - للاستخدام المباشر
+export const radiusClasses = {
+  default: "rounded-xl",    // 16px - الافتراضي
+  sm: "rounded-lg",         // 12px
+  md: "rounded-xl",         // 16px
+  lg: "rounded-2xl",        // 20px
+  full: "rounded-full",     // دائري
+  none: "rounded-none",
 } as const;

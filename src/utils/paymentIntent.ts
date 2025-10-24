@@ -6,14 +6,16 @@ import type {
 export async function createPaymentIntent(
   req: PaymentIntentRequest,
 ): Promise<PaymentIntentResponse> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payments/create-intent`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(req),
+  // استدعاء API route المحلي بدلاً من Backend مباشرة
+  // API route سيقوم بإضافة signature headers والتحقق من الأمان
+  const res = await fetch("/api/payments/create-intent", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify(req),
+  });
+
   if (!res.ok) {
     try {
       const err = await res.json();

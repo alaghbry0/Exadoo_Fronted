@@ -1,8 +1,9 @@
-// components/details/DetailRow.tsx (النسخة النهائية مع ميزة النسخ)
+// features/payments/components/DetailRow.tsx (النسخة النهائية مع ميزة النسخ)
 
 import React from "react";
 import { useClipboard } from "@/hooks/useClipboard"; // استيراد الـ hook الجديد
 import { Check, Copy } from "lucide-react";
+import { colors } from "@/styles/tokens";
 
 interface DetailRowProps {
   icon: React.ReactNode;
@@ -30,9 +31,15 @@ const DetailRow: React.FC<DetailRowProps> = ({
   };
 
   return (
-    <div className="flex justify-between items-center gap-4 py-3 border-b border-gray-200 last:border-b-0">
+    <div 
+      className="flex justify-between items-center gap-4 py-3 border-b last:border-b-0"
+      style={{ borderColor: colors.border.default }}
+    >
       {/* الجزء الأيسر: الأيقونة والعنوان */}
-      <div className="flex items-center gap-3 text-gray-600 flex-shrink-0">
+      <div 
+        className="flex items-center gap-3 flex-shrink-0"
+        style={{ color: colors.text.secondary }}
+      >
         {icon}
         <span className="text-sm">{label}</span>
       </div>
@@ -42,7 +49,10 @@ const DetailRow: React.FC<DetailRowProps> = ({
         className="flex items-center gap-2 font-mono text-sm font-medium text-right min-w-0" // min-w-0 مهمة جدًا لـ flexbox
       >
         {/* حاوية القيمة لتطبيق truncate بشكل صحيح */}
-        <span className={`truncate ${valueClass || "text-gray-800"}`}>
+        <span 
+          className={`truncate ${valueClass || ""}`}
+          style={{ color: valueClass ? undefined : colors.text.primary }}
+        >
           {value}
         </span>
 
@@ -50,7 +60,8 @@ const DetailRow: React.FC<DetailRowProps> = ({
         {isCopyable && (
           <button
             onClick={handleCopy}
-            className="p-1 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800 flex-shrink-0 transition-transform duration-200 active:scale-95"
+            className="p-1 rounded-md flex-shrink-0 transition-transform duration-200 active:scale-95 hover:opacity-80"
+            style={{ color: colors.text.tertiary }}
             aria-label="Copy to clipboard"
           >
             {isCopied ? (

@@ -2,6 +2,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { componentVariants, mergeVariants } from "@/components/ui/variants";
+import { colors } from '@/styles/tokens';
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -88,15 +89,21 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
         <div
           className={cn(
             componentVariants.card.elevated,
-            "hidden md:block bg-gradient-to-br from-primary-50 via-white to-primary-50/50 dark:from-primary-950/30 dark:via-neutral-900 dark:to-primary-950/30 dark: /50 p-8 relative overflow-hidden",
+            "hidden md:block p-8 relative overflow-hidden",
           )}
+          style={{
+            background: `linear-gradient(to bottom right, ${colors.bg.primary}, ${colors.bg.secondary})`
+          }}
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
           <button
             onClick={() => setIsDismissed(true)}
-            className="absolute top-4 left-4 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
+            className="absolute top-4 left-4 p-1 transition-colors z-10"
+            style={{ color: colors.text.tertiary }}
+            onMouseEnter={(e) => e.currentTarget.style.color = colors.text.secondary}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.text.tertiary}
             aria-label="إخفاء"
           >
             <X className="w-6 h-6" />
@@ -105,15 +112,21 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
           <div className="relative z-10">
             <div className="flex items-start justify-between gap-8">
               <div className="flex-1">
-                <div className="inline-flex items-center gap-2 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 px-3 py-1.5 rounded-full text-sm font-semibold mb-4">
+                <div 
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold mb-4"
+                  style={{
+                    backgroundColor: colors.brand.primary + '15',
+                    color: colors.brand.primary
+                  }}
+                >
                   <Sparkles className="w-4 h-4" />
                   <span>ميزة حصرية</span>
                 </div>
 
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-neutral-100 mb-3">
+                <h2 className="text-3xl font-bold mb-3" style={{ color: colors.text.primary }}>
                   اربط حسابك للوصول الكامل
                 </h2>
-                <p className="text-lg text-gray-600 dark:text-neutral-400 mb-6 max-w-xl">
+                <p className="text-lg mb-6 max-w-xl" style={{ color: colors.text.secondary }}>
                   قم بمزامنة حسابك مع تطبيق الموبايل للاستفادة من جميع الخدمات
                   والحصول على تجربة متكاملة
                 </p>
@@ -126,19 +139,24 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 * index }}
-                        className={cn(
-                          componentVariants.card.base,
-                          "flex items-start gap-3 /50 p-4 rounded-xl dark:",
-                        )}
+                        className="flex items-start gap-3 p-4 rounded-xl"
+                        style={{
+                          backgroundColor: colors.bg.secondary,
+                          borderColor: colors.border.default,
+                          borderWidth: '1px'
+                        }}
                       >
-                        <div className="bg-primary-100 dark:bg-primary-900/50 p-2 rounded-lg">
-                          <feature.icon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        <div 
+                          className="p-2 rounded-lg"
+                          style={{ backgroundColor: colors.brand.primary + '15' }}
+                        >
+                          <feature.icon className="w-5 h-5" style={{ color: colors.brand.primary }} />
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-neutral-100 text-sm mb-0.5">
+                          <h4 className="font-semibold text-sm mb-0.5" style={{ color: colors.text.primary }}>
                             {feature.title}
                           </h4>
-                          <p className="text-xs text-gray-600 dark:text-neutral-400">
+                          <p className="text-xs" style={{ color: colors.text.secondary }}>
                             {feature.description}
                           </p>
                         </div>
@@ -158,8 +176,13 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
 
               <div className="hidden lg:block">
                 <div className="relative">
-                  <div className="w-48 h-48 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/50 dark:to-primary-800/50 rounded-3xl flex items-center justify-center transform rotate-6 hover:rotate-0 transition-transform duration-500">
-                    <Smartphone className="w-24 h-24 text-primary-600 dark:text-primary-400" />
+                  <div 
+                    className="w-48 h-48 rounded-3xl flex items-center justify-center transform rotate-6 hover:rotate-0 transition-transform duration-500"
+                    style={{
+                      background: `linear-gradient(to bottom right, ${colors.brand.primary}15, ${colors.brand.primary}25)`
+                    }}
+                  >
+                    <Smartphone className="w-24 h-24" style={{ color: colors.brand.primary }} />
                   </div>
                   <div className="absolute -top-4 -right-4 bg-emerald-500 text-white p-2 rounded-full shadow-lg">
                     <CheckCircle2 className="w-6 h-6" />

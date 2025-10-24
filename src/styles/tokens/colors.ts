@@ -58,16 +58,16 @@ export const colors = {
 
 // CSS Variables للاستخدام المباشر
 export const colorVars = `
-  /* Light Mode */
+  /* Light Mode - WCAG AA Compliant */
   :root {
-    /* Text */
-    --color-text-primary: #1a1a1a;
-    --color-text-secondary: #6b7280;
-    --color-text-tertiary: #9ca3af;
-    --color-text-disabled: #d1d5db;
-    --color-text-inverse: #ffffff;
-    --color-text-link: #0084FF;
-    --color-text-link-hover: #0066CC;
+    /* Text - محسّن لـ WCAG (contrast ratio > 4.5:1) */
+    --color-text-primary: #0a0a0a;           /* #1a1a1a → #0a0a0a (darker) */
+    --color-text-secondary: #525252;         /* #6b7280 → #525252 (darker) ✅ */
+    --color-text-tertiary: #737373;          /* #9ca3af → #737373 (darker) */
+    --color-text-disabled: #a3a3a3;          /* #d1d5db → #a3a3a3 */
+    --color-text-inverse: #fafafa;
+    --color-text-link: #0066CC;              /* darker for better contrast */
+    --color-text-link-hover: #0052A3;
 
     /* Background */
     --color-bg-primary: #ffffff;

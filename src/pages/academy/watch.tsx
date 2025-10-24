@@ -1,6 +1,6 @@
 "use client";
-import { componentVariants, mergeVariants } from "@/components/ui/variants";
-
+import { componentVariants } from "@/components/ui/variants";
+import { colors } from "@/styles/tokens";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -47,16 +47,28 @@ function CoursePlaylist({
   if (!sections?.length) return null;
 
   return (
-    <div className={cn(componentVariants.card.base, "lg: lg: dark: h-full")}>
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-inherit z-10">
-        <h2 className="font-bold text-lg text-neutral-900 dark:text-neutral-100">
+    <div className={cn(componentVariants.card.base, "h-full")}>
+      <div
+        className="p-4 border-b sticky top-0 bg-inherit z-10"
+        style={{ borderColor: colors.border.default }}
+      >
+        <h2 className="font-bold text-lg" style={{ color: colors.text.primary }}>
           محتوى الدورة
         </h2>
       </div>
-      <div className="divide-y divide-neutral-200 dark:divide-neutral-800 overflow-y-auto h-full pb-20">
+      <div
+        className="divide-y overflow-y-auto h-full pb-20"
+        style={{ borderColor: colors.border.default }}
+      >
         {sections.map((section) => (
           <div key={section.id} className="animate-fade-in">
-            <h3 className="font-semibold p-4 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-700 dark:text-neutral-300">
+            <h3
+              className="font-semibold p-4"
+              style={{
+                backgroundColor: colors.bg.secondary,
+                color: colors.text.secondary,
+              }}
+            >
               {section.title}
             </h3>
             <ul>
@@ -74,12 +86,26 @@ function CoursePlaylist({
                       disabled={isLocked}
                       className={cn(
                         "w-full text-right p-4 flex items-center gap-3 transition-all duration-200 group",
-                        isCurrent &&
-                          "bg-primary-50 dark:bg-primary-900/20 border-r-2 border-primary-500",
-                        !isLocked &&
-                          "hover:bg-neutral-100 dark:hover:bg-neutral-800/60 hover:pr-5",
+                        isCurrent && "border-r-2 border-primary-500",
+                        !isLocked && "hover:pr-5",
                         isLocked && "cursor-not-allowed opacity-60",
                       )}
+                      style={{
+                        backgroundColor: isCurrent
+                          ? `${colors.brand.primary}15`
+                          : undefined,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isLocked && !isCurrent) {
+                          e.currentTarget.style.backgroundColor =
+                            colors.bg.secondary;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isLocked && !isCurrent) {
+                          e.currentTarget.style.backgroundColor = "";
+                        }
+                      }}
                     >
                       <div
                         className={cn(
@@ -95,12 +121,12 @@ function CoursePlaylist({
                         )}
                       </div>
                       <span
-                        className={cn(
-                          "font-medium text-sm transition-colors",
-                          isCurrent
-                            ? "text-primary-700 dark:text-primary-300"
-                            : "text-neutral-700 dark:text-neutral-300",
-                        )}
+                        className="font-medium text-sm transition-colors"
+                        style={{
+                          color: isCurrent
+                            ? colors.brand.primary
+                            : colors.text.secondary,
+                        }}
                       >
                         {lesson.title}
                       </span>
@@ -267,18 +293,25 @@ export default function WatchLessonPage() {
   return (
     <div
       dir="rtl"
-      className="h-screen flex flex-col bg-neutral-100 dark:bg-black"
+      className="h-screen flex flex-col"
+      style={{ backgroundColor: colors.bg.primary }}
     >
       <header
         className={cn(
           componentVariants.card.base,
-          "w-full dark: px-4 py-3 flex items-center justify-between flex-shrink-0 z-20",
+          "w-full px-4 py-3 flex items-center justify-between flex-shrink-0 z-20",
         )}
       >
         <div className="min-w-0 flex-1 flex items-center gap-3">
           <button
             onClick={() => setIsPlaylistOpen(!isPlaylistOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="lg:hidden p-2 rounded-lg transition-colors"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.bg.secondary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "";
+            }}
             aria-label="فتح/إغلاق قائمة الدروس"
           >
             {isPlaylistOpen ? <X size={20} /> : <Menu size={20} />}
@@ -286,18 +319,26 @@ export default function WatchLessonPage() {
           <div className="min-w-0 flex-1">
             <Link
               href={`/academy/course/${courseId}`}
-              className="text-sm text-neutral-500 hover:underline hover:text-primary-500 transition-colors block truncate"
+              className="text-sm hover:underline hover:text-primary-500 transition-colors block truncate"
+              style={{ color: colors.text.tertiary }}
             >
               {courseDetails?.title || "العودة للدورة"}
             </Link>
-            <h1 className="font-bold text-neutral-900 dark:text-neutral-100 truncate text-sm sm:text-base">
+            <h1 className="font-bold truncate text-sm sm:text-base" style={{ color: colors.text.primary }}>
               {currentLessonTitle}
             </h1>
           </div>
         </div>
         <Link
           href={`/academy/course/${courseId}`}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors flex-shrink-0"
+          style={{ backgroundColor: colors.bg.secondary, color: colors.text.primary }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = colors.bg.elevated;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = colors.bg.secondary;
+          }}
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="hidden sm:inline">صفحة الدورة</span>
@@ -310,11 +351,12 @@ export default function WatchLessonPage() {
 
         <aside
           className={cn(
-            "w-full lg:w-1/4 h-full overflow-y-auto bg-white dark:bg-neutral-900 transition-transform duration-300 absolute lg:relative inset-0 z-10",
+            "w-full lg:w-1/4 h-full overflow-y-auto transition-transform duration-300 absolute lg:relative inset-0 z-10",
             isPlaylistOpen
               ? "translate-x-0"
               : "translate-x-full lg:translate-x-0",
           )}
+          style={{ backgroundColor: colors.bg.elevated }}
         >
           <CoursePlaylist
             courseId={courseId}

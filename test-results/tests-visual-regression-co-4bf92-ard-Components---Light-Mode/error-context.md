@@ -1,0 +1,105 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - banner [ref=e6]:
+        - navigation [ref=e7]:
+          - link "Exaado Exaado" [ref=e8] [cursor=pointer]:
+            - /url: /
+            - img "Exaado" [ref=e9]
+            - generic [ref=e10]: Exaado
+          - generic [ref=e11]:
+            - link "المتجر" [ref=e12] [cursor=pointer]:
+              - /url: /shop
+            - link "الأكاديمية" [ref=e13] [cursor=pointer]:
+              - /url: /academy
+            - link "حسابي" [ref=e14] [cursor=pointer]:
+              - /url: /profile
+          - link "الإشعارات" [ref=e16] [cursor=pointer]:
+            - /url: /notifications
+            - img
+      - main [ref=e17]:
+        - region "القسم الرئيسي" [ref=e18]:
+          - generic [ref=e20]:
+            - button "Connect Wallet" [ref=e25] [cursor=pointer]:
+              - img [ref=e26]
+              - generic [ref=e28]: Connect Wallet
+            - heading "تداول بذكاء مع توصيات خبرائنا في إكسادوا" [level=1] [ref=e29]:
+              - generic [ref=e30]: تداول بذكاء
+              - text: مع توصيات خبرائنا في إكسادوا
+            - paragraph [ref=e31]: احصل على وصول فوري إلى تحليلات مباشرة وتوصيات تداول بنسب نجاح عالية!
+            - link "اشترك معنا الآن" [ref=e33] [cursor=pointer]:
+              - /url: /shop
+              - text: اشترك معنا الآن
+              - img
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - heading "كل ما تحتاجه للربح بثقة" [level=2] [ref=e36]
+            - paragraph [ref=e37]: نقدم لك الأدوات والتحليلات اللازمة لاتخاذ قرارات تداول مدروسة.
+          - generic [ref=e38]:
+            - generic [ref=e40]:
+              - generic [ref=e41]:
+                - img [ref=e43]
+                - heading "تحليلات مباشرة للأسواق" [level=3] [ref=e45]
+              - paragraph [ref=e47]: تحليلات يومية وأسبوعية لأهم العملات الرقمية وأزواج سوق الفوركس.
+            - generic [ref=e49]:
+              - generic [ref=e50]:
+                - img [ref=e52]
+                - heading "توصيات تداول رابحة" [level=3] [ref=e55]
+              - paragraph [ref=e57]: توصيات مدروسة المخاطرة وذات نسب نجاح عالية تضمن لك أرباحاً في نهاية كل شهر.
+            - generic [ref=e59]:
+              - generic [ref=e60]:
+                - img [ref=e62]
+                - heading "خدمة عملاء 24/7" [level=3] [ref=e65]
+              - paragraph [ref=e67]: دعم فوري وسريع للرد على أي استفسار أو لحل أي مشكلة على مدار اليوم.
+        - generic [ref=e72]:
+          - img [ref=e73]
+          - heading "انضم إلينا اليوم وحقق دخل إضافي من التداول!" [level=2] [ref=e77]
+          - paragraph [ref=e78]: ابدأ رحلتك نحو دخل إضافي من التداول مع خطط اشتراك مرنة ومناسبة للجميع.
+          - link "استعراض خطط الاشتراك" [ref=e79] [cursor=pointer]:
+            - /url: /shop
+      - navigation "التنقل الرئيسي" [ref=e80]:
+        - generic [ref=e81]:
+          - link "الرئيسية" [ref=e82] [cursor=pointer]:
+            - /url: /
+            - img [ref=e84]
+            - generic [ref=e88]: الرئيسية
+          - link "المتجر" [ref=e89] [cursor=pointer]:
+            - /url: /shop
+            - img [ref=e91]
+            - generic [ref=e94]: المتجر
+          - link "الأكاديمية" [ref=e95] [cursor=pointer]:
+            - /url: /academy
+            - img [ref=e97]
+            - generic [ref=e100]: الأكاديمية
+          - link "حسابي" [ref=e101] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e103]
+            - generic [ref=e106]: حسابي
+    - navigation "التنقّل السفلي" [ref=e107]:
+      - generic [ref=e108]:
+        - link "الرئيسية" [ref=e109] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e110]:
+            - img [ref=e111]
+            - generic [ref=e114]: الرئيسية
+        - link "الاشتراكات" [ref=e116] [cursor=pointer]:
+          - /url: /shop
+          - generic [ref=e117]:
+            - img [ref=e118]
+            - generic [ref=e120]: الاشتراكات
+        - link "الملف" [ref=e121] [cursor=pointer]:
+          - /url: /profile
+          - generic [ref=e122]:
+            - img [ref=e123]
+            - generic [ref=e126]: الملف
+    - generic [ref=e127]:
+      - img [ref=e129]
+      - button "Open Tanstack query devtools" [ref=e177] [cursor=pointer]:
+        - img [ref=e178]
+  - button "Open Next.js Dev Tools" [ref=e231] [cursor=pointer]:
+    - img [ref=e232]
+  - alert [ref=e235]
+```
