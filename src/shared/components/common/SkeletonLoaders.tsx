@@ -1,112 +1,147 @@
-import { cn } from "@/lib/utils";
-import { componentVariants, mergeVariants } from "@/components/ui/variants";
-// components/shared/SkeletonLoaders.tsx
-
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { colors, spacing, radius, componentRadius, shadowClasses } from "@/styles/tokens";
+import type { CSSProperties } from "react";
 
-/**
- * Skeleton Loader لبطاقة نصف عرض (Half Card)
- */
+const skeletonStyle: CSSProperties = {
+  backgroundColor: colors.bg.tertiary,
+  borderRadius: radius.sm,
+};
+
+function SkeletonBlock({ width, height }: { width: string; height: string }) {
+  return (
+    <div
+      style={{
+        ...skeletonStyle,
+        width,
+        height,
+      }}
+    />
+  );
+}
+
+function IconSkeleton() {
+  return (
+    <div
+      style={{
+        width: spacing[12],
+        height: spacing[12],
+        borderRadius: radius["2xl"],
+        backgroundColor: colors.bg.secondary,
+      }}
+    />
+  );
+}
+
+const cardClassName = cn(componentRadius.card, shadowClasses.card);
+
 export const HalfCardSkeleton = () => (
-  <Card
-    className={cn(componentVariants.card.base, "h-full rounded-card-lg dark:")}
-  >
-    <CardContent className="p-5">
-      <div className="flex items-start gap-4 animate-pulse">
-        {/* Icon Skeleton */}
-        <div className="h-12 w-12 rounded-2xl bg-gray-200 dark:bg-neutral-800 shrink-0" />
-
-        {/* Content Skeleton */}
-        <div className="flex-1 space-y-3">
-          <div className="h-5 bg-gray-200 dark:bg-neutral-800 rounded w-3/4" />
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-full" />
-            <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-5/6" />
+  <Card className={cardClassName} style={{ borderColor: colors.border.default }}>
+    <CardContent style={{ padding: spacing[5] }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: spacing[4],
+          marginBottom: spacing[4],
+        }}
+      >
+        <IconSkeleton />
+        <div style={{ flex: 1 }}>
+          <SkeletonBlock width="75%" height="1.25rem" />
+          <div style={{ marginTop: spacing[3], display: "grid", gap: spacing[2] }}>
+            <SkeletonBlock width="100%" height="1rem" />
+            <SkeletonBlock width="83%" height="1rem" />
           </div>
         </div>
       </div>
-
-      {/* CTA Skeleton */}
-      <div className="mt-4 pt-4">
-        <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-24" />
-      </div>
+      <SkeletonBlock width="6rem" height="1rem" />
     </CardContent>
   </Card>
 );
 
-/**
- * Skeleton Loader لبطاقة كامل العرض (Wide Card)
- */
 export const WideCardSkeleton = () => (
-  <Card className={cn(componentVariants.card.base, "rounded-card-lg dark:")}>
-    <CardContent className="p-5 md:p-6">
-      <div className="animate-pulse">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
-          <div className="h-12 w-12 rounded-2xl bg-gray-200 dark:bg-neutral-800 shrink-0" />
-          <div className="flex-1 space-y-3">
-            <div className="h-6 bg-gray-200 dark:bg-neutral-800 rounded w-2/3" />
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-full" />
-              <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-4/5" />
+  <Card className={cardClassName} style={{ borderColor: colors.border.default }}>
+    <CardContent style={{ padding: spacing[5], paddingTop: spacing[5] }}>
+      <div style={{ display: "grid", gap: spacing[6] }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: spacing[4],
+            alignItems: "flex-start",
+          }}
+        >
+          <IconSkeleton />
+          <div style={{ flex: 1, minWidth: "12rem" }}>
+            <SkeletonBlock width="66%" height="1.5rem" />
+            <div style={{ marginTop: spacing[3], display: "grid", gap: spacing[2] }}>
+              <SkeletonBlock width="100%" height="1rem" />
+              <SkeletonBlock width="80%" height="1rem" />
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="h-3 bg-gray-200 dark:bg-neutral-800 rounded w-32" />
-            <div className="h-8 bg-gray-200 dark:bg-neutral-800 rounded w-24" />
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: spacing[4],
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "grid", gap: spacing[2], minWidth: "10rem" }}>
+            <SkeletonBlock width="8rem" height="0.75rem" />
+            <SkeletonBlock width="6rem" height="2rem" />
           </div>
-          <div className="h-10 bg-gray-200 dark:bg-neutral-800 rounded w-32" />
+          <SkeletonBlock width="8rem" height="2.5rem" />
         </div>
       </div>
     </CardContent>
   </Card>
 );
 
-/**
- * Skeleton Loader لبطاقة الأكاديمية
- */
 export const AcademyCardSkeleton = () => (
-  <Card className={cn(componentVariants.card.base, "rounded-card-lg dark:")}>
-    <CardContent className="p-6">
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 dark:bg-neutral-800 rounded w-1/2" />
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="text-center space-y-2">
-              <div className="h-10 bg-gray-200 dark:bg-neutral-800 rounded w-16 mx-auto" />
-              <div className="h-3 bg-gray-200 dark:bg-neutral-800 rounded w-20 mx-auto" />
+  <Card className={cardClassName} style={{ borderColor: colors.border.default }}>
+    <CardContent style={{ padding: spacing[6] }}>
+      <div style={{ display: "grid", gap: spacing[4] }}>
+        <SkeletonBlock width="50%" height="2rem" />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: spacing[4],
+          }}
+        >
+          {[1, 2, 3].map(key => (
+            <div key={key} style={{ display: "grid", gap: spacing[2], justifyItems: "center" }}>
+              <SkeletonBlock width="4rem" height="2.5rem" />
+              <SkeletonBlock width="5rem" height="0.75rem" />
             </div>
           ))}
         </div>
-        <div className="h-10 bg-gray-200 dark:bg-neutral-800 rounded w-full" />
+        <SkeletonBlock width="100%" height="2.5rem" />
       </div>
     </CardContent>
   </Card>
 );
 
-/**
- * Grid Skeleton - لعرض عدة بطاقات
- */
 interface GridSkeletonProps {
   count?: number;
   variant?: "half" | "wide" | "mixed";
 }
 
-export const GridSkeleton = ({
-  count = 4,
-  variant = "mixed",
-}: GridSkeletonProps) => {
+export const GridSkeleton = ({ count = 4, variant = "mixed" }: GridSkeletonProps) => {
   if (variant === "half") {
     return (
-      <div className="grid grid-cols-12 gap-4 sm:gap-5">
-        {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="col-span-12 sm:col-span-6">
-            <HalfCardSkeleton />
-          </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
+          gap: spacing[4],
+        }}
+      >
+        {Array.from({ length: count }).map((_, index) => (
+          <HalfCardSkeleton key={index} />
         ))}
       </div>
     );
@@ -114,38 +149,35 @@ export const GridSkeleton = ({
 
   if (variant === "wide") {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: count }).map((_, i) => (
-          <WideCardSkeleton key={i} />
+      <div style={{ display: "grid", gap: spacing[4] }}>
+        {Array.from({ length: count }).map((_, index) => (
+          <WideCardSkeleton key={index} />
         ))}
       </div>
     );
   }
 
-  // Mixed: 1 wide + 2 half
   return (
-    <div className="space-y-4">
+    <div style={{ display: "grid", gap: spacing[4] }}>
       <WideCardSkeleton />
-      <div className="grid grid-cols-12 gap-4 sm:gap-5">
-        <div className="col-span-12 sm:col-span-6">
-          <HalfCardSkeleton />
-        </div>
-        <div className="col-span-12 sm:col-span-6">
-          <HalfCardSkeleton />
-        </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
+          gap: spacing[4],
+        }}
+      >
+        {[0, 1].map(index => (
+          <HalfCardSkeleton key={index} />
+        ))}
       </div>
     </div>
   );
 };
 
-/**
- * Search Skeleton - أثناء البحث
- */
 export const SearchSkeleton = () => (
-  <div className="space-y-4">
-    <div className="animate-pulse">
-      <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-48 mb-6" />
-      <GridSkeleton count={3} variant="mixed" />
-    </div>
+  <div style={{ display: "grid", gap: spacing[4] }}>
+    <SkeletonBlock width="12rem" height="1rem" />
+    <GridSkeleton count={3} variant="mixed" />
   </div>
 );

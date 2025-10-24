@@ -29,5 +29,11 @@
     ".next/types/**/*.ts",
     "src/telegram-web-app.d.ts"
   ],
-  "exclude": ["node_modules", "archived_components"]
+  "exclude": ["node_modules", "archived_components"],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node"
+    }
+  }
 }

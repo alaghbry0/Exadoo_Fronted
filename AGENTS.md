@@ -26,3 +26,6 @@ Core principles:
 - □ لا hard-coded colors
 - □ لا inline animations
 - □ لا dark: classes
+
+### Changelog
+- 2025-02-14: بعد تثبيت الحزم عبر `npm install` يجب تشغيل أوامر الفحص باستخدام `NON_INTERACTIVE=1 ORA_SILENT=1 npm run migration:scan` لتفادي المشاكل التفاعلية مع `ts-node`.

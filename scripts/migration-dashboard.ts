@@ -12,6 +12,8 @@ import * as path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 
+const isInteractive = process.stdout.isTTY && !process.env.NON_INTERACTIVE;
+
 // ================================================
 // Types
 // ================================================
@@ -201,7 +203,7 @@ function scanFile(filePath: string): ScanResult | null {
     }
     
     // Calculate priority score (0-100)
-    let score = Math.min(100, 
+    const score = Math.min(100, 
       (issues.darkModeClasses * 5) +     // Dark mode is highest priority
       (issues.hardCodedColors * 2) +
       (issues.hardCodedSpacing * 1) +
@@ -508,7 +510,9 @@ function calculateStats(files: FileProgress[]) {
 // ================================================
 
 function displayHeader() {
-  console.clear();
+  if (isInteractive) {
+    console.clear();
+  }
   console.log(chalk.bold.cyan('\n╔════════════════════════════════════════════════════════════╗'));
   console.log(chalk.bold.cyan('║     🎨 Design System Compliance Dashboard                ║'));
   console.log(chalk.bold.cyan('║     v3.0 - UX/UI Improvements Integrated               ║'));
@@ -658,12 +662,17 @@ async function main() {
   
   // Auto-scan mode
   if (shouldScan) {
-    const spinner = ora('🔍 Scanning all files in src/...').start();
-    
+    const spinner = isInteractive ? ora('🔍 Scanning all files in src/...').start() : null;
+
     try {
       const results = await scanAllFiles();
-      spinner.succeed(`Scan complete! Found ${results.length} files`);
-      
+      if (spinner) {
+        spinner.succeed(`Scan complete! Found ${results.length} files`);
+      } else {
+        console.log('Scan complete!');
+        console.log(`Found ${results.length} files that need attention.`);
+      }
+
       displayHeader();
       displayScanResults(results);
       
@@ -677,20 +686,28 @@ async function main() {
       
       return;
     } catch (error) {
-      spinner.fail('Scan failed');
+      if (spinner) {
+        spinner.fail('Scan failed');
+      } else {
+        console.error('Scan failed');
+      }
       throw error;
     }
   }
-  
+
   // Normal dashboard mode
-  const spinner = ora('Loading migration progress...').start();
+  const spinner = isInteractive ? ora('Loading migration progress...').start() : null;
   
   await new Promise(resolve => setTimeout(resolve, 500));
   
   const progress = loadProgress();
   progress.stats = calculateStats(progress.files);
   
-  spinner.succeed('Progress loaded');
+  if (spinner) {
+    spinner.succeed('Progress loaded');
+  } else {
+    console.log('Progress loaded');
+  }
   
   // Display dashboard
   displayHeader();

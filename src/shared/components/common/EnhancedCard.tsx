@@ -1,9 +1,17 @@
 // src/shared/components/common/EnhancedCard.tsx
 import { Card as ShadcnCard, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
-import { LucideIcon } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import {
+  colors,
+  spacing,
+  radius,
+  shadowClasses,
+  componentRadius,
+  typography,
+} from "@/styles/tokens";
 
 interface EnhancedCardProps {
   children: ReactNode;
@@ -20,15 +28,29 @@ export function EnhancedCard({
   className,
   onClick,
 }: EnhancedCardProps) {
+  const cardStyles: CSSProperties = {
+    backgroundColor: colors.bg.primary,
+    color: colors.text.primary,
+    borderColor: colors.border.default,
+    transition: "transform 0.3s ease",
+  };
+
+  if (gradient) {
+    cardStyles.backgroundImage = `linear-gradient(135deg, ${colors.bg.primary}, ${colors.bg.secondary})`;
+  }
+
+  if (hover) {
+    cardStyles.cursor = "pointer";
+  }
+
   return (
     <ShadcnCard
       className={cn(
-        "transition-all duration-300",
-        hover && "hover:shadow-lg hover:-translate-y-1 cursor-pointer",
-        gradient &&
-          "bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-neutral-800",
+        componentRadius.card,
+        hover ? shadowClasses.cardInteractive : shadowClasses.card,
         className,
       )}
+      style={cardStyles}
       onClick={onClick}
     >
       {children}
@@ -36,7 +58,6 @@ export function EnhancedCard({
   );
 }
 
-// Service Card variant
 interface ServiceCardProps {
   title: string;
   description: string;
@@ -46,6 +67,40 @@ interface ServiceCardProps {
     text: string;
     variant?: "default" | "success" | "warning";
   };
+}
+
+const baseBadgeStyles: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingInline: spacing[3],
+  paddingBlock: spacing[1],
+  borderRadius: radius.full,
+};
+
+function getBadgeStyles(
+  variant?: "default" | "success" | "warning",
+): CSSProperties {
+  switch (variant) {
+    case "success":
+      return {
+        ...baseBadgeStyles,
+        backgroundColor: colors.status.successBg,
+        color: colors.status.success,
+      };
+    case "warning":
+      return {
+        ...baseBadgeStyles,
+        backgroundColor: colors.status.warningBg,
+        color: colors.status.warning,
+      };
+    default:
+      return {
+        ...baseBadgeStyles,
+        backgroundColor: colors.bg.secondary,
+        color: colors.text.secondary,
+      };
+  }
 }
 
 export function ServiceCard({
@@ -58,31 +113,64 @@ export function ServiceCard({
   return (
     <Link href={href}>
       <EnhancedCard hover>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-primary-50 dark:bg-primary-900/20">
-              <Icon className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+        <CardContent
+          style={{
+            padding: spacing[6],
+            paddingTop: spacing[6],
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[4],
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: spacing[4],
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: spacing[4],
+                borderRadius: radius["2xl"],
+                backgroundColor: colors.status.infoBg,
+                color: colors.brand.primary,
+              }}
+              aria-hidden="true"
+            >
+              <Icon size={24} />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-lg">{title}</h3>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing[3],
+                  marginBottom: spacing[3],
+                }}
+              >
+                <h3
+                  className={cn(typography.heading.md)}
+                  style={{ color: colors.text.primary }}
+                >
+                  {title}
+                </h3>
                 {badge && (
                   <span
-                    className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-semibold",
-                      badge.variant === "success" &&
-                        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-                      badge.variant === "warning" &&
-                        "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                      !badge.variant &&
-                        "bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-neutral-300",
-                    )}
+                    className={cn(typography.label.md)}
+                    style={getBadgeStyles(badge.variant)}
                   >
                     {badge.text}
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <p
+                className={cn(typography.body.sm)}
+                style={{ color: colors.text.secondary }}
+              >
                 {description}
               </p>
             </div>
@@ -93,7 +181,6 @@ export function ServiceCard({
   );
 }
 
-// Stats Card variant
 interface StatsCardProps {
   title: string;
   value: string | number;
@@ -105,31 +192,72 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ title, value, icon: Icon, trend }: StatsCardProps) {
+  const trendColor = trend
+    ? trend.isPositive
+      ? colors.status.success
+      : colors.status.error
+    : undefined;
+
   return (
     <EnhancedCard gradient>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
+      <CardContent
+        style={{
+          padding: spacing[6],
+          paddingTop: spacing[6],
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: spacing[4],
+          }}
+        >
           <div>
-            <p className="text-sm text-gray-600 dark:text-neutral-400 mb-1">
+            <p
+              className={cn(typography.body.sm)}
+              style={{
+                color: colors.text.secondary,
+                marginBottom: spacing[2],
+              }}
+            >
               {title}
             </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
+            <p
+              className={cn(typography.heading.xl)}
+              style={{ color: colors.text.primary }}
+            >
               {value}
             </p>
             {trend && (
               <p
-                className={cn(
-                  "text-sm font-medium mt-1",
-                  trend.isPositive ? "text-green-600" : "text-red-600",
-                )}
+                className={cn(typography.label.lg)}
+                style={{
+                  color: trendColor,
+                  marginTop: spacing[2],
+                }}
               >
                 {trend.isPositive ? "+" : ""}
                 {trend.value}%
               </p>
             )}
           </div>
-          <div className="p-4 rounded-full bg-primary-100 dark:bg-primary-900/30">
-            <Icon className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: spacing[5],
+              borderRadius: radius.full,
+              backgroundColor: colors.status.infoBg,
+              color: colors.brand.primary,
+              minWidth: "3.5rem",
+              minHeight: "3.5rem",
+            }}
+            aria-hidden="true"
+          >
+            <Icon size={24} />
           </div>
         </div>
       </CardContent>
