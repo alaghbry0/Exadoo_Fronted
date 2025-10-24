@@ -1,7 +1,7 @@
 // pages/notifications.tsx (النسخة النهائية والمحسنة)
 
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +11,14 @@ import NotificationFilter from "@/features/notifications/components/Notification
 import { useTelegram } from "../context/TelegramContext";
 import { useNotificationsContext } from "@/context/NotificationsContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { cn } from "@/lib/utils";
+import {
+  animations,
+  colors,
+  radius,
+  shadowClasses,
+  spacing,
+} from "@/styles/tokens";
 // import PageLayout from '@/shared/components/layout/PageLayout' // غير مستخدم;
 
 // استيراد ديناميكي لمكون NotificationItem مع هيكل تحميل محسن
@@ -22,37 +30,168 @@ const NotificationItem = dynamic(
 );
 
 // هيكل تحميل محسن للإشعارات
+const skeletonContainerStyle: CSSProperties = {
+  backgroundColor: colors.bg.elevated,
+  borderColor: colors.border.default,
+  borderStyle: "solid",
+  borderWidth: "1px",
+  borderRadius: radius.xl,
+  padding: spacing[5],
+};
+
+const skeletonLineStyle: CSSProperties = {
+  backgroundColor: colors.bg.tertiary,
+  borderRadius: radius.md,
+  height: "1rem",
+  width: "100%",
+  opacity: 0.85,
+};
+
 const NotificationSkeleton = () => (
   <motion.div
     initial={{ opacity: 0.5, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
-    className="bg-white rounded-xl shadow-sm border border-gray-200 p-4"
+    className={cn(shadowClasses.card, animations.presets.pulse)}
+    style={skeletonContainerStyle}
   >
-    <div className="flex gap-3">
-      <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
-      <div className="flex-1 space-y-2">
-        <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-        <div className="h-4 bg-gray-100 rounded w-full animate-pulse"></div>
-        <div className="h-4 bg-gray-100 rounded w-5/6 animate-pulse"></div>
+    <div
+      style={{
+        display: "flex",
+        gap: spacing[4],
+        alignItems: "flex-start",
+      }}
+    >
+      <div
+        style={{
+          ...skeletonLineStyle,
+          width: "2.5rem",
+          height: "2.5rem",
+          borderRadius: radius.full,
+        }}
+      />
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: spacing[3],
+        }}
+      >
+        <div style={{ ...skeletonLineStyle, width: "75%", height: "1.25rem" }} />
+        <div style={{ ...skeletonLineStyle, opacity: 0.8 }} />
+        <div style={{ ...skeletonLineStyle, width: "85%", opacity: 0.75 }} />
       </div>
-      <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse"></div>
+      <div
+        style={{
+          ...skeletonLineStyle,
+          width: "2rem",
+          height: "2rem",
+          borderRadius: radius.full,
+        }}
+      />
     </div>
   </motion.div>
 );
 
 // مكون هيكل تحميل للصفحة الأولى
 const PageSkeleton = () => (
-  <div className="container mx-auto px-4 py-6 space-y-4">
-    <div className="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
-      <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
-      <div className="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+  <div
+    style={{
+      margin: "0 auto",
+      padding: `${spacing[6]} ${spacing[5]}`,
+      display: "flex",
+      flexDirection: "column",
+      gap: spacing[4],
+      maxWidth: "960px",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: spacing[3],
+        backgroundColor: colors.bg.tertiary,
+        borderRadius: radius.lg,
+      }}
+    >
+      <div
+        className={animations.presets.pulse}
+        style={{ ...skeletonLineStyle, width: "6rem", height: "2rem" }}
+      />
+      <div
+        className={animations.presets.pulse}
+        style={{ ...skeletonLineStyle, width: "6rem", height: "2rem" }}
+      />
     </div>
-    {[...Array(5)].map((_, i) => (
-      <NotificationSkeleton key={`skeleton-${i}`} />
+    {[...Array(5)].map((_, index) => (
+      <NotificationSkeleton key={`skeleton-${index}`} />
     ))}
   </div>
 );
+
+const pageWrapperStyle: CSSProperties = {
+  position: "relative",
+  minHeight: "100vh",
+  backgroundColor: colors.bg.secondary,
+  zIndex: 20,
+};
+
+const scrollAreaStyle: CSSProperties = {
+  maxWidth: "960px",
+  margin: "0 auto",
+  padding: `${spacing[6]} ${spacing[5]}`,
+  height: "100vh",
+  overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
+  gap: spacing[5],
+};
+
+const stickyHeaderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: spacing[4],
+  marginBottom: spacing[4],
+  position: "sticky",
+  top: 0,
+  backgroundColor: colors.bg.secondary,
+  zIndex: 10,
+  paddingBlock: spacing[3],
+};
+
+const statusCardStyle: CSSProperties = {
+  marginBottom: spacing[5],
+  backgroundImage: `linear-gradient(90deg, ${colors.bg.secondary}, ${colors.bg.tertiary})`,
+  padding: spacing[5],
+  borderRadius: radius.xl,
+  border: `1px solid ${colors.border.default}`,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: spacing[4],
+};
+
+const emptyStateStyle: CSSProperties = {
+  textAlign: "center",
+  padding: spacing[8],
+  backgroundColor: colors.bg.elevated,
+  borderRadius: radius.xl,
+  border: `1px solid ${colors.border.default}`,
+  color: colors.text.secondary,
+};
+
+const endMessageStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: spacing[3],
+  color: colors.text.secondary,
+  fontSize: "0.875rem",
+  backgroundColor: colors.bg.tertiary,
+  padding: `${spacing[3]} ${spacing[4]}`,
+  borderRadius: radius.full,
+};
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -101,12 +240,6 @@ export default function NotificationsPage() {
     router.push("/");
   };
 
-  const themeColors = {
-    primary: "blue",
-    accent: "indigo",
-    background: "gray-50",
-  };
-
   // حالة التحميل الأولية
   if (isLoading) {
     return <PageSkeleton />;
@@ -115,24 +248,77 @@ export default function NotificationsPage() {
   // حالة الخطأ المحسنة
   if (error) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-screen">
+      <div
+        style={{
+          padding: spacing[6],
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          backgroundColor: colors.bg.secondary,
+        }}
+      >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-red-50 p-6 rounded-xl text-red-600 mb-6 text-center max-w-md w-full border border-red-100 shadow-sm"
+          className={shadowClasses.card}
+          style={{
+            backgroundColor: colors.status.errorBg,
+            padding: spacing[6],
+            borderRadius: radius.xl,
+            color: colors.status.error,
+            marginBottom: spacing[5],
+            textAlign: "center",
+            maxWidth: "28rem",
+            width: "100%",
+            border: `1px solid ${colors.border.error}`,
+          }}
         >
-          <AlertCircle className="mx-auto h-12 w-12 mb-4 text-red-500" />
-          <h3 className="text-lg font-bold mb-2">
+          <AlertCircle
+            style={{
+              margin: "0 auto",
+              height: "3rem",
+              width: "3rem",
+              marginBottom: spacing[4],
+              color: colors.status.error,
+            }}
+          />
+          <h3
+            style={{
+              fontSize: "1.125rem",
+              fontWeight: 700,
+              marginBottom: spacing[3],
+              color: colors.text.primary,
+            }}
+          >
             حدث خطأ أثناء تحميل الإشعارات
           </h3>
-          <p className="mb-4 text-sm text-red-500">
+          <p
+            style={{
+              marginBottom: spacing[4],
+              fontSize: "0.875rem",
+              color: colors.status.error,
+            }}
+          >
             تعذر الاتصال بالخادم. حاول مرة أخرى.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => refetch()}
-            className="bg-red-500 text-white px-5 py-2.5 rounded-lg shadow-sm hover:bg-red-600 transition-colors w-full flex items-center justify-center gap-2"
+            className={shadowClasses.button}
+            style={{
+              backgroundColor: colors.status.error,
+              color: colors.text.inverse,
+              padding: `${spacing[3]} ${spacing[5]}`,
+              borderRadius: radius.lg,
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: spacing[3],
+            }}
           >
             <RefreshCw size={16} />
             إعادة المحاولة
@@ -143,8 +329,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className={`relative min-h-screen bg-${themeColors.background} z-20`}>
-      {/* ✨ مؤشر تحديث مبسط يعتمد على isFetching */}
+    <div style={pageWrapperStyle}>
       <AnimatePresence>
         {isFetching && !isFetchingNextPage && !isLoading && (
           <motion.div
@@ -152,67 +337,120 @@ export default function NotificationsPage() {
             animate={{ y: 16, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 z-30"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 30,
+            }}
           >
-            <div className="p-2 bg-white rounded-full shadow-lg">
-              <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
+            <div
+              className={shadowClasses.card}
+              style={{
+                padding: spacing[3],
+                backgroundColor: colors.bg.elevated,
+                borderRadius: radius.full,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <RefreshCw
+                className={animations.presets.spin}
+                style={{
+                  height: "1.5rem",
+                  width: "1.5rem",
+                  color: colors.brand.primary,
+                }}
+              />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div
-        ref={scrollRef}
-        className="container mx-auto px-4 py-6 h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300"
-      >
-        {/* رأس الصفحة مع زر الرجوع */}
+      <div ref={scrollRef} style={scrollAreaStyle}>
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className={`flex items-center mb-4 sticky top-0 bg-${themeColors.background} z-10 py-3`}
+          style={stickyHeaderStyle}
         >
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleGoBack}
-            className="bg-white hover:bg-gray-100 text-gray-800 font-bold p-3 rounded-full shadow-sm border border-gray-200"
+            className={shadowClasses.button}
+            style={{
+              backgroundColor: colors.bg.elevated,
+              color: colors.text.primary,
+              fontWeight: 700,
+              padding: spacing[3],
+              borderRadius: radius.full,
+              border: `1px solid ${colors.border.default}`,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            aria-label="العودة للصفحة الرئيسية"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft style={{ width: "1.25rem", height: "1.25rem" }} />
           </motion.button>
-          <h1 className="text-xl font-bold flex-1 text-center text-gray-800">
+          <h1
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              flex: 1,
+              textAlign: "center",
+              color: colors.text.primary,
+            }}
+          >
             الإشعارات
           </h1>
-          <div className="w-8"></div>
+          <div style={{ width: "2rem" }} aria-hidden="true" />
         </motion.div>
 
-        {/* شريط حالة الإشعارات غير المقروءة */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className={`mb-5 bg-gradient-to-r from-${themeColors.primary}-50 to-${themeColors.accent}-50 p-4 rounded-xl shadow-sm border border-${themeColors.primary}-100 flex items-center justify-between`}
+          className={shadowClasses.card}
+          style={statusCardStyle}
         >
-          <div className="flex items-center">
-            <Bell
-              size={20}
-              className={`text-${themeColors.primary}-500 mr-2`}
-            />
-            <span className="font-semibold text-gray-700">
-              الإشعارات غير المقروءة:
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: spacing[3],
+              color: colors.text.secondary,
+            }}
+          >
+            <Bell size={20} style={{ color: colors.brand.primary }} aria-hidden="true" />
+            <span style={{ fontWeight: 600, color: colors.text.primary }}>
+              لديك {unreadCount} إشعار غير مقروء
             </span>
           </div>
           <motion.span
             key={unreadCount}
-            className={`inline-flex items-center justify-center bg-${themeColors.primary}-500 text-white rounded-full px-3 py-1 text-sm font-medium`}
             initial={{ scale: 0.9 }}
             animate={{ scale: [0.9, 1.1, 1] }}
             transition={{ duration: 0.3 }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.brand.primary,
+              color: colors.text.inverse,
+              borderRadius: radius.full,
+              padding: `${spacing[2]} ${spacing[4]}`,
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              minWidth: "2.5rem",
+            }}
           >
             {unreadCount}
           </motion.span>
         </motion.div>
 
-        {/* مكون التصفية */}
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -225,36 +463,77 @@ export default function NotificationsPage() {
           />
         </motion.div>
 
-        {/* قائمة الإشعارات أو رسالة الحالة الفارغة */}
-        <div className="mt-4 space-y-3">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[4],
+          }}
+        >
           {notifications.length > 0 ? (
             <AnimatePresence>
-              {notifications.map((notification) => (
-                <NotificationItem
+              {notifications.map((notification, index) => (
+                <motion.div
                   key={notification.id}
-                  notification={notification}
-                />
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <NotificationItem notification={notification} />
+                </motion.div>
               ))}
             </AnimatePresence>
           ) : (
             !isFetching && (
               <motion.div
+                className={shadowClasses.card}
+                style={emptyStateStyle}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-16 mt-6 text-gray-500 bg-white rounded-xl shadow-sm border"
               >
-                <Bell size={80} className="text-gray-400 mb-6" />
-                <p className="text-lg font-medium">
+                <Bell
+                  size={64}
+                  style={{
+                    marginBottom: spacing[4],
+                    color: colors.text.tertiary,
+                  }}
+                />
+                <p
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    color: colors.text.primary,
+                  }}
+                >
                   لا توجد إشعارات {filter === "unread" ? "غير مقروءة" : ""}
                 </p>
-                <p className="text-sm text-gray-400 mt-2 max-w-xs text-center">
+                <p
+                  style={{
+                    marginTop: spacing[3],
+                    fontSize: "0.875rem",
+                    maxWidth: "20rem",
+                    marginInline: "auto",
+                  }}
+                >
                   ستظهر الإشعارات الجديدة هنا فور وصولها.
                 </p>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => refetch()}
-                  className={`mt-6 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2`}
+                  className={shadowClasses.button}
+                  style={{
+                    marginTop: spacing[5],
+                    backgroundColor: colors.bg.elevated,
+                    color: colors.brand.primary,
+                    border: `1px solid ${colors.border.default}`,
+                    padding: `${spacing[3]} ${spacing[5]}`,
+                    borderRadius: radius.lg,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: spacing[3],
+                  }}
                 >
                   <RefreshCw size={16} />
                   تحديث
@@ -264,28 +543,35 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        {/* مؤشر تحميل المزيد */}
         {isFetchingNextPage && (
           <motion.div
-            className="my-6 space-y-4"
+            style={{
+              marginTop: spacing[6],
+              display: "flex",
+              flexDirection: "column",
+              gap: spacing[4],
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            {[...Array(3)].map((_, i) => (
-              <NotificationSkeleton key={`loading-${i}`} />
+            {Array.from({ length: 3 }).map((_, index) => (
+              <NotificationSkeleton key={`loading-${index}`} />
             ))}
           </motion.div>
         )}
 
-        {/* رسالة نهاية القائمة */}
         {!hasNextPage && notifications.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center my-6 pb-4"
+            style={{
+              textAlign: "center",
+              marginTop: spacing[6],
+              paddingBottom: spacing[4],
+            }}
           >
-            <div className="inline-flex items-center text-gray-400 text-sm bg-gray-100 px-4 py-2 rounded-full">
-              <Check size={16} className="mr-2" />
+            <div style={endMessageStyle}>
+              <Check size={16} style={{ color: colors.brand.primary }} />
               لقد شاهدت جميع الإشعارات
             </div>
           </motion.div>

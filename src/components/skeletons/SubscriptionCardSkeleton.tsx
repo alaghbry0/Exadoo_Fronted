@@ -1,44 +1,142 @@
-import React from "react";
+import type { CSSProperties } from "react";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import {
+  animations,
+  colors,
+  radius,
+  semanticSpacing,
+  shadowClasses,
+  spacing,
+} from "@/styles/tokens";
+
+const baseSkeletonStyle: CSSProperties = {
+  backgroundColor: colors.bg.tertiary,
+  borderRadius: radius.md,
+  width: "100%",
+  opacity: 0.85,
+};
+
+const createLine = (width: string, height: string): CSSProperties => ({
+  ...baseSkeletonStyle,
+  width,
+  height,
+});
+
+const createCircle = (size: string): CSSProperties => ({
+  ...baseSkeletonStyle,
+  width: size,
+  height: size,
+  borderRadius: radius.full,
+});
 
 export function SubscriptionCardSkeleton() {
   return (
-    <Card className="relative overflow-hidden animate-pulse">
-      <CardHeader className="space-y-3 pb-4">
-        {/* Icon Skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-xl" />
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20" />
+    <Card
+      className={cn(shadowClasses.card, animations.presets.pulse)}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        backgroundColor: colors.bg.elevated,
+        borderColor: colors.border.default,
+      }}
+      aria-label="تحميل بطاقة الاشتراك"
+    >
+      <CardHeader
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: spacing[4],
+          paddingBottom: spacing[4],
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              ...createLine("3rem", "3rem"),
+              backgroundImage: `linear-gradient(135deg, ${colors.bg.secondary}, ${colors.bg.tertiary})`,
+              borderRadius: radius.xl,
+            }}
+          />
+          <div style={createLine("5rem", "1.5rem")} />
         </div>
 
-        {/* Title Skeleton */}
-        <div className="space-y-2">
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[3],
+          }}
+        >
+          <div style={createLine("75%", "1.5rem")} />
+          <div style={createLine("100%", "1.125rem")} />
+          <div style={createLine("65%", "1.125rem")} />
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Features Skeleton */}
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
+      <CardContent
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: spacing[4],
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[3],
+          }}
+        >
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={`feature-skeleton-${index}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[3],
+              }}
+            >
+              <div style={createCircle("1rem")} />
+              <div style={{ ...createLine("100%", "1rem"), flex: 1 }} />
             </div>
           ))}
         </div>
 
-        {/* Price Skeleton */}
-        <div className="pt-4 border-t space-y-3">
-          <div className="flex items-baseline gap-2">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+        <div
+          style={{
+            paddingTop: semanticSpacing.component.lg,
+            borderTop: `1px solid ${colors.border.default}`,
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[4],
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: spacing[3],
+            }}
+          >
+            <div style={createLine("6rem", "2rem")} />
+            <div style={createLine("4rem", "1.25rem")} />
           </div>
 
-          {/* Button Skeleton */}
-          <div className="h-11 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-xl w-full" />
+          <div
+            style={{
+              ...createLine("100%", "2.75rem"),
+              backgroundImage: `linear-gradient(90deg, ${colors.bg.secondary}, ${colors.bg.tertiary})`,
+              borderRadius: radius.xl,
+            }}
+          />
         </div>
       </CardContent>
     </Card>
@@ -47,9 +145,16 @@ export function SubscriptionCardSkeleton() {
 
 export function SubscriptionGridSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {Array.from({ length: count }).map((_, i) => (
-        <SubscriptionCardSkeleton key={i} />
+    <div
+      className="grid"
+      style={{
+        gap: spacing[8],
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      }}
+      aria-label="شبكة بطاقات الاشتراك قيد التحميل"
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <SubscriptionCardSkeleton key={index} />
       ))}
     </div>
   );

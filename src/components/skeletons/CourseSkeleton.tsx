@@ -1,36 +1,122 @@
-import React from "react";
+import type { CSSProperties } from "react";
+
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import {
+  animations,
+  colors,
+  radius,
+  semanticSpacing,
+  shadowClasses,
+  spacing,
+} from "@/styles/tokens";
+
+const baseBarStyle: CSSProperties = {
+  backgroundColor: colors.bg.tertiary,
+  borderRadius: radius.md,
+  width: "100%",
+  opacity: 0.85,
+};
+
+const accentBarStyle: CSSProperties = {
+  ...baseBarStyle,
+  backgroundColor: colors.bg.secondary,
+  opacity: 0.95,
+};
+
+const createLineStyle = (width: string, height: string): CSSProperties => ({
+  ...baseBarStyle,
+  width,
+  height,
+});
+
+const createAccentLineStyle = (
+  width: string,
+  height: string,
+): CSSProperties => ({
+  ...accentBarStyle,
+  width,
+  height,
+});
+
+const createCircleStyle = (size: string): CSSProperties => ({
+  ...baseBarStyle,
+  width: size,
+  height: size,
+  borderRadius: radius.full,
+});
 
 export function CourseSkeleton() {
   return (
-    <Card className="overflow-hidden animate-pulse">
-      {/* Image Skeleton */}
-      <div className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800" />
+    <Card
+      className={cn(shadowClasses.card, animations.presets.pulse)}
+      style={{
+        overflow: "hidden",
+        backgroundColor: colors.bg.elevated,
+        borderColor: colors.border.default,
+      }}
+      aria-label="تحميل محتوى الدورة"
+    >
+      <div
+        style={{
+          aspectRatio: "16 / 9",
+          width: "100%",
+          backgroundImage: `linear-gradient(135deg, ${colors.bg.secondary}, ${colors.bg.tertiary})`,
+        }}
+      />
 
-      <CardContent className="p-4 space-y-3">
-        {/* Title Skeleton */}
-        <div className="space-y-2">
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-3/4" />
-          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-1/2" />
+      <CardContent
+        style={{
+          padding: spacing[5],
+          display: "flex",
+          flexDirection: "column",
+          gap: spacing[4],
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[3],
+          }}
+        >
+          <div style={createLineStyle("75%", "1.25rem")} />
+          <div style={createLineStyle("50%", "1.25rem")} />
         </div>
 
-        {/* Instructor Skeleton */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: spacing[3],
+          }}
+        >
+          <div style={createCircleStyle("1.5rem")} />
+          <div style={createLineStyle("6rem", "1rem")} />
         </div>
 
-        {/* Stats Skeleton */}
-        <div className="flex items-center gap-4">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: spacing[4],
+          }}
+        >
+          <div style={createLineStyle("4rem", "1rem")} />
+          <div style={createLineStyle("5rem", "1rem")} />
+          <div style={createLineStyle("4rem", "1rem")} />
         </div>
 
-        {/* Price Skeleton */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20" />
-          <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: semanticSpacing.component.lg,
+          }}
+        >
+          <div style={createAccentLineStyle("5.5rem", "1.5rem")} />
+          <div style={createAccentLineStyle("6.5rem", "2.25rem")} />
         </div>
       </CardContent>
     </Card>
@@ -39,9 +125,16 @@ export function CourseSkeleton() {
 
 export function CourseGridSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: count }).map((_, i) => (
-        <CourseSkeleton key={i} />
+    <div
+      className="grid"
+      style={{
+        gap: spacing[6],
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      }}
+      aria-label="شبكة دورات قيد التحميل"
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <CourseSkeleton key={index} />
       ))}
     </div>
   );

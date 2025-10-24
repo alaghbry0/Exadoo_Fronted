@@ -1,87 +1,203 @@
 // src/components/AcademyHeroCard.tsx
 "use client";
 
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { GraduationCap, ArrowLeft } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  animations,
+  colors,
+  radius,
+  shadowClasses,
+  shadows,
+  spacing,
+} from "@/styles/tokens";
 
 export interface AcademyHeroCardProps {
   className?: string;
 }
 
+const overlayStyle: CSSProperties = {
+  pointerEvents: "none",
+  position: "absolute",
+  inset: 0,
+  borderRadius: radius["3xl"],
+  opacity: 0,
+  transition: `opacity ${animations.duration.normal} ${animations.easing.out}`,
+  backgroundImage: `linear-gradient(135deg, color-mix(in srgb, ${colors.brand.primary} 18%, transparent), transparent)`,
+};
+
+const bubbleStyle = (
+  align: "top-right" | "bottom-left",
+): CSSProperties => ({
+  pointerEvents: "none",
+  position: "absolute",
+  height: "16rem",
+  width: "16rem",
+  borderRadius: radius.full,
+  backgroundColor: colors.brand.primary,
+  opacity: 0.12,
+  filter: "blur(48px)",
+  transition: `transform ${animations.duration.slow} ${animations.easing.out}`,
+  ...(align === "top-right"
+    ? { top: "-4rem", right: "-4rem", transform: "translate(0, 0)" }
+    : { bottom: "-5rem", left: "-5rem", transform: "translate(0, 0)" }),
+});
+
+const cardContentStyle: CSSProperties = {
+  padding: spacing[8],
+  color: colors.text.primary,
+  display: "flex",
+  flexDirection: "column",
+  gap: spacing[6],
+};
+
 function AcademyHeroCard({ className }: AcademyHeroCardProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <Link
       href="/academy"
       prefetch
       aria-label="الدخول إلى أكاديمية إكسادو"
-      // تحسين حالة التركيز (focus) لتكون أوضح
-      className={cn(
-        "group block rounded-3xl outline-none focus-visible:ring-4 focus-visible:ring-primary-400/50",
-        className,
-      )}
+      className={cn("group block", className)}
+      style={{
+        borderRadius: radius["3xl"],
+        outline: "none",
+        boxShadow: isFocused
+          ? `0 0 0 4px color-mix(in srgb, ${colors.brand.primary} 45%, transparent)`
+          : undefined,
+        transition: `box-shadow ${animations.duration.normal} ${animations.easing.out}`,
+      }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
     >
       <Card
         dir="rtl"
         className={cn(
-          "relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm",
-          // تحسين تأثير الحركة عند المرور ليكون أكثر سلاسة
-          "transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-primary-500/10",
-          "dark:border-neutral-800 dark:bg-neutral-900",
+          shadowClasses.card,
+          "relative overflow-hidden transition-transform duration-300 group-hover:-translate-y-1",
         )}
+        style={{
+          borderRadius: radius["3xl"],
+          backgroundColor: colors.bg.elevated,
+          border: `1px solid ${colors.border.default}`,
+          color: colors.text.primary,
+          boxShadow: "none",
+        }}
       >
-        {/* إضافة تأثير توهج عند المرور */}
-        <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-gradient-to-br dark:from-primary-500/10 dark:via-transparent dark:to-secondary-500/10" />
-
-        {/* تحسين ألوان وتأثير حركة الخلفيات الضبابية */}
-        <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-primary-100/80 blur-3xl transition-transform duration-500 group-hover:-translate-x-2 group-hover:-translate-y-2 dark:bg-primary-500/20" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-secondary-500/10 blur-3xl transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2 dark:bg-secondary-600/20" />
+        <div
+          className="transition-opacity duration-300 group-hover:opacity-100"
+          style={overlayStyle}
+        />
+        <div
+          className="transition-transform duration-500 group-hover:-translate-x-2 group-hover:-translate-y-2"
+          style={bubbleStyle("top-right")}
+        />
+        <div
+          className="transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2"
+          style={{
+            ...bubbleStyle("bottom-left"),
+            backgroundColor: colors.brand.secondary,
+            opacity: 0.12,
+          }}
+        />
 
         {/* زيادة المساحة الداخلية للبطاقة */}
-        <CardContent className="p-8 md:p-10 font-arabic text-gray-800 dark:text-neutral-200">
-          <div className="relative flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+        <CardContent className="font-arabic" style={cardContentStyle}>
+          <div
+            className="relative flex flex-col items-start justify-between md:flex-row md:items-center"
+            style={{ gap: spacing[6] }}
+          >
             <div className="flex-1">
-              <div className="flex items-center gap-4">
+              <div
+                className="flex items-center"
+                style={{ gap: spacing[4] }}
+              >
                 {/* تكبير حجم الأيقونة والمربع المحيط بها */}
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary-100 text-primary-600 transition-transform duration-300 group-hover:scale-110 dark:bg-primary-500/10 dark:text-primary-400">
+                <div
+                  className="grid place-items-center transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    height: "3.5rem",
+                    width: "3.5rem",
+                    borderRadius: radius["2xl"],
+                    backgroundColor: colors.brand.primary,
+                    color: colors.text.inverse,
+                    boxShadow: shadows.colored.primary.sm,
+                  }}
+                >
                   <GraduationCap className="h-7 w-7" aria-hidden="true" />
                 </div>
                 {/* تحسين العنوان */}
                 <h2
                   id="academy-title"
-                  className="font-display text-2xl font-bold tracking-tight text-gray-900 dark:text-neutral-100 md:text-3xl"
+                  className="font-display"
+                  style={{
+                    fontSize: "2rem",
+                    fontWeight: 700,
+                    letterSpacing: "-0.02em",
+                    color: colors.text.primary,
+                  }}
                 >
                   أكاديمية إكسادو: انطلق نحو الاحتراف
                 </h2>
               </div>
 
               {/* اقتراح نص وصفي بديل وأكثر جاذبية */}
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-neutral-300 md:text-lg">
+              <p
+                style={{
+                  marginTop: spacing[4],
+                  maxWidth: "42rem",
+                  fontSize: "1rem",
+                  lineHeight: 1.7,
+                  color: colors.text.secondary,
+                }}
+              >
                 حوّل معرفتك إلى مهارات حقيقية. ابدأ رحلتك التعليمية مع مسارات
                 عملية وشهادات معتمدة.
               </p>
 
               {/* زيادة المسافة العلوية للرقائق */}
-              <div className=" flex flex-wrap items-center gap-2 text-sm"></div>
+              <div
+                style={{
+                  marginTop: spacing[4],
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: spacing[3],
+                  fontSize: "0.875rem",
+                  color: colors.text.tertiary,
+                }}
+              ></div>
             </div>
 
             <div className="shrink-0">
               <div
                 className={cn(
-                  "inline-flex h-10 items-center justify-center gap-2 rounded-full px-7 text-sm font-bold text-white",
-                  // اقتراح تدرج لوني أكثر حيوية للزر
-                  "bg-gradient-to-r from-primary-500 to-primary-700 shadow-lg transition-all duration-300",
-                  // تأثير ظل أكثر بروزاً وحركة سهم أكبر عند المرور
-                  "group-hover:shadow-2xl group-hover:shadow-primary-500/30",
+                  "inline-flex items-center justify-center gap-2 transition-transform duration-300 group-hover:-translate-x-1",
                 )}
                 role="button"
                 aria-hidden="true"
+                style={{
+                  height: "2.75rem",
+                  paddingInline: spacing[6],
+                  borderRadius: radius.full,
+                  fontSize: "0.9375rem",
+                  fontWeight: 700,
+                  color: colors.text.inverse,
+                  backgroundImage: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
+                  boxShadow: "0 10px 25px rgba(0, 132, 255, 0.15)",
+                  transition: `box-shadow ${animations.duration.normal} ${animations.easing.out}`,
+                }}
               >
                 {/* اقتراح نص CTA بديل */}
                 <span>ابدأ التعلّم الآن</span>
                 <ArrowLeft
-                  className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1.5"
+                  className="transition-transform duration-300 group-hover:-translate-x-2"
+                  style={{ height: "1.25rem", width: "1.25rem" }}
                   aria-hidden="true"
                 />
               </div>

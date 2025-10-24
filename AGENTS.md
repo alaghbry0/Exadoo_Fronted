@@ -7,8 +7,10 @@ Core principles:
 - Never exceed 300 lines per file
 - Always use Design Tokens
 
+
 ## اهم قاعده
 - npm run migration:scan الى ان تحصل على نجاح, ويخبرك ان كل ملفات المشروع تتبع قواعد نظام التصميم
+- جميع قواعد والتعليمات موجوده في DESIGN_SYSTEM.md
 
 ## ✅ Checklist سريع
 
