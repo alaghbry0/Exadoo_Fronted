@@ -49,3 +49,5 @@ export const BundleHero: React.FC<BundleHeroProps> = ({
     </section>
   );
 };
+
+export default BundleHero;

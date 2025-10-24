@@ -11,7 +11,7 @@ import styles from "./ShopSearchBar.module.css";
 interface ShopSearchBarProps {
   value: string;
   onChange: (value: string) => void;
-  inputRef: RefObject<HTMLInputElement>;
+  inputRef: RefObject<HTMLInputElement | null>;
 }
 
 export function ShopSearchBar({ value, onChange, inputRef }: ShopSearchBarProps) {

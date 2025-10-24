@@ -74,3 +74,5 @@ export const StickyHeader: React.FC<StickyHeaderProps> = ({
     </motion.div>
   );
 };
+
+export default StickyHeader;

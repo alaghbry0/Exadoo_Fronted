@@ -159,3 +159,5 @@ export const TitleMetaBundle: React.FC<TitleMetaBundleProps> = ({
     </motion.section>
   );
 };
+
+export default TitleMetaBundle;

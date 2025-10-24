@@ -37,3 +37,5 @@ export const HScroll: React.FC<HScrollProps> = ({
     </div>
   );
 };
+
+export default HScroll;

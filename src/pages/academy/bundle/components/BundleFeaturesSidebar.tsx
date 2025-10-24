@@ -119,3 +119,5 @@ export const BundleFeaturesSidebar: React.FC<BundleFeaturesSidebarProps> = ({
     </motion.div>
   );
 };
+
+export default BundleFeaturesSidebar;

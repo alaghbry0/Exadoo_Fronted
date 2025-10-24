@@ -160,3 +160,5 @@ export const MiniCourseCard: React.FC<MiniCourseCardProps> = ({
     </Link>
   );
 };
+
+export default MiniCourseCard;
