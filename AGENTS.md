@@ -8,10 +8,6 @@ Core principles:
 - Always use Design Tokens
 
 
-## اهم قاعده
-- npm run migration:scan الى ان تحصل على نجاح, ويخبرك ان كل ملفات المشروع تتبع قواعد نظام التصميم
-- جميع قواعد والتعليمات موجوده في DESIGN_SYSTEM.md
-
 ## ✅ Checklist سريع
 
 ### قبل البدء
@@ -35,3 +31,8 @@ Core principles:
 ### Changelog
 - 2025-02-14: بعد تثبيت الحزم عبر `npm install` يجب تشغيل أوامر الفحص باستخدام `NON_INTERACTIVE=1 ORA_SILENT=1 npm run migration:scan` لتفادي المشاكل التفاعلية مع `ts-node`.
 - 2025-02-16: اذا ظهر خطأ `ts-node: not found` عند تشغيل `migration:scan` قم بتشغيل `npm install` لإعادة تثبيت devDependencies ثم أعد المحاولة.
+
+
+## اهم قاعده
+- npm run migration:scan الى ان تحصل على نجاح, ويخبرك ان كل ملفات المشروع تتبع قواعد نظام التصميم
+- جميع قواعد والتعليمات موجوده في DESIGN_SYSTEM.md
