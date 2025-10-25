@@ -565,7 +565,7 @@ export default function AcademyIndex() {
 
       {/* Bottom Navigation */}
       <div 
-        className="fixed bottom-0 left-0 right-0 px-4 py-3 z-40 backdrop-blur-xl bg-white/95 border-t border-gray-200 shadow-lg"
+        className="fixed bottom-0 left-0 right-0 px-4 py-1 z-40 backdrop-blur-xl bg-white/95 border-t border-gray-200 shadow-lg"
       >
         <div className="flex items-center justify-around max-w-2xl mx-auto">
           <button
@@ -583,7 +583,7 @@ export default function AcademyIndex() {
           </button>
           
           <button
-            className={`flex flex-col items-center gap-1.5 transition-all px-6 py-2 rounded-xl ${
+            className={`flex flex-col items-center gap-1.5 transition-all px-6 py-1 rounded-xl ${
               tab === "mine" 
                 ? "text-blue-600 bg-blue-50" 
                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -598,16 +598,8 @@ export default function AcademyIndex() {
         </div>
       </div>
 
-      {/* Floating Help Button */}
-      <button
-        className="fixed bottom-24 left-4 sm:left-6 w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full shadow-xl shadow-blue-500/40 flex items-center justify-center transition-all z-30 hover:scale-110 hover:shadow-2xl hover:shadow-blue-500/50 focus-visible:ring-4 focus-visible:ring-blue-500/50"
-        aria-label="المساعدة"
-        onClick={() => {
-          console.log('Help button clicked');
-        }}
-      >
-        <MessageCircle size={24} aria-hidden="true" />
-      </button>
+  
+      
     </div>
   );
 }

@@ -92,7 +92,6 @@ function CourseHeader({ title, subtitle, imageUrl, onBack }: CourseHeaderProps) 
       </div>
 
       <div className="absolute bottom-8 left-0 right-0 text-center text-white z-10">
-        <h2 className="text-2xl mb-2 drop-shadow-lg font-bold">{subtitle}</h2>
         <p className="text-sm opacity-90 drop-shadow-lg">(COURSE)</p>
       </div>
 
@@ -582,22 +581,6 @@ export default function CourseDetail() {
           </Button>
         </div>
       </div>
-
-      {/* Floating Help Button */}
-      <button 
-        className="fixed bottom-24 left-6 w-14 h-14 rounded-full shadow-lg flex flex-col items-center justify-center transition-all z-30"
-        style={{
-          backgroundColor: colors.brand.primary,
-          color: colors.text.inverse
-        }}
-        onClick={() => {
-          // Open help or contact
-          window.open("https://t.me/exadoo", "_blank");
-        }}
-      >
-        <MessageCircle size={24} />
-        <span className="text-xs mt-0.5">مساعدة</span>
-      </button>
 
       <AcademyPurchaseModal />
       <AuthPrompt />

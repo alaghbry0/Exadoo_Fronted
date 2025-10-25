@@ -16,9 +16,11 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 30,
+    minimumCacheTTL: 60 * 60 * 24 * 365, // سنة كاملة للصور
     remotePatterns: [
       { protocol: "https", hostname: "exaado.plebits.com", pathname: "/uploads/**" },
+      // Allow test images from picsum.photos used in /test-images
+      { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
     ],
     unoptimized: false,
     dangerouslyAllowSVG: true,
@@ -78,7 +80,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/_next/image",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, stale-while-revalidate=86400" }],
+        headers: [
+          { 
+            key: "Cache-Control", 
+            value: "public, max-age=31536000, stale-while-revalidate=31536000, immutable" 
+          }
+        ],
       },
       {
         // 👍 كاش ثابت لملفات المشغّل
@@ -87,7 +94,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/api/image-proxy",
-        headers: [{ key: "Cache-Control", value: "public, max-age=2592000, stale-while-revalidate=604800" }],
+        headers: [
+          { 
+            key: "Cache-Control", 
+            value: "public, max-age=31536000, stale-while-revalidate=31536000, immutable" 
+          }
+        ],
       },
       {
         source: "/:path*",

@@ -1,17 +1,20 @@
 /**
  * PricingView Component
- * واجهة عرض الأسعار والخطط
+ * واجهة عرض الأسعار والخطط - مبسطة
  */
 
+import { motion } from "framer-motion";
 import { Zap, ShieldCheck, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import AuthPrompt from "@/features/auth/components/AuthFab";
 import TradingPanelPurchaseModal from "@/components/TradingPanelPurchaseModal";
-import { HeroSection } from "./HeroSection";
+import { LottieAnimation } from "./LottieAnimation";
 import { FeatureCard } from "./FeatureCard";
 import { PlanCard } from "./PlanCard";
 import { FAQSection } from "./FAQSection";
+import { forexAnimations } from "../animations";
 import type { ForexData } from "@/pages/api/forex";
+import forexAnimation from "@/animations/forex_1.json";
 
 interface PricingViewProps {
   data: ForexData;
@@ -45,9 +48,49 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
   ];
 
   return (
-    <main className="pb-12">
-      {/* Hero Section */}
-      <HeroSection />
+    <main
+      className="pb-12"
+      style={{ backgroundColor: "var(--color-bg-primary)" }}
+    >
+      <div className="max-w-4xl mx-auto px-4 pt-8">
+        {/* Lottie Animation */}
+        <motion.div
+          {...forexAnimations.fadeInUp}
+          className="flex justify-center mb-8"
+        >
+          <LottieAnimation
+            animationData={forexAnimation}
+            width="100%"
+            height={350}
+            className="max-w-md"
+          />
+        </motion.div>
+
+        {/* Header */}
+        <motion.div
+          {...forexAnimations.fadeInUp}
+          className="text-center mb-12"
+        >
+          <h1
+            className="text-3xl md:text-4xl font-extrabold mb-3"
+            style={{
+              color: "var(--color-text-primary)",
+              fontFamily: "var(--font-arabic)",
+            }}
+          >
+            Our Forex Utility Projects !
+          </h1>
+          <p
+            className="text-base md:text-lg max-w-2xl mx-auto"
+            style={{
+              color: "var(--color-text-secondary)",
+              fontFamily: "var(--font-arabic)",
+            }}
+          >
+            Choose between a variety of projects provided by Exaado!
+          </p>
+        </motion.div>
+      </div>
 
       {/* Features Section */}
       <section className="py-16 max-w-6xl mx-auto px-4">
@@ -69,20 +112,26 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
       >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 
-              className="text-3xl font-extrabold font-display"
-              style={{ color: "var(--color-text-primary)" }}
+            <h2
+              className="text-3xl font-extrabold"
+              style={{
+                color: "var(--color-text-primary)",
+                fontFamily: "var(--font-arabic)",
+              }}
             >
               اختر الخطة التي تناسبك
             </h2>
-            <p 
+            <p
               className="mt-2"
-              style={{ color: "var(--color-text-secondary)" }}
+              style={{
+                color: "var(--color-text-secondary)",
+                fontFamily: "var(--font-arabic)",
+              }}
             >
               ابدأ تجربتك المجانية أو احصل على وصول كامل اليوم.
             </p>
           </div>
-          
+
           {allPlans.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
               {allPlans.map((p) => (
@@ -91,7 +140,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
             </div>
           ) : (
             <Card className="rounded-3xl border-dashed sm:col-span-3">
-              <CardContent 
+              <CardContent
                 className="p-8 text-center"
                 style={{ color: "var(--color-text-disabled)" }}
               >

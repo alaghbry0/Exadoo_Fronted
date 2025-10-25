@@ -55,11 +55,10 @@ export const OngoingCourseCard = memo(function OngoingCourseCard({
               blurType="secondary"
               sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 80vw"
               priority={!!priority}
+              lazy={!priority}
+              loaderType="skeleton"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               style={{ borderRadius: "0 0 0rem 0rem" }}
-              noFade
-              disableSkeleton
-              eager
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 

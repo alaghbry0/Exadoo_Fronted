@@ -1,7 +1,7 @@
 // src/components/academy/CategoryCard.tsx
 import { memo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import SmartImage from "@/shared/components/common/SmartImage";
 import { motion } from "framer-motion";
 
 interface CategoryCardProps {
@@ -28,12 +28,15 @@ export const CategoryCard = memo(function CategoryCard({
         <div className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
           {/* Background Image */}
           <div className="relative h-32 sm:h-36 overflow-hidden">
-            <Image
+            <SmartImage
               src={thumbnail || "/image.jpg"}
               alt={name}
               fill
+              blurType="secondary"
               className="object-cover"
               sizes="(max-width: 640px) 160px, 180px"
+              priority={!!priority}
+              lazy={!priority}
             />
             {/* Subtle overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />

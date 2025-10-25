@@ -69,6 +69,8 @@ export const MiniCourseCard: React.FC<MiniCourseCardProps> = ({
             sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             priority={!!priority}
+            lazy={!priority}
+            loaderType="skeleton"
           />
           <div
             className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"

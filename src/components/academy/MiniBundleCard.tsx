@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Check, X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { componentVariants } from "@/components/ui/variants";
-import Image from "next/image";
+import SmartImage from "@/shared/components/common/SmartImage";
 import { cardHoverVariant } from "./animation-variants";
 import { colors } from "@/styles/tokens";
 
@@ -82,12 +82,15 @@ export const MiniBundleCard = memo(function MiniBundleCard({
           <div className="flex items-start gap-3 mb-4" dir="rtl">
             {/* Circular Image */}
             <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-purple-200">
-              <Image
+              <SmartImage
                 src={img || "/11.png"}
                 alt={title}
                 fill
+                blurType="secondary"
                 className="object-cover"
                 sizes="56px"
+                priority={!!priority}
+                lazy={!priority}
               />
             </div>
             

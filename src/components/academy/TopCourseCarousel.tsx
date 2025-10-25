@@ -1,7 +1,7 @@
 // src/components/academy/TopCourseCarousel.tsx
 import { useState, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import SmartImage from "@/shared/components/common/SmartImage";
 import Link from "next/link";
 
 interface TopCourse {
@@ -87,12 +87,14 @@ export const TopCourseCarousel = memo(function TopCourseCarousel({
         >
         {/* SVG Background */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden">
-          <Image
+          <SmartImage
             src="/background_banner.svg"
             alt="Banner Background"
             fill
+            blurType="primary"
             className="object-cover"
             priority
+            noFade
           />
         </div>
         
@@ -109,12 +111,14 @@ export const TopCourseCarousel = memo(function TopCourseCarousel({
             {/* Course Image - Right Side */}
             <div className="flex-shrink-0 order-2">
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-4 ring-white/30 shadow-2xl">
-                <Image
+                <SmartImage
                   src={currentCourse.thumbnail || '/11.png'}
                   alt={currentCourse.title}
                   fill
+                  blurType="secondary"
                   className="object-cover"
                   sizes="(max-width: 640px) 80px, 96px"
+                  priority
                 />
               </div>
             </div>

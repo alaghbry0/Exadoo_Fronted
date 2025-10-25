@@ -24,6 +24,7 @@ import GlobalAuthSheet from "@/features/auth/components/GlobalAuthSheet";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import logger from "@/core/utils/logger";
+import { registerServiceWorker } from "@/utils/registerServiceWorker";
 
 // ===================== startapp helpers =====================
 type StartAppParam = string | null;
@@ -146,6 +147,15 @@ function AppContent({
       }
     } catch {
       /* no-op */
+    }
+  }, []);
+
+  // ===== 2) تسجيل Service Worker للتحكم في الصور =====
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      registerServiceWorker().catch((err) => {
+        logger.error("Service Worker registration failed", err);
+      });
     }
   }, []);
 

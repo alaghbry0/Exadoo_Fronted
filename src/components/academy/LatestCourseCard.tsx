@@ -1,7 +1,7 @@
 // src/components/academy/LatestCourseCard.tsx
 import { memo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import SmartImage from "@/shared/components/common/SmartImage";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart } from "lucide-react";
 import { colors } from "@/styles/tokens";
@@ -57,12 +57,15 @@ export const LatestCourseCard = memo(function LatestCourseCard({
         <div className="overflow-hidden bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col" style={{ minHeight: '320px', maxHeight: '320px' }}>
           {/* Banner Image */}
           <div className="relative h-40">
-            <Image
+            <SmartImage
               src={imageUrl || "/image.jpg"}
               alt={title}
               fill
+              blurType="secondary"
               className="object-cover"
               sizes="(max-width: 640px) 240px, 260px"
+              priority={!!priority}
+              lazy={!priority}
             />
             {/* Subtle Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
