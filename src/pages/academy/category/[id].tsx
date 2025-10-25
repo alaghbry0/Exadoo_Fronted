@@ -150,6 +150,7 @@ export default function CategoryDetail() {
                       desc={b.description || ""}
                       price={b.price}
                       img={b.image || b.cover_image}
+                      subCategoryId={b.sub_category_id}
                       priority={i === 0}
                     />
                   ))}

@@ -1,7 +1,7 @@
 // src/pages/academy/bundle/[id].tsx
 "use client";
 
-import React, { useMemo, useEffect, useRef, useState } from "react";
+import React, { useMemo, useEffect, useRef, useState, ReactNode } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -11,22 +11,28 @@ import { useTelegram } from "@/context/TelegramContext";
 import AuthPrompt from "@/features/auth/components/AuthFab";
 import SmartImage from "@/shared/components/common/SmartImage";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const AcademyPurchaseModal = dynamic(
   () => import("@/features/academy/components/AcademyPurchaseModal"),
   { ssr: false },
 );
 import PageLayout from "@/shared/components/layout/PageLayout";
-import { Breadcrumbs } from "@/shared/components/common/Breadcrumbs";
 import { PageLoader } from "@/shared/components/common/LoadingStates";
 import { EmptyState } from "@/shared/components/common/EmptyState";
-import { ArrowLeft, Layers, Sparkles, Package, BookOpen } from "lucide-react";
-import SubscribeFab from "@/components/SubscribeFab";
+import { 
+  ArrowLeft, 
+  Package, 
+  BookOpen, 
+  MessageCircle, 
+  Users, 
+  Headphones, 
+  Tag, 
+  Crown,
+  ChevronRight
+} from "lucide-react";
 import { colors, spacing } from "@/styles/tokens";
-import { MiniCourseCard } from "./components/MiniCourseCard";
-import { TitleMetaBundle } from "./components/TitleMetaBundle";
-import { StickyHeader } from "./components/StickyHeader";
-import { BundleFeaturesSidebar } from "./components/BundleFeaturesSidebar";
-import { HScroll } from "./components/HScroll";
+
 
 /* ==============================
    Types
@@ -52,6 +58,138 @@ interface Bundle {
   course_ids: string;
   free_sessions_count?: string;
   telegram_url?: string;
+}
+
+/* ==============================
+   Sub-Components
+============================== */
+
+// CourseHeader Component
+interface CourseHeaderProps {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  onBack?: () => void;
+}
+
+function CourseHeader({ title, subtitle, imageUrl, onBack }: CourseHeaderProps) {
+  return (
+    <div className="relative h-[400px] rounded-b-3xl overflow-hidden">
+      <div className="absolute inset-0">
+        <SmartImage
+          src={imageUrl}
+          alt={subtitle}
+          fill
+          blurType="secondary"
+          className="object-cover"
+          sizes="100vw"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
+      </div>
+
+      <button
+        onClick={onBack}
+        className="absolute top-4 left-4 z-10 w-10 h-10 bg-black/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-white transition-all hover:bg-black/30"
+        aria-label="رجوع"
+      >
+        <ArrowLeft size={24} />
+      </button>
+
+      <div className="absolute top-4 right-4 left-16 z-10 text-white text-center">
+        <h1 className="text-xl drop-shadow-lg">{title}</h1>
+      </div>
+
+      <div className="absolute bottom-8 left-0 right-0 text-center text-white z-10">
+        <h2 className="text-2xl mb-2 drop-shadow-lg font-bold">{subtitle}</h2>
+        <p className="text-sm opacity-90 drop-shadow-lg">(PLUS)</p>
+      </div>
+
+      <div 
+        className="absolute bottom-6 right-6 rounded-full px-4 py-2 flex items-center shadow-lg z-10"
+        style={{
+          backgroundColor: colors.bg.primary,
+          gap: spacing[2]
+        }}
+      >
+        <span style={{ color: colors.status.error, fontWeight: 600 }}>NEW</span>
+        <span>👨‍🎓</span>
+      </div>
+    </div>
+  );
+}
+
+// CourseFeature Component
+interface CourseFeatureProps {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}
+
+function CourseFeature({ icon, title, description }: CourseFeatureProps) {
+  return (
+    <div 
+      className="rounded-2xl p-4 flex"
+      style={{ 
+        backgroundColor: colors.bg.secondary,
+        gap: spacing[4]
+      }}
+    >
+      <div 
+        className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
+        style={{ backgroundColor: colors.bg.primary }}
+      >
+        {icon}
+      </div>
+      <div className="flex-1">
+        <h3 className="mb-1 font-semibold" style={{ color: colors.text.primary }}>
+          {title}
+        </h3>
+        <p className="text-sm" style={{ color: colors.text.secondary }}>
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// CourseListItem Component
+interface CourseListItemProps {
+  title: string;
+  icon: string;
+  onClick?: () => void;
+}
+
+function CourseListItem({ title, icon, onClick }: CourseListItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center py-4 border-b transition-colors"
+      style={{
+        gap: spacing[3],
+        borderColor: colors.border.default
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = colors.bg.secondary;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'transparent';
+      }}
+    >
+      <div 
+        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white"
+        style={{
+          background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${colors.brand.primaryHover} 100%)`
+        }}
+      >
+        {icon}
+      </div>
+      <span className="flex-1 text-right" style={{ color: colors.text.primary }}>
+        {title}
+      </span>
+      <ChevronRight size={20} style={{ color: colors.text.tertiary }} />
+    </button>
+  );
 }
 
 /* ==============================
@@ -153,202 +291,340 @@ export default function BundleDetail() {
   if (!bundle) return null;
 
   return (
-    <div
-      dir="rtl"
-      className="font-arabic min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-200"
-    >
-      <PageLayout maxWidth="full">
-        {/* Sticky header */}
-        <StickyHeader
-          title={bundle.title}
-          price={bundle.price}
-          visible={showSticky}
-          onCTA={onCTA}
-        />
+    <div dir="rtl" className="min-h-screen" style={{ backgroundColor: colors.bg.primary }}>
+      {/* Course Header with Image */}
+      <CourseHeader
+        title={bundle.title}
+        subtitle={bundle.title}
+        imageUrl={bundle.cover_image || bundle.image || "/image.jpg"}
+        onBack={() => router.push("/academy")}
+      />
 
-        <main className="pb-28">
-          {/* ===== HERO (صورة فقط + بارالاكس خفيف) ===== */}
-          <header
-            ref={heroRef}
-            className="relative w-full overflow-hidden text-white pt-20 md:pt-24 pb-16"
-          >
-            <motion.div
-              style={{ y, scale }}
-              className="absolute inset-0 will-change-transform"
-            >
-              <SmartImage
-                src={bundle.cover_image || bundle.image || "/image.jpg"}
-                alt={bundle.title}
-                fill
-                blurType="secondary"
-                className="object-cover"
-                sizes="100vw"
-                priority
-              />
-            </motion.div>
+      {/* Content */}
+      <div className="px-4 py-6 max-w-2xl mx-auto">
+        {/* Premium Badge */}
+        <div className="flex items-center justify-center mb-6" style={{ gap: spacing[2] }}>
+          <Crown size={24} style={{ color: colors.text.secondary }} />
+          <h2 style={{ color: colors.text.primary }}>{bundle.title}</h2>
+        </div>
 
-            <div className="absolute top-6 left-6 z-10">
-              <Link
-                href="/academy"
-                prefetch={false}
-                className="inline-flex items-center gap-2 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/50"
-                aria-label="العودة إلى الأكاديمية"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>العودة</span>
-              </Link>
-            </div>
+        {/* Description */}
+        <div className="mb-6 text-center space-y-1" style={{ color: colors.text.secondary }}>
+          {(bundle.description || "").split("\n").map((line, index) => (
+            <p key={index}>{line}</p>
+          ))}
+        </div>
 
-            {/* تدرجات خفيفة لتحسين القراءة */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/35 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/25 to-transparent" />
-
-            {/* Floaty stat chip */}
-            <div className="relative z-10 mx-auto mt-24 sm:mt-32 max-w-6xl px-4">
-              <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
-                  <Layers className="h-4 w-4 opacity-90" />
-                  {coursesInBundle.length} دورات تدريبية
-                </span>
-              </div>
-            </div>
-          </header>
-
-          {/* Breadcrumbs */}
-          <div className="max-w-6xl mx-auto px-4 py-4">
-            <Breadcrumbs
-              items={[
-                { label: "الرئيسية", href: "/" },
-                { label: "الأكاديمية", href: "/academy" },
-                { label: bundle.title },
-              ]}
-            />
-          </div>
-
-          {/* ===== Title & CTA (زجاجية) ===== */}
-          <TitleMetaBundle
-            bundle={bundle}
-            coursesCount={coursesInBundle.length}
-            onCTA={onCTA}
+        {/* Features */}
+        <div className="space-y-3 mb-6">
+          <CourseFeature
+            icon={<BookOpen size={24} style={{ color: colors.brand.primary }} />}
+            title="محتوى تعليمي غني"
+            description={`ستحصل على ${coursesInBundle.length} دورات تدريبية مع ${coursesInBundle.reduce((acc, c) => acc + c.total_number_of_lessons, 0)} درس`}
           />
-
-          {/* ===== المحتوى ===== */}
-          <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-            <div className="grid gap-8 lg:grid-cols-3">
-              {/* الوصف */}
-              <div className="lg:col-span-2">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="rounded-3xl backdrop-blur-xl shadow-lg"
-                  style={{
-                    backgroundColor: `${colors.bg.elevated}B3`,
-                    border: `1px solid ${colors.border.default}CC`,
-                    padding: `${spacing[6]} ${spacing[8]}`,
-                  }}
+          
+          {parseInt(bundle.free_sessions_count || "0") > 0 && (
+            <CourseFeature
+              icon={
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: colors.brand.primary }}
                 >
-                  <div
-                    className="mb-4 flex items-center"
-                    style={{ gap: spacing[4] }}
-                  >
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: colors.brand.primary }}
-                    >
-                      <Sparkles className="h-5 w-5 text-white" />
-                    </div>
-                    <h2 className="text-xl font-bold" style={{ color: colors.text.primary }}>
-                      عن الحزمة
-                    </h2>
-                  </div>
-                  <p
-                    className="whitespace-pre-line text-base leading-relaxed"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    {(bundle.description || "").replace(/\\r\\n/g, "\n")}
-                  </p>
-                </motion.div>
-              </div>
-
-              {/* مميزات الحزمة (Sidebar) */}
-              <aside className="lg:col-span-1">
-                <BundleFeaturesSidebar
-                  bundle={bundle}
-                  coursesCount={coursesInBundle.length}
-                />
-              </aside>
-            </div>
-
-            {/* الدورات المتضمنة */}
-            {coursesInBundle.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="mt-12"
-              >
-                <div
-                  className="mb-6 flex items-center"
-                  style={{ gap: spacing[4] }}
-                >
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-xl shadow-sm"
-                    style={{
-                      background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${colors.brand.primaryHover} 100%)`,
-                    }}
-                  >
-                    <BookOpen className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h2
-                      className="text-2xl font-bold md:text-3xl"
-                      style={{ color: colors.text.primary }}
-                    >
-                      الدورات المتضمنة
-                    </h2>
-                    <p className="text-sm" style={{ color: colors.text.secondary }}>
-                      {coursesInBundle.length} دورات تدريبية متكاملة
-                    </p>
-                  </div>
+                  zoom
                 </div>
-
-                <HScroll>
-                  {coursesInBundle.map((course, i) => (
-                    <MiniCourseCard
-                      key={course.id}
-                      id={course.id}
-                      title={course.title}
-                      desc={course.short_description}
-                      lessons={course.total_number_of_lessons}
-                      level={course.level}
-                      img={course.thumbnail}
-                      free={isFreeCourse(course)}
-                      price={course.price}
-                      priority={i === 0}
-                    />
-                  ))}
-                </HScroll>
-              </motion.div>
-            )}
-          </div>
-        </main>
-
-        {/* FAB للموبايل */}
-        <div className="lg:hidden">
-          <SubscribeFab
-            isEnrolled={isEnrolled}
-            isFree={isFree}
-            price={bundle.price}
-            formatPrice={formatPrice}
-            onClick={onCTA}
+              }
+              title="استشارات مجانية"
+              description={`ستحصل على ${bundle.free_sessions_count} جلسات مباشرة مع خبير أكسادو 💙`}
+            />
+          )}
+          
+          {bundle.telegram_url?.trim() && (
+            <CourseFeature
+              icon={<Users size={24} style={{ color: colors.brand.primary }} />}
+              title="مجموعة نقاش"
+              description="احصل على دخول لمجموعة النقاش الخاصة وندوات أسبوعية"
+            />
+          )}
+          
+          <CourseFeature
+            icon={<Headphones size={24} style={{ color: colors.brand.primary }} />}
+            title="دعم فني 24/7"
+            description="احصل على دعم من خبراء أكسادو في أي وقت"
+          />
+          
+          <CourseFeature
+            icon={<Tag size={24} style={{ color: colors.brand.primary }} />}
+            title="السعر الإجمالي"
+            description={formatPrice(bundle.price)}
           />
         </div>
 
-        <AcademyPurchaseModal />
-        <AuthPrompt />
-      </PageLayout>
+        {/* Tabs */}
+        <Tabs defaultValue="courses" className="mb-6">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="courses">الدورات</TabsTrigger>
+            <TabsTrigger value="output">المخرجات</TabsTrigger>
+            <TabsTrigger value="requirements">المتطلبات</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="courses" className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <BookOpen size={24} style={{ color: colors.brand.primary }} />
+              <h3 style={{ color: colors.text.primary }}>الدورات المتضمنة</h3>
+            </div>
+            
+            <div className="space-y-0">
+              {coursesInBundle.map((course) => (
+                <CourseListItem
+                  key={course.id}
+                  title={course.title}
+                  icon="📚"
+                  onClick={() => router.push(`/academy/course/${course.id}`)}
+                />
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="output" className="mt-6">
+            <div 
+              className="p-6 rounded-xl"
+              style={{ backgroundColor: colors.bg.elevated }}
+            >
+              <div className="flex items-center mb-4" style={{ gap: spacing[3] }}>
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: colors.status.warning }}
+                >
+                  <span className="text-white text-xl">🎯</span>
+                </div>
+                <h3 style={{ color: colors.text.primary }}>ماذا ستتعلم في هذه الحزمة</h3>
+              </div>
+              
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.status.success}25`,
+                      color: colors.status.success
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    إتقان {coursesInBundle.length} دورات تدريبية شاملة في مجال واحد
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.status.success}25`,
+                      color: colors.status.success
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    تطبيق عملي على {coursesInBundle.reduce((acc, c) => acc + c.total_number_of_lessons, 0)} درس تفاعلي
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.status.success}25`,
+                      color: colors.status.success
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    الحصول على شهادات معتمدة لكل دورة في الحزمة
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.status.success}25`,
+                      color: colors.status.success
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    بناء portfolio عملي ومشاريع حقيقية
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.status.success}25`,
+                      color: colors.status.success
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    التفاعل المباشر مع المدربين والمجتمع
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.status.success}25`,
+                      color: colors.status.success
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    وصول مدى الحياة لجميع المحتويات والتحديثات
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="requirements" className="mt-6">
+            <div 
+              className="p-6 rounded-xl"
+              style={{ backgroundColor: colors.bg.elevated }}
+            >
+              <div className="flex items-center mb-4" style={{ gap: spacing[3] }}>
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: colors.brand.primary }}
+                >
+                  <span className="text-white text-xl">📋</span>
+                </div>
+                <h3 style={{ color: colors.text.primary }}>المتطلبات</h3>
+              </div>
+              
+              <ul className="space-y-3">
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.brand.primary}25`,
+                      color: colors.brand.primary
+                    }}
+                  >
+                    •
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    جهاز كمبيوتر أو هاتف ذكي متصل بالإنترنت
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.brand.primary}25`,
+                      color: colors.brand.primary
+                    }}
+                  >
+                    •
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    الرغبة في التعلم والالتزام بإكمال الدورات
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.brand.primary}25`,
+                      color: colors.brand.primary
+                    }}
+                  >
+                    •
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    لا توجد متطلبات مسبقة - مناسب لجميع المستويات
+                  </span>
+                </li>
+                <li className="flex items-start" style={{ gap: spacing[2] }}>
+                  <span 
+                    className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.brand.primary}25`,
+                      color: colors.brand.primary
+                    }}
+                  >
+                    •
+                  </span>
+                  <span style={{ color: colors.text.secondary }}>
+                    ساعات كافية للتطبيق العملي على المشاريع
+                  </span>
+                </li>
+              </ul>
+              
+              <div 
+                className="mt-6 p-4 rounded-lg"
+                style={{
+                  backgroundColor: `${colors.brand.primary}10`,
+                  borderRight: `4px solid ${colors.brand.primary}`
+                }}
+              >
+                <p style={{ color: colors.text.secondary }}>
+                  💡 <strong>نصيحة:</strong> هذه الحزمة مصممة لتأخذك من المبتدئ إلى المحترف خطوة بخطوة. 
+                  كل ما تحتاجه هو الالتزام والرغبة في التعلم!
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Spacer for fixed button */}
+        <div className="h-24"></div>
+      </div>
+
+      {/* Fixed Enroll Button */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 p-4 shadow-lg z-20"
+        style={{ 
+          backgroundColor: colors.bg.primary,
+          borderTop: `1px solid ${colors.border.default}`
+        }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <Button 
+            onClick={onCTA}
+            className="w-full rounded-xl py-6"
+            style={{
+              backgroundColor: colors.brand.primary,
+              color: colors.text.inverse
+            }}
+          >
+            {isEnrolled ? "الانتقال للدورة" : `اشترك الآن 🔥 - ${formatPrice(bundle.price)}`}
+          </Button>
+        </div>
+      </div>
+
+      {/* Floating Help Button */}
+      <button 
+        className="fixed bottom-24 left-6 w-14 h-14 rounded-full shadow-lg flex flex-col items-center justify-center transition-all z-30"
+        style={{
+          backgroundColor: colors.brand.primary,
+          color: colors.text.inverse
+        }}
+        onClick={() => {
+          // Open help or contact
+          if (bundle.telegram_url?.trim()) {
+            window.open(bundle.telegram_url, "_blank");
+          }
+        }}
+      >
+        <MessageCircle size={24} />
+        <span className="text-xs mt-0.5">مساعدة</span>
+      </button>
+
+      <AcademyPurchaseModal />
+      <AuthPrompt />
     </div>
   );
 }

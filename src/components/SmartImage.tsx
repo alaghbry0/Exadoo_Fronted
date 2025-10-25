@@ -3,8 +3,10 @@
 import Image, { type ImageProps, type StaticImageData } from "next/image";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { Loader2 } from "lucide-react";
 
-// Blur placeholder خفيف جدًا (يُستخدم فقط إن لم نطفئه)
+// Blur placeholder محسّن
 const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4=";
 
@@ -42,6 +44,12 @@ type SmartImageProps = Omit<
   disableSkeleton?: boolean;
   /** تحميل مُبكّر فعليًا: priority + loading="eager" */
   eager?: boolean;
+  /** تفعيل Lazy Loading باستخدام IntersectionObserver */
+  lazy?: boolean;
+  /** عرض Spinner أثناء التحميل */
+  showSpinner?: boolean;
+  /** نوع Loader (spinner, skeleton, pulse) */
+  loaderType?: "spinner" | "skeleton" | "pulse";
 };
 
 export default function SmartImage({
@@ -54,6 +62,9 @@ export default function SmartImage({
   noFade = false,
   disableSkeleton = false,
   eager = false,
+  lazy = false,
+  showSpinner = true,
+  loaderType = "skeleton",
   priority, // سيُتجاهل إن لم يكن eager
   ...props
 }: SmartImageProps) {
@@ -77,6 +88,14 @@ export default function SmartImage({
   const [imageSrc, setImageSrc] = useState<string>(normalizedSrc);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(!lazy);
+
+  // Lazy loading باستخدام IntersectionObserver
+  const { ref: lazyRef, isVisible } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: "100px",
+    freezeOnceVisible: true,
+  });
 
   useEffect(() => {
     if (prevSrcRef.current !== normalizedSrc) {
@@ -86,6 +105,13 @@ export default function SmartImage({
       setHasError(false);
     }
   }, [normalizedSrc]);
+
+  // بدء التحميل عند ظهور الصورة في viewport
+  useEffect(() => {
+    if (lazy && isVisible && !shouldLoad) {
+      setShouldLoad(true);
+    }
+  }, [lazy, isVisible, shouldLoad]);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError && normalizedFallback && imageSrc !== normalizedFallback) {
@@ -106,41 +132,75 @@ export default function SmartImage({
   const placeholder = noFade ? "empty" : "blur";
   const wrapperClasses = cn("relative h-full w-full overflow-hidden");
 
+  // حالة التحميل
+  const isLoading = !isLoaded && shouldLoad;
+
   return (
-    <div className={wrapperClasses}>
-      {/* Skeleton loader */}
-      {!disableSkeleton && !noFade && !isLoaded && (
-        <div
-          className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 via-gray-200/80 to-gray-100 dark:from-neutral-900 dark:via-neutral-800/80 dark:to-neutral-900"
-          aria-hidden="true"
-        />
+    <div ref={lazy ? lazyRef : undefined} className={wrapperClasses}>
+      {/* Loading States */}
+      {!disableSkeleton && !noFade && isLoading && (
+        <>
+          {/* Skeleton Loader */}
+          {loaderType === "skeleton" && (
+            <div
+              className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 via-gray-200/80 to-gray-100 dark:from-neutral-900 dark:via-neutral-800/80 dark:to-neutral-900"
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Pulse Loader */}
+          {loaderType === "pulse" && (
+            <div
+              className="absolute inset-0 bg-gray-200 dark:bg-neutral-800"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent animate-shimmer" />
+            </div>
+          )}
+
+          {/* Spinner Loader */}
+          {loaderType === "spinner" && showSpinner && (
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-gray-100/50 dark:bg-neutral-900/50 backdrop-blur-sm"
+              aria-hidden="true"
+            >
+              <Loader2
+                className="h-8 w-8 animate-spin text-blue-500"
+                aria-label="جاري تحميل الصورة"
+              />
+            </div>
+          )}
+        </>
       )}
 
-      <Image
-        {...props}
-        src={imageSrc}
-        alt={alt}
-        className={cn(
-          // منع وميض GPU أثناء التحريك/التمرير:
-          "[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform",
-          noFade
-            ? "opacity-100"
-            : "transition-opacity duration-300 " +
-                (isLoaded ? "opacity-100" : "opacity-0"),
-          "object-cover",
-          className,
-        )}
-        placeholder={placeholder}
-        blurDataURL={noFade ? undefined : BLUR_DATA_URL}
-        onLoad={handleLoad}
-        onError={handleError}
-        quality={85}
-        unoptimized={false}
-        priority={!!finalPriority}
-        loading={loading}
-        draggable={false}
-        decoding={eager ? "sync" : "async"}
-      />
+      {/* الصورة - تحميل فقط إذا shouldLoad = true */}
+      {shouldLoad && (
+        <Image
+          {...props}
+          src={imageSrc}
+          alt={alt}
+          className={cn(
+            // منع وميض GPU أثناء التحريك/التمرير:
+            "[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform",
+            noFade
+              ? "opacity-100"
+              : "transition-opacity duration-500 ease-in-out " +
+                  (isLoaded ? "opacity-100" : "opacity-0"),
+            "object-cover",
+            className,
+          )}
+          placeholder={placeholder}
+          blurDataURL={noFade ? undefined : BLUR_DATA_URL}
+          onLoad={handleLoad}
+          onError={handleError}
+          quality={85}
+          unoptimized={false}
+          priority={!!finalPriority}
+          loading={loading}
+          draggable={false}
+          decoding={eager ? "sync" : "async"}
+        />
+      )}
     </div>
   );
 }

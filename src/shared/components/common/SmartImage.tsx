@@ -3,11 +3,13 @@
 import Image, { type ImageProps, type StaticImageData } from "next/image";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import {
   blurPlaceholders,
   getOptimalQuality,
   generateSizesAttribute,
 } from "@/utils/imageUtils";
+import { Loader2 } from "lucide-react";
 
 // استخدام blur placeholders المحسّنة
 const BLUR_DATA_URL = blurPlaceholders.light;
@@ -50,6 +52,12 @@ type SmartImageProps = Omit<
   blurType?: "light" | "dark" | "primary" | "secondary" | "neutral";
   /** تحسين تلقائي للجودة بناءً على العرض */
   autoQuality?: boolean;
+  /** تفعيل Lazy Loading باستخدام IntersectionObserver */
+  lazy?: boolean;
+  /** عرض Spinner أثناء التحميل */
+  showSpinner?: boolean;
+  /** نوع Loader (spinner, skeleton, pulse) */
+  loaderType?: "spinner" | "skeleton" | "pulse";
 };
 
 export default function SmartImage({
@@ -65,6 +73,9 @@ export default function SmartImage({
   priority, // سيُتجاهل إن لم يكن eager
   blurType = "light",
   autoQuality = true,
+  lazy = false,
+  showSpinner = true,
+  loaderType = "skeleton",
   width,
   ...props
 }: SmartImageProps) {
@@ -88,6 +99,14 @@ export default function SmartImage({
   const [imageSrc, setImageSrc] = useState<string>(normalizedSrc);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(!lazy);
+
+  // Lazy loading باستخدام IntersectionObserver
+  const { ref: lazyRef, isVisible } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: "100px",
+    freezeOnceVisible: true,
+  });
 
   useEffect(() => {
     if (prevSrcRef.current !== normalizedSrc) {
@@ -97,6 +116,13 @@ export default function SmartImage({
       setHasError(false);
     }
   }, [normalizedSrc]);
+
+  // بدء التحميل عند ظهور الصورة في viewport
+  useEffect(() => {
+    if (lazy && isVisible && !shouldLoad) {
+      setShouldLoad(true);
+    }
+  }, [lazy, isVisible, shouldLoad]);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError && normalizedFallback && imageSrc !== normalizedFallback) {
@@ -126,42 +152,76 @@ export default function SmartImage({
       ? getOptimalQuality(width)
       : props.quality || 85;
 
+  // حالة التحميل
+  const isLoading = !isLoaded && shouldLoad;
+
   return (
-    <div className={wrapperClasses}>
-      {/* Skeleton loader */}
-      {!disableSkeleton && !noFade && !isLoaded && (
-        <div
-          className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 via-gray-200/80 to-gray-100 dark:from-neutral-900 dark:via-neutral-800/80 dark:to-neutral-900"
-          aria-hidden="true"
-        />
+    <div ref={lazy ? lazyRef : undefined} className={wrapperClasses}>
+      {/* Loading States */}
+      {!disableSkeleton && !noFade && isLoading && (
+        <>
+          {/* Skeleton Loader */}
+          {loaderType === "skeleton" && (
+            <div
+              className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 via-gray-200/80 to-gray-100 dark:from-neutral-900 dark:via-neutral-800/80 dark:to-neutral-900"
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Pulse Loader */}
+          {loaderType === "pulse" && (
+            <div
+              className="absolute inset-0 bg-gray-200 dark:bg-neutral-800"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent animate-shimmer" />
+            </div>
+          )}
+
+          {/* Spinner Loader */}
+          {loaderType === "spinner" && showSpinner && (
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-gray-100/50 dark:bg-neutral-900/50 backdrop-blur-sm"
+              aria-hidden="true"
+            >
+              <Loader2
+                className="h-8 w-8 animate-spin text-blue-500"
+                aria-label="جاري تحميل الصورة"
+              />
+            </div>
+          )}
+        </>
       )}
 
-      <Image
-        {...props}
-        src={imageSrc}
-        alt={alt}
-        width={width}
-        className={cn(
-          // منع وميض GPU أثناء التحريك/التمرير:
-          "[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform",
-          noFade
-            ? "opacity-100"
-            : "transition-opacity duration-300 " +
-                (isLoaded ? "opacity-100" : "opacity-0"),
-          "object-cover",
-          className,
-        )}
-        placeholder={placeholder}
-        blurDataURL={blurDataURL}
-        onLoad={handleLoad}
-        onError={handleError}
-        quality={quality}
-        unoptimized={false}
-        priority={!!finalPriority}
-        loading={loading}
-        draggable={false}
-        decoding={eager ? "sync" : "async"}
-      />
+      {/* الصورة - تحميل فقط إذا shouldLoad = true */}
+      {shouldLoad && (
+        <Image
+          {...props}
+          src={imageSrc}
+          alt={alt}
+          width={width}
+          className={cn(
+            // منع وميض GPU أثناء التحريك/التمرير:
+            "[transform:translateZ(0)] [backface-visibility:hidden] will-change-transform",
+            noFade
+              ? "opacity-100"
+              : "transition-opacity duration-500 ease-in-out " +
+                  (isLoaded ? "opacity-100" : "opacity-0"),
+            "object-cover",
+            className,
+          )}
+          placeholder={placeholder}
+          blurDataURL={blurDataURL}
+          onLoad={handleLoad}
+          onError={handleError}
+          quality={quality}
+          unoptimized={false}
+          priority={!!finalPriority}
+          loading={loading}
+          draggable={false}
+          decoding={eager ? "sync" : "async"}
+        />
+      )}
     </div>
   );
 }

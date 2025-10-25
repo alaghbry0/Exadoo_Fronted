@@ -2,12 +2,12 @@
 import { memo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Award } from "lucide-react";
+import { Check, X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { componentVariants } from "@/components/ui/variants";
-import SmartImage from "@/shared/components/common/SmartImage";
+import Image from "next/image";
 import { cardHoverVariant } from "./animation-variants";
-import { colors, spacing } from "@/styles/tokens";
+import { colors } from "@/styles/tokens";
 
 interface MiniBundleCardProps {
   id: string;
@@ -15,7 +15,8 @@ interface MiniBundleCardProps {
   desc: string;
   price: string;
   img?: string;
-  variant?: "default" | "highlight";
+  subCategoryId?: string | number;
+  freeSessionsCount?: string | number;
   priority?: boolean;
 }
 
@@ -23,7 +24,7 @@ const formatPrice = (value?: string) => {
   if (!value) return "";
   if (value.toLowerCase?.() === "free") return "مجاني";
   const n = Number(value);
-  return isNaN(n) ? value : `$${n.toFixed(0)}`;
+  return isNaN(n) ? value : `${n.toFixed(0)}`;
 };
 
 export const MiniBundleCard = memo(function MiniBundleCard({
@@ -32,14 +33,39 @@ export const MiniBundleCard = memo(function MiniBundleCard({
   desc,
   price,
   img,
-  variant = "default",
+  subCategoryId,
+  freeSessionsCount,
   priority,
 }: MiniBundleCardProps) {
+  // Check if bundle has access to 3 levels (sub_category_id >= 3)
+  const hasAccessTo3Levels = Number(subCategoryId || 0) >= 2;
+  
+  // Get free sessions count
+  const sessionsCount = Number(freeSessionsCount || 0);
+  const hasFreeSessions = sessionsCount > 0;
+  
+  // Define features with dynamic data
+  const features = [
+    { 
+      text: "الوصول إلى 3 مستويات", 
+      available: hasAccessTo3Levels 
+    },
+    { 
+      text: hasFreeSessions 
+        ? `${sessionsCount} استشارات مجانية`
+        : "استشارات مجانية",
+      available: hasFreeSessions 
+    },
+    { 
+      text: "لايفات اسبوعية", 
+      available: true // دائماً صح
+    },
+  ];
   return (
     <Link
       href={`/academy/bundle/${id}`}
       prefetch
-      className="block h-full group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-3xl"
+      className="block group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-2xl"
     >
       <motion.div {...cardHoverVariant}>
         <div
@@ -47,75 +73,83 @@ export const MiniBundleCard = memo(function MiniBundleCard({
             componentVariants.card.base,
             componentVariants.card.elevated,
             componentVariants.card.interactive,
-            "relative h-full overflow-hidden rounded-3xl backdrop-blur-sm",
-            variant === "highlight"
-              ? "border-purple-400/30 hover:border-purple-500/50"
-              : "hover:border-blue-500/30",
+            "relative overflow-hidden rounded-2xl backdrop-blur-sm p-5 flex flex-col h-full",
+            "hover:border-blue-500/30",
           )}
+          style={{ minHeight: '320px', maxHeight: '320px' }}
         >
-          {/* Image Section */}
-          <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full overflow-hidden">
-            <SmartImage
-              src={img || "/image.jpg"}
-              alt={title}
-              fill
-              blurType="secondary"
-              sizes="(min-width:1024px) 30vw, (min-width:640px) 45vw, 60vw"
-              priority={!!priority}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              style={{ borderRadius: "0 0 0rem 0rem" }}
-              noFade
-              disableSkeleton
-              eager
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-            {variant === "highlight" && (
-              <div className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3 flex items-center gap-1.5 rounded-full bg-purple-600/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-white shadow-lg shadow-purple-500/30 backdrop-blur-sm">
-                <Award className="h-3.5 w-3.5" />
-                <span className="text-[10px] sm:text-xs font-semibold">
-                  حزمة مميزة
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Content Section */}
-          <div
-            className="p-3 sm:p-4 flex flex-col flex-grow"
-            style={{ gap: spacing[2] }}
-          >
-            <h3
-              className="line-clamp-1 text-sm sm:text-base font-bold mb-1.5 sm:mb-2"
-              style={{ color: colors.text.primary }}
-            >
-              {title}
-            </h3>
-            <p
-              className="line-clamp-2 text-[13px] sm:text-sm leading-relaxed text-balance mb-3 sm:mb-4 flex-grow"
-              style={{ color: colors.text.secondary }}
-            >
-              {(desc || "").replace(/\\r\\n/g, " ")}
-            </p>
-            <div
-              className="flex items-center justify-between pt-2.5 sm:pt-3 mt-auto"
-              style={{ 
-                borderTop: `1px solid ${colors.border.default}`,
-                paddingTop: spacing[3]
-              }}
-            >
-              <span
-                className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium"
-                style={{ color: colors.text.secondary }}
+          {/* Header: Image + Title + Price */}
+          <div className="flex items-start gap-3 mb-4" dir="rtl">
+            {/* Circular Image */}
+            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-purple-200">
+              <Image
+                src={img || "/11.png"}
+                alt={title}
+                fill
+                className="object-cover"
+                sizes="56px"
+              />
+            </div>
+            
+            {/* Title + Price */}
+            <div className="flex-1 text-right min-w-0">
+              <h3
+                className="text-sm font-bold mb-1.5 line-clamp-2"
+                style={{ color: colors.text.primary, fontFamily: 'var(--font-arabic)' }}
+                title={title}
               >
-                <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>حزمة تعليمية</span>
-              </span>
-              <span className="text-sm sm:text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-500">
-                {formatPrice(price)}
-              </span>
+                {title}
+              </h3>
+              <p className="text-blue-500 text-base font-bold">
+                ${formatPrice(price)}
+              </p>
             </div>
           </div>
+
+          {/* Description */}
+          <p
+            className="text-[11px] leading-relaxed text-right mb-4 line-clamp-3"
+            style={{ color: colors.text.secondary, fontFamily: 'var(--font-arabic)' }}
+            dir="rtl"
+          >
+            {(desc || "").replace(/\\r\\n/g, " ")}
+          </p>
+
+          {/* Features List */}
+          <div className="space-y-2 mb-4 flex-grow">
+            {features.map((feature, index) => (
+              <div 
+                key={index} 
+                className="flex items-center gap-2 text-xs" 
+                dir="rtl" 
+                style={{ color: colors.text.secondary, fontFamily: 'var(--font-arabic)' }}
+              >
+                {feature.available ? (
+                  <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <Check className="text-white" size={12} aria-hidden="true" />
+                  </div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                    <X className="text-white" size={12} aria-hidden="true" />
+                  </div>
+                )}
+                <span>{feature.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Button */}
+          <button
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 font-semibold text-sm transition-colors mt-auto"
+            style={{ fontFamily: 'var(--font-arabic)' }}
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = `/academy/bundle/${id}`;
+            }}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            <span>${formatPrice(price)}</span>
+          </button>
         </div>
       </motion.div>
     </Link>

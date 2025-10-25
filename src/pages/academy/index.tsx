@@ -2,15 +2,17 @@
 "use client";
 
 import { useMemo, useState, useCallback, useDeferredValue } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import BackHeader from "@/components/BackHeader";
+import { AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import AuthPrompt from "@/features/auth/components/AuthFab";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { componentVariants } from "@/components/ui/variants";
 import { cn } from "@/lib/utils";
-import { Search, Bookmark, Layers, Star, TrendingUp, Award, BookOpen, Sparkles } from "lucide-react";
+import { Search, Bookmark, Layers, Star, TrendingUp, Award, BookOpen, Sparkles, Eye, EyeOff, MessageCircle } from "lucide-react";
 import { useTelegram } from "@/context/TelegramContext";
 import { useAcademyData } from "@/services/academy";
+import { useUserStore } from "@/stores/zustand/userStore";
 import { LazyLoad } from "@/components/common/LazyLoad";
 import { CourseSkeleton } from "@/components/skeletons/CourseSkeleton";
 import {
@@ -20,9 +22,9 @@ import {
   SectionHeader,
   HScroll,
   SkeletonCard,
-  fadeInUpVariant,
-  fadeInUpDelayedVariant,
-  tabSwitchVariant,
+  OngoingCourseCard,
+  TopCourseCarousel,
+  LatestCourseCard,
 } from "@/components/academy";
 import { colors, spacing } from "@/styles/tokens";
 
@@ -39,6 +41,8 @@ interface CourseItem {
   thumbnail: string;
   is_free_course?: string | null;
   level?: "beginner" | "intermediate" | "advanced" | string;
+  instructor_name?: string;
+  rating?: number;
 }
 
 interface BundleItem {
@@ -48,6 +52,8 @@ interface BundleItem {
   price: string;
   image?: string;
   cover_image?: string;
+  sub_category_id?: string;
+  free_sessions_count?: string;
 }
 
 interface CategoryItem {
@@ -170,113 +176,106 @@ export default function AcademyIndex() {
 
   const handleTab = useCallback((key: "all" | "mine") => setTab(key), []);
 
+  const { telegramId: tgId } = useTelegram();
+  
+  // Get user data from store
+  const { fullName, photoUrl } = useUserStore();
+  const userName = fullName || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
+  
+  // State for hiding/showing name
+  const [isNameHidden, setIsNameHidden] = useState(false);
+  
+  const displayName =
+    isNameHidden
+      ? "****"
+      : (userName.length > 24 ? `${userName.slice(0, 24)}…` : userName);
+
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen font-arabic"
-      style={{ backgroundColor: colors.bg.primary, color: colors.text.primary }}
-    >
-      <BackHeader title="الأكاديمية" backTo="/shop" backMode="always" />
-      <main className="mx-auto max-w-7xl px-4 pb-20">
-        {/* Hero */}
-        <section
-          className="relative overflow-hidden pt-8 pb-8 no-print"
-          aria-labelledby="page-title"
-        >
-          <div className="relative text-center">
-            <motion.div
-              {...fadeInUpVariant}
-              className="mb-6"
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
+      {/* Header */}
+      <div
+  role="banner"
+  className="
+    sticky top-0 z-50 pt-[env(safe-area-inset-top)]
+    bg-white/85 dark:bg-neutral-900/80
+    supports-[backdrop-filter]:backdrop-blur-md
+    border-b border-gray-100 dark:border-neutral-800
+    shadow-[0_1px_0_0_rgba(0,0,0,0.03)]
+  "
+>
+  <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
+    <div className="flex h-16 items-center justify-between">
+      {/* Left: Avatar + Text */}
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+        <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-1 ring-gray-200/60 dark:ring-neutral-800">
+          {/* ✅ صورة افتراضية من public/icon_user.png */}
+          <AvatarImage src={photoUrl || '/icon_user.svg'} alt={displayName} />
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+            {userInitial}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h1
+              className="truncate text-base sm:text-lg font-semibold text-gray-900 dark:text-white"
+              style={{ fontFamily: 'var(--font-arabic)' }}
             >
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-1.5">
-                <Sparkles className="h-4 w-4" style={{ color: colors.brand.primary }} />
-                <span className="text-sm font-medium" style={{ color: colors.brand.primary }}>
-                  رحلتك التعليمية تبدأ هنا
-                </span>
-              </div>
+              {/* تحية احترافية بدون إيموجي */}
+              {`مرحباً، ${displayName}`}
+            </h1>
 
-              <h1
-                id="page-title"
-                className="mb-3 text-4xl font-bold"
-                style={{ color: colors.text.primary }}
-              >
-                أكاديمية Exaado
-              </h1>
-
-              <p className="mx-auto max-w-2xl text-base text-balance" style={{ color: colors.text.secondary }}>
-                طريقك المتكامل لإتقان التداول. تعلّم من الخبراء وطبّق
-                باستراتيجيات عملية
-              </p>
-            </motion.div>
-
-            {/* Search */}
-            <motion.div
-              {...fadeInUpDelayedVariant}
-              className="mx-auto max-w-2xl"
-              role="search"
-            >
-              <div className="relative rounded-[1.5rem] p-0.5" style={{ backgroundColor: colors.bg.elevated }}>
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <Search className="h-5 w-5" style={{ color: colors.text.tertiary }} />
-                </div>
-                <input
-                  type="search"
-                  placeholder="ابحث في الدورات والحزم والتصنيفات..."
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className={cn(
-                    componentVariants.card.base,
-                    "block w-full rounded-[1.35rem] py-3.5 pr-4 pl-12 text-base focus:outline-none focus:ring-4 focus:ring-primary-400/10",
-                  )}
-                  style={{ color: colors.text.primary }}
-                  aria-label="بحث في محتوى الأكاديمية"
-                />
-              </div>
-            </motion.div>
+            
           </div>
-        </section>
 
-        {/* Tabs */}
-        <div
-          className="sticky top-[56px] z-20 mx-0 sm:-mx-4 mb-8 border-y px-0 sm:px-4 backdrop-blur-xl"
-          style={{ 
-            borderColor: colors.border.default,
-            backgroundColor: `${colors.bg.primary}cc`
-          }}
-        >
-          <div
-            role="tablist"
-            aria-label="أقسام الأكاديمية"
-            className="mx-auto flex max-w-7xl items-center justify-center gap-3 py-4"
-          >
-            <Button
-              role="tab"
-              aria-selected={tab === "all"}
-              onClick={() => handleTab("all")}
-              className="rounded-xl px-6 py-2.5 text-[15px] font-semibold"
-              style={{
-                backgroundColor: tab === "all" ? colors.brand.primary : colors.bg.secondary,
-                color: tab === "all" ? "#FFFFFF" : colors.text.primary,
-              }}
-            >
-              <Layers className="ml-2 h-4 w-4" />
-              جميع المحتوى
-            </Button>
-            <Button
-              role="tab"
-              aria-selected={tab === "mine"}
-              onClick={() => handleTab("mine")}
-              className="rounded-xl px-6 py-2.5 text-[15px] font-semibold"
-              style={{
-                backgroundColor: tab === "mine" ? colors.brand.primary : colors.bg.secondary,
-                color: tab === "mine" ? "#FFFFFF" : colors.text.primary,
-              }}
-            >
-              <Bookmark className="ml-2 h-4 w-4" />
-              دوراتي
-            </Button>
-          </div>
+          <p className="mt-0.5 text-xs sm:text-[13px] text-gray-600 dark:text-neutral-400">
+            رحلتك التعليمية تبدأ من هنا
+          </p>
         </div>
+      </div>
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-4">
+
+
+        <div
+          className="
+           flex items-center gap-2 hover:opacity-80 transition
+          "
+          aria-hidden="true"
+        >
+          <Image
+            src="/logo.png"
+            alt="Exaado Logo"
+            width={35}
+            height={35}
+            className="object-contain opacity-90"
+            priority
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      {/* Search Bar */}
+      <div className="px-4 pt-4 pb-6 bg-gray-50">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={22} aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="Enter Course Name"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:shadow-md transition-all text-gray-900 font-normal placeholder:text-gray-400"
+            style={{ fontFamily: 'var(--font-arabic)' }}
+            aria-label="بحث في محتوى الأكاديمية"
+          />
+        </div>
+      </div>
+
+      <main className="px-4 bg-gray-50">
 
         {/* Loading / Error */}
         <div aria-live="polite">
@@ -310,9 +309,8 @@ export default function AcademyIndex() {
         {/* Content */}
         {data && !isLoading && !isError && (
           <AnimatePresence mode="wait">
-            <motion.div
+            <div
               key={tab}
-              {...tabSwitchVariant}
               className="space-y-12"
             >
               {tab === "mine" ? (
@@ -394,7 +392,8 @@ export default function AcademyIndex() {
                                 desc={b.description}
                                 price={b.price}
                                 img={b.image || b.cover_image}
-                                variant="highlight"
+                                subCategoryId={b.sub_category_id}
+                                freeSessionsCount={b.free_sessions_count}
                                 priority={i === 0}
                               />
                             ))}
@@ -406,120 +405,100 @@ export default function AcademyIndex() {
                 </section>
               ) : (
                 <>
-                  {/* Top Courses */}
+                  {/* Top Courses Carousel with Auto-Scroll */}
                   {filteredData.topCourses.length > 0 && (
-                    <LazyLoad
-                      fallback={
-                        <div className="h-64">
-                          <CourseSkeleton />
-                        </div>
-                      }
-                    >
-                      <section aria-labelledby="top-courses">
-                        <SectionHeader
-                          icon={TrendingUp}
-                          title="الأكثر طلباً"
-                          id="top-courses"
-                        />
-                        <HScroll>
-                          {filteredData.topCourses.map((c, i) => (
-                            <MiniCourseCard
-                              key={c.id}
-                              id={c.id}
-                              title={c.title}
-                              desc={c.short_description}
-                              price={c.discounted_price || c.price}
-                              lessons={c.total_number_of_lessons}
-                              level={c.level}
-                              img={c.thumbnail}
-                              free={isFreeCourse(c)}
-                              variant="top"
-                              priority={i === 0}
-                            />
-                          ))}
-                        </HScroll>
-                      </section>
-                    </LazyLoad>
-                  )}
-
-                  {/* Categories */}
-                  {filteredData.categories.length > 0 && (
-                    <section aria-labelledby="categories">
-                      <SectionHeader
-                        icon={Layers}
-                        title="التصنيفات"
-                        id="categories"
+                    <section aria-labelledby="top-courses-carousel" className="mb-8">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'var(--font-arabic)' }}>
+                        Top Courses
+                      </h2>
+                      
+                      <TopCourseCarousel
+                        courses={filteredData.topCourses.slice(0, 5).map((c) => ({
+                          id: c.id,
+                          title: c.title,
+                          subtitle: c.short_description?.substring(0, 50) || "دورة تعليمية",
+                          description: c.short_description || "",
+                          thumbnail: c.thumbnail || '/11.png',
+                        }))}
+                        autoScroll={true}
+                        interval={7000}
                       />
-                      <HScroll itemClassName="min-w-[180px] w-[55%] xs:w-[48%] sm:w-[38%] lg:w-[22%] xl:w-[18%]">
-                        {filteredData.categories.map((cat, i) => (
-                          <CategoryCard
-                            key={cat.id}
-                            {...cat}
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HScroll>
                     </section>
                   )}
 
-                  {/* Top Bundles */}
-                  {filteredData.topBundles.length > 0 && (
-                    <LazyLoad
-                      fallback={
-                        <div className="h-64">
-                          <CourseSkeleton />
-                        </div>
-                      }
-                    >
-                      <section aria-labelledby="top-bundles">
-                        <SectionHeader
-                          icon={Award}
-                          title="حزم مميزة"
-                          id="top-bundles"
-                        />
-                        <HScroll>
-                          {filteredData.topBundles.map((b, i) => (
-                            <MiniBundleCard
-                              key={b.id}
-                              id={b.id}
-                              title={b.title}
-                              desc={b.description}
-                              price={b.price}
-                              img={b.image || b.cover_image}
-                              variant="highlight"
+                  {/* Course Categories */}
+                  {filteredData.categories.length > 0 && (
+                    <section aria-labelledby="categories" className="mb-8">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'var(--font-arabic)' }}>
+                        Course Categories :
+                      </h2>
+                      
+                      <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+                        <div className="flex gap-3 min-w-max">
+                          {filteredData.categories.slice(0, 6).map((cat, i) => (
+                            <CategoryCard
+                              key={cat.id}
+                              {...cat}
                               priority={i === 0}
                             />
                           ))}
-                        </HScroll>
-                      </section>
-                    </LazyLoad>
+                        </div>
+                      </div>
+                    </section>
                   )}
 
-                  {/* Highlight Courses */}
+                  {/* Latest Bundles */}
+                  {filteredData.topBundles.length > 0 && (
+                    <section aria-labelledby="latest-bundles" className="mb-8">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-5" style={{ fontFamily: 'var(--font-arabic)' }}>
+                        Latest Bundles 🔥
+                      </h2>
+                      
+                      <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+                        <div className="flex gap-4 min-w-max">
+                          {filteredData.topBundles.map((b, i) => (
+                            <div key={b.id} className="w-[280px]">
+                              <MiniBundleCard
+                                id={b.id}
+                                title={b.title}
+                                desc={b.description}
+                                price={b.price}
+                                img={b.image || b.cover_image}
+                                subCategoryId={b.sub_category_id}
+                                freeSessionsCount={b.free_sessions_count}
+                                priority={i === 0}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Latest Courses */}
                   {filteredData.highlightCourses.length > 0 && (
-                    <section aria-labelledby="highlight-courses">
-                      <SectionHeader
-                        icon={Star}
-                        title="دورات مميزة"
-                        id="highlight-courses"
-                      />
-                      <HScroll>
-                        {filteredData.highlightCourses.map((c, i) => (
-                          <MiniCourseCard
-                            key={c.id}
-                            id={c.id}
-                            title={c.title}
-                            desc={c.short_description}
-                            price={c.discounted_price || c.price}
-                            lessons={c.total_number_of_lessons}
-                            level={c.level}
-                            img={c.thumbnail}
-                            free={isFreeCourse(c)}
-                            variant="highlight"
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HScroll>
+                    <section aria-labelledby="latest-courses" className="mb-8">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'var(--font-arabic)' }}>
+                        Latest Courses 
+                      </h2>
+                      
+                      <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+                        <div className="flex gap-3 min-w-max">
+                          {filteredData.highlightCourses.slice(0, 6).map((c, i) => (
+                            <LatestCourseCard
+                              key={c.id}
+                              id={c.id}
+                              title={c.title}
+                              lessonsCount={c.total_number_of_lessons}
+                              imageUrl={c.thumbnail}
+                              price={c.discounted_price || c.price}
+                              instructorName={c.instructor_name}
+                              rating={c.rating}
+                              priority={i === 0}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </section>
                   )}
 
@@ -540,8 +519,9 @@ export default function AcademyIndex() {
                           <div
                             className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
                             style={{ backgroundColor: colors.bg.secondary }}
+                            aria-hidden="true"
                           >
-                            <Search className="h-8 w-8" style={{ color: colors.text.tertiary }} />
+                            <Search className="h-8 w-8" style={{ color: colors.text.tertiary }} aria-hidden="true" />
                           </div>
                           <p className="mb-2 text-lg font-bold" style={{ color: colors.text.primary }}>
                             لا توجد نتائج
@@ -578,10 +558,56 @@ export default function AcademyIndex() {
               <div className="pt-4">
                 <AuthPrompt />
               </div>
-            </motion.div>
+            </div>
           </AnimatePresence>
         )}
       </main>
+
+      {/* Bottom Navigation */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 px-4 py-3 z-40 backdrop-blur-xl bg-white/95 border-t border-gray-200 shadow-lg"
+      >
+        <div className="flex items-center justify-around max-w-2xl mx-auto">
+          <button
+            className={`flex flex-col items-center gap-1.5 transition-all px-6 py-2 rounded-xl ${
+              tab === "all" 
+                ? "text-blue-600 bg-blue-50" 
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
+            onClick={() => handleTab("all")}
+            aria-label="الصفحة الرئيسية"
+            aria-current={tab === "all" ? "page" : undefined}
+          >
+            <Layers size={22} aria-hidden="true" />
+            <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-arabic)' }}>Home</span>
+          </button>
+          
+          <button
+            className={`flex flex-col items-center gap-1.5 transition-all px-6 py-2 rounded-xl ${
+              tab === "mine" 
+                ? "text-blue-600 bg-blue-50" 
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
+            onClick={() => handleTab("mine")}
+            aria-label="دوراتي"
+            aria-current={tab === "mine" ? "page" : undefined}
+          >
+            <Bookmark size={22} aria-hidden="true" />
+            <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-arabic)' }}>My Courses</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Floating Help Button */}
+      <button
+        className="fixed bottom-24 left-4 sm:left-6 w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full shadow-xl shadow-blue-500/40 flex items-center justify-center transition-all z-30 hover:scale-110 hover:shadow-2xl hover:shadow-blue-500/50 focus-visible:ring-4 focus-visible:ring-blue-500/50"
+        aria-label="المساعدة"
+        onClick={() => {
+          console.log('Help button clicked');
+        }}
+      >
+        <MessageCircle size={24} aria-hidden="true" />
+      </button>
     </div>
   );
 }
