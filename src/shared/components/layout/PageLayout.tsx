@@ -1,7 +1,6 @@
 // src/shared/components/layout/PageLayout.tsx
 import { ReactNode } from "react";
-import NavbarEnhanced from "./NavbarEnhanced";
-import FooterNavEnhanced from "./FooterNavEnhanced";
+
 import { cn } from "@/lib/utils";
 
 interface PageLayoutProps {
@@ -30,7 +29,7 @@ export default function PageLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {showNavbar && <NavbarEnhanced />}
+      
 
       <main
         className={cn(
@@ -43,7 +42,7 @@ export default function PageLayout({
         {children}
       </main>
 
-      {showFooter && <FooterNavEnhanced />}
+      
     </div>
   );
 }

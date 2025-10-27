@@ -37,15 +37,24 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
     };
   }, [animationData]);
 
-  // Simple HTML to render Lottie using LottieFiles player
+  // Enhanced HTML to render Lottie with better quality and performance
   const iframeContent = `
     <!DOCTYPE html>
     <html>
       <head>
         <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
         <style>
-          body { margin: 0; padding: 0; overflow: hidden; }
-          lottie-player { width: 100%; height: 100%; }
+          body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: transparent;
+          }
+          lottie-player { 
+            width: 100%; 
+            height: 100%; 
+            background: transparent;
+          }
         </style>
       </head>
       <body>
@@ -53,7 +62,11 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
           autoplay
           loop
           mode="normal"
+          speed="1"
+          direction="1"
           src="${animationUrl}"
+          background="transparent"
+          style="width: 100%; height: 100%;"
         ></lottie-player>
       </body>
     </html>

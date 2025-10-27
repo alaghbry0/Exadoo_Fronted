@@ -5,13 +5,14 @@ import { useRouter } from "next/router";
 import React, { useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Home, CreditCard, User } from "lucide-react";
+import { Home, Bell, GraduationCap, User } from "lucide-react";
 
 type NavItem = { path: string; icon: React.ElementType; label: string };
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
+  { path: "/shop/signals", icon: Bell, label: "الإشارات" },
   { path: "/", icon: Home, label: "الرئيسية" },
-  { path: "/shop", icon: CreditCard, label: "الاشتراكات" },
+  { path: "/academy", icon: GraduationCap, label: "الأكاديمية" },
   { path: "/profile", icon: User, label: "الملف" },
 ];
 
