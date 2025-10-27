@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { indicatorsAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 
 export const HeroSection: React.FC = () => {
   return (
@@ -23,7 +23,7 @@ export const HeroSection: React.FC = () => {
       />
       
       <div className="max-w-4xl mx-auto px-4 relative z-10">
-        <motion.div {...indicatorsAnimations.heroContent}>
+        <motion.div {...animations.heroContent}>
           <Badge
             variant="outline"
             className="mb-4 backdrop-blur-sm border"
@@ -48,7 +48,7 @@ export const HeroSection: React.FC = () => {
           </h1>
           
           <motion.p
-            {...indicatorsAnimations.heroParagraph}
+            {...animations.heroParagraph}
             className="mt-4 text-lg max-w-2xl mx-auto"
             style={{ color: "var(--color-text-secondary)" }}
           >
@@ -56,7 +56,7 @@ export const HeroSection: React.FC = () => {
             لمساعدتك على اتخاذ قرارات تداول أكثر ذكاءً وثقة.
           </motion.p>
           
-          <motion.div {...indicatorsAnimations.heroButton} className="mt-8">
+          <motion.div {...animations.heroButton} className="mt-8">
             <Button
               size="lg"
               asChild

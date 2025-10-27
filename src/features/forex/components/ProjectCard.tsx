@@ -8,7 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { componentVariants } from "@/components/ui/variants";
 import { cn } from "@/lib/utils";
-import { forexAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 
 interface ProjectCardProps {
   id: string;
@@ -29,7 +29,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   index = 0,
 }) => {
   return (
-    <motion.div {...forexAnimations.staggeredFadeIn(index)}>
+    <motion.div {...animations.staggeredFadeIn(index)}>
       <Card
         className={cn(
           componentVariants.card.interactive,
@@ -44,17 +44,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           <div className="flex items-start gap-4">
             {/* Icon */}
             <div
-              className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{
-                background:
-                  "linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))",
-              }}
+              className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-purple-200 flex items-center justify-center"
+              style={{ backgroundColor: "var(--color-primary-500)" }}
             >
               {icon ? (
                 <img
                   src={icon}
                   alt={title}
-                  className="w-10 h-10 object-contain"
+                  className="w-14 h-14 object-contain"
                 />
               ) : (
                 <div className="text-white text-2xl font-bold">

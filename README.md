@@ -246,3 +246,12 @@ npm run type-check   # TypeScript check
 
 تم تطبيق تحسينات شاملة على الكود، البنية، والتوثيق.  
 جاهز للتطوير المستمر والتوسع.
+
+
+> ملخلص اهم اوامر رفع التحديثات الى المستودع الرئيسي
+```bash
+git status
+git add .
+git commit -m "your commit message"
+git push origin main
+`

@@ -8,13 +8,13 @@ import { Zap, ShieldCheck, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import AuthPrompt from "@/features/auth/components/AuthFab";
 import TradingPanelPurchaseModal from "@/components/TradingPanelPurchaseModal";
-import { LottieAnimation } from "./LottieAnimation";
+import { LottieAnimation } from "@/components/common/LottieAnimation";
 import { FeatureCard } from "./FeatureCard";
 import { PlanCard } from "./PlanCard";
 import { FAQSection } from "./FAQSection";
-import { forexAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 import type { ForexData } from "@/pages/api/forex";
-import forexAnimation from "@/animations/forex_1.json";
+import forexAnimation from "@/animations/forex_2.json";
 
 interface PricingViewProps {
   data: ForexData;
@@ -55,7 +55,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
       <div className="max-w-4xl mx-auto px-4 pt-8">
         {/* Lottie Animation */}
         <motion.div
-          {...forexAnimations.fadeInUp}
+          {...animations.fadeInUp}
           className="flex justify-center mb-8"
         >
           <LottieAnimation
@@ -68,7 +68,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
 
         {/* Header */}
         <motion.div
-          {...forexAnimations.fadeInUp}
+          {...animations.fadeInUp}
           className="text-center mb-12"
         >
           <h1

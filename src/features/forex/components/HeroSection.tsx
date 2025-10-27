@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { forexAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 
 export const HeroSection: React.FC = () => {
   return (
@@ -23,7 +23,7 @@ export const HeroSection: React.FC = () => {
       />
       
       <div className="max-w-4xl mx-auto px-4 relative z-10">
-        <motion.div {...forexAnimations.fadeInUp}>
+        <motion.div {...animations.fadeInUp}>
           <Badge
             variant="outline"
             className="mb-4 backdrop-blur-sm border"
@@ -56,7 +56,7 @@ export const HeroSection: React.FC = () => {
             مخاطرك بفعالية، وركز على الأهم: تحقيق الأرباح.
           </motion.p>
           
-          <motion.div {...forexAnimations.heroButton} className="mt-8">
+          <motion.div {...animations.heroButton} className="mt-8">
             <Button
               size="lg"
               asChild

@@ -5,9 +5,9 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { LottieAnimation } from "./LottieAnimation";
+import { LottieAnimation } from "@/components/common/LottieAnimation";
 import { SubscriptionCard } from "./SubscriptionCard";
-import { indicatorsAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 import type { IndicatorsData } from "@/pages/api/indicators";
 import indicatorAnimation from "@/animations/buy_indicator.json";
 
@@ -29,19 +29,23 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
   const isLifetime = sub.status === "lifetime";
 
   return (
-    <main
-      className="min-h-screen pb-24 pt-8"
+     <main
+      className="min-h-screen pb-24 pt-6" // خفّضنا الـ padding شوي فقط
       style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
       <div className="max-w-4xl mx-auto px-4">
         {/* Lottie Animation */}
         <motion.div
-          {...indicatorsAnimations.fadeInUp}
-          className="flex justify-center mb-8"
+          {...animations.fadeInUp}
+          className="flex justify-center"
+          style={{
+            position: "relative",
+            top: 60, // نزّل اللوتي (قابلة للتعديل الدقيقة)
+          }}
         >
           <LottieAnimation
             animationData={indicatorAnimation}
-            width="100%"
+            width="40%"
             height={300}
             className="max-w-sm"
           />
@@ -49,14 +53,20 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
 
         {/* Header */}
         <motion.div
-          {...indicatorsAnimations.fadeInUp}
-          className="text-center mb-8"
+          {...animations.fadeInUp}
+          className="text-center"
+          style={{
+            position: "relative",
+            bottom: 50, // ارفع العنوان (قابلة للتعديل الدقيقة)
+          
+          }}
         >
           <h1
-            className="text-3xl md:text-4xl font-extrabold mb-3"
+            className="text-3xl md:text-4xl font-extrabold"
             style={{
               color: "var(--color-text-primary)",
               fontFamily: "var(--font-arabic)",
+              marginBottom: 4, // قلّل/زِد حسب مزاجك
             }}
           >
             Gann Tool Subscriptions
@@ -66,7 +76,7 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
             style={{
               color: "var(--color-text-secondary)",
               fontFamily: "var(--font-arabic)",
-              lineHeight: "1.8",
+              lineHeight: "1.6",
             }}
           >
             أول وأفضل مؤشر في الوطن العربي لرسم مربع 9 ومربع 144 ومربع 52 🔥
@@ -86,3 +96,4 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
     </main>
   );
 };
+

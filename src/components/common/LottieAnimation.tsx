@@ -2,6 +2,8 @@
  * LottieAnimation Component
  * عرض Lottie animations بدون مكتبة خارجية
  * يستخدم iframe للعرض المباشر
+ * 
+ * @component مشترك - يستخدم في forex و indicators وأي صفحة أخرى
  */
 
 import { useEffect, useRef, useState } from "react";

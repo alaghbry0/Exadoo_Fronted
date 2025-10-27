@@ -8,11 +8,11 @@ import { Zap, Award, Settings } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import AuthPrompt from "@/features/auth/components/AuthFab";
 import IndicatorsPurchaseModal from "@/components/IndicatorsPurchaseModal";
-import { LottieAnimation } from "./LottieAnimation";
+import { LottieAnimation } from "@/components/common/LottieAnimation";
 import { FeatureCard } from "./FeatureCard";
 import { PlanCard } from "./PlanCard";
 import { FAQSection } from "./FAQSection";
-import { indicatorsAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 import type { IndicatorsData } from "@/pages/api/indicators";
 import indicatorAnimation from "@/animations/buy_indicator.json";
 
@@ -59,7 +59,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
       <div className="max-w-4xl mx-auto px-4 pt-8">
         {/* Lottie Animation */}
         <motion.div
-          {...indicatorsAnimations.fadeInUp}
+          {...animations.fadeInUp}
           className="flex justify-center mb-8"
         >
           <LottieAnimation
@@ -72,7 +72,7 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
 
         {/* Header */}
         <motion.div
-          {...indicatorsAnimations.fadeInUp}
+          {...animations.fadeInUp}
           className="text-center mb-12"
         >
           <h1

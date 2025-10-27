@@ -9,5 +9,4 @@ export { HeroSection } from "./HeroSection";
 export { FAQSection } from "./FAQSection";
 export { SubscribedView } from "./SubscribedView";
 export { PricingView } from "./PricingView";
-export { LottieAnimation } from "./LottieAnimation";
 export { SubscriptionCard } from "./SubscriptionCard";

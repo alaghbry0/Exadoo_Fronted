@@ -5,11 +5,11 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { LottieAnimation } from "./LottieAnimation";
+import { LottieAnimation } from "@/components/common/LottieAnimation";
 import { ProjectCard } from "./ProjectCard";
-import { forexAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 import type { MyForexSubscription } from "@/pages/api/forex";
-import forexAnimation from "@/animations/forex_1.json";
+import forexAnimation from "@/animations/utility.json";
 
 interface SubscribedViewProps {
   sub: MyForexSubscription;
@@ -23,8 +23,8 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
         id: "1",
         title: "Exa-TradingPad",
         description:
-          "Exa-TradingPad is a fundamental component for placing orders in Overcharts. Using Trading Panel you can set all parameters of the order being placed",
-        icon: "/logo.png",
+          "Exa-TradingPad هو مكوّن أساسي لتنفيذ أوامر التداول في Overcharts. من خلال لوحة التداول يمكنك ضبط جميع إعدادات الأمر قبل تنفيذه.",
+        icon: "/forex_s3.png",
         downloadLink: sub.download_link || "#",
         setupGuideLink: sub.setup_guide_link || "#",
       },
@@ -35,18 +35,20 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
 
   return (
     <main
-      className="min-h-screen pb-24 pt-8"
+      className="min-h-screen pb-24 "
       style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         {/* Lottie Animation */}
         <motion.div
-          {...forexAnimations.fadeInUp}
-          className="flex justify-center mb-8"
+          {...animations.fadeInUp}
+          className="flex justify-center"
+          
+          
         >
           <LottieAnimation
             animationData={forexAnimation}
-            width="100%"
+            width="80%"
             height={350}
             className="max-w-md"
           />
@@ -54,26 +56,29 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
 
         {/* Header */}
         <motion.div
-          {...forexAnimations.fadeInUp}
-          className="text-center mb-12"
+          {...animations.fadeInUp}
+          className="text-center mb-4"
         >
           <h1
-            className="text-3xl md:text-4xl font-extrabold mb-3"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-arabic)",
-            }}
-          >
-            Our Forex Utility Projects !
+            className="text-3xl md:text-12xl font-extrabold"
+             style={{
+            position: "relative",
+            bottom: 30, // ارفع العنوان (قابلة للتعديل الدقيقة)
+          
+          }}
+        >
+            مشاريعنا الخاصة بأدوات الفوركس!
           </h1>
           <p
             className="text-base md:text-lg max-w-2xl mx-auto"
             style={{
               color: "var(--color-text-secondary)",
               fontFamily: "var(--font-arabic)",
+              lineHeight: "1.4",
+              
             }}
           >
-            Choose between a variety of projects provided by Exaado!
+            اختر من بين مجموعة متنوعة من المشاريع التي تقدمها Exaado!
           </p>
         </motion.div>
 

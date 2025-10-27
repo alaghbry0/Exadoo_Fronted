@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { componentVariants } from "@/components/ui/variants";
 import { cn } from "@/lib/utils";
-import { indicatorsAnimations } from "../animations";
+import { animations } from "@/styles/animations";
 import Image from "next/image";
 
 interface SubscriptionCardProps {
@@ -30,7 +30,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   index = 0,
 }) => {
   return (
-    <motion.div {...indicatorsAnimations.staggeredFadeIn(index)}>
+    <motion.div {...animations.staggeredFadeIn(index)}>
       <Card
         className={cn(
           componentVariants.card.base,
@@ -45,17 +45,14 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           <div className="flex items-start gap-4">
             {/* Icon */}
             <div
-              className="flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden"
-              style={{
-                background:
-                  "linear-gradient(135deg, #FFD700, #FFA500)",
-              }}
+              className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-purple-200 flex items-center justify-center"
+              
             >
               <Image
                 src={icon}
                 alt={planName}
-                width={48}
-                height={48}
+                width={55}
+                height={55}
                 className="object-contain"
               />
             </div>
