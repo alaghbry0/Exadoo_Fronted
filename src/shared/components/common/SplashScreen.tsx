@@ -15,7 +15,7 @@ import {
   useRef,
   MouseEvent as ReactMouseEvent,
 } from "react";
-import AuroraBackground from "@/components/splash-screen/AuroraBackground"; // استيراد الخلفية الجديدة
+import AuroraBackground from "@/shared/components/splash-screen/AuroraBackground"; // استيراد الخلفية الجديدة
 
 // الخطاف المساعد لمحاكاة التحميل (يبقى كما هو)
 const useLoadingSimulator = () => {

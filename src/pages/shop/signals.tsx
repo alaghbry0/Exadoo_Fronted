@@ -1,7 +1,7 @@
 // src/pages/shop/signals.tsx
 
 "use client";
-import { componentVariants, mergeVariants } from "@/components/ui/variants";
+import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
 import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // Dynamic import للـ SubscriptionModal
 const SubscriptionModal = dynamic(
   () =>
-    import("@/features/subscriptions/components/SubscriptionModal").then(
+    import("@/domains/subscriptions/components/SubscriptionModal").then(
       (mod) => mod.default,
     ),
   { ssr: false },
@@ -22,11 +22,11 @@ import {
   getSubscriptionTypes,
   getSubscriptionPlans,
   getSubscriptionGroups,
-} from "../../services/api";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@/domains/subscriptions/api";
+import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Badge } from "@/shared/components/ui/badge";
 import {
   Crown,
   Zap,
@@ -42,23 +42,23 @@ import {
   ShieldCheck,
   Flame,
 } from "lucide-react";
-import { useTelegram } from "@/context/TelegramContext";
+import { useTelegram } from "@/shared/context/TelegramContext";
 import PageLayout from "@/shared/components/layout/PageLayout";
 import {
   GridSkeleton,
   PageLoader,
 } from "@/shared/components/common/LoadingStates";
 import { EmptyState } from "@/shared/components/common/EmptyState";
-import { LazyLoad } from "@/components/common/LazyLoad";
-import { SubscriptionCardSkeleton } from "@/components/skeletons/SubscriptionCardSkeleton";
+import { LazyLoad } from "@/shared/components/common/LazyLoad";
+import { SubscriptionCardSkeleton } from "@/shared/components/skeletons/SubscriptionCardSkeleton";
 
-import type { ModalPlanData } from "@/types/modalPlanData";
+import type { ModalPlanData } from "@/domains/subscriptions/types";
 import type {
   ApiSubscriptionType,
   ApiSubscriptionPlan,
   ApiSubscriptionGroup,
   SubscriptionOption,
-} from "../../typesPlan";
+} from "@/domains/subscriptions/types";
 
 // ----------------------------------------------------
 // الأنواع المساعدة + الأيقونات
@@ -197,7 +197,7 @@ const ShopComponent = () => {
                   ? discountDetails
                   : undefined,
               // ⚠️ مهم: قادم من الخادم
-              // تأكد أن SubscriptionOption تحتوي isTrial?: boolean في typesPlan.ts
+              // تأكد أن SubscriptionOption تحتوي isTrial?: boolean في domains/subscriptions/types/subscriptionPlan.ts
               isTrial: plan.is_trial === true,
               trialDurationDays: plan.is_trial ? plan.duration_days : undefined,
             };

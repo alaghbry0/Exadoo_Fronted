@@ -6,8 +6,8 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useTelegram } from "@/context/TelegramContext";
-import { useAcademyData } from "@/services/academy";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useAcademyData } from "@/domains/academy/api";
 import PageLayout from "@/shared/components/layout/PageLayout";
 import { Breadcrumbs } from "@/shared/components/common/Breadcrumbs";
 import { PageLoader } from "@/shared/components/common/LoadingStates";
@@ -22,11 +22,11 @@ import {
   MiniCourseCard,
   MiniBundleCard,
   CategoryHeroHeader,
-} from "@/features/academy/components";
+} from "@/domains/academy/components";
 
 // Types & Helpers
-import type { Category, Course, Bundle } from "@/features/academy/types/academy.types";
-import { isFreeCourse } from "@/features/academy/utils/helpers";
+import type { Category, Course, Bundle } from "@/domains/academy/types/academy.types";
+import { isFreeCourse } from "@/domains/academy/utils/helpers";
 
 /**
  * Main Component

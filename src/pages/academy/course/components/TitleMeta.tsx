@@ -2,9 +2,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
-import type { Course } from "@/types/academy";
+import type { Course } from "@/domains/academy/types";
 import LevelBadge from "./LevelBadge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 export default function TitleMeta({
   course,

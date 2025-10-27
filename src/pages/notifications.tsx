@@ -7,11 +7,11 @@ import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, ArrowLeft, Bell, Check, RefreshCw } from "lucide-react";
-import NotificationFilter from "@/features/notifications/components/NotificationFilter";
-import { useTelegram } from "../context/TelegramContext";
-import { useNotificationsContext } from "@/context/NotificationsContext";
-import { useNotifications } from "@/hooks/useNotifications";
-import { cn } from "@/lib/utils";
+import NotificationFilter from "@/domains/notifications/components/NotificationFilter";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useNotificationsContext } from "@/domains/notifications/context/NotificationsContext";
+import { useNotifications } from "@/domains/notifications/hooks/useNotifications";
+import { cn } from "@/shared/utils";
 import {
   animations,
   colors,
@@ -23,7 +23,7 @@ import {
 
 // استيراد ديناميكي لمكون NotificationItem مع هيكل تحميل محسن
 const NotificationItem = dynamic(
-  () => import("@/features/notifications/components/NotificationItem"),
+  () => import("@/domains/notifications/components/NotificationItem"),
   {
     loading: () => <NotificationSkeleton />,
   },

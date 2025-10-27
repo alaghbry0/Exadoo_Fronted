@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import type { CSSProperties, ComponentType } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import { colors, spacing, radius, typography } from "@/styles/tokens";
 import type { AccentTheme, IconConfig, StatChip } from "./types";
 import SmartImage from "@/shared/components/common/SmartImage";

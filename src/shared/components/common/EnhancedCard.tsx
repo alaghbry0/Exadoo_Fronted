@@ -1,6 +1,6 @@
 // src/shared/components/common/EnhancedCard.tsx
-import { Card as ShadcnCard, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Card as ShadcnCard, CardContent } from "@/shared/components/ui/card";
+import { cn } from "@/shared/utils";
 import type { CSSProperties, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";

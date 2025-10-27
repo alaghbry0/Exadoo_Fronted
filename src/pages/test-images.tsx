@@ -9,8 +9,8 @@
 
 import { useState } from 'react';
 import SmartImage from '@/shared/components/common/SmartImage';
-import { Card } from '@/components/ui/card';
-import { LazyLoad } from '@/components/common/LazyLoad';
+import { Card } from '@/shared/components/ui/card';
+import { LazyLoad } from '@/shared/components/common/LazyLoad';
 
 export default function TestImagesPage() {
   const [selectedLoader, setSelectedLoader] = useState<'skeleton' | 'spinner' | 'pulse'>('skeleton');

@@ -2,9 +2,9 @@
 "use client";
 
 import { ServiceCardV2 } from "./ServiceCardV2";
-import { useTelegram } from "@/context/TelegramContext";
-import { useIndicatorsData } from "@/services/indicators";
-import { Button } from "@/components/ui/button";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useIndicatorsData } from "@/domains/indicators/api";
+import { Button } from "@/shared/components/ui/button";
 import { ArrowLeft, BarChart3 } from "lucide-react";
 
 export function IndicatorsCard({

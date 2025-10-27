@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { componentVariants, mergeVariants } from "@/components/ui/variants";
+import { cn } from "@/shared/utils";
+import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
 /**
  * Offline Page - PWA Support
  * تظهر عندما يكون المستخدم غير متصل بالإنترنت

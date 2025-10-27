@@ -2,16 +2,16 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useUserStore } from "../stores/zustand/userStore";
-import ProfileHeader from "@/features/profile/components/ProfileHeader";
-import SubscriptionsSection from "@/features/profile/components/SubscriptionsSection";
+import { useUserStore } from "@/shared/state/zustand/userStore";
+import ProfileHeader from "@/domains/profile/components/ProfileHeader";
+import SubscriptionsSection from "@/domains/profile/components/SubscriptionsSection";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
-import { getUserSubscriptions } from "../services/api";
+import { getUserSubscriptions } from "@/domains/subscriptions/api";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "react-hot-toast";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
 import PageLayout from "@/shared/components/layout/PageLayout";
 
 export default function Profile() {

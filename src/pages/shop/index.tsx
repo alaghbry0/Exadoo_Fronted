@@ -5,24 +5,24 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, Zap } from "lucide-react";
 
 import PageLayout from "@/shared/components/layout/PageLayout";
-import AuthPrompt from "@/features/auth/components/AuthFab";
-import AcademyHeroCard from "@/components/AcademyHeroCard";
-import { useTelegram } from "@/context/TelegramContext";
-import { useAcademyData } from "@/services/academy";
-import { useUnifiedSearchHook } from "@/hooks/useUnifiedSearch";
-import { useKeyboardSearch } from "@/hooks/useKeyboardSearch";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useUserStore } from "@/stores/zustand/userStore";
+import AuthPrompt from "@/domains/auth/components/AuthFab";
+import AcademyHeroCard from "@/domains/academy/components/AcademyHeroCard";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useAcademyData } from "@/domains/academy/api";
+import { useUnifiedSearchHook } from "@/domains/shop/hooks/useUnifiedSearch";
+import { useKeyboardSearch } from "@/domains/shop/hooks/useKeyboardSearch";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUserStore } from "@/shared/state/zustand/userStore";
 import { animations } from "@/styles/animations";
 import { colors, semanticSpacing, spacing } from "@/styles/tokens";
 
-import { LockedServiceCard } from "@/features/shop/components/LockedServiceCard";
-import { ShopHero } from "@/features/shop/components/ShopHero";
-import { ShopSearchBar } from "@/features/shop/components/ShopSearchBar";
-import { ShopSearchResults } from "@/features/shop/components/ShopSearchResults";
-import { ShopSectionHeading } from "@/features/shop/components/ShopSectionHeading";
-import { ShopServicesGrid } from "@/features/shop/components/ShopServicesGrid";
-import { SHOP_SERVICES } from "@/features/shop/data/services";
+import { LockedServiceCard } from "@/domains/shop/components/LockedServiceCard";
+import { ShopHero } from "@/domains/shop/components/ShopHero";
+import { ShopSearchBar } from "@/domains/shop/components/ShopSearchBar";
+import { ShopSearchResults } from "@/domains/shop/components/ShopSearchResults";
+import { ShopSectionHeading } from "@/domains/shop/components/ShopSectionHeading";
+import { ShopServicesGrid } from "@/domains/shop/components/ShopServicesGrid";
+import { SHOP_SERVICES } from "@/domains/shop/data/services";
 
 export default function ShopHome() {
   const [query, setQuery] = useState("");

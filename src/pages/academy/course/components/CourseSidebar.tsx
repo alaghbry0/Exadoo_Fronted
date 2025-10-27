@@ -1,12 +1,12 @@
-import { cn } from "@/lib/utils";
-import { componentVariants, mergeVariants } from "@/components/ui/variants";
+import { cn } from "@/shared/utils";
+import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
 // src/features/academy/course/components/CourseSidebar.tsx
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Play } from "lucide-react";
 import SmartImage from "@/shared/components/common/SmartImage";
-import type { Course } from "@/types/academy";
-import { formatPrice } from "@/lib/academy";
+import type { Course } from "@/domains/academy/types";
+import { formatPrice } from "@/domains/academy/utils";
 
 export default function CourseSidebar({
   course,

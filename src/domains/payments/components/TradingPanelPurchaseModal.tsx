@@ -1,0 +1,220 @@
+// src/components/TradingPanelPurchaseModal.tsx
+"use client";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/components/ui/sheet";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { Button } from "@/shared/components/ui/button";
+import { X, Loader2, ShieldCheck } from "lucide-react";
+import { UsdtPaymentMethodModal } from "./UsdtPaymentMethodModal";
+import { ExchangePaymentModal } from "@/domains/payments/components/ExchangePaymentModal";
+import { PaymentSuccessModal } from "./PaymentSuccessModal";
+import { PaymentExchangeSuccess } from "./PaymentExchangeSuccess";
+import { useServicePayment } from "@/domains/payments/hooks/useServicePayment";
+import { showToast } from "@/shared/components/ui/showToast";
+
+type OpenTradingPanelPayload = {
+  productType: "utility_trading_panel";
+  plan: {
+    id: string;
+    name: string;
+    price: string;
+    discounted_price?: string | null;
+    duration_in_months?: string; // "0" => lifetime
+  };
+};
+
+const fmt = (v?: string | null) => {
+  if (!v) return "";
+  if (v.toLowerCase?.() === "free") return "مجاني";
+  const n = Number(v);
+  return isNaN(n) ? v : `$${n.toFixed(0)}`;
+};
+
+export default function TradingPanelPurchaseModal() {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<
+    "details" | "choose_method" | "show_exchange"
+  >("details");
+  const [payload, setPayload] = useState<OpenTradingPanelPayload | null>(null);
+
+  const {
+    paymentStatus,
+    loading,
+    exchangeDetails,
+    setExchangeDetails,
+    payWithUSDT,
+    reset,
+  } = useServicePayment();
+
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const d = (e as CustomEvent<OpenTradingPanelPayload>).detail;
+      if (!d || d.productType !== "utility_trading_panel") return;
+      setPayload(d);
+      setStep("details");
+      setOpen(true);
+    };
+    window.addEventListener("open-service-purchase", onOpen as EventListener);
+    return () =>
+      window.removeEventListener(
+        "open-service-purchase",
+        onOpen as EventListener,
+      );
+  }, []);
+
+  const closeAll = useCallback(() => {
+    reset();
+    setExchangeDetails(null);
+    setStep("details");
+    setOpen(false);
+  }, [reset, setExchangeDetails]);
+
+  const priceInfo = useMemo(() => {
+    if (!payload) return { isFree: false, priceNum: 0, priceStr: "" };
+    const base = payload.plan.discounted_price || payload.plan.price;
+    const isFree = base?.toLowerCase?.() === "free" || Number(base) === 0;
+    const n = Number(base);
+    return { isFree, priceNum: isNaN(n) ? 0 : n, priceStr: fmt(base) };
+  }, [payload]);
+
+  const onChooseMethod = useCallback(() => {
+    if (!payload) return;
+    if (priceInfo.isFree) {
+      showToast.success("تم تفعيل لوحة التداول مجانًا!");
+      closeAll();
+      return;
+    }
+    setStep("choose_method");
+  }, [payload, priceInfo.isFree, closeAll]);
+
+  const onWallet = useCallback(async () => {
+    if (!payload) return;
+    await payWithUSDT("wallet", {
+      productType: "utility_trading_panel",
+      productId: Number(payload.plan.id),
+      amountUsdt: priceInfo.priceNum,
+      displayName: payload.plan.name,
+    });
+    setStep("details");
+  }, [payload, payWithUSDT, priceInfo.priceNum]);
+
+  const onExchange = useCallback(async () => {
+    if (!payload) return;
+    const ok = await payWithUSDT("exchange", {
+      productType: "utility_trading_panel",
+      productId: Number(payload.plan.id),
+      amountUsdt: priceInfo.priceNum,
+      displayName: payload.plan.name,
+    });
+    if (ok) setStep("show_exchange");
+  }, [payload, payWithUSDT, priceInfo.priceNum]);
+
+  if (!open || !payload) return null;
+
+  return (
+    <>
+      <Sheet open={step === "details"} onOpenChange={(o) => !o && closeAll()}>
+        <SheetContent
+          side="bottom"
+          className="h-[65vh] md:h-[85vh] rounded-t-3xl border-0 bg-gray-50 p-0 flex flex-col"
+          dir="rtl"
+        >
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full z-20" />
+          <SheetHeader className="p-4 pt-8 text-center border-b border-gray-200">
+            <SheetTitle className="text-xl font-bold font-arabic text-gray-800 dark:text-neutral-100 text-center pr-6 pl-10">
+              {payload.plan.name}
+            </SheetTitle>
+            <button
+              onClick={closeAll}
+              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 p-1 rounded-full"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1">
+            <div className="space-y-8 p-4 pt-6 pb-12 text-right">
+              <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white text-center relative overflow-hidden">
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full" />
+                <div className="absolute -bottom-8 -left-2 w-32 h-32 bg-white/10 rounded-full" />
+                <p className="font-medium text-white/80 mb-1">
+                  خطة لوحة التداول
+                </p>
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-5xl font-extrabold">
+                    {priceInfo.isFree ? "مجاني" : priceInfo.priceStr}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border">
+                <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                  <ShieldCheck className="w-5 h-5 text-primary-600" />
+                  <span className="ml-2">ما الذي ستحصل عليه؟</span>
+                </h4>
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li>لوحة تداول احترافية (MT4/MT5)</li>
+                  <li>تحديثات مستقبلية بدون تكلفة إضافية</li>
+                  <li>دعم فني عبر تيليجرام</li>
+                </ul>
+              </div>
+            </div>
+          </ScrollArea>
+
+          <div className="bg-white/90 border-t-2 border-primary-100 p-4">
+            <Button
+              onClick={onChooseMethod}
+              size="lg"
+              className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold"
+              disabled={loading}
+            >
+              {loading && paymentStatus === "processing_usdt" ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : priceInfo.isFree ? (
+                "سجّل الآن مجانًا"
+              ) : (
+                "الدفع باستخدام USDT"
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {step === "choose_method" && (
+        <UsdtPaymentMethodModal
+          loading={loading}
+          onClose={() => setStep("details")}
+          onWalletSelect={onWallet}
+          onExchangeSelect={onExchange}
+        />
+      )}
+
+      {step === "show_exchange" && exchangeDetails && (
+        <ExchangePaymentModal
+          details={exchangeDetails}
+          onClose={() => {
+            reset();
+            setExchangeDetails(null);
+            setStep("details");
+          }}
+        />
+      )}
+
+      {paymentStatus === "exchange_success" && (
+        <PaymentExchangeSuccess
+          onClose={closeAll}
+          planName={payload.plan.name}
+        />
+      )}
+      {paymentStatus === "success" && (
+        <PaymentSuccessModal onClose={closeAll} />
+      )}
+    </>
+  );
+}

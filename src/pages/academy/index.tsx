@@ -4,17 +4,17 @@
 import { useMemo, useState, useCallback, useDeferredValue } from "react";
 import { AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import AuthPrompt from "@/features/auth/components/AuthFab";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { componentVariants } from "@/components/ui/variants";
-import { cn } from "@/lib/utils";
+import AuthPrompt from "@/domains/auth/components/AuthFab";
+import { Button } from "@/shared/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { componentVariants } from "@/shared/components/ui/variants";
+import { cn } from "@/shared/utils";
 import { Search, Bookmark, Layers, Star, TrendingUp, Award, BookOpen, Sparkles, Eye, EyeOff, MessageCircle } from "lucide-react";
-import { useTelegram } from "@/context/TelegramContext";
-import { useAcademyData } from "@/services/academy";
-import { useUserStore } from "@/stores/zustand/userStore";
-import { LazyLoad } from "@/components/common/LazyLoad";
-import { CourseSkeleton } from "@/components/skeletons/CourseSkeleton";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useAcademyData } from "@/domains/academy/api";
+import { useUserStore } from "@/shared/state/zustand/userStore";
+import { LazyLoad } from "@/shared/components/common/LazyLoad";
+import { CourseSkeleton } from "@/shared/components/skeletons/CourseSkeleton";
 import {
   MiniCourseCard,
   MiniBundleCard,
@@ -25,7 +25,7 @@ import {
   OngoingCourseCard,
   TopCourseCarousel,
   LatestCourseCard,
-} from "@/components/academy";
+} from "@/domains/academy/components";
 import { colors, spacing } from "@/styles/tokens";
 
 /* =========================

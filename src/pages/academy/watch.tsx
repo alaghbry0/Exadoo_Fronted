@@ -1,11 +1,11 @@
 "use client";
-import { componentVariants } from "@/components/ui/variants";
+import { componentVariants } from "@/shared/components/ui/variants";
 import { colors } from "@/styles/tokens";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { useStartWatching, useCourseDetails } from "@/services/courseDetails";
-import { useTelegram } from "@/context/TelegramContext";
+import { useStartWatching, useCourseDetails } from "@/domains/academy/api";
+import { useTelegram } from "@/shared/context/TelegramContext";
 import {
   ArrowLeft,
   Lock,
@@ -14,7 +14,7 @@ import {
   X,
   SkipForward,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 function toBase64Url(str: string) {
   const b64 =

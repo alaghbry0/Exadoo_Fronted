@@ -6,7 +6,7 @@ import {
   componentRadius,
   shadowClasses,
 } from "@/styles/tokens";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import type {
   Accent,
   AccentTheme,

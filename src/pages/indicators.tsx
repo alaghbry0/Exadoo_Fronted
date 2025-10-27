@@ -3,10 +3,10 @@
  * تم تقسيم هذا الملف إلى مكونات منفصلة في src/features/indicators/
  */
 
-import BackHeader from "@/components/BackHeader";
-import { useTelegram } from "@/context/TelegramContext";
-import { useIndicatorsData } from "@/services/indicators";
-import { SubscribedView, PricingView } from "@/features/indicators/components";
+import BackHeader from "@/shared/components/layout/BackHeader";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useIndicatorsData } from "@/domains/indicators/api";
+import { SubscribedView, PricingView } from "@/domains/indicators/components";
 
 export default function IndicatorsPage() {
   const { telegramId } = useTelegram();

@@ -1,7 +1,7 @@
 // src/pages/api/trials/claim.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { makeSignatureHeaders } from "@/lib/signing";
-import { resolveBackendConfig } from "@/lib/serverConfig";
+import { makeSignatureHeaders } from "@/infrastructure/security/signing";
+import { resolveBackendConfig } from "@/infrastructure/config/serverConfig";
 
 export default async function handler(
   req: NextApiRequest,

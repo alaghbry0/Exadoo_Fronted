@@ -3,14 +3,14 @@
 
 import { useState } from "react";
 import PageLayout from "@/shared/components/layout/PageLayout";
-import AcademyHeroCard from "@/components/AcademyHeroCard";
-import AuthPrompt from "@/features/auth/components/AuthFab";
+import AcademyHeroCard from "@/domains/academy/components/AcademyHeroCard";
+import AuthPrompt from "@/domains/auth/components/AuthFab";
 import {
   UserHeader,
   HomeSearchBar,
   HomeServiceCard,
-} from "@/features/home/components";
-import { HOME_SERVICES } from "@/features/home/data/services";
+} from "@/domains/home/components";
+import { HOME_SERVICES } from "@/domains/home/data/services";
 import { colors, spacing } from "@/styles/tokens";
 
 export default function Home() {

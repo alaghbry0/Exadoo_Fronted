@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, ExternalLink, X } from "lucide-react";
-import { sanitizeHtml } from "@/utils/safeHtml";
+import { sanitizeHtml } from "@/shared/utils/safeHtml";
 
 const InviteAlert: React.FC = () => {
   const [subscriptionData, setSubscriptionData] = useState<{

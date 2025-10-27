@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Home, ShoppingBag, User, GraduationCap } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "الرئيسية" },

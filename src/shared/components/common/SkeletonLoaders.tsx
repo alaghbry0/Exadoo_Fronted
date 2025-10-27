@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { cn } from "@/shared/utils";
 import { colors, spacing, radius, componentRadius, shadowClasses } from "@/styles/tokens";
 import type { CSSProperties } from "react";
 

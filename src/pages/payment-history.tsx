@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { PaymentHistoryItem } from "@/components/PaymentHistoryItem";
+import { PaymentHistoryItem } from "@/domains/payments/components/PaymentHistoryItem";
 import axios from "axios";
-import { useTelegram } from "../context/TelegramContext";
-import { Button } from "@/components/ui/button";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { Button } from "@/shared/components/ui/button";
 import { useRouter } from "next/router";
 import { ArrowLeft } from "lucide-react";
 import { TableSkeleton } from "@/shared/components/common/LoadingStates";

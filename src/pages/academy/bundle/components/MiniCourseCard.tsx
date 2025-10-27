@@ -5,10 +5,10 @@ import React, { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { BookOpen } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import SmartImage from "@/shared/components/common/SmartImage";
 import { colors, spacing } from "@/styles/tokens";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 interface MiniCourseCardProps {
   id: string;

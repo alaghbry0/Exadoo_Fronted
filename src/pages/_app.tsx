@@ -3,28 +3,28 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
-import "../styles/globals.css";
-import FooterNav from "../shared/components/layout/FooterNav";
-import SplashScreen from "../shared/components/common/SplashScreen";
-import { TelegramProvider, useTelegram } from "../context/TelegramContext";
-import { useTariffStore } from "../stores/zustand";
-import { fetchBotWalletAddress } from "../services/api";
+import "@/styles/globals.css";
+import FooterNav from "@/shared/components/layout/FooterNav";
+import SplashScreen from "@/shared/components/common/SplashScreen";
+import { TelegramProvider, useTelegram } from "@/shared/context/TelegramContext";
+import { useTariffStore } from "@/shared/state/zustand";
+import { fetchBotWalletAddress } from "@/domains/payments/api";
 import {
   QueryClient,
   QueryClientProvider,
   useQuery,
   useQueryClient as useTanstackQueryClient,
 } from "@tanstack/react-query";
-import { useUserStore } from "../stores/zustand/userStore";
-import { NotificationToast } from "../features/notifications/components/NotificationToast";
+import { useUserStore } from "@/shared/state/zustand/userStore";
+import { NotificationToast } from "@/domains/notifications/components/NotificationToast";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { NotificationsProvider } from "@/context/NotificationsContext";
-import { useNotificationStream } from "@/hooks/useNotificationStream";
-import GlobalAuthSheet from "@/features/auth/components/GlobalAuthSheet";
+import { NotificationsProvider } from "@/domains/notifications/context/NotificationsContext";
+import { useNotificationStream } from "@/domains/notifications/hooks/useNotificationStream";
+import GlobalAuthSheet from "@/domains/auth/components/GlobalAuthSheet";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
-import logger from "@/core/utils/logger";
-import { registerServiceWorker } from "@/utils/registerServiceWorker";
+import logger from "@/infrastructure/logging/logger";
+import { registerServiceWorker } from "@/infrastructure/serviceWorker/registerServiceWorker";
 
 // ===================== startapp helpers =====================
 type StartAppParam = string | null;

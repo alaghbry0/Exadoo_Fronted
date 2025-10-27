@@ -16,22 +16,22 @@ import {
 } from "lucide-react";
 import { colors, spacing } from "@/styles/tokens";
 import SmartImage from "@/shared/components/common/SmartImage";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 
-import AuthPrompt from "@/features/auth/components/AuthFab";
+import AuthPrompt from "@/domains/auth/components/AuthFab";
 
 // Feature Components
 import {
   CourseLoadingState,
   CourseErrorState,
   CourseNotFoundState,
-} from "@/features/academy/components";
+} from "@/domains/academy/components";
 
 // Dynamic Imports
 const AcademyPurchaseModal = dynamic(
-  () => import("@/features/academy/components/AcademyPurchaseModal"),
+  () => import("@/domains/academy/components/AcademyPurchaseModal"),
   {
     ssr: false,
     loading: () => (
@@ -43,13 +43,13 @@ const AcademyPurchaseModal = dynamic(
 );
 
 // Services & Hooks
-import { useAcademyData } from "@/services/academy";
-import { useCourseDetails } from "@/services/courseDetails";
-import { useTelegram } from "@/context/TelegramContext";
+import { useAcademyData } from "@/domains/academy/api";
+import { useCourseDetails } from "@/domains/academy/api";
+import { useTelegram } from "@/shared/context/TelegramContext";
 
 // Utils & Types
-import { formatPrice } from "@/lib/academy";
-import type { Course } from "@/types/academy";
+import { formatPrice } from "@/domains/academy/utils";
+import type { Course } from "@/domains/academy/types";
 
 /* ==============================
    Sub-Components

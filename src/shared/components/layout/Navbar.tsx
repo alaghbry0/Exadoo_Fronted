@@ -5,9 +5,9 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Bell, Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/shared/components/ui/sheet";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

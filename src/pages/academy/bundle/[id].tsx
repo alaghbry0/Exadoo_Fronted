@@ -6,15 +6,15 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useAcademyData } from "@/services/academy";
-import { useTelegram } from "@/context/TelegramContext";
-import AuthPrompt from "@/features/auth/components/AuthFab";
+import { useAcademyData } from "@/domains/academy/api";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import AuthPrompt from "@/domains/auth/components/AuthFab";
 import SmartImage from "@/shared/components/common/SmartImage";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 const AcademyPurchaseModal = dynamic(
-  () => import("@/features/academy/components/AcademyPurchaseModal"),
+  () => import("@/domains/academy/components/AcademyPurchaseModal"),
   { ssr: false },
 );
 import PageLayout from "@/shared/components/layout/PageLayout";

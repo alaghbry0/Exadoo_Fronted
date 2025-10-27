@@ -1,7 +1,7 @@
 import React from "react";
 import { CheckCircle2, Lock, PlayCircle, Clock, Video } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import { colors, spacing } from "@/styles/tokens";
 
 export default function CurriculumList({

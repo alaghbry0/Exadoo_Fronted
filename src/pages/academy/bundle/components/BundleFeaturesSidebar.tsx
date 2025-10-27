@@ -4,7 +4,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Gift, Layers, MessageSquare, Award } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/shared/components/ui/card";
 import { colors, spacing } from "@/styles/tokens";
 
 interface Bundle {

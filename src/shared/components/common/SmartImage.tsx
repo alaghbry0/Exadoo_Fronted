@@ -2,13 +2,13 @@
 
 import Image, { type ImageProps, type StaticImageData } from "next/image";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { cn } from "@/lib/utils";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { cn } from "@/shared/utils";
+import { useIntersectionObserver } from "@/shared/hooks/useIntersectionObserver";
 import {
   blurPlaceholders,
   getOptimalQuality,
   generateSizesAttribute,
-} from "@/utils/imageUtils";
+} from "@/shared/utils/imageUtils";
 import { Loader2 } from "lucide-react";
 
 // استخدام blur placeholders المحسّنة

@@ -1,6 +1,6 @@
 // src/shared/components/common/LoadingStates.tsx
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 // Full page loader

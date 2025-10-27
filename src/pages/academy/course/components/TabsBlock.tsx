@@ -1,8 +1,8 @@
 // src/features/academy/course/components/TabsBlock.tsx
 import React from "react";
 import { BookOpen, FileText, Target } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { TabId } from "@/types/academy";
+import { cn } from "@/shared/utils";
+import type { TabId } from "@/domains/academy/types";
 
 const tabsDef: { id: TabId; label: string; icon: any }[] = [
   { id: "curriculum", label: "المنهج الدراسي", icon: BookOpen },

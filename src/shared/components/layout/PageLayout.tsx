@@ -1,7 +1,7 @@
 // src/shared/components/layout/PageLayout.tsx
 import { ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 
 interface PageLayoutProps {
   children: ReactNode;

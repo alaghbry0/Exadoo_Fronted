@@ -18,15 +18,15 @@ import {
   AlertOctagon,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTelegram } from "@/context/TelegramContext";
-import { useNotificationsContext } from "@/context/NotificationsContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { NotificationType } from "@/types/notification";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { useNotificationsContext } from "@/domains/notifications/context/NotificationsContext";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import { NotificationType } from "@/domains/notifications/types";
 
 // استيراد المكونات الجديدة
-import PaymentDetailsCard from "@/features/payments/components/PaymentDetailsCard";
-import SubscriptionDetailsCard from "@/features/payments/components/SubscriptionDetailsCard";
+import PaymentDetailsCard from "@/domains/payments/components/PaymentDetailsCard";
+import SubscriptionDetailsCard from "@/domains/payments/components/SubscriptionDetailsCard";
 
 // --- الدوال المساعدة ومكونات الواجهة (تبقى كما هي) ---
 

@@ -1,6 +1,6 @@
 // src/pages/academy/course/components/LevelBadge.tsx
 import React from "react";
-import type { Course } from "@/types/academy";
+import type { Course } from "@/domains/academy/types";
 import { colors, spacing } from "@/styles/tokens";
 
 export default function LevelBadge({ level }: { level?: Course["level"] }) {

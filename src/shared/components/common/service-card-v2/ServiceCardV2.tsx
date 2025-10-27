@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { CSSProperties, ComponentType } from "react";
 import { spacing } from "@/styles/tokens";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import {
   accentThemes,
   cardClasses,

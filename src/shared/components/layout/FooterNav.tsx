@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils";
 import { Home, Bell, GraduationCap, User } from "lucide-react";
 
 type NavItem = { path: string; icon: React.ElementType; label: string };

@@ -3,7 +3,7 @@
 
 import { ServiceCardV2 } from "./ServiceCardV2";
 import { CalendarCheck2, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 
 export function ConsultationsCard({
   title,
