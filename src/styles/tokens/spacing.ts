@@ -12,6 +12,7 @@ export const spacing = {
   4: "0.75rem", // 12px
   5: "1rem", // 16px
   6: "1.5rem", // 24px
+  7: "1.25rem", // 20px (للتباعدات الثابتة كأزرار FAB)
   8: "2rem", // 32px
   10: "2.5rem", // 40px
   12: "3rem", // 48px
@@ -53,5 +54,11 @@ export const semanticSpacing = {
     lg: spacing[16], // 64px
     xl: spacing[20], // 80px
     "2xl": spacing[24], // 96px
+  },
+
+  // Fixed placements & safe areas
+  fixed: {
+    fabOffset: `calc(env(safe-area-inset-bottom, 0px) + ${spacing[7]})`,
+    safeAreaTop: "env(safe-area-inset-top, 0px)",
   },
 } as const;

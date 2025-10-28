@@ -4,7 +4,9 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/shared/components/ui/button";
+import { GlowRing } from "@/shared/components/ui/glow-ring";
 import { cn } from "@/shared/utils";
+import { shadowClasses } from "@/styles/tokens";
 import { ChevronLeft, Play } from "lucide-react";
 
 type Props = {
@@ -91,12 +93,11 @@ export default function SubscribeFab({
 
   return createPortal(
     <div
-      className="fixed z-[30] pointer-events-none"
-      style={{
-        left: "50%",
-        transform: "translateX(-50%)",
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
-      }}
+      className={cn(
+        "fixed left-1/2 -translate-x-1/2",
+        "safe-area-bottom-fab z-[30] pointer-events-none",
+        "px-4",
+      )}
     >
       <motion.div
         initial={reduceMotion ? false : { y: 48, opacity: 0, scale: 0.98 }}
@@ -109,23 +110,21 @@ export default function SubscribeFab({
           density="relaxed"
           aria-label={aria}
           className={cn(
-            "h-12 md:h-14 px-5 md:px-6 rounded-full min-w-[260px]",
-            "bg-white/95 dark:bg-neutral-900/80 backdrop-blur-xl",
-            "border border-neutral-200/70 dark:border-neutral-700/60",
-            "text-neutral-900 dark:text-neutral-100 font-medium tracking-tight",
-            "shadow-xl",
-            "transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0",
+            "relative flex h-12 min-w-[260px] items-center justify-center",
+            "rounded-full px-5 md:h-14 md:px-6",
+            "bg-white/95 text-neutral-900 dark:bg-neutral-900/80 dark:text-neutral-100",
+            "border border-neutral-200/70 dark:border-neutral-700/60 backdrop-blur-xl",
+            shadowClasses.fab,
+            "font-medium tracking-tight transition-transform duration-200",
+            "hover:-translate-y-0.5 active:translate-y-0",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
-            "whitespace-nowrap relative overflow-hidden group",
+            "whitespace-nowrap overflow-hidden group",
           )}
         >
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background:
-                "radial-gradient(160px 160px at 50% 10%, rgba(255,255,255,0.18), transparent 60%)",
-            }}
+          <GlowRing
+            className="opacity-0 group-hover:opacity-100"
+            intent="primary"
+            blur="lg"
           />
           <span className="relative z-10 flex items-center gap-3 md:gap-4">
             <span
@@ -147,9 +146,11 @@ export default function SubscribeFab({
 
             {!isEnrolled && (
               <span
-                className="flex items-baseline gap-1 rounded-full px-2.5 py-1 shrink-0
-                               bg-neutral-100 text-neutral-900
-                               dark:bg-neutral-800 dark:text-neutral-100"
+                className={cn(
+                  "flex items-baseline gap-1 rounded-full px-2.5 py-1 shrink-0",
+                  "bg-neutral-100 text-neutral-900",
+                  "dark:bg-neutral-800 dark:text-neutral-100",
+                )}
               >
                 {isFree ? (
                   <span className="text-xs md:text-sm font-semibold text-primary-700 dark:text-primary-300">

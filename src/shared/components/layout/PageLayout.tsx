@@ -26,7 +26,7 @@ interface PageLayoutProps {
   navbarProps?: NavbarProps;
 }
 
-const DEFAULT_NAVBAR: PageLayoutSlot = NavbarEnhanced;
+
 const DEFAULT_FOOTER: PageLayoutSlot = FooterNavEnhanced;
 
 export default function PageLayout({

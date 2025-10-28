@@ -50,6 +50,13 @@ export const shadows = {
     sm: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)",
     md: "inset 0 2px 8px 0 rgba(0, 0, 0, 0.1)",
   },
+
+  // Composite shadows for elevated surfaces
+  composite: {
+    floatingFab: `${"0 18px 45px rgba(15, 23, 42, 0.18)"}, ${"0 8px 22px rgba(37, 99, 235, 0.12)"}`,
+    surfaceGlow: `${"0 25px 65px rgba(15, 23, 42, 0.25)"}, ${"0 18px 40px rgba(56, 189, 248, 0.15)"}`,
+    focusRing: `${"0 0 0 2px rgba(255, 255, 255, 0.3)"}, ${"0 0 0 6px rgba(37, 99, 235, 0.35)"}`,
+  },
 } as const;
 
 // CSS classes للاستخدام المباشر - موحدة
@@ -79,10 +86,13 @@ export const shadowClasses = {
   // Special effects
   glow: "shadow-[0_0_40px_rgba(0,132,255,0.3)]",
   glowPurple: "shadow-[0_0_40px_rgba(139,92,246,0.3)]",
-  
+  fab: "shadow-[0_18px_45px_rgba(15,23,42,0.18)] dark:shadow-[0_22px_50px_rgba(0,0,0,0.55)]",
+
   // None
   none: "shadow-none",
 } as const;
 
 // Shadow utility للاستخدام الديناميكي
 export type ShadowType = keyof typeof shadowClasses;
+
+export const compositeShadows = shadows.composite;

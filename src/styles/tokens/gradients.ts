@@ -30,6 +30,11 @@ export const gradients = {
   text: {
     brand: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${colors.brand.primaryHover} 100%)`,
   },
+  effects: {
+    buttonGlow: `radial-gradient(160px 160px at 50% 12%, ${withAlpha(colors.brand.primary, 0.18)}, transparent 65%)`,
+    surfaceGlow: `radial-gradient(220px 220px at 50% 0%, ${withAlpha(colors.brand.primary, 0.12)}, transparent 70%)`,
+    neutralSheen: `linear-gradient(120deg, ${withAlpha(colors.bg.inverse, 0.08)} 0%, transparent 50%, ${withAlpha(colors.bg.inverse, 0.06)} 100%)`,
+  },
 } as const;
 
 export type GradientGroup = keyof typeof gradients;

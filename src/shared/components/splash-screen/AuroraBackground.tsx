@@ -1,18 +1,7 @@
-// src/components/AuroraBackground.tsx
 "use client";
 import { motion } from "framer-motion";
 
-// ====================================================================
-//  التعديل: تم استخراج الألوان بدقة من صورة الشعار
-// ====================================================================
-// اللون السماوي الأساسي من الشعار (Hex: #3899f2)
-const PRIMARY_LOGO_COLOR = "rgba(50, 170, 242, 0.25)";
-
-// لون سماوي ثانوي مائل للأخضر لإضافة عمق
-const SECONDARY_CYAN_COLOR = "rgba(60, 153, 240, 0.2)";
-
-// لون أزرق فاتح جداً للوهج والتأثيرات السحابية
-const TERTIARY_HIGHLIGHT_COLOR = "rgba(204, 230, 255, 0.2)";
+import { cn } from "@/shared/utils";
 
 const AuroraBackground = () => {
   return (
@@ -25,8 +14,10 @@ const AuroraBackground = () => {
       >
         {/* Gradient Blob 1 (لون الشعار الأساسي) */}
         <motion.div
-          className="absolute top-0 left-0 w-96 h-96 rounded-full"
-          style={{ background: PRIMARY_LOGO_COLOR, filter: "blur(100px)" }}
+          className={cn(
+            "absolute top-0 left-0 h-96 w-96 rounded-full",
+            "mix-blend-screen bg-aurora-primary blur-aurora-lg",
+          )}
           animate={{
             x: ["-20%", "20%", "-20%"],
             y: ["-20%", "20%", "-20%"],
@@ -41,8 +32,10 @@ const AuroraBackground = () => {
         />
         {/* Gradient Blob 2 (اللون الثانوي) */}
         <motion.div
-          className="absolute bottom-0 right-0 w-96 h-96 rounded-full"
-          style={{ background: SECONDARY_CYAN_COLOR, filter: "blur(100px)" }}
+          className={cn(
+            "absolute bottom-0 right-0 h-96 w-96 rounded-full",
+            "mix-blend-screen bg-aurora-secondary blur-aurora-lg",
+          )}
           animate={{
             x: ["20%", "-20%", "20%"],
             y: ["20%", "-20%", "20%"],
@@ -58,8 +51,10 @@ const AuroraBackground = () => {
         />
         {/* Gradient Blob 3 (لون الوهج) */}
         <motion.div
-          className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full"
-          style={{ background: TERTIARY_HIGHLIGHT_COLOR, filter: "blur(90px)" }}
+          className={cn(
+            "absolute bottom-1/4 left-1/4 h-80 w-80 rounded-full",
+            "mix-blend-screen bg-aurora-highlight blur-aurora-md",
+          )}
           animate={{
             x: ["10%", "-10%", "10%"],
             y: ["-10%", "10%", "-10%"],
