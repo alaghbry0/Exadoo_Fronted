@@ -109,8 +109,7 @@ const FILE_LIST: FileProgress[] = [
   { path: 'src/shared/components/common/ServiceCardV2.tsx', status: 'pending', priority: 3, category: 'Common' },
   { path: 'src/shared/components/common/SkeletonLoaders.tsx', status: 'pending', priority: 3, category: 'Common' },
   { path: 'src/shared/components/common/InviteAlert.tsx', status: 'pending', priority: 3, category: 'Common' },
-  { path: 'src/shared/components/layout/Navbar.tsx', status: 'pending', priority: 3, category: 'Layout' },
-  { path: 'src/shared/components/layout/NavbarEnhanced.tsx', status: 'pending', priority: 3, category: 'Layout' },
+  { path: 'src/components/ui/navbar/index.tsx', status: 'completed', priority: 3, category: 'Layout' },
   { path: 'src/shared/components/layout/BackHeader.tsx', status: 'pending', priority: 3, category: 'Layout' },
   { path: 'src/shared/components/layout/FooterNav.tsx', status: 'pending', priority: 3, category: 'Layout' },
 ];

@@ -4,6 +4,13 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Flame, TrendingUp, ShieldCheck } from "lucide-react";
 import type { DiscountDetails } from "@/domains/subscriptions/types";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  shadows,
+  withAlpha,
+} from "@/styles/tokens";
 
 interface Props {
   details: DiscountDetails;
@@ -20,15 +27,27 @@ const TieredDiscountInfo: React.FC<Props> = ({ details }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
-      className="mt-4 p-4 bg-gradient-to-br from-amber-50 to-orange-100/50 border border-amber-300/60 rounded-xl text-amber-900 text-sm space-y-3 text-center shadow-inner"
+      className={`mt-4 p-4 text-sm space-y-3 text-center ${componentRadius.card}`}
+      style={{
+        background: gradients.accent.amber,
+        color: colors.text.inverse,
+        border: `1px solid ${withAlpha(colors.status.warning, 0.4)}`,
+        boxShadow: shadows.inner.md,
+      }}
     >
       {/* 1. عرض المقاعد المتبقية */}
       {details.remaining_slots !== null && (
         <div className="flex items-center justify-center gap-2 font-semibold">
-          <Flame className="w-5 h-5 text-red-500" />
+          <Flame
+            className="w-5 h-5"
+            style={{ color: colors.status.warning }}
+          />
           <p>
             عرض حصري لـ{" "}
-            <span className="font-bold text-lg text-red-600 tracking-wider">
+            <span
+              className="font-bold text-lg tracking-wider"
+              style={{ color: colors.status.error }}
+            >
               {details.remaining_slots}
             </span>{" "}
             مقاعد فقط!
@@ -38,7 +57,10 @@ const TieredDiscountInfo: React.FC<Props> = ({ details }) => {
 
       {/* 2. رسالة السعر التالي (إن وجدت) */}
       {details.next_tier_info?.message && (
-        <div className="flex items-center justify-center gap-2 text-amber-800">
+        <div
+          className="flex items-center justify-center gap-2"
+          style={{ color: withAlpha(colors.text.inverse, 0.85) }}
+        >
           <TrendingUp className="w-4 h-4" />
           <p>{details.next_tier_info.message}</p>
         </div>
@@ -46,7 +68,10 @@ const TieredDiscountInfo: React.FC<Props> = ({ details }) => {
 
       {/* 3. رسالة تثبيت السعر */}
       {details.lock_in_price && (
-        <div className="flex items-center justify-center gap-2 text-green-700 pt-2">
+        <div
+          className="flex items-center justify-center gap-2 pt-2"
+          style={{ color: colors.status.success }}
+        >
           <ShieldCheck className="w-4 h-4" />
           <p className="font-semibold">
             اشتر الآن وثبّت هذا السعر

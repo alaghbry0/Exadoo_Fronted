@@ -2,6 +2,14 @@
 "use client";
 import { motion } from "framer-motion";
 import { Spinner } from "@/shared/components/common/Spinner";
+import { cn } from "@/shared/utils";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  shadowClasses,
+  withAlpha,
+} from "@/styles/tokens";
 // افترض أن PaymentStatus معرفة بشكل صحيح، مثلاً:
 // export type PaymentStatus = 'idle' | 'processing' | 'processing_usdt' | 'processing_stars' | 'success' | 'error' | 'exchange_pending' | 'exchange_success';
 import type { PaymentStatus } from "@/domains/payments/types"; // تأكد من أن هذا النوع يتضمن 'idle'
@@ -49,16 +57,28 @@ export const PaymentButtons = ({
         whileTap={{ scale: !isUsdtButtonDisabled ? 0.98 : 1 }} // لا تقم بالتحريك إذا كان معطلاً
         onClick={onUsdtSelect}
         disabled={isUsdtButtonDisabled} // <-- استخدام حالة التعطيل المدمجة
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0084FF] to-[#0066CC] text-white rounded-lg 
-          ${isUsdtButtonDisabled ? "opacity-75 cursor-not-allowed" : "hover:from-[#0075e6] hover:to-[#0059b3]"} 
-          shadow-md transition-all duration-200`}
+        className={cn(
+          "w-full flex items-center justify-center gap-2 px-4 py-3 transition-all duration-200",
+          componentRadius.button,
+          shadowClasses.buttonElevated,
+          `text-[${colors.text.inverse}]`,
+          `bg-[${gradients.brand.primary}]`,
+          !isUsdtButtonDisabled && `hover:bg-[${gradients.brand.primaryHover}]`,
+          isUsdtButtonDisabled && "opacity-75 cursor-not-allowed",
+        )}
         aria-label="الدفع عبر USDT"
       >
         {showUsdtSpinner ? ( // <-- استخدام حالة إظهار Spinner المحددة
-          <Spinner className="w-5 h-5 text-white" />
+          <Spinner
+            className="w-5 h-5"
+            style={{ color: colors.text.inverse }}
+          />
         ) : (
           <>
-            <Wallet className="w-5 h-5 text-white" />
+            <Wallet
+              className="w-5 h-5"
+              style={{ color: colors.text.inverse }}
+            />
             <span className="font-bold">الدفع عبر USDT</span>
           </>
         )}
@@ -71,28 +91,55 @@ export const PaymentButtons = ({
           whileTap={{ scale: !isStarsButtonDisabled ? 0.98 : 1 }}
           onClick={onStarsSelect}
           disabled={isStarsButtonDisabled} // <-- استخدام حالة التعطيل المدمجة
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFC800] text-gray-900 rounded-lg 
-            ${isStarsButtonDisabled ? "opacity-75 cursor-not-allowed" : "hover:from-[#f0c800] hover:to-[#e6b800]"} 
-            shadow-md transition-all duration-200`}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 px-4 py-3 transition-all duration-200",
+            componentRadius.button,
+            shadowClasses.buttonElevated,
+            `text-[${colors.text.primary}]`,
+            `bg-[${gradients.accent.amber}]`,
+            !isStarsButtonDisabled && `hover:bg-[${gradients.accent.amber}]`,
+            isStarsButtonDisabled && "opacity-75 cursor-not-allowed",
+          )}
           aria-label="الدفع باستخدام Telegram Stars"
         >
           {showStarsSpinner ? ( // <-- استخدام حالة إظهار Spinner المحددة
-            <Spinner className="w-5 h-5 text-gray-900" /> // قد تحتاج Spinner بلون مختلف هنا
+            <Spinner
+              className="w-5 h-5"
+              style={{ color: colors.text.primary }}
+            /> // قد تحتاج Spinner بلون مختلف هنا
           ) : (
             <>
-              <Star className="w-5 h-5 text-amber-700" />
+              <Star
+                className="w-5 h-5"
+                style={{ color: colors.status.warning }}
+              />
               <span className="font-bold">Telegram Stars</span>
             </>
           )}
         </motion.button>
       )}
       {!telegramId && (
-        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-          <p className="text-sm text-yellow-700 font-medium flex items-center justify-center gap-2">
-            <Star className="w-5 h-5 text-amber-700 inline-block" />
+        <div
+          className="p-3 border rounded-lg text-center"
+          style={{
+            background: withAlpha(colors.status.warning, 0.12),
+            borderColor: withAlpha(colors.status.warning, 0.35),
+          }}
+        >
+          <p
+            className="text-sm font-medium flex items-center justify-center gap-2"
+            style={{ color: colors.status.warning }}
+          >
+            <Star
+              className="w-5 h-5 inline-block"
+              style={{ color: colors.status.warning }}
+            />
             <span>الدفع عبر Telegram Stars</span>
           </p>
-          <p className="text-xs text-yellow-600 mt-1">
+          <p
+            className="text-xs mt-1"
+            style={{ color: withAlpha(colors.status.warning, 0.8) }}
+          >
             هذه الطريقة متاحة فقط عند فتح التطبيق من داخل تليجرام.
           </p>
         </div>

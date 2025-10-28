@@ -1,7 +1,6 @@
 // src/components/SubscriptionModal.tsx
 "use client";
 import { cn } from "@/shared/utils";
-import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
 
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
@@ -31,6 +30,13 @@ import { ExchangePaymentModal } from "@/domains/payments/components/ExchangePaym
 import { PaymentSuccessModal } from "@/domains/payments/components/PaymentSuccessModal";
 import { PaymentExchangeSuccess } from "@/domains/payments/components/PaymentExchangeSuccess";
 import { claimTrial } from "@/domains/subscriptions/api";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  shadowClasses,
+  withAlpha,
+} from "@/styles/tokens";
 
 // ====================================================================
 // المكون الرئيسي لمودال شراء اشتراكات الاشارات
@@ -158,8 +164,14 @@ const SubscriptionModal = ({
   return (
     <>
       {isInitializing && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
-          <Loader2 className="w-12 h-12 text-white animate-spin" />
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[100]"
+          style={{ backgroundColor: withAlpha(colors.bg.overlay, 0.85) }}
+        >
+          <Loader2
+            className="w-12 h-12 animate-spin"
+            style={{ color: colors.text.inverse }}
+          />
         </div>
       )}
       <Sheet
@@ -168,18 +180,34 @@ const SubscriptionModal = ({
       >
         <SheetContent
           side="bottom"
-          className="h-[90vh] md:h-[85vh] rounded-t-3xl border-0 bg-gray-50 p-0 flex flex-col"
+          className="h-[90vh] md:h-[85vh] rounded-t-3xl border-0 p-0 flex flex-col"
           dir="rtl"
+          style={{ background: gradients.surface.elevated }}
         >
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full z-20" />
+          <div
+            className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full z-20"
+            style={{ backgroundColor: withAlpha(colors.border.default, 0.8) }}
+          />
 
-          <SheetHeader className="p-4 pt-8 text-center border-b border-gray-200">
-            <SheetTitle className="text-xl font-bold text-gray-800 font-arabic">
+          <SheetHeader
+            className="p-4 pt-8 text-center border-b"
+            style={{ borderColor: withAlpha(colors.border.default, 0.6) }}
+          >
+            <SheetTitle
+              className={cn(
+                "text-xl font-bold font-arabic",
+                `text-[${colors.text.primary}]`,
+              )}
+            >
               {plan.name}
             </SheetTitle>
             <button
               onClick={handleCloseAll}
-              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 p-1 rounded-full transition-colors"
+              className={cn(
+                "absolute top-4 left-4 p-1 rounded-full transition-colors",
+                `text-[${colors.text.tertiary}]`,
+                `hover:text-[${colors.text.primary}]`,
+              )}
             >
               <X className="w-6 h-6" />
             </button>
@@ -190,15 +218,27 @@ const SubscriptionModal = ({
               {/* Price / Trial hero card */}
               <div
                 className={cn(
-                  componentVariants.card.elevated,
-                  "bg-gradient-to-br from-primary-500 to-primary-600 p-6 text-white text-center relative overflow-hidden",
+                  "p-6 text-center relative overflow-hidden",
+                  componentRadius.card,
+                  shadowClasses.card,
+                  `text-[${colors.text.inverse}]`,
                 )}
+                style={{ backgroundImage: gradients.brand.primary }}
               >
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full" />
-                <div className="absolute -bottom-8 -left-2 w-32 h-32 bg-white/10 rounded-full" />
+                <div
+                  className="absolute -top-4 -right-4 w-24 h-24 rounded-full"
+                  style={{ backgroundColor: withAlpha(colors.bg.inverse, 0.1) }}
+                />
+                <div
+                  className="absolute -bottom-8 -left-2 w-32 h-32 rounded-full"
+                  style={{ backgroundColor: withAlpha(colors.bg.inverse, 0.1) }}
+                />
 
                 {/* العنوان يتغير حسب كونها تجربة أم لا */}
-                <p className="font-medium text-white/80 mb-1 z-10 relative">
+                <p
+                  className="font-medium mb-1 z-10 relative"
+                  style={{ color: withAlpha(colors.text.inverse, 0.8) }}
+                >
                   {isTrial ? (
                     <>
                       {" "}
@@ -217,7 +257,10 @@ const SubscriptionModal = ({
                   {!isTrial &&
                     plan.selectedOption.hasDiscount &&
                     plan.selectedOption.originalPrice && (
-                      <span className="text-2xl font-medium text-white/60 line-through">
+                      <span
+                        className="text-2xl font-medium line-through"
+                        style={{ color: withAlpha(colors.text.inverse, 0.6) }}
+                      >
                         {Number(plan.selectedOption.originalPrice).toFixed(0)}$
                       </span>
                     )}
@@ -228,7 +271,13 @@ const SubscriptionModal = ({
                       <span className="text-3xl md:text-5xl font-extrabold tracking-tight">
                         فترة تجريبية{" "}
                       </span>
-                      <span className="text-[11px] font-bold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">
+                      <span
+                        className="text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                        style={{
+                          backgroundColor: withAlpha(colors.bg.inverse, 0.2),
+                          color: colors.text.inverse,
+                        }}
+                      >
                         Free Trial
                       </span>
                     </div>
@@ -241,14 +290,32 @@ const SubscriptionModal = ({
 
                 {/* شارة الخصم فقط للخطط المدفوعة */}
                 {!isTrial && plan.selectedOption.hasDiscount && (
-                  <div className="mt-3 inline-block bg-white text-primary-600 px-3 py-1 rounded-full text-sm font-bold shadow z-10 relative">
+                  <div
+                    className={cn(
+                      "mt-3 inline-block px-3 py-1 rounded-full text-sm font-bold z-10 relative",
+                      shadowClasses.button,
+                    )}
+                    style={{
+                      background: colors.bg.primary,
+                      color: colors.brand.primary,
+                    }}
+                  >
                     وفر {plan.selectedOption.discountPercentage}% الآن!
                   </div>
                 )}
 
                 {/* شارة تجربة للوضوح (اختيارية) */}
                 {isTrial && (
-                  <div className="mt-3 inline-block bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow z-10 relative">
+                  <div
+                    className={cn(
+                      "mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold z-10 relative",
+                      shadowClasses.button,
+                    )}
+                    style={{
+                      background: withAlpha(colors.status.success, 0.12),
+                      color: colors.status.success,
+                    }}
+                  >
                     {plan.selectedOption.trialDurationDays
                       ? `جرب ${plan.selectedOption.trialDurationDays} يوم مجانًا — بدون دفع`
                       : "بدون دفع — ابدأ الآن"}
@@ -258,18 +325,38 @@ const SubscriptionModal = ({
 
               {/* Features */}
               <div className="space-y-6">
-                <div className="bg-white p-5 rounded-2xl border">
-                  <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center font-arabic">
-                    <ShieldCheck className="w-5 h-5 text-primary-600" />
+                <div
+                  className="p-5 rounded-2xl border"
+                  style={{
+                    background: colors.bg.elevated,
+                    borderColor: withAlpha(colors.border.default, 0.5),
+                  }}
+                >
+                  <h4
+                    className={cn(
+                      "text-lg font-bold mb-4 flex items-center font-arabic",
+                      `text-[${colors.text.primary}]`,
+                    )}
+                  >
+                    <ShieldCheck
+                      className="w-5 h-5"
+                      style={{ color: colors.brand.primary }}
+                    />
                     <span className="ml-2">ماذا ستحصل عليه؟</span>
                   </h4>
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
-                        <span className="text-gray-600 leading-relaxed text-sm">
+                        <span
+                          className="leading-relaxed text-sm"
+                          style={{ color: colors.text.secondary }}
+                        >
                           {feature}
                         </span>
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 ml-3 mt-1" />
+                        <CheckCircle
+                          className="w-5 h-5 flex-shrink-0 ml-3 mt-1"
+                          style={{ color: colors.status.success }}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -279,10 +366,22 @@ const SubscriptionModal = ({
                 {hasTerms && (
                   <div
                     ref={termsSectionRef}
-                    className="bg-white p-5 rounded-2xl border"
+                    className="p-5 rounded-2xl border"
+                    style={{
+                      background: colors.bg.elevated,
+                      borderColor: withAlpha(colors.border.default, 0.5),
+                    }}
                   >
-                    <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center font-arabic">
-                      <ScrollText className="w-5 h-5 text-gray-500" />
+                    <h4
+                      className={cn(
+                        "text-lg font-bold mb-4 flex items-center font-arabic",
+                        `text-[${colors.text.primary}]`,
+                      )}
+                    >
+                      <ScrollText
+                        className="w-5 h-5"
+                        style={{ color: colors.text.secondary }}
+                      />
                       <span className="ml-2">الشروط والأحكام</span>
                     </h4>
                     <ul className="space-y-3">
@@ -292,10 +391,18 @@ const SubscriptionModal = ({
                             key={index}
                             className="flex items-start text-right"
                           >
-                            <span className="flex-1 text-gray-500 leading-relaxed text-sm">
+                            <span
+                              className="flex-1 leading-relaxed text-sm"
+                              style={{ color: colors.text.secondary }}
+                            >
                               {term}
                             </span>
-                            <span className="mt-1.5 ml-3 text-gray-500">•</span>
+                            <span
+                              className="mt-1.5 ml-3"
+                              style={{ color: colors.text.secondary }}
+                            >
+                              •
+                            </span>
                           </li>
                         ),
                       )}
@@ -307,7 +414,13 @@ const SubscriptionModal = ({
           </ScrollArea>
 
           {/* Footer actions */}
-          <div className="bg-white/90 backdrop-blur-sm border-t-2 border-primary-100 p-4 shadow-top-strong z-10">
+          <div
+            className="backdrop-blur-sm border-t-2 p-4 shadow-top-strong z-10"
+            style={{
+              background: withAlpha(colors.bg.elevated, 0.95),
+              borderColor: withAlpha(colors.border.default, 0.6),
+            }}
+          >
             {hasTerms && (
               <div className="flex items-start gap-3 mb-4">
                 <Checkbox
@@ -320,11 +433,13 @@ const SubscriptionModal = ({
                 />
                 <label
                   htmlFor="termsAgreementModal"
-                  className="text-sm text-gray-600 select-none"
+                  className="text-sm select-none"
+                  style={{ color: colors.text.secondary }}
                 >
                   أوافق على{" "}
                   <span
-                    className="font-bold text-primary-600 hover:underline cursor-pointer"
+                    className="font-bold hover:underline cursor-pointer"
+                    style={{ color: colors.brand.primary }}
                     onClick={scrollToTerms}
                   >
                     الشروط والأحكام
@@ -339,11 +454,22 @@ const SubscriptionModal = ({
                 <Button
                   onClick={goToChooseMethod}
                   density="relaxed"
-                  className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-base font-bold shadow-lg hover:shadow-primary-500/40 transition-shadow duration-300"
+                  fullWidth
+                  className="h-14 text-base font-bold transition-shadow duration-300"
+                  intentOverrides={{
+                    background: gradients.brand.primary,
+                    hoverBackground: gradients.brand.primaryHover,
+                    foreground: colors.text.inverse,
+                    hoverForeground: colors.text.inverse,
+                    shadow: shadowClasses.buttonElevated,
+                  }}
                   disabled={loading || (hasTerms && !termsAgreed)}
                 >
                   {loading && paymentStatus === "processing_usdt" ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2
+                      className="w-5 h-5 animate-spin"
+                      style={{ color: colors.text.inverse }}
+                    />
                   ) : (
                     "الدفع باستخدام USDT"
                   )}
@@ -353,11 +479,22 @@ const SubscriptionModal = ({
                   <Button
                     onClick={handleStarsPayment}
                     density="relaxed"
-                    className="w-full h-14 bg-sky-500 text-white text-base font-bold shadow-lg hover:shadow-sky-500/40 transition-shadow duration-300"
+                    fullWidth
+                    className="h-14 text-base font-bold transition-shadow duration-300"
+                    intentOverrides={{
+                      background: gradients.brand.secondary,
+                      hoverBackground: gradients.brand.secondary,
+                      foreground: colors.text.inverse,
+                      hoverForeground: colors.text.inverse,
+                      shadow: shadowClasses.buttonElevated,
+                    }}
                     disabled={loading || (hasTerms && !termsAgreed)}
                   >
                     {loading && paymentStatus === "processing_stars" ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2
+                        className="w-5 h-5 animate-spin"
+                        style={{ color: colors.text.inverse }}
+                      />
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5 ml-2" />
@@ -372,25 +509,42 @@ const SubscriptionModal = ({
                 <Button
                   onClick={handleClaimTrial}
                   density="relaxed"
-                  className="w-full h-14 bg-emerald-600 text-white text-base font-bold shadow-lg hover:shadow-emerald-500/40 transition-shadow duration-300"
+                  fullWidth
+                  className="h-14 text-base font-bold transition-shadow duration-300"
+                  intentOverrides={{
+                    background: gradients.status.success,
+                    hoverBackground: gradients.status.success,
+                    foreground: colors.text.inverse,
+                    hoverForeground: colors.text.inverse,
+                    shadow: shadowClasses.buttonElevated,
+                  }}
                   disabled={
                     (hasTerms && !termsAgreed) || trialStatus === "processing"
                   }
                 >
                   {trialStatus === "processing" ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2
+                      className="w-5 h-5 animate-spin"
+                      style={{ color: colors.text.inverse }}
+                    />
                   ) : (
                     "اشترك الآن مجانًا"
                   )}
                 </Button>
 
                 {trialStatus === "error" && (
-                  <p className="text-sm text-red-600 text-center">
+                  <p
+                    className="text-sm text-center"
+                    style={{ color: colors.status.error }}
+                  >
                     {trialError}
                   </p>
                 )}
                 {trialStatus === "success" && (
-                  <p className="text-sm text-emerald-700 text-center">
+                  <p
+                    className="text-sm text-center"
+                    style={{ color: colors.status.success }}
+                  >
                     تم تفعيل التجربة بنجاح 🎉
                   </p>
                 )}

@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { ArrowLeft, Crown } from "lucide-react";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  shadowClasses,
+  withAlpha,
+} from "@/styles/tokens";
 
 import type { SubscriptionCard, SubscriptionOption } from "@/domains/subscriptions/types";
 
@@ -47,41 +54,86 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
     >
       <Card
         className={cn(
-          "h-full flex flex-col border-gray-200/80 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 bg-white/70 backdrop-blur-sm rounded-2xl text-center",
-          cardData.isRecommended && "ring-2 ring-primary-500",
+          "h-full flex flex-col text-center backdrop-blur-sm transition-all duration-300 group",
+          componentRadius.card,
+          "border",
+          shadowClasses.cardHover,
+          cardData.isRecommended && `ring-2 ring-[${colors.brand.primary}]`,
         )}
+        style={{
+          background: gradients.surface.elevated,
+          borderColor: withAlpha(colors.border.default, 0.65),
+        }}
       >
         <CardHeader className="flex flex-col items-center pt-8">
           {cardData.isRecommended && (
             <Badge
-              variant="secondary"
-              className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 px-2 py-1 text-xs font-bold shadow-lg"
+              variant="highlight"
+              className="absolute top-4 right-4 px-2 py-1 text-xs font-bold"
+              style={{
+                background: gradients.accent.amber,
+                color: colors.text.inverse,
+              }}
             >
               <Crown className="w-3.5 h-3.5 ml-1" /> موصى به
             </Badge>
           )}
-          <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <CardIcon className="w-8 h-8 text-white" />
+          <div
+            className={cn(
+              "relative w-16 h-16 flex items-center justify-center mb-5 transition-transform duration-300",
+              componentRadius.card,
+              shadowClasses.buttonElevated,
+              "group-hover:scale-110",
+            )}
+            style={{
+              backgroundImage: gradients.brand.primary,
+              color: colors.text.inverse,
+            }}
+          >
+            <CardIcon className="w-8 h-8" style={{ color: colors.text.inverse }} />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">{cardData.name}</h3>
-          <p className="text-gray-500 text-sm h-10 px-2">{cardData.tagline}</p>
+          <h3
+            className={cn("text-2xl font-bold", `text-[${colors.text.primary}]`)}
+          >
+            {cardData.name}
+          </h3>
+          <p
+            className={cn("text-sm h-10 px-2", `text-[${colors.text.secondary}]`)}
+          >
+            {cardData.tagline}
+          </p>
         </CardHeader>
         <CardContent className="p-6 flex-1 flex flex-col justify-between">
           <div>
             {cardData.subscriptionOptions.length > 1 && (
               <div className="mb-6">
-                <div className="flex w-full bg-gray-200/70 p-1 rounded-full">
+                <div
+                  className="flex w-full p-1 rounded-full border"
+                  style={{
+                    background: withAlpha(colors.bg.secondary, 0.65),
+                    borderColor: withAlpha(colors.border.default, 0.6),
+                  }}
+                >
                   {cardData.subscriptionOptions.map((option) => (
                     <button
                       key={option.id}
                       // 🔄 عند النقر، يتم تحديث الحالة الداخلية للبطاقة
                       onClick={() => setSelectedOption(option)}
-                      className="relative flex-1 text-xs font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      className={cn(
+                        "relative flex-1 text-xs font-semibold py-2.5 transition-colors duration-300 focus:outline-none",
+                        componentRadius.badge,
+                        `focus-visible:ring-2 focus-visible:ring-[${colors.border.focus}] focus-visible:ring-offset-2 focus-visible:ring-offset-[${colors.bg.primary}]`,
+                      )}
                     >
                       {selectedOption.id === option.id && (
                         <motion.div
                           layoutId={`pill-switch-${cardData.id}`}
-                          className="absolute inset-0 bg-white rounded-full shadow"
+                          className={cn(
+                            "absolute inset-0",
+                            componentRadius.badge,
+                            shadowClasses.button,
+                          )}
+                          style={{ background: colors.bg.primary }}
                           transition={{
                             type: "spring",
                             stiffness: 300,
@@ -90,11 +142,12 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
                         />
                       )}
                       <span
-                        className={cn("relative z-10", {
-                          "text-primary-600": selectedOption.id === option.id,
-                          "text-gray-600 hover:text-gray-900":
-                            selectedOption.id !== option.id,
-                        })}
+                        className={cn(
+                          "relative z-10 transition-colors",
+                          selectedOption.id === option.id
+                            ? `text-[${colors.brand.primary}]`
+                            : `text-[${colors.text.secondary}] hover:text-[${colors.text.primary}]`,
+                        )}
                       >
                         {option.duration}
                       </span>
@@ -107,15 +160,27 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-2">
                 {selectedOption.hasDiscount && selectedOption.originalPrice && (
-                  <span className="text-xl font-medium text-gray-400 line-through">
+                  <span
+                    className={cn(
+                      "text-xl font-medium line-through",
+                      `text-[${withAlpha(colors.text.secondary, 0.6)}]`,
+                    )}
+                  >
                     {selectedOption.originalPrice.toFixed(0)}$
                   </span>
                 )}
-                <span className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                <span
+                  className={cn(
+                    "text-4xl font-extrabold tracking-tight",
+                    `text-[${colors.text.primary}]`,
+                  )}
+                >
                   {selectedOption.price}
                 </span>
               </div>
-              <span className="text-sm text-gray-500">
+              <span
+                className={cn("text-sm", `text-[${colors.text.secondary}]`)}
+              >
                 / {selectedOption.duration}
               </span>
               <div className="h-6 flex items-center justify-center mt-2">
@@ -137,7 +202,15 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
             // 🔄 عند النقر على زر الاشتراك، يتم استدعاء الدالة من الأب مع تمرير الخيار المحدد حالياً
             onClick={() => onSubscribeClick(selectedOption)}
             density="relaxed"
-            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:-translate-y-1"
+            fullWidth
+            className="px-8 py-3 font-semibold text-lg transition-all duration-300 transform hover:-translate-y-1"
+            intentOverrides={{
+              background: gradients.brand.primary,
+              foreground: colors.text.inverse,
+              hoverBackground: gradients.brand.primaryHover,
+              hoverForeground: colors.text.inverse,
+              shadow: shadowClasses.buttonElevated,
+            }}
             disabled={!selectedOption}
           >
             اشترك الآن
