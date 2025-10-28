@@ -1,8 +1,13 @@
 // src/features/auth/components/UnlinkedStateBanner.tsx
 "use client";
 import { cn } from "@/shared/utils";
-import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
-import { colors } from '@/styles/tokens';
+import {
+  colors,
+  gradients,
+  shadowClasses,
+  shadows,
+  withAlpha,
+} from "@/styles/tokens";
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,25 +58,46 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
         {/* Mobile Version */}
         <div
           className={cn(
-            componentVariants.card.elevated,
-            "md:hidden bg-gradient-to-br from-primary-500 to-primary-700 text-white p-5 relative overflow-hidden",
+            "md:hidden relative overflow-hidden rounded-2xl p-5",
+            shadowClasses.cardElevated,
           )}
+          style={{
+            background: gradients.brand.primary,
+            color: colors.text.inverse,
+          }}
         >
           <button
             onClick={() => setIsDismissed(true)}
-            className="absolute top-3 left-3 p-1 text-white/80 hover:text-white transition-colors"
+            className={cn("absolute top-3 left-3", "token-icon-button")}
+            style={{
+              "--token-icon-size": "2rem",
+              "--token-icon-bg": withAlpha(colors.bg.inverse, 0.15),
+              "--token-icon-bg-hover": withAlpha(colors.bg.inverse, 0.25),
+              "--token-icon-color": colors.text.inverse,
+              "--token-icon-color-hover": colors.text.inverse,
+              "--token-icon-shadow": shadows.colored.primary.sm,
+              "--token-icon-shadow-hover": shadows.colored.primary.md,
+            } as React.CSSProperties}
             aria-label="إخفاء"
           >
             <X className="w-5 h-5" />
           </button>
 
           <div className="flex items-start gap-4 mb-4">
-            <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-              <Smartphone className="w-7 h-7" />
+            <div
+              className="backdrop-blur-sm p-3 rounded-xl"
+              style={{
+                backgroundColor: withAlpha(colors.bg.inverse, 0.25),
+                color: colors.text.inverse,
+              }}
+            >
+              <Smartphone className="w-7 h-7" aria-hidden />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold mb-1">اربط حسابك الآن</h3>
-              <p className="text-sm text-white/90">
+              <h3 className="text-lg font-bold mb-1" style={{ color: colors.text.inverse }}>
+                اربط حسابك الآن
+              </h3>
+              <p className="text-sm" style={{ color: withAlpha(colors.text.inverse, 0.9) }}>
                 للوصول الكامل لجميع الميزات والخدمات
               </p>
             </div>
@@ -79,7 +105,23 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
 
           <button
             onClick={onLinkClick}
-            className="w-full bg-white text-primary-600 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className={cn(
+              "w-full rounded-xl font-bold py-3",
+              shadowClasses.buttonElevated,
+              "token-interactive",
+            )}
+            style={{
+              "--token-bg": colors.bg.primary,
+              "--token-bg-hover": withAlpha(colors.bg.primary, 0.9),
+              "--token-bg-active": withAlpha(colors.bg.primary, 0.85),
+              "--token-fg": colors.brand.primary,
+              "--token-fg-hover": colors.brand.primaryHover,
+              "--token-shadow": shadows.colored.primary.sm,
+              "--token-shadow-hover": shadows.colored.primary.md,
+              "--token-shadow-active": shadows.colored.primary.sm,
+              "--token-transform-hover": "translateY(-0.1875rem)",
+              "--token-transform-active": "translateY(-0.0625rem)",
+            } as React.CSSProperties}
           >
             ربط الحساب
           </button>
@@ -88,22 +130,38 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
         {/* Desktop Version */}
         <div
           className={cn(
-            componentVariants.card.elevated,
-            "hidden md:block p-8 relative overflow-hidden",
+            "hidden md:block p-8 relative overflow-hidden rounded-3xl",
+            shadowClasses.cardElevated,
           )}
           style={{
-            background: `linear-gradient(to bottom right, ${colors.bg.primary}, ${colors.bg.secondary})`
+            background: gradients.surface.elevated,
+            color: colors.text.primary,
           }}
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+          <div
+            className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"
+            style={{ background: withAlpha(colors.brand.primary, 0.12) }}
+            aria-hidden
+          />
+          <div
+            className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"
+            style={{ background: withAlpha(colors.brand.secondary, 0.1) }}
+            aria-hidden
+          />
 
           <button
             onClick={() => setIsDismissed(true)}
-            className="absolute top-4 left-4 p-1 transition-colors z-10"
-            style={{ color: colors.text.tertiary }}
-            onMouseEnter={(e) => e.currentTarget.style.color = colors.text.secondary}
-            onMouseLeave={(e) => e.currentTarget.style.color = colors.text.tertiary}
+            className={cn("absolute top-4 left-4 z-10", "token-icon-button")}
+            style={{
+              "--token-icon-size": "2.5rem",
+              "--token-icon-radius": "9999px",
+              "--token-icon-bg": withAlpha(colors.bg.overlay, 0.12),
+              "--token-icon-bg-hover": withAlpha(colors.bg.overlay, 0.18),
+              "--token-icon-color": colors.text.tertiary,
+              "--token-icon-color-hover": colors.text.secondary,
+              "--token-icon-shadow": shadows.elevation[1],
+              "--token-icon-shadow-hover": shadows.elevation[2],
+            } as React.CSSProperties}
             aria-label="إخفاء"
           >
             <X className="w-6 h-6" />
@@ -112,11 +170,11 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
           <div className="relative z-10">
             <div className="flex items-start justify-between gap-8">
               <div className="flex-1">
-                <div 
+                <div
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold mb-4"
                   style={{
-                    backgroundColor: colors.brand.primary + '15',
-                    color: colors.brand.primary
+                    backgroundColor: withAlpha(colors.brand.primary, 0.15),
+                    color: colors.brand.primary,
                   }}
                 >
                   <Sparkles className="w-4 h-4" />
@@ -143,12 +201,12 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
                         style={{
                           backgroundColor: colors.bg.secondary,
                           borderColor: colors.border.default,
-                          borderWidth: '1px'
+                          borderWidth: "1px",
                         }}
                       >
-                        <div 
+                        <div
                           className="p-2 rounded-lg"
-                          style={{ backgroundColor: colors.brand.primary + '15' }}
+                          style={{ backgroundColor: withAlpha(colors.brand.primary, 0.15) }}
                         >
                           <feature.icon className="w-5 h-5" style={{ color: colors.brand.primary }} />
                         </div>
@@ -167,7 +225,22 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
 
                 <button
                   onClick={onLinkClick}
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
+                  className={cn(
+                    "inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold",
+                    shadowClasses.buttonElevated,
+                    "token-interactive",
+                  )}
+                  style={{
+                    "--token-bg": gradients.brand.primary,
+                    "--token-bg-hover": gradients.brand.primaryHover,
+                    "--token-bg-active": gradients.brand.primaryActive,
+                    "--token-fg": colors.text.inverse,
+                    "--token-shadow": shadows.colored.primary.md,
+                    "--token-shadow-hover": shadows.colored.primary.lg,
+                    "--token-shadow-active": shadows.colored.primary.md,
+                    "--token-transform-hover": "translateY(-0.25rem)",
+                    "--token-transform-active": "translateY(-0.125rem)",
+                  } as React.CSSProperties}
                 >
                   <Smartphone className="w-5 h-5" />
                   <span>ربط الحساب الآن</span>
@@ -176,16 +249,23 @@ const UnlinkedStateBanner: React.FC<UnlinkedStateBannerProps> = ({
 
               <div className="hidden lg:block">
                 <div className="relative">
-                  <div 
-                    className="w-48 h-48 rounded-3xl flex items-center justify-center transform rotate-6 hover:rotate-0 transition-transform duration-500"
+                  <div
+                    className="w-48 h-48 rounded-3xl flex items-center justify-center transition-transform duration-500"
                     style={{
-                      background: `linear-gradient(to bottom right, ${colors.brand.primary}15, ${colors.brand.primary}25)`
+                      background: gradients.brand.subtle,
                     }}
                   >
                     <Smartphone className="w-24 h-24" style={{ color: colors.brand.primary }} />
                   </div>
-                  <div className="absolute -top-4 -right-4 bg-emerald-500 text-white p-2 rounded-full shadow-lg">
-                    <CheckCircle2 className="w-6 h-6" />
+                  <div
+                    className="absolute -top-4 -right-4 p-2 rounded-full"
+                    style={{
+                      background: gradients.status.success,
+                      color: colors.text.inverse,
+                      boxShadow: shadows.colored.primary.md,
+                    }}
+                  >
+                    <CheckCircle2 className="w-6 h-6" aria-hidden />
                   </div>
                 </div>
               </div>

@@ -431,6 +431,83 @@
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; } /* WebKit */
 
+  .token-interactive {
+    --token-bg: transparent;
+    --token-bg-hover: var(--token-bg);
+    --token-bg-active: var(--token-bg-hover);
+    --token-fg: inherit;
+    --token-fg-hover: var(--token-fg);
+    --token-fg-active: var(--token-fg-hover);
+    --token-shadow: none;
+    --token-shadow-hover: var(--token-shadow);
+    --token-shadow-active: var(--token-shadow-hover);
+    --token-border-color: transparent;
+    --token-border-color-hover: var(--token-border-color);
+    --token-border-color-active: var(--token-border-color-hover);
+    --token-transform-hover: translateY(-0.125rem);
+    --token-transform-active: translateY(-0.0625rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--token-bg);
+    color: var(--token-fg);
+    box-shadow: var(--token-shadow);
+    border-color: var(--token-border-color);
+    border-style: solid;
+    border-width: var(--token-border-width, 0px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .token-interactive:hover,
+  .token-interactive:focus-visible {
+    background: var(--token-bg-hover);
+    color: var(--token-fg-hover);
+    box-shadow: var(--token-shadow-hover);
+    border-color: var(--token-border-color-hover);
+    transform: var(--token-transform-hover);
+  }
+
+  .token-interactive:active {
+    background: var(--token-bg-active);
+    color: var(--token-fg-active);
+    box-shadow: var(--token-shadow-active);
+    border-color: var(--token-border-color-active);
+    transform: var(--token-transform-active);
+  }
+
+  .token-icon-button {
+    --token-icon-size: 2.5rem;
+    --token-icon-radius: 9999px;
+    --token-icon-bg: transparent;
+    --token-icon-bg-hover: var(--token-icon-bg);
+    --token-icon-color: inherit;
+    --token-icon-color-hover: var(--token-icon-color);
+    --token-icon-shadow: none;
+    --token-icon-shadow-hover: var(--token-icon-shadow);
+    width: var(--token-icon-size);
+    height: var(--token-icon-size);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--token-icon-radius);
+    background: var(--token-icon-bg);
+    color: var(--token-icon-color);
+    box-shadow: var(--token-icon-shadow);
+    transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+
+  .token-icon-button:hover,
+  .token-icon-button:focus-visible {
+    background: var(--token-icon-bg-hover);
+    color: var(--token-icon-color-hover);
+    box-shadow: var(--token-icon-shadow-hover);
+  }
+
+  .token-icon-button:active {
+    transform: scale(0.96);
+  }
+
   /* Animation utilities */
   .animate-fade-in { animation: fade-in 300ms ease-out; }
   .animate-fade-out { animation: fade-out 300ms ease-out; }

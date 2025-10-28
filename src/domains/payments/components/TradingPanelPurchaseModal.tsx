@@ -17,6 +17,14 @@ import { PaymentSuccessModal } from "./PaymentSuccessModal";
 import { PaymentExchangeSuccess } from "./PaymentExchangeSuccess";
 import { useServicePayment } from "@/domains/payments/hooks/useServicePayment";
 import { showToast } from "@/shared/components/ui/showToast";
+import { cn } from "@/shared/utils";
+import {
+  colors,
+  gradients,
+  shadowClasses,
+  shadows,
+  withAlpha,
+} from "@/styles/tokens";
 
 type OpenTradingPanelPayload = {
   productType: "utility_trading_panel";
@@ -122,17 +130,36 @@ export default function TradingPanelPurchaseModal() {
       <Sheet open={step === "details"} onOpenChange={(o) => !o && closeAll()}>
         <SheetContent
           side="bottom"
-          className="h-[65vh] md:h-[85vh] rounded-t-3xl border-0 bg-gray-50 p-0 flex flex-col"
+          className="h-[65vh] md:h-[85vh] rounded-t-3xl border-0 p-0 flex flex-col"
           dir="rtl"
+          style={{ background: colors.bg.secondary }}
         >
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full z-20" />
-          <SheetHeader className="p-4 pt-8 text-center border-b border-gray-200">
-            <SheetTitle className="text-xl font-bold font-arabic text-gray-800 dark:text-neutral-100 text-center pr-6 pl-10">
+          <div
+            className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full z-20"
+            style={{ backgroundColor: colors.border.hover }}
+          />
+          <SheetHeader
+            className="p-4 pt-8 text-center border-b"
+            style={{ borderColor: colors.border.default, background: colors.bg.primary }}
+          >
+            <SheetTitle
+              className="text-xl font-bold font-arabic text-center pr-6 pl-10"
+              style={{ color: colors.text.primary }}
+            >
               {payload.plan.name}
             </SheetTitle>
             <button
               onClick={closeAll}
-              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 p-1 rounded-full"
+              className={cn("absolute top-4 left-4", "token-icon-button")}
+              style={{
+                "--token-icon-size": "2.5rem",
+                "--token-icon-bg": withAlpha(colors.bg.overlay, 0.1),
+                "--token-icon-bg-hover": withAlpha(colors.bg.overlay, 0.16),
+                "--token-icon-color": colors.text.tertiary,
+                "--token-icon-color-hover": colors.text.secondary,
+                "--token-icon-shadow": shadows.elevation[1],
+                "--token-icon-shadow-hover": shadows.elevation[2],
+              } as React.CSSProperties}
             >
               <X className="w-6 h-6" />
             </button>
@@ -140,10 +167,25 @@ export default function TradingPanelPurchaseModal() {
 
           <ScrollArea className="flex-1">
             <div className="space-y-8 p-4 pt-6 pb-12 text-right">
-              <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white text-center relative overflow-hidden">
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full" />
-                <div className="absolute -bottom-8 -left-2 w-32 h-32 bg-white/10 rounded-full" />
-                <p className="font-medium text-white/80 mb-1">
+              <div
+                className={cn(
+                  "rounded-2xl p-6 text-center relative overflow-hidden",
+                  shadowClasses.cardElevated,
+                )}
+                style={{
+                  background: gradients.brand.primary,
+                  color: colors.text.inverse,
+                }}
+              >
+                <div
+                  className="absolute -top-4 -right-4 w-24 h-24 rounded-full"
+                  style={{ background: withAlpha(colors.bg.inverse, 0.15) }}
+                />
+                <div
+                  className="absolute -bottom-8 -left-2 w-32 h-32 rounded-full"
+                  style={{ background: withAlpha(colors.bg.inverse, 0.12) }}
+                />
+                <p className="font-medium mb-1" style={{ color: withAlpha(colors.text.inverse, 0.8) }}>
                   خطة لوحة التداول
                 </p>
                 <div className="flex items-baseline justify-center gap-2">
@@ -153,12 +195,23 @@ export default function TradingPanelPurchaseModal() {
                 </div>
               </div>
 
-              <div className="bg-white p-5 rounded-2xl border">
-                <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                  <ShieldCheck className="w-5 h-5 text-primary-600" />
+              <div
+                className="p-5 rounded-2xl border"
+                style={{
+                  background: colors.bg.primary,
+                  borderColor: colors.border.default,
+                  color: colors.text.primary,
+                }}
+              >
+                <h4 className="text-lg font-bold mb-4 flex items-center" style={{ color: colors.text.primary }}>
+                  <ShieldCheck
+                    className="w-5 h-5"
+                    style={{ color: colors.brand.primary }}
+                    aria-hidden
+                  />
                   <span className="ml-2">ما الذي ستحصل عليه؟</span>
                 </h4>
-                <ul className="space-y-3 text-sm text-gray-600">
+                <ul className="space-y-3 text-sm" style={{ color: colors.text.secondary }}>
                   <li>لوحة تداول احترافية (MT4/MT5)</li>
                   <li>تحديثات مستقبلية بدون تكلفة إضافية</li>
                   <li>دعم فني عبر تيليجرام</li>
@@ -167,11 +220,32 @@ export default function TradingPanelPurchaseModal() {
             </div>
           </ScrollArea>
 
-          <div className="bg-white/90 border-t-2 border-primary-100 p-4">
+          <div
+            className="p-4"
+            style={{
+              background: withAlpha(colors.bg.primary, 0.95),
+              borderTop: `1px solid ${withAlpha(colors.brand.primary, 0.2)}`,
+            }}
+          >
             <Button
               onClick={onChooseMethod}
               size="lg"
-              className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold"
+              className={cn(
+                "w-full h-14 font-bold",
+                shadowClasses.buttonElevated,
+                "token-interactive",
+              )}
+              style={{
+                "--token-bg": gradients.brand.primary,
+                "--token-bg-hover": gradients.brand.primaryHover,
+                "--token-bg-active": gradients.brand.primaryActive,
+                "--token-fg": colors.text.inverse,
+                "--token-shadow": shadows.colored.primary.md,
+                "--token-shadow-hover": shadows.colored.primary.lg,
+                "--token-shadow-active": shadows.colored.primary.md,
+                "--token-transform-hover": "translateY(-0.1875rem)",
+                "--token-transform-active": "translateY(-0.0625rem)",
+              } as React.CSSProperties}
               disabled={loading}
             >
               {loading && paymentStatus === "processing_usdt" ? (

@@ -3,7 +3,7 @@
 
 import React from "react";
 import { Clock } from "lucide-react";
-import { colors, spacing } from "@/styles/tokens";
+import { colors, gradients, spacing, withAlpha } from "@/styles/tokens";
 
 interface PaymentAmountSectionProps {
   amount: string;
@@ -43,7 +43,7 @@ export const PaymentAmountSection: React.FC<PaymentAmountSectionProps> = ({
           backgroundColor: colors.status.infoBg,
           color: colors.brand.primary,
           padding: `${spacing[2]} ${spacing[4]}`,
-          border: `1px solid ${colors.brand.primary}33`,
+          border: `1px solid ${withAlpha(colors.brand.primary, 0.2)}`,
         }}
       >
         شبكة: {network || "TON"}
@@ -72,10 +72,10 @@ export const PaymentAmountSection: React.FC<PaymentAmountSectionProps> = ({
           style={{ backgroundColor: colors.bg.tertiary }}
         >
           <div
-            className="bg-gradient-to-r h-full rounded-full transition-all duration-1000 ease-linear"
+            className="h-full rounded-full transition-all duration-1000 ease-linear"
             style={{
               width: `${timeProgress}%`,
-              backgroundImage: `linear-gradient(to right, ${colors.brand.primary}88, ${colors.brand.primary})`,
+              background: gradients.brand.primary,
             }}
           />
         </div>
