@@ -63,7 +63,7 @@ export default function PaymentHistory() {
     return (
       <div className="container mx-auto p-4 min-h-[60vh]">
         <div className="flex items-center mb-6">
-          <Button variant="ghost" size="icon" className="rounded-full" disabled>
+          <Button intent="ghost" density="icon" className="rounded-full" disabled>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>
@@ -78,8 +78,8 @@ export default function PaymentHistory() {
       <div className="flex items-center mb-6">
         <Button
           onClick={handleGoBack}
-          variant="ghost"
-          size="icon"
+          intent="ghost"
+          density="icon"
           className="rounded-full"
         >
           <ArrowLeft className="w-5 h-5" />

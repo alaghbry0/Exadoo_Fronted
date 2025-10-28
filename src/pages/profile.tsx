@@ -110,7 +110,7 @@ export default function Profile() {
               </p>
               <Button
                 onClick={() => refetch()}
-                size="lg"
+                density="relaxed"
                 className="font-arabic"
               >
                 إعادة المحاولة

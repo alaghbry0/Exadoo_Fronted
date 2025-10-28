@@ -229,6 +229,7 @@ export default function TradingPanelPurchaseModal() {
           >
             <Button
               onClick={onChooseMethod}
+<<<<<<< ours
               size="lg"
               className={cn(
                 "w-full h-14 font-bold",
@@ -246,6 +247,10 @@ export default function TradingPanelPurchaseModal() {
                 "--token-transform-hover": "translateY(-0.1875rem)",
                 "--token-transform-active": "translateY(-0.0625rem)",
               } as React.CSSProperties}
+=======
+              density="relaxed"
+              className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold"
+>>>>>>> theirs
               disabled={loading}
             >
               {loading && paymentStatus === "processing_usdt" ? (

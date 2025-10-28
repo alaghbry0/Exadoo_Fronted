@@ -140,8 +140,8 @@ const BackHeader: React.FC<BackHeaderProps> = ({
             {shouldShowLocalBtn && (
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
+                intent="ghost"
+                density="icon"
                 onClick={handleBack}
                 aria-label="رجوع"
               >

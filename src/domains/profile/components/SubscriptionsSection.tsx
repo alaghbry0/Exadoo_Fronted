@@ -123,8 +123,8 @@ export default function SubscriptionsSection({
           </CardTitle>
         </div>
         <Button
-          variant="ghost"
-          size="sm"
+          intent="ghost"
+          density="compact"
           onClick={onRefreshClick}
           disabled={isRefreshing}
         >
@@ -384,8 +384,8 @@ const SubscriptionItem = ({
         <div className="mt-4 border-t border-gray-200/80 pt-4 flex items-center justify-end gap-3 flex-wrap">
           {showSupportButton && (
             <Button
-              variant="outline"
-              size="sm"
+              intent="outline"
+              density="compact"
               onClick={(e) => {
                 e.preventDefault();
                 window.open("https://t.me/ExaadoSupport", "_blank");
@@ -398,7 +398,7 @@ const SubscriptionItem = ({
           {showJoinButton && (
             <Button
               asChild
-              size="sm"
+              density="compact"
               className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm hover:shadow-lg transition-shadow"
             >
               <a

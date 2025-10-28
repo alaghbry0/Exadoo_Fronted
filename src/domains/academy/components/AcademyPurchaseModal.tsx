@@ -307,7 +307,7 @@ export default function AcademyPurchaseModal() {
             <div className="grid grid-cols-1 gap-3">
               <Button
                 onClick={onChooseMethod}
-                size="lg"
+                density="relaxed"
                 className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-base font-bold shadow-lg hover:shadow-primary-500/40 transition-shadow duration-300"
                 disabled={loading}
               >

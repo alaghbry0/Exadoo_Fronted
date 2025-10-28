@@ -338,7 +338,7 @@ const SubscriptionModal = ({
               <div className="grid grid-cols-1 gap-3">
                 <Button
                   onClick={goToChooseMethod}
-                  size="lg"
+                  density="relaxed"
                   className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-base font-bold shadow-lg hover:shadow-primary-500/40 transition-shadow duration-300"
                   disabled={loading || (hasTerms && !termsAgreed)}
                 >
@@ -352,7 +352,7 @@ const SubscriptionModal = ({
                 {plan.selectedOption.telegramStarsPrice != null && (
                   <Button
                     onClick={handleStarsPayment}
-                    size="lg"
+                    density="relaxed"
                     className="w-full h-14 bg-sky-500 text-white text-base font-bold shadow-lg hover:shadow-sky-500/40 transition-shadow duration-300"
                     disabled={loading || (hasTerms && !termsAgreed)}
                   >
@@ -371,7 +371,7 @@ const SubscriptionModal = ({
               <div className="grid grid-cols-1 gap-2">
                 <Button
                   onClick={handleClaimTrial}
-                  size="lg"
+                  density="relaxed"
                   className="w-full h-14 bg-emerald-600 text-white text-base font-bold shadow-lg hover:shadow-emerald-500/40 transition-shadow duration-300"
                   disabled={
                     (hasTerms && !termsAgreed) || trialStatus === "processing"

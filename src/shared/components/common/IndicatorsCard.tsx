@@ -64,7 +64,7 @@ export function IndicatorsCard({
           </div>
         )}
       </div>
-      <Button size="lg" className="rounded-xl font-bold text-white">
+      <Button density="relaxed" className="rounded-xl font-bold text-white">
         تفاصيل المؤشرات
         <ArrowLeft className="w-4 h-4 mr-2" />
       </Button>

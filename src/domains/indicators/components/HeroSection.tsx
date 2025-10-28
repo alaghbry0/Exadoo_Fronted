@@ -58,7 +58,7 @@ export const HeroSection: React.FC = () => {
           
           <motion.div {...animations.heroButton} className="mt-8">
             <Button
-              size="lg"
+              density="relaxed"
               asChild
               className="rounded-xl font-bold shadow-lg transition-transform hover:-translate-y-1"
               style={{

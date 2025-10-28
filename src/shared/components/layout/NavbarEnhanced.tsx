@@ -44,7 +44,7 @@ export default function NavbarEnhanced() {
         {/* Actions Section */}
         <div className="flex items-center gap-3">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative" asChild>
+          <Button intent="ghost" density="icon" className="relative" asChild>
             <Link href="/notifications" aria-label="الإشعارات">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -61,7 +61,7 @@ export default function NavbarEnhanced() {
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" aria-label="القائمة">
+              <Button intent="ghost" density="icon" aria-label="القائمة">
                 {mobileMenuOpen ? <X /> : <Menu />}
               </Button>
             </SheetTrigger>

@@ -138,7 +138,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <Button
                   onClick={this.handleReset}
                   className="gap-2"
-                  variant="default"
+                  intent="primary"
                 >
                   <RefreshCw className="w-4 h-4" />
                   إعادة المحاولة
@@ -147,7 +147,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <Button
                   onClick={this.handleGoHome}
                   className="gap-2"
-                  variant="outline"
+                  intent="outline"
                 >
                   <Home className="w-4 h-4" />
                   العودة للرئيسية

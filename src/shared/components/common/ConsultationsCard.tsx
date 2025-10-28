@@ -20,7 +20,7 @@ export function ConsultationsCard({
 }) {
   const Right = (
     <Button
-      variant="outline"
+      intent="outline"
       className="rounded-xl border-gray-300 dark:border-neutral-700"
     >
       احجز الآن <ArrowLeft className="w-4 h-4 mr-2" />

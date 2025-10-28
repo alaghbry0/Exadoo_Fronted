@@ -532,7 +532,7 @@ const ShopComponent = () => {
                                         trialPlan &&
                                         handleSubscribeClick(sub, trialPlan)
                                       }
-                                      size="lg"
+                                      density="relaxed"
                                       className={cn(
                                         "w-full relative overflow-hidden group",
                                         "bg-emerald-600 hover:bg-emerald-700",
@@ -737,7 +737,7 @@ const ShopComponent = () => {
                                         selectedPlan &&
                                         handleSubscribeClick(sub, selectedPlan)
                                       }
-                                      size="lg"
+                                      density="relaxed"
                                       className={cn(
                                         "w-full relative overflow-hidden group mt-4",
                                         "bg-gradient-to-r from-primary-500 to-primary-700",

@@ -106,7 +106,7 @@ export default function SubscribeFab({
       >
         <Button
           onClick={onClick}
-          size="lg"
+          density="relaxed"
           aria-label={aria}
           className={cn(
             "h-12 md:h-14 px-5 md:px-6 rounded-full min-w-[260px]",

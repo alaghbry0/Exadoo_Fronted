@@ -167,7 +167,8 @@ export default function NotificationDetail() {
       <div className="flex items-center mb-6 sticky top-0 bg-gray-50 z-30 py-2">
         <Button
           onClick={handleGoBack}
-          variant="outline"
+          intent="outline"
+          density="icon"
           className="rounded-full w-10 h-10 p-0 flex items-center justify-center"
         >
           <ArrowRight className="w-5 h-5" />

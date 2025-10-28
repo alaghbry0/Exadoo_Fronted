@@ -102,7 +102,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
         </div>
         
         <Button
-          size="lg"
+          density="relaxed"
           className={cn(
             "mt-8 w-full rounded-xl text-base font-bold shadow-button transition-all duration-300 transform hover:-translate-y-0.5",
           )}

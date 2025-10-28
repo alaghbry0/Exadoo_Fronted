@@ -136,7 +136,7 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
           <Button
             // 🔄 عند النقر على زر الاشتراك، يتم استدعاء الدالة من الأب مع تمرير الخيار المحدد حالياً
             onClick={() => onSubscribeClick(selectedOption)}
-            size="lg"
+            density="relaxed"
             className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg hover:shadow-primary-500/30 transition-all duration-300 transform hover:-translate-y-1"
             disabled={!selectedOption}
           >
