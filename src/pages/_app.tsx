@@ -7,6 +7,7 @@ import "@/styles/globals.css";
 import FooterNav from "@/shared/components/layout/FooterNav";
 import SplashScreen from "@/shared/components/common/SplashScreen";
 import { TelegramProvider, useTelegram } from "@/shared/context/TelegramContext";
+import { ThemeProvider } from "@/shared/theme/ThemeProvider";
 import { useTariffStore } from "@/shared/state/zustand";
 import { fetchBotWalletAddress } from "@/domains/payments/api";
 import {
@@ -348,24 +349,26 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary showDetails={process.env.NODE_ENV === "development"}>
-      <TonConnectUIProvider
-        manifestUrl={
-          process.env.NEXT_PUBLIC_TON_MANIFEST_URL ??
-          "https://exadooo-plum.vercel.app/tonconnect-manifest.json"
-        }
-      >
-        <TelegramProvider>
-          <QueryClientProvider client={globalQueryClient}>
-            <NotificationsProvider>
-              <AppContent hideFooter={hideFooter}>
-                <Component {...pageProps} />
-              </AppContent>
-              <GlobalAuthSheet />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </NotificationsProvider>
-          </QueryClientProvider>
-        </TelegramProvider>
-      </TonConnectUIProvider>
+      <ThemeProvider>
+        <TonConnectUIProvider
+          manifestUrl={
+            process.env.NEXT_PUBLIC_TON_MANIFEST_URL ??
+            "https://exadooo-plum.vercel.app/tonconnect-manifest.json"
+          }
+        >
+          <TelegramProvider>
+            <QueryClientProvider client={globalQueryClient}>
+              <NotificationsProvider>
+                <AppContent hideFooter={hideFooter}>
+                  <Component {...pageProps} />
+                </AppContent>
+                <GlobalAuthSheet />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </NotificationsProvider>
+            </QueryClientProvider>
+          </TelegramProvider>
+        </TonConnectUIProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

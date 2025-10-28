@@ -5,9 +5,12 @@
 "use client";
 
 import React, { Component, ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { cn } from "@/shared/utils";
+import { colors, componentRadius, shadowClasses, withAlpha } from "@/styles/tokens";
 import logger from "@/infrastructure/logging/logger";
 
 interface Props {
@@ -67,30 +70,64 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-neutral-950">
-          <Card className="max-w-lg w-full border-red-200 dark:border-red-900">
-            <CardContent className="p-8 text-center">
+        <div
+          className="min-h-screen flex items-center justify-center p-4"
+          style={{ backgroundColor: colors.bg.secondary }}
+        >
+          <Card
+            className={cn(
+              "max-w-lg w-full border",
+              componentRadius.card,
+              shadowClasses.card,
+            )}
+            style={{ borderColor: withAlpha(colors.status.error, 0.4) }}
+          >
+            <CardContent
+              className="p-8 text-center"
+              style={{ color: colors.text.secondary, backgroundColor: colors.bg.elevated }}
+            >
               <div className="mb-6 flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-                  <AlertTriangle className="w-10 h-10 text-red-500" />
+                <div
+                  className={cn("w-20 h-20 flex items-center justify-center", componentRadius.badge)}
+                  style={{ backgroundColor: colors.status.errorBg }}
+                >
+                  <AlertTriangle
+                    className="w-10 h-10"
+                    style={{ color: colors.status.error }}
+                  />
                 </div>
               </div>
 
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-3">
+              <h2
+                className="text-2xl font-bold mb-3"
+                style={{ color: colors.text.primary }}
+              >
                 عذراً، حدث خطأ غير متوقع
               </h2>
 
-              <p className="text-gray-600 dark:text-neutral-400 mb-6 leading-relaxed">
+              <p className="mb-6 leading-relaxed">
                 نعتذر عن الإزعاج. حدث خطأ أثناء عرض هذه الصفحة. يرجى المحاولة
                 مرة أخرى.
               </p>
 
               {this.props.showDetails && this.state.error && (
-                <details className="mb-6 text-right bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                  <summary className="cursor-pointer font-semibold text-red-700 dark:text-red-400 mb-2">
+                <details
+                  className="mb-6 text-right p-4"
+                  style={{
+                    backgroundColor: colors.status.errorBg,
+                    borderRadius: "0.75rem",
+                  }}
+                >
+                  <summary
+                    className="cursor-pointer font-semibold mb-2"
+                    style={{ color: colors.status.error }}
+                  >
                     تفاصيل تقنية
                   </summary>
-                  <pre className="text-xs overflow-auto max-h-40 text-red-600 dark:text-red-300">
+                  <pre
+                    className="text-xs overflow-auto max-h-40"
+                    style={{ color: colors.status.error }}
+                  >
                     {this.state.error.toString()}
                     {this.state.errorInfo?.componentStack}
                   </pre>

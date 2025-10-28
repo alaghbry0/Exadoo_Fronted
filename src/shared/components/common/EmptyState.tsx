@@ -2,6 +2,8 @@
 import { ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/utils";
+import { colors, componentRadius, withAlpha } from "@/styles/tokens";
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -22,19 +24,34 @@ export function EmptyState({
   children,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+    <div
+      className="flex flex-col items-center justify-center py-12 px-4 text-center"
+      style={{ color: colors.text.secondary }}
+    >
       {Icon && (
-        <div className="mb-4 p-4 rounded-full bg-gray-100 dark:bg-neutral-800">
-          <Icon className="h-8 w-8 text-gray-400 dark:text-neutral-500" />
+        <div
+          className={cn("mb-4 p-4", componentRadius.badge)}
+          style={{ backgroundColor: withAlpha(colors.bg.secondary, 0.9) }}
+        >
+          <Icon
+            className="h-8 w-8"
+            style={{ color: colors.text.tertiary }}
+          />
         </div>
       )}
 
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+      <h3
+        className="text-lg font-semibold mb-2"
+        style={{ color: colors.text.primary }}
+      >
         {title}
       </h3>
 
       {description && (
-        <p className="text-sm text-gray-600 dark:text-neutral-400 max-w-md mb-6">
+        <p
+          className="text-sm max-w-md mb-6"
+          style={{ color: colors.text.secondary }}
+        >
           {description}
         </p>
       )}

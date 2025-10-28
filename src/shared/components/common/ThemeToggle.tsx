@@ -1,24 +1,21 @@
 "use client";
-import { useTheme } from "next-themes";
+
 import { Sun, Moon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useThemeController } from "@/shared/theme/ThemeProvider";
 
 const ThemeSwitcher = () => {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { isMounted, isDark, toggleTheme } = useThemeController();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null; // ✅ يمنع مشاكل SSR ويضمن تحميل الزر بشكل صحيح
+  if (!isMounted) return null; // ✅ يمنع مشاكل SSR ويضمن تحميل الزر بشكل صحيح
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggleTheme}
       className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-all"
+      aria-label="Toggle theme"
+      type="button"
     >
-      {theme === "dark" ? (
+      {isDark ? (
         <Sun className="text-yellow-500" size={22} />
       ) : (
         <Moon className="text-gray-800" size={22} />
