@@ -1,24 +1,50 @@
 // src/features/home/components/HomeSearchBar.tsx
 "use client";
 
+import type { CSSProperties } from "react";
 import { Search } from "lucide-react";
-import { colors, radius, spacing } from "@/styles/tokens";
+
+
+import { Input } from "@/shared/components/ui/input";
+import {
+  colors,
+  radius,
+  semanticSpacing,
+  shadows,
+  withAlpha,
+  shadowClasses
+} from "@/styles/tokens";
 
 interface HomeSearchBarProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
 export function HomeSearchBar({
   value,
   onChange,
   placeholder = "Enter the search word",
+  ariaLabel = "بحث في الخدمات",
 }: HomeSearchBarProps) {
+  const inputStyles: CSSProperties = {
+    backgroundColor: colors.bg.primary,
+    borderRadius: radius["2xl"],
+    fontFamily: "var(--font-arabic)",
+    color: colors.text.primary,
+    "--placeholder-color": colors.text.tertiary,
+    "--focus-ring-color": colors.border.focus,
+  };
+
   return (
     <div
-      className="px-4 pt-4 pb-6"
-      style={{ backgroundColor: colors.bg.secondary }}
+      className="px-4"
+      style={{
+        backgroundColor: colors.bg.secondary,
+        paddingTop: semanticSpacing.component.xl,
+        paddingBottom: semanticSpacing.component.xl,
+      }}
     >
       <div className="relative">
         <Search
@@ -27,19 +53,20 @@ export function HomeSearchBar({
           size={22}
           aria-hidden="true"
         />
-        <input
-          type="text"
-          placeholder={placeholder}
+        <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-12 pr-4 py-3.5 bg-white border-0 focus:outline-none focus:ring-2 transition-all text-gray-900 font-normal placeholder:text-gray-400"
+placeholder={placeholder}
+          aria-label={ariaLabel}
+          className="h-14 w-full pl-12 pr-4 py-0 text-base font-normal"
           style={{
             borderRadius: radius["2xl"],
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-            fontFamily: "var(--font-arabic)",
+            boxShadow: shadows.elevation[2],
+            backgroundColor: colors.bg.primary,
             color: colors.text.primary,
+            fontFamily: "var(--font-arabic)",
+            borderColor: withAlpha(colors.border.default, 0.9),
           }}
-          aria-label="بحث في الخدمات"
         />
       </div>
     </div>

@@ -1,7 +1,7 @@
 // src/pages/shop/signals.tsx
 
 "use client";
-import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
+import { componentVariants } from "@/shared/components/ui/variants";
 import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,6 +51,13 @@ import {
 import { EmptyState } from "@/shared/components/common/EmptyState";
 import { LazyLoad } from "@/shared/components/common/LazyLoad";
 import { SubscriptionCardSkeleton } from "@/shared/components/skeletons/SubscriptionCardSkeleton";
+import {
+  colors,
+  gradients,
+  shadowClasses,
+  shadows,
+  withAlpha,
+} from "@/styles/tokens";
 
 import type { ModalPlanData } from "@/domains/subscriptions/types";
 import type {
@@ -308,7 +315,11 @@ const ShopComponent = () => {
       <QueryBoundary isLoading={initialLoading} isError={hasError}>
         <div
           dir="rtl"
-          className="min-h-screen bg-gray-50 text-gray-800 font-arabic flex flex-col"
+          className="min-h-screen font-arabic flex flex-col"
+          style={{
+            backgroundColor: colors.bg.secondary,
+            color: colors.text.primary,
+          }}
         >
           <PageLayout maxWidth="2xl">
             <section className="pt-20 pb- text-center">
@@ -317,9 +328,13 @@ const ShopComponent = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight"
+                  className="text-4xl md:text-5xl font-bold mb-4 leading-tight"
+                  style={{ color: colors.text.primary }}
                 >
-                  <span className="block text-primary-600">
+                  <span
+                    className="block"
+                    style={{ color: colors.brand.primary }}
+                  >
                     اختر الاشتراك الأنسب لك!
                   </span>
                   واستثمر بذكاء مع خبرائنا
@@ -331,7 +346,10 @@ const ShopComponent = () => {
                   transition={{ delay: 0.3, duration: 0.5 }}
                 >
                   <div className="h-1.5 bg-gradient-to-r from-primary-500/80 to-transparent w-1/3 mx-auto mb-6 rounded-full"></div>
-                  <p className="text-lg text-gray-600 leading-relaxed">
+                  <p
+                    className="text-lg leading-relaxed"
+                    style={{ color: colors.text.secondary }}
+                  >
                     مع إكسادو، أصبح التداول أسهل مما تتخيل – جرّب بنفسك الآن!
                   </p>
                 </motion.div>
@@ -346,14 +364,23 @@ const ShopComponent = () => {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-gray-50 px-4 text-primary-600">
+                <span
+                  className="px-4"
+                  style={{
+                    backgroundColor: colors.bg.secondary,
+                    color: colors.brand.primary,
+                  }}
+                >
                   <Gem className="h-7 w-7" />
                 </span>
               </div>
             </div>
 
             {groupsData && groupsData.length > 1 && (
-              <section className="sticky top-[60px] z-30 bg-gray-50/80 backdrop-blur-sm pt-4 pb-3 -mt-12 mb-8">
+              <section
+                className="sticky top-[60px] z-30 backdrop-blur-sm pt-4 pb-3 -mt-12 mb-8"
+                style={{ backgroundColor: withAlpha(colors.bg.secondary, 0.8) }}
+              >
                 <div className="container mx-auto px-4 relative">
                   <AnimatePresence>
                     {showScrollButtons.left && (
@@ -362,7 +389,14 @@ const ShopComponent = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => scrollTabs("left")}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/70 backdrop-blur-sm rounded-full shadow-md w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors"
+                        className={cn(
+                          "absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                          shadowClasses.button,
+                        )}
+                        style={{
+                          backgroundColor: withAlpha(colors.bg.elevated, 0.85),
+                          color: colors.text.secondary,
+                        }}
                       >
                         <ChevronRight className="w-5 h-5" />
                       </motion.button>
@@ -381,14 +415,22 @@ const ShopComponent = () => {
                         key={group.id ?? "all"}
                         onClick={() => handleGroupSelect(group.id)}
                         className={cn(
-                          "flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2",
-                          {
-                            "bg-primary-600 text-white shadow-md":
-                              selectedGroupId === group.id,
-                            "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60":
-                              selectedGroupId !== group.id,
-                          },
+                          "flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                          shadowClasses.button,
+                          selectedGroupId === group.id
+                            ? "text-white"
+                            : "hover:brightness-110",
                         )}
+                        style={{
+                          background:
+                            selectedGroupId === group.id
+                              ? gradients.brand.primary
+                              : withAlpha(colors.bg.elevated, 0.8),
+                          color:
+                            selectedGroupId === group.id
+                              ? colors.text.inverse
+                              : colors.text.secondary,
+                        }}
                       >
                         <group.icon className="w-4 h-4" />
                         {group.name}
@@ -403,7 +445,14 @@ const ShopComponent = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => scrollTabs("right")}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/70 backdrop-blur-sm rounded-full shadow-md w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors"
+                        className={cn(
+                          "absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                          shadowClasses.button,
+                        )}
+                        style={{
+                          backgroundColor: withAlpha(colors.bg.elevated, 0.85),
+                          color: colors.text.secondary,
+                        }}
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </motion.button>
@@ -428,10 +477,16 @@ const ShopComponent = () => {
                           "text-center py-16",
                         )}
                       >
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2 font-arabic">
+                        <h3
+                          className="text-2xl font-bold mb-2 font-arabic"
+                          style={{ color: colors.text.primary }}
+                        >
                           لا توجد باقات متاحة حاليًا
                         </h3>
-                        <p className="text-gray-600 max-w-md mx-auto font-arabic">
+                        <p
+                          className="max-w-md mx-auto font-arabic"
+                          style={{ color: colors.text.secondary }}
+                        >
                           يرجى التحقق مرة أخرى في وقت لاحق أو اختيار فئة أخرى.
                         </p>
                       </motion.div>
@@ -490,27 +545,51 @@ const ShopComponent = () => {
                           >
                             <Card
                               className={cn(
-                                "h-full flex flex-col border-gray-200/80 shadow-lg hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 bg-white/70 backdrop-blur-sm rounded-2xl text-center",
+                                "h-full flex flex-col transition-all duration-300 group text-center backdrop-blur-sm rounded-2xl border group-hover:-translate-y-2",
+                                shadowClasses.cardInteractive,
                                 sub.isRecommended && "ring-2 ring-primary-500",
                               )}
+                              style={{
+                                backgroundColor: withAlpha(colors.bg.elevated, 0.92),
+                                borderColor: withAlpha(colors.border.default, 0.7),
+                              }}
                             >
                               <CardHeader className="flex flex-col items-center pt-8">
                                 {sub.isRecommended && (
                                   <Badge
                                     variant="secondary"
-                                    className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white border-0 px-2 py-1 text-xs font-bold shadow-lg"
+                                    className={cn(
+                                      "absolute top-4 right-4 border-0 px-2 py-1 text-xs font-bold",
+                                      shadowClasses.button,
+                                    )}
+                                    style={{
+                                      background: gradients.status.warning,
+                                      color: colors.text.inverse,
+                                    }}
                                   >
                                     <Crown className="w-3.5 h-3.5 ml-1" /> موصى
                                     به
                                   </Badge>
                                 )}
-                                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                <div
+                                  className={cn(
+                                    "relative w-16 h-16 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300",
+                                    shadowClasses.glow,
+                                  )}
+                                  style={{ background: gradients.brand.primary }}
+                                >
                                   <CardIcon className="w-8 h-8 text-white" />
                                 </div>
-                                <h3 className="text-2xl font-bold text-gray-900">
+                                <h3
+                                  className="text-2xl font-bold"
+                                  style={{ color: colors.text.primary }}
+                                >
                                   {sub.name}
                                 </h3>
-                                <p className="text-gray-500 text-sm min-h-10 px-2">
+                                <p
+                                  className="text-sm min-h-10 px-2"
+                                  style={{ color: colors.text.secondary }}
+                                >
                                   {sub.tagline}
                                 </p>
                               </CardHeader>
@@ -520,11 +599,20 @@ const ShopComponent = () => {
                                 {trialOnly ? (
                                   <div className="flex-1 flex flex-col items-center justify-center">
                                     <div className="text-center mb-4">
-                                      <span className="inline-block px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-100 rounded-full">
+                                      <span
+                                        className="inline-block px-3 py-1 text-xs font-bold rounded-full"
+                                        style={{
+                                          backgroundColor: colors.status.successBg,
+                                          color: colors.status.success,
+                                        }}
+                                      >
                                         تجربة مجانية
                                       </span>
                                     </div>
-                                    <p className="text-gray-600 text-sm mb-6">
+                                    <p
+                                      className="text-sm mb-6"
+                                      style={{ color: colors.text.secondary }}
+                                    >
                                       هذه الباقة متاحة كتجربة مجانية حاليًا.
                                     </p>
                                     <Button
@@ -534,13 +622,14 @@ const ShopComponent = () => {
                                       }
                                       density="relaxed"
                                       className={cn(
-                                        "w-full relative overflow-hidden group",
-                                        "bg-emerald-600 hover:bg-emerald-700",
-                                        "text-white px-4 py-4 rounded-2xl",
-                                        "font-semibold text-lg",
-                                        "shadow-xl shadow-emerald-300/25",
-                                        "transition-all duration-300",
+                                        "w-full relative overflow-hidden group px-4 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                                        shadowClasses.buttonElevated,
                                       )}
+                                      style={{
+                                        background: gradients.status.success,
+                                        color: colors.text.inverse,
+                                        boxShadow: shadows.colored.success.md,
+                                      }}
                                     >
                                       <span className="relative flex items-center justify-center gap-3">
                                         <span>
@@ -560,7 +649,15 @@ const ShopComponent = () => {
                                     {/* ====== Tabs لخطط مدفوعة فقط ====== */}
                                     {displayPlans.length > 1 && (
                                       <div className="mb-6">
-                                        <div className="flex w-full bg-primary-100/70 p-1 rounded-full">
+                                        <div
+                                          className="flex w-full p-1 rounded-full"
+                                          style={{
+                                            backgroundColor: withAlpha(
+                                              colors.brand.primary,
+                                              0.15,
+                                            ),
+                                          }}
+                                        >
                                           {displayPlans.map((option) => (
                                             <button
                                               key={option.id}
@@ -576,7 +673,14 @@ const ShopComponent = () => {
                                                 option.id && (
                                                 <motion.div
                                                   layoutId={`pill-switch-${sub.id}`}
-                                                  className="absolute inset-0 bg-white rounded-full shadow"
+                                                  className={cn(
+                                                    "absolute inset-0 rounded-full",
+                                                    shadowClasses.button,
+                                                  )}
+                                                  style={{
+                                                    backgroundColor:
+                                                      colors.bg.elevated,
+                                                  }}
                                                   transition={{
                                                     type: "spring",
                                                     stiffness: 300,
@@ -585,14 +689,14 @@ const ShopComponent = () => {
                                                 />
                                               )}
                                               <span
-                                                className={cn("relative z-10", {
-                                                  "text-primary-600":
+                                                className="relative z-10"
+                                                style={{
+                                                  color:
                                                     selectedPlan?.id ===
-                                                    option.id,
-                                                  "text-gray-700 hover:text-gray-900":
-                                                    selectedPlan?.id !==
-                                                    option.id,
-                                                })}
+                                                    option.id
+                                                      ? colors.brand.primary
+                                                      : colors.text.secondary,
+                                                }}
                                               >
                                                 {option.duration}
                                               </span>
@@ -609,7 +713,10 @@ const ShopComponent = () => {
                                           {selectedPlan.hasDiscount &&
                                             !isTieredDiscount &&
                                             selectedPlan.originalPrice && (
-                                              <span className="text-xl font-medium text-gray-500 line-through">
+                                              <span
+                                                className="text-xl font-medium line-through"
+                                                style={{ color: colors.text.secondary }}
+                                              >
                                                 $
                                                 {Number(
                                                   selectedPlan.originalPrice,
@@ -625,10 +732,16 @@ const ShopComponent = () => {
                                             <span
                                               className={cn(
                                                 "text-4xl font-extrabold tracking-tight",
-                                                isTieredDiscount
-                                                  ? "text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-red-500"
-                                                  : "text-gray-900",
+                                                isTieredDiscount && "text-transparent bg-clip-text",
                                               )}
+                                              style={{
+                                                color: isTieredDiscount
+                                                  ? undefined
+                                                  : colors.text.primary,
+                                                backgroundImage: isTieredDiscount
+                                                  ? gradients.status.warning
+                                                  : undefined,
+                                              }}
                                             >
                                               $
                                               {Number(
@@ -637,7 +750,10 @@ const ShopComponent = () => {
                                             </span>
                                           </motion.div>
                                         </div>
-                                        <span className="text-sm text-gray-500">
+                                        <span
+                                          className="text-sm"
+                                          style={{ color: colors.text.secondary }}
+                                        >
                                           {" "}
                                           / {selectedPlan.duration}{" "}
                                         </span>
@@ -654,28 +770,57 @@ const ShopComponent = () => {
                                               initial={{ opacity: 0, y: 10 }}
                                               animate={{ opacity: 1, y: 0 }}
                                               exit={{ opacity: 0, y: -10 }}
-                                              className="w-full space-y-2 text-sm bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-3 border border-orange-200"
+                                              className="w-full space-y-2 text-sm rounded-2xl p-3 border"
+                                              style={{
+                                                background: withAlpha(
+                                                  colors.status.warning,
+                                                  0.12,
+                                                ),
+                                                borderColor: withAlpha(
+                                                  colors.status.warning,
+                                                  0.4,
+                                                ),
+                                                color: colors.text.secondary,
+                                              }}
                                             >
                                               {(selectedPlan.discountDetails
                                                 ?.remaining_slots ?? 0) > 0 && (
-                                                <div className="flex flex-col items-center justify-center text-center gap-2 font-medium text-gray-700">
+                                                <div
+                                                  className="flex flex-col items-center justify-center text-center gap-2 font-medium"
+                                                  style={{ color: colors.text.primary }}
+                                                >
                                                   <div className="flex items-center gap-2">
-                                                    <Flame className="w-6 h-6 text-red-400 animate-pulse" />
+                                                    <Flame
+                                                      className="w-6 h-6 animate-pulse"
+                                                      style={{
+                                                        color: colors.status.warning,
+                                                      }}
+                                                    />
                                                     <span>
                                                       متبقي{" "}
-                                                      <span className="font-bold text-lg text-primary-600">
+                                                      <span
+                                                        className="font-bold text-lg"
+                                                        style={{
+                                                          color: colors.brand.primary,
+                                                        }}
+                                                      >
                                                         {
                                                           selectedPlan
                                                             .discountDetails
                                                             ?.remaining_slots
-                                                        }
+                                                      }
                                                       </span>{" "}
                                                       مقاعد فقط بهذا السعر
                                                     </span>
                                                   </div>
 
                                                   {nextPrice !== null && (
-                                                    <div className="flex items-center gap-1 text-red-600">
+                                                    <div
+                                                      className="flex items-center gap-1"
+                                                      style={{
+                                                        color: colors.status.warning,
+                                                      }}
+                                                    >
                                                       <TrendingUp className="w-4 h-4" />
                                                       <span>
                                                         بعد ذلك سيكون السعر{" "}
@@ -691,8 +836,22 @@ const ShopComponent = () => {
 
                                               {selectedPlan.discountDetails
                                                 ?.lock_in_price && (
-                                                <div className="flex items-center justify-center gap-2 text-green-700 pt-2 border-top border-orange-200/60 mt-2">
-                                                  <ShieldCheck className="w-4 h-4 text-green-600 animate-bounce" />
+                                                <div
+                                                  className="flex items-center justify-center gap-2 pt-2 mt-2"
+                                                  style={{
+                                                    color: colors.status.success,
+                                                    borderTop: `1px solid ${withAlpha(
+                                                      colors.status.warning,
+                                                      0.35,
+                                                    )}`,
+                                                  }}
+                                                >
+                                                  <ShieldCheck
+                                                    className="w-4 h-4 animate-bounce"
+                                                    style={{
+                                                      color: colors.status.success,
+                                                    }}
+                                                  />
                                                   <p className="text-sm font-medium">
                                                     سيتم تثبيت سعر اشتراكك
                                                     للشهور القادمة
@@ -725,7 +884,16 @@ const ShopComponent = () => {
 
                                     {isTieredDiscount && (
                                       <div className="mt-4 text-center">
-                                        <span className="inline-block px-3 py-1 text-xs font-bold text-orange-700 bg-orange-100 rounded-full">
+                                        <span
+                                          className="inline-block px-3 py-1 text-xs font-bold rounded-full"
+                                          style={{
+                                            backgroundColor: withAlpha(
+                                              colors.status.warning,
+                                              0.15,
+                                            ),
+                                            color: colors.status.warning,
+                                          }}
+                                        >
                                           عرض محدود
                                         </span>
                                       </div>
@@ -739,19 +907,22 @@ const ShopComponent = () => {
                                       }
                                       density="relaxed"
                                       className={cn(
-                                        "w-full relative overflow-hidden group mt-4",
-                                        "bg-gradient-to-r from-primary-500 to-primary-700",
-                                        "text-white px-4 py-4 rounded-2xl",
-                                        "font-semibold text-lg",
-                                        "shadow-xl shadow-primary-300/25",
-                                        "transition-all duration-300",
-                                        "hover:shadow-2xl hover:shadow-primary-500/30",
-                                        "hover:-translate-y-1",
-                                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                                        "w-full relative overflow-hidden group mt-4 px-4 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed",
+                                        shadowClasses.buttonElevated,
                                       )}
+                                      style={{
+                                        background: gradients.brand.primary,
+                                        color: colors.text.inverse,
+                                        boxShadow: shadows.colored.primary.lg,
+                                      }}
                                       disabled={!selectedPlan}
                                     >
-                                      <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                      <span
+                                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                        style={{
+                                          background: gradients.brand.primaryHover,
+                                        }}
+                                      />
                                       <span className="relative flex items-center justify-center gap-3">
                                         <span>اشترك الآن</span>
                                         <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
@@ -765,7 +936,8 @@ const ShopComponent = () => {
                                         onClick={() =>
                                           handleSubscribeClick(sub, trialPlan)
                                         }
-                                        className="mt-3 text-primary-700 hover:text-primary-800 text-sm font-bold underline underline-offset-4"
+                                        className="mt-3 text-sm font-bold underline underline-offset-4 hover:opacity-80"
+                                        style={{ color: colors.brand.primary }}
                                       >
                                         جرب {trialPlan.trialDurationDays || ""}{" "}
                                         {trialPlan.trialDurationDays

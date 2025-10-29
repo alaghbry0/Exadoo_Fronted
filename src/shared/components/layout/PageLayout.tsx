@@ -2,20 +2,17 @@
 import {
   ComponentType,
   ReactNode,
+  cloneElement,
   isValidElement,
 } from "react";
 
-
 import { Navbar, type NavbarProps } from "@/components/ui/navbar";
-
 import { cn } from "@/shared/utils";
+
 import FooterNavEnhanced from "./FooterNavEnhanced";
+import { PageLayoutSlot, usePageLayoutComponents } from "./PageLayoutContext";
 
-import { usePageLayoutComponents } from "./PageLayoutContext";
-
-type PageLayoutSlot = ReactNode | ComponentType;
-
-interface PageLayoutProps {
+type PageLayoutProps = {
   children: ReactNode;
   showNavbar?: boolean;
   showFooter?: boolean;
@@ -24,9 +21,9 @@ interface PageLayoutProps {
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   className?: string;
   navbarProps?: NavbarProps;
-}
+};
 
-
+const DEFAULT_NAVBAR: PageLayoutSlot = Navbar;
 const DEFAULT_FOOTER: PageLayoutSlot = FooterNavEnhanced;
 
 export default function PageLayout({
@@ -59,32 +56,31 @@ export default function PageLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {showNavbar && <Navbar {...navbarProps} />}
+      {shouldRenderNavbar && renderSlot(resolvedNavbar, navbarProps)}
 
       <main
         className={cn(
           "flex-1 w-full mx-auto px-4",
           maxWidthClass,
-          shouldRenderFooter && "pb-20", // مسافة للـ footer
+          shouldRenderFooter && "pb-20",
           className,
         )}
       >
         {children}
       </main>
 
-
-      {showFooter && <FooterNavEnhanced />}
-
+      {shouldRenderFooter && renderSlot(resolvedFooter)}
     </div>
   );
 }
 
-function renderSlot(slot?: PageLayoutSlot) {
+function renderSlot<P extends object>(slot?: PageLayoutSlot, props?: P) {
   if (!slot) return null;
+
   if (isValidElement(slot)) {
-    return slot;
+    return props ? cloneElement(slot, props) : slot;
   }
 
-  const SlotComponent = slot as ComponentType;
-  return <SlotComponent />;
+  const SlotComponent = slot as ComponentType<P>;
+  return <SlotComponent {...props} />;
 }

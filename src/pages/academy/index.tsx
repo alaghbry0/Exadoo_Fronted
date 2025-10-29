@@ -7,14 +7,11 @@ import Image from "next/image";
 import AuthPrompt from "@/domains/auth/components/AuthFab";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { componentVariants } from "@/shared/components/ui/variants";
 import { cn } from "@/shared/utils";
-import { Search, Bookmark, Layers, Star, TrendingUp, Award, BookOpen, Sparkles, Eye, EyeOff, MessageCircle } from "lucide-react";
+import { Search, Bookmark, Layers, Award, BookOpen } from "lucide-react";
 import { useTelegram } from "@/shared/context/TelegramContext";
 import { useAcademyData } from "@/domains/academy/api";
 import { useUserStore } from "@/shared/state/zustand/userStore";
-import { LazyLoad } from "@/shared/components/common/LazyLoad";
-import { CourseSkeleton } from "@/shared/components/skeletons/CourseSkeleton";
 import {
   MiniCourseCard,
   MiniBundleCard,
@@ -26,7 +23,14 @@ import {
   TopCourseCarousel,
   LatestCourseCard,
 } from "@/domains/academy/components";
-import { colors, spacing } from "@/styles/tokens";
+import { HomeSearchBar } from "@/domains/home/components";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  shadows,
+  withAlpha,
+} from "@/styles/tokens";
 
 /* =========================
    Types
@@ -191,91 +195,106 @@ export default function AcademyIndex() {
       ? "****"
       : (userName.length > 24 ? `${userName.slice(0, 24)}…` : userName);
 
+  const headingStyle = {
+    fontFamily: "var(--font-arabic)",
+    color: colors.text.primary,
+  } as const;
+
+  const supportingTextStyle = {
+    fontFamily: "var(--font-arabic)",
+    color: colors.text.secondary,
+  } as const;
+
+  const navButtonBase = cn(
+    "flex flex-col items-center gap-1.5 px-6 py-2 transition-all",
+    componentRadius.button,
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
+    <div
+      className="min-h-screen pb-20"
+      dir="rtl"
+      style={{ backgroundColor: colors.bg.secondary }}
+    >
       {/* Header */}
       <div
-  role="banner"
-  className="
-    sticky top-0 z-50 pt-[env(safe-area-inset-top)]
-    bg-white/85 dark:bg-neutral-900/80
-    supports-[backdrop-filter]:backdrop-blur-md
-    border-b border-gray-100 dark:border-neutral-800
-    shadow-[0_1px_0_0_rgba(0,0,0,0.03)]
-  "
->
-  <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
-    <div className="flex h-16 items-center justify-between">
-      {/* Left: Avatar + Text */}
-      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-        <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-1 ring-gray-200/60 dark:ring-neutral-800">
-          {/* ✅ صورة افتراضية من public/icon_user.png */}
-          <AvatarImage src={photoUrl || '/icon_user.svg'} alt={displayName} />
-          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
-            {userInitial}
-          </AvatarFallback>
-        </Avatar>
+        role="banner"
+        className="sticky top-0 z-50 pt-[env(safe-area-inset-top)] supports-[backdrop-filter]:backdrop-blur-md backdrop-blur-md"
+        style={{
+          backgroundColor: withAlpha(colors.bg.elevated, 0.92),
+          borderBottom: `1px solid ${withAlpha(colors.border.default, 0.7)}`,
+          boxShadow: shadows.elevation[1],
+        }}
+      >
+        <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
+          <div className="flex h-16 items-center justify-between">
+            {/* Left: Avatar + Text */}
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <Avatar
+                className="h-11 w-11 sm:h-12 sm:w-12"
+                style={{
+                  boxShadow: `0 0 0 2px ${withAlpha(colors.brand.primary, 0.2)}`,
+                  backgroundColor: withAlpha(colors.brand.primary, 0.08),
+                }}
+              >
+                {/* ✅ صورة افتراضية من public/icon_user.png */}
+                <AvatarImage src={photoUrl || "/icon_user.svg"} alt={displayName} />
+                <AvatarFallback
+                  className="font-semibold"
+                  style={{
+                    backgroundImage: gradients.brand.primary,
+                    color: colors.text.inverse,
+                    fontFamily: "var(--font-arabic)",
+                  }}
+                >
+                  {userInitial}
+                </AvatarFallback>
+              </Avatar>
 
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1
-              className="truncate text-base sm:text-lg font-semibold text-gray-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-arabic)' }}
-            >
-              {/* تحية احترافية بدون إيموجي */}
-              {`مرحباً، ${displayName}`}
-            </h1>
+              <div className="min-w-0">
+                <h1
+                  className="truncate text-base font-semibold sm:text-lg"
+                  style={headingStyle}
+                >
+                  {`مرحباً، ${displayName}`}
+                </h1>
+                <p
+                  className="mt-0.5 text-xs sm:text-[13px]"
+                  style={supportingTextStyle}
+                >
+                  رحلتك التعليمية تبدأ من هنا
+                </p>
+              </div>
+            </div>
 
-            
+            {/* Right: Actions */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 transition hover:opacity-80" aria-hidden="true">
+                <Image
+                  src="/logo.png"
+                  alt="Exaado Logo"
+                  width={35}
+                  height={35}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
           </div>
-
-          <p className="mt-0.5 text-xs sm:text-[13px] text-gray-600 dark:text-neutral-400">
-            رحلتك التعليمية تبدأ من هنا
-          </p>
         </div>
       </div>
-
-      {/* Right: Actions */}
-      <div className="flex items-center gap-4">
-
-
-        <div
-          className="
-           flex items-center gap-2 hover:opacity-80 transition
-          "
-          aria-hidden="true"
-        >
-          <Image
-            src="/logo.png"
-            alt="Exaado Logo"
-            width={35}
-            height={35}
-            className="object-contain opacity-90"
-            priority
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
       {/* Search Bar */}
-      <div className="px-4 pt-4 pb-6 bg-gray-50">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" size={22} aria-hidden="true" />
-          <input
-            type="text"
-            placeholder="Enter Course Name"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:shadow-md transition-all text-gray-900 font-normal placeholder:text-gray-400"
-            style={{ fontFamily: 'var(--font-arabic)' }}
-            aria-label="بحث في محتوى الأكاديمية"
-          />
-        </div>
+      <div className="mx-auto max-w-screen-xl">
+        <HomeSearchBar
+          value={q}
+          onChange={setQ}
+          placeholder="Enter Course Name"
+          ariaLabel="بحث في محتوى الأكاديمية"
+        />
       </div>
 
-      <main className="px-4 bg-gray-50">
+      <main className="px-4" style={{ backgroundColor: colors.bg.secondary }}>
 
         {/* Loading / Error */}
         <div aria-live="polite">
@@ -297,7 +316,7 @@ export default function AcademyIndex() {
               className="rounded-3xl border p-8 text-center"
               style={{
                 borderColor: colors.status.error,
-                backgroundColor: `${colors.status.error}10`,
+                backgroundColor: withAlpha(colors.status.error, 0.1),
                 color: colors.status.error,
               }}
             >
@@ -327,7 +346,7 @@ export default function AcademyIndex() {
                       >
                         <div
                           className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-                          style={{ backgroundColor: `${colors.brand.primary}15` }}
+                          style={{ backgroundColor: withAlpha(colors.brand.primary, 0.12) }}
                         >
                           <BookOpen className="h-8 w-8" style={{ color: colors.brand.primary }} />
                         </div>
@@ -340,7 +359,10 @@ export default function AcademyIndex() {
                         </p>
                         <Button
                           className="rounded-xl px-6 py-2.5"
-                          style={{ backgroundColor: colors.brand.primary, color: "#FFFFFF" }}
+                          style={{
+                            backgroundColor: colors.brand.primary,
+                            color: colors.text.inverse,
+                          }}
                           onClick={() => setTab("all")}
                         >
                           <Layers className="ml-2 h-4 w-4" />
@@ -408,7 +430,7 @@ export default function AcademyIndex() {
                   {/* Top Courses Carousel with Auto-Scroll */}
                   {filteredData.topCourses.length > 0 && (
                     <section aria-labelledby="top-courses-carousel" className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'var(--font-arabic)' }}>
+                      <h2 className="mb-4 text-2xl font-bold" style={headingStyle}>
                         Top Courses
                       </h2>
                       
@@ -429,7 +451,7 @@ export default function AcademyIndex() {
                   {/* Course Categories */}
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories" className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'var(--font-arabic)' }}>
+                      <h2 className="mb-6 text-2xl font-bold" style={headingStyle}>
                         Course Categories :
                       </h2>
                       
@@ -450,7 +472,7 @@ export default function AcademyIndex() {
                   {/* Latest Bundles */}
                   {filteredData.topBundles.length > 0 && (
                     <section aria-labelledby="latest-bundles" className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-5" style={{ fontFamily: 'var(--font-arabic)' }}>
+                      <h2 className="mb-5 text-2xl font-bold" style={headingStyle}>
                         Latest Bundles 🔥
                       </h2>
                       
@@ -478,8 +500,8 @@ export default function AcademyIndex() {
                   {/* Latest Courses */}
                   {filteredData.highlightCourses.length > 0 && (
                     <section aria-labelledby="latest-courses" className="mb-8">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'var(--font-arabic)' }}>
-                        Latest Courses 
+                      <h2 className="mb-6 text-2xl font-bold" style={headingStyle}>
+                        Latest Courses
                       </h2>
                       
                       <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
@@ -564,36 +586,56 @@ export default function AcademyIndex() {
       </main>
 
       {/* Bottom Navigation */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 px-4 py-1 z-40 backdrop-blur-xl bg-white/95 border-t border-gray-200 shadow-lg"
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 px-4 py-2 backdrop-blur-xl"
+        style={{
+          backgroundColor: withAlpha(colors.bg.elevated, 0.95),
+          borderTop: `1px solid ${withAlpha(colors.border.default, 0.7)}`,
+          boxShadow: shadows.elevation[2],
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)",
+        }}
       >
-        <div className="flex items-center justify-around max-w-2xl mx-auto">
+        <div className="mx-auto flex max-w-2xl items-center justify-around">
           <button
-            className={`flex flex-col items-center gap-1.5 transition-all px-6 py-2 rounded-xl ${
-              tab === "all" 
-                ? "text-blue-600 bg-blue-50" 
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
+            className={navButtonBase}
+            style={{
+              color: tab === "all" ? colors.brand.primary : colors.text.secondary,
+              backgroundColor:
+                tab === "all" ? withAlpha(colors.brand.primary, 0.12) : "transparent",
+              boxShadow: tab === "all" ? shadows.colored.primary.sm : "none",
+            }}
             onClick={() => handleTab("all")}
             aria-label="الصفحة الرئيسية"
             aria-current={tab === "all" ? "page" : undefined}
           >
             <Layers size={22} aria-hidden="true" />
-            <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-arabic)' }}>Home</span>
+            <span
+              className="text-xs font-semibold"
+              style={{ fontFamily: "var(--font-arabic)" }}
+            >
+              Home
+            </span>
           </button>
-          
+
           <button
-            className={`flex flex-col items-center gap-1.5 transition-all px-6 py-1 rounded-xl ${
-              tab === "mine" 
-                ? "text-blue-600 bg-blue-50" 
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
+            className={navButtonBase}
+            style={{
+              color: tab === "mine" ? colors.brand.primary : colors.text.secondary,
+              backgroundColor:
+                tab === "mine" ? withAlpha(colors.brand.primary, 0.12) : "transparent",
+              boxShadow: tab === "mine" ? shadows.colored.primary.sm : "none",
+            }}
             onClick={() => handleTab("mine")}
             aria-label="دوراتي"
             aria-current={tab === "mine" ? "page" : undefined}
           >
             <Bookmark size={22} aria-hidden="true" />
-            <span className="text-xs font-semibold" style={{ fontFamily: 'var(--font-arabic)' }}>My Courses</span>
+            <span
+              className="text-xs font-semibold"
+              style={{ fontFamily: "var(--font-arabic)" }}
+            >
+              My Courses
+            </span>
           </button>
         </div>
       </div>
