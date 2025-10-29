@@ -4,6 +4,8 @@ import {
   ReactNode,
   cloneElement,
   isValidElement,
+  type CSSProperties,
+  type HTMLAttributes,
 } from "react";
 
 import { Navbar, type NavbarProps } from "@/shared/components/layout/Navbar";
@@ -21,7 +23,9 @@ type PageLayoutProps = {
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   className?: string;
   navbarProps?: NavbarProps;
-};
+  mainStyle?: CSSProperties;
+  mainProps?: HTMLAttributes<HTMLElement>;
+} & Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
 
 const DEFAULT_NAVBAR: PageLayoutSlot = Navbar;
 const DEFAULT_FOOTER: PageLayoutSlot = FooterNavEnhanced;
@@ -35,6 +39,9 @@ export default function PageLayout({
   maxWidth = "2xl",
   className,
   navbarProps,
+  mainStyle,
+  mainProps,
+  ...rest
 }: PageLayoutProps) {
   const { navbar: navbarFromContext, footer: footerFromContext } =
     usePageLayoutComponents();
@@ -54,17 +61,23 @@ export default function PageLayout({
     full: "max-w-full",
   }[maxWidth];
 
+  const { className: mainClassName, style: mainInlineStyle, ...restMainProps } =
+    mainProps ?? {};
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" {...rest}>
       {shouldRenderNavbar && renderSlot(resolvedNavbar, navbarProps)}
 
       <main
+        {...restMainProps}
         className={cn(
           "flex-1 w-full mx-auto px-4",
           maxWidthClass,
           shouldRenderFooter && "pb-20",
           className,
+          mainClassName,
         )}
+        style={{ ...mainInlineStyle, ...mainStyle }}
       >
         {children}
       </main>

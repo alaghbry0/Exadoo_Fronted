@@ -14,13 +14,16 @@ import {
   MiniCourseCard,
   MiniBundleCard,
   CategoryCard,
-  SectionHeader,
-  HScroll,
-  OngoingCourseCard,
   TopCourseCarousel,
   LatestCourseCard,
 } from "@/domains/academy/components";
 import { HomeSearchBar, UserHeader } from "@/domains/home/components";
+import {
+  HorizontalScroll,
+  PageLayout,
+  buildCountBadge,
+} from "@/shared/components/layout";
+import { SectionHeading } from "@/shared/components/common";
 import {
   colors,
   componentRadius,
@@ -182,13 +185,6 @@ export default function AcademyIndex() {
 
   const handleTab = useCallback((key: "all" | "mine") => setTab(key), []);
 
-  const { telegramId: tgId } = useTelegram();
-
-    const headingStyle = {
-      fontFamily: fontFamily.arabic,
-      color: colors.text.primary,
-    } as const;
-
   const bottomNavTokens = {
     containerBackground: withAlpha(colors.bg.elevated, 0.95),
     containerBorder: withAlpha(colors.border.default, 0.7),
@@ -220,10 +216,15 @@ export default function AcademyIndex() {
     }) as const;
 
   return (
-    <div
-      className="min-h-screen pb-20"
+    <PageLayout
       dir="rtl"
+      showNavbar={false}
+      showFooter={false}
       style={{ backgroundColor: colors.bg.secondary }}
+      mainStyle={{
+        backgroundColor: colors.bg.secondary,
+        paddingBottom: spacing[20],
+      }}
     >
       {/* Header */}
       <UserHeader
@@ -241,7 +242,7 @@ export default function AcademyIndex() {
         />
       </div>
 
-      <main className="px-4" style={{ backgroundColor: colors.bg.secondary }}>
+      <div>
 
         {/* Loading / Error */}
         <div aria-live="polite">
@@ -262,11 +263,11 @@ export default function AcademyIndex() {
                   marginBottom: spacing[7],
                 }}
               />
-              <HScroll>
+              <HorizontalScroll ariaLabel="قائمة دورات قيد التحميل" bottomPadding="md">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <AcademyCardSkeleton key={i} />
                 ))}
-              </HScroll>
+              </HorizontalScroll>
             </section>
           )}
           {isError && (
@@ -332,13 +333,16 @@ export default function AcademyIndex() {
                     <>
                       {mine.courses.length > 0 && (
                         <section aria-labelledby="my-courses">
-                          <SectionHeader
+                          <SectionHeading
+                            id="my-courses"
                             icon={Bookmark}
                             title="دوراتي"
-                            count={mine.courses.length}
-                            id="my-courses"
+                            action={buildCountBadge(mine.courses.length)}
                           />
-                          <HScroll>
+                          <HorizontalScroll
+                            ariaLabel="قائمة الدورات المسجلة"
+                            bottomPadding="lg"
+                          >
                             {mine.courses.map((c, i) => (
                               <MiniCourseCard
                                 key={c.id}
@@ -353,19 +357,23 @@ export default function AcademyIndex() {
                                 priority={i === 0}
                               />
                             ))}
-                          </HScroll>
+                          </HorizontalScroll>
                         </section>
                       )}
 
                       {mine.bundles.length > 0 && (
                         <section aria-labelledby="my-bundles">
-                          <SectionHeader
+                          <SectionHeading
+                            id="my-bundles"
                             icon={Award}
                             title="حزمي المسجلة"
-                            count={mine.bundles.length}
-                            id="my-bundles"
+                            action={buildCountBadge(mine.bundles.length)}
                           />
-                          <HScroll>
+                          <HorizontalScroll
+                            ariaLabel="قائمة الحزم المسجلة"
+                            bottomPadding="lg"
+                            itemClassName="w-[280px]"
+                          >
                             {mine.bundles.map((b, i) => (
                               <MiniBundleCard
                                 key={b.id}
@@ -379,7 +387,7 @@ export default function AcademyIndex() {
                                 priority={i === 0}
                               />
                             ))}
-                          </HScroll>
+                          </HorizontalScroll>
                         </section>
                       )}
                     </>
@@ -390,10 +398,13 @@ export default function AcademyIndex() {
                   {/* Top Courses Carousel with Auto-Scroll */}
                   {filteredData.topCourses.length > 0 && (
                     <section aria-labelledby="top-courses-carousel" className="mb-8">
-                      <h2 className="mb-4 text-2xl font-bold" style={headingStyle}>
-                        أفضل الدورات
-                      </h2>
-                      
+                      <div style={{ marginBottom: spacing[4] }}>
+                        <SectionHeading
+                          id="top-courses-carousel"
+                          title="أفضل الدورات"
+                        />
+                      </div>
+
                       <TopCourseCarousel
                         courses={filteredData.topCourses.slice(0, 5).map((c) => ({
                           id: c.id,
@@ -411,76 +422,84 @@ export default function AcademyIndex() {
                   {/* Course Categories */}
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories" className="mb-8">
-                      <h2 className="mb-6 text-2xl font-bold" style={headingStyle}>
-                        تصنيفات الدورات
-                      </h2>
-                      
-                      <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
-                        <div className="flex gap-3 min-w-max">
-                          {filteredData.categories.slice(0, 6).map((cat, i) => (
-                            <CategoryCard
-                              key={cat.id}
-                              {...cat}
-                              priority={i === 0}
-                            />
-                          ))}
-                        </div>
+                      <div style={{ marginBottom: spacing[6] }}>
+                        <SectionHeading id="categories" title="تصنيفات الدورات" />
                       </div>
+
+                      <HorizontalScroll
+                        ariaLabel="قائمة تصنيفات الدورات"
+                        gap="sm"
+                        bottomPadding="lg"
+                        itemClassName="w-auto"
+                      >
+                        {filteredData.categories.slice(0, 6).map((cat, i) => (
+                          <CategoryCard
+                            key={cat.id}
+                            {...cat}
+                            priority={i === 0}
+                          />
+                        ))}
+                      </HorizontalScroll>
                     </section>
                   )}
 
                   {/* Latest Bundles */}
                   {filteredData.topBundles.length > 0 && (
                     <section aria-labelledby="latest-bundles" className="mb-8">
-                      <h2 className="mb-5 text-2xl font-bold" style={headingStyle}>
-                        أحدث الباقات 🔥
-                      </h2>
-                      
-                      <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
-                        <div className="flex gap-4 min-w-max">
-                          {filteredData.topBundles.map((b, i) => (
-                            <div key={b.id} className="w-[280px]">
-                              <MiniBundleCard
-                                id={b.id}
-                                title={b.title}
-                                desc={b.description}
-                                price={b.price}
-                                img={b.image || b.cover_image}
-                                subCategoryId={b.sub_category_id}
-                                freeSessionsCount={b.free_sessions_count}
-                                priority={i === 0}
-                              />
-                            </div>
-                          ))}
-                        </div>
+                      <div style={{ marginBottom: spacing[7] }}>
+                        <SectionHeading id="latest-bundles" title="أحدث الباقات 🔥" />
                       </div>
+
+                      <HorizontalScroll
+                        ariaLabel="قائمة أحدث الباقات"
+                        gap="md"
+                        bottomPadding="lg"
+                        itemClassName="w-[280px]"
+                      >
+                        {filteredData.topBundles.map((b, i) => (
+                          <MiniBundleCard
+                            key={b.id}
+                            id={b.id}
+                            title={b.title}
+                            desc={b.description}
+                            price={b.price}
+                            img={b.image || b.cover_image}
+                            subCategoryId={b.sub_category_id}
+                            freeSessionsCount={b.free_sessions_count}
+                            priority={i === 0}
+                          />
+                        ))}
+                      </HorizontalScroll>
                     </section>
                   )}
 
                   {/* Latest Courses */}
                   {filteredData.highlightCourses.length > 0 && (
                     <section aria-labelledby="latest-courses" className="mb-8">
-                      <h2 className="mb-6 text-2xl font-bold" style={headingStyle}>
-                        أحدث الدورات
-                      </h2>
-                      
-                      <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
-                        <div className="flex gap-3 min-w-max">
-                          {filteredData.highlightCourses.slice(0, 6).map((c, i) => (
-                            <LatestCourseCard
-                              key={c.id}
-                              id={c.id}
-                              title={c.title}
-                              lessonsCount={c.total_number_of_lessons}
-                              imageUrl={c.thumbnail}
-                              price={c.discounted_price || c.price}
-                              instructorName={c.instructor_name}
-                              rating={c.rating}
-                              priority={i === 0}
-                            />
-                          ))}
-                        </div>
+                      <div style={{ marginBottom: spacing[6] }}>
+                        <SectionHeading id="latest-courses" title="أحدث الدورات" />
                       </div>
+
+                      <HorizontalScroll
+                        ariaLabel="قائمة أحدث الدورات"
+                        gap="sm"
+                        bottomPadding="lg"
+                        itemClassName="w-auto"
+                      >
+                        {filteredData.highlightCourses.slice(0, 6).map((c, i) => (
+                          <LatestCourseCard
+                            key={c.id}
+                            id={c.id}
+                            title={c.title}
+                            lessonsCount={c.total_number_of_lessons}
+                            imageUrl={c.thumbnail}
+                            price={c.discounted_price || c.price}
+                            instructorName={c.instructor_name}
+                            rating={c.rating}
+                            priority={i === 0}
+                          />
+                        ))}
+                      </HorizontalScroll>
                     </section>
                   )}
 
@@ -543,7 +562,7 @@ export default function AcademyIndex() {
             </div>
           </AnimatePresence>
         )}
-      </main>
+      </div>
 
       {/* Bottom Navigation */}
       <div
@@ -585,9 +604,6 @@ export default function AcademyIndex() {
           </TabsList>
         </Tabs>
       </div>
-
-  
-      
-    </div>
+    </PageLayout>
   );
 }

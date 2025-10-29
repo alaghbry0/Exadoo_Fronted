@@ -8,17 +8,20 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useTelegram } from "@/shared/context/TelegramContext";
 import { useAcademyData } from "@/domains/academy/api";
-import PageLayout from "@/shared/components/layout/PageLayout";
+import {
+  HorizontalScroll,
+  PageLayout,
+  buildCountBadge,
+} from "@/shared/components/layout";
 import { Breadcrumbs } from "@/shared/components/ui/breadcrumbs";
 import { PageLoader } from "@/shared/components/ui/loaders";
 import { EmptyState } from "@/shared/components/common/EmptyState";
+import { SectionHeading } from "@/shared/components/common";
 import { BookOpen, Award, Layers, FolderOpen } from "lucide-react";
-import { colors } from "@/styles/tokens";
+import { colors, spacing } from "@/styles/tokens";
 
 // Feature Components
 import {
-  HScroll,
-  SectionHeader,
   MiniCourseCard,
   MiniBundleCard,
   CategoryHeroHeader,
@@ -107,13 +110,18 @@ export default function CategoryDetail() {
             {/* Courses Section */}
             {courses.length > 0 && (
               <section aria-labelledby="cat-courses">
-                <SectionHeader
-                  icon={BookOpen}
-                  title="الدورات التدريبية"
-                  count={courses.length}
-                  id="cat-courses"
-                />
-                <HScroll>
+                <div style={{ marginBottom: spacing[7] }}>
+                  <SectionHeading
+                    id="cat-courses"
+                    icon={BookOpen}
+                    title="الدورات التدريبية"
+                    action={buildCountBadge(courses.length)}
+                  />
+                </div>
+                <HorizontalScroll
+                  ariaLabel="قائمة الدورات في هذا التصنيف"
+                  bottomPadding="lg"
+                >
                   {courses.map((c, i) => (
                     <MiniCourseCard
                       key={c.id}
@@ -128,20 +136,26 @@ export default function CategoryDetail() {
                       priority={i === 0}
                     />
                   ))}
-                </HScroll>
+                </HorizontalScroll>
               </section>
             )}
 
             {/* Bundles Section */}
             {bundles.length > 0 && (
               <section aria-labelledby="cat-bundles">
-                <SectionHeader
-                  icon={Award}
-                  title="الحزم التعليمية"
-                  count={bundles.length}
-                  id="cat-bundles"
-                />
-                <HScroll>
+                <div style={{ marginBottom: spacing[7] }}>
+                  <SectionHeading
+                    id="cat-bundles"
+                    icon={Award}
+                    title="الحزم التعليمية"
+                    action={buildCountBadge(bundles.length)}
+                  />
+                </div>
+                <HorizontalScroll
+                  ariaLabel="قائمة الحزم في هذا التصنيف"
+                  bottomPadding="lg"
+                  itemClassName="w-[280px]"
+                >
                   {bundles.map((b, i) => (
                     <MiniBundleCard
                       key={b.id}
@@ -154,7 +168,7 @@ export default function CategoryDetail() {
                       priority={i === 0}
                     />
                   ))}
-                </HScroll>
+                </HorizontalScroll>
               </section>
             )}
 

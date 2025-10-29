@@ -5,8 +5,6 @@
 
 // Category Components
 export { LevelBadge } from "./LevelBadge";
-export { HScroll } from "./HScroll";
-export { SectionHeader } from "./SectionHeader";
 export { CategoryCard } from "./CategoryCard";
 export { MiniCourseCard } from "./MiniCourseCard";
 export { MiniBundleCard } from "./MiniBundleCard";
