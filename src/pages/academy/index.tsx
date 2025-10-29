@@ -15,7 +15,6 @@ import {
   CategoryCard,
   SectionHeader,
   HScroll,
-  SkeletonCard,
   OngoingCourseCard,
   TopCourseCarousel,
   LatestCourseCard,
@@ -27,7 +26,11 @@ import {
   shadows,
   withAlpha,
   fontFamily,
+  spacing,
+  radius,
+  animations,
 } from "@/styles/tokens";
+import { AcademyCardSkeleton } from "@/shared/components/ui/skeleton-loaders";
 
 /* =========================
    Types
@@ -216,14 +219,25 @@ export default function AcademyIndex() {
         {/* Loading / Error */}
         <div aria-live="polite">
           {isLoading && (
-            <section className="space-y-8">
+            <section
+              style={{
+                display: "grid",
+                gap: spacing[8],
+              }}
+            >
               <div
-                className="mb-5 h-7 w-40 rounded-xl animate-pulse"
-                style={{ backgroundColor: colors.bg.secondary }}
+                className={animations.presets.pulse}
+                style={{
+                  height: "1.75rem",
+                  width: "10rem",
+                  borderRadius: radius.xl,
+                  backgroundColor: colors.bg.secondary,
+                  marginBottom: spacing[7],
+                }}
               />
               <HScroll>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <SkeletonCard key={i} />
+                  <AcademyCardSkeleton key={i} />
                 ))}
               </HScroll>
             </section>

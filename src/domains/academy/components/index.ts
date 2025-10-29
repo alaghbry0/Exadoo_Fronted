@@ -11,7 +11,6 @@ export { CategoryCard } from "./CategoryCard";
 export { MiniCourseCard } from "./MiniCourseCard";
 export { MiniBundleCard } from "./MiniBundleCard";
 export { CategoryHeroHeader } from "./CategoryHeroHeader";
-export { SkeletonCard } from "./SkeletonCard";
 export { LatestCourseCard } from "./LatestCourseCard";
 export { OngoingCourseCard } from "./OngoingCourseCard";
 export { TopCourseCarousel } from "./TopCourseCarousel";
