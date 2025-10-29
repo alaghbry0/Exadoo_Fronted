@@ -2,7 +2,7 @@
 
 "use client";
 import { componentVariants } from "@/shared/components/ui/variants";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,6 +27,11 @@ import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
+import { ScrollArea, ScrollBar } from "@/shared/components/ui/scroll-area";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/shared/components/ui/toggle-group";
 import {
   Crown,
   Zap,
@@ -36,8 +41,6 @@ import {
   Layers,
   Tag,
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   TrendingUp,
   ShieldCheck,
   Flame,
@@ -131,12 +134,6 @@ const ShopComponent = () => {
   const [initialGroupSelected, setInitialGroupSelected] = useState(false);
 
   const { telegramId } = useTelegram();
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const [showScrollButtons, setShowScrollButtons] = useState({
-    left: false,
-    right: false,
-  });
-
   const focusRingStyle = {
     "--tw-ring-color": colors.border.focus,
   } as React.CSSProperties;
@@ -270,29 +267,6 @@ const ShopComponent = () => {
     }
   }, [groupsData, initialGroupSelected]);
 
-  // تحكم بأسهم التمرير
-  useEffect(() => {
-    const checkScroll = () => {
-      const el = tabsContainerRef.current;
-      if (el) {
-        const hasOverflow = el.scrollWidth > el.clientWidth;
-        setShowScrollButtons({
-          left: el.scrollLeft > 0,
-          right:
-            hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
-        });
-      }
-    };
-    checkScroll();
-    const el = tabsContainerRef.current;
-    el?.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el?.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, [groupsData]);
-
   const handleSubscribeClick = (
     subscription: Subscription,
     selectedPlan: SubscriptionOption,
@@ -308,15 +282,6 @@ const ShopComponent = () => {
     };
     setSelectedPlanForModal(modalData);
   };
-
-  const handleGroupSelect = (groupId: number | null) =>
-    setSelectedGroupId(groupId);
-  const scrollTabs = (direction: "left" | "right") =>
-    tabsContainerRef.current?.scrollBy({
-      left: direction === "left" ? -200 : 200,
-      behavior: "smooth",
-    });
-
   const initialLoading = groupsLoading || (plansLoading && !plansData);
   const hasError = !!(groupsError || typesError || plansError);
 
@@ -405,79 +370,43 @@ const ShopComponent = () => {
                 style={{ backgroundColor: withAlpha(colors.bg.secondary, 0.8) }}
               >
                 <div className="container mx-auto px-4 relative">
-                  <AnimatePresence>
-                    {showScrollButtons.left && (
-                      <motion.button
-                        {...shopSignalsAnimations.scrollButton}
-                        onClick={() => scrollTabs("left")}
-                        className={cn(
-                          "absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2",
-                          shadowClasses.button,
-                        )}
-                        style={{
-                          backgroundColor: withAlpha(colors.bg.elevated, 0.85),
-                          color: colors.text.secondary,
-                          ...focusRingStyle,
-                        }}
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-
-                  <div
-                    ref={tabsContainerRef}
-                    className="flex justify-start lg:justify-center items-center overflow-x-auto gap-2 md:gap-4 pb-2 scrollbar-hide -mx-4 px-4"
-                  >
-                    {[
-                      { id: null, name: "الكل", icon: Layers },
-                      ...groupsData.map((g) => ({ ...g, icon: Tag })),
-                    ].map((group) => (
-                      <button
-                        key={group.id ?? "all"}
-                        onClick={() => handleGroupSelect(group.id)}
-                        className={cn(
-                          "flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2",
-                          shadowClasses.button,
-                          selectedGroupId !== group.id && "hover:brightness-110",
-                        )}
-                        style={{
-                          background:
-                            selectedGroupId === group.id
-                              ? gradients.brand.primary
-                              : withAlpha(colors.bg.elevated, 0.8),
-                          color:
-                            selectedGroupId === group.id
-                              ? colors.text.inverse
-                              : colors.text.secondary,
-                          ...focusRingStyle,
-                        }}
-                      >
-                        <group.icon className="w-4 h-4" />
-                        {group.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  <AnimatePresence>
-                    {showScrollButtons.right && (
-                      <motion.button
-                        {...shopSignalsAnimations.scrollButton}
-                        onClick={() => scrollTabs("right")}
-                        className={cn(
-                          "absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2",
-                          shadowClasses.button,
-                        )}
-                        style={{
-                          backgroundColor: withAlpha(colors.bg.elevated, 0.85),
-                          color: colors.text.secondary,
-                          ...focusRingStyle,
-                        }}
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
+                  <ScrollArea type="scroll" className="-mx-4 px-4">
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      size="lg"
+                      value={
+                        selectedGroupId === null
+                          ? "all"
+                          : String(selectedGroupId)
+                      }
+                      onValueChange={(value) => {
+                        if (!value || value === "all") {
+                          setSelectedGroupId(null);
+                          return;
+                        }
+                        setSelectedGroupId(Number(value));
+                      }}
+                      className="flex w-max items-center gap-2 md:gap-4 pb-2 pr-4 justify-start lg:justify-center"
+                    >
+                      {[
+                        { id: null, name: "الكل", icon: Layers },
+                        ...groupsData.map((g) => ({ ...g, icon: Tag })),
+                      ].map((group) => (
+                        <ToggleGroupItem
+                          key={group.id ?? "all"}
+                          value={
+                            group.id === null ? "all" : String(group.id)
+                          }
+                          className="font-semibold"
+                        >
+                          <group.icon className="h-4 w-4" />
+                          {group.name}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                    <ScrollBar orientation="horizontal" className="mt-2" />
+                  </ScrollArea>
                 </div>
               </section>
             )}
