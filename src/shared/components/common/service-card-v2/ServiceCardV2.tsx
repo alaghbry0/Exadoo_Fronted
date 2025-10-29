@@ -194,7 +194,7 @@ function StandardLayout({
           </div>
         </div>
         {layout === "wide" && (
-          <div style={{ marginLeft: spacing[4], minWidth: "8rem" }}>
+          <div style={{ marginLeft: spacing[4], minWidth: "5rem" }}>
             {rightSlot ?? <PrimaryCTA label={ctaLabel} tone={ctaTone} />}
           </div>
         )}

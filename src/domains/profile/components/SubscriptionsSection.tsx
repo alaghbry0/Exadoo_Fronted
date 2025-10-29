@@ -471,5 +471,3 @@ const LinkCard = ({ channel }: { channel: SubChannelLink }) => {
     </motion.div>
   );
 };
-
-

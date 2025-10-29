@@ -1,16 +1,54 @@
 /**
  * LottieAnimation Component
  * عرض Lottie animations بدون مكتبة خارجية
- * يستخدم iframe للعرض المباشر
+ * يستخدم مكتبة lottie-web للرسم داخل DOM
  * 
  * @component مشترك - يستخدم في forex و indicators وأي صفحة أخرى
  */
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import type { AnimationEventName, AnimationItem } from "lottie-web";
 
 const WHITE_RGBA: [number, number, number, number] = [1, 1, 1, 1];
+const WHITE_RGBA_255: [number, number, number, number] = [255, 255, 255, 255];
 
 type LottieColorValue = number[] | Record<string, any> | Array<any>;
+
+const isNumber = (value: unknown): value is number => {
+  return typeof value === "number" && Number.isFinite(value);
+};
+
+const isApproximately = (value: number, target: number, tolerance = 1e-3) => {
+  return Math.abs(value - target) <= tolerance;
+};
+
+const componentIsWhite = (component: number) => {
+  if (!isNumber(component)) {
+    return false;
+  }
+
+  if (component > 1) {
+    return isApproximately(component, 255, 0.5);
+  }
+
+  return component >= 0.99;
+};
+
+const componentIsOpaque = (component: number) => {
+  if (!isNumber(component)) {
+    return false;
+  }
+
+  if (component > 1) {
+    if (component <= 100) {
+      return component >= 99;
+    }
+
+    return component >= 254.5;
+  }
+
+  return component >= 0.99;
+};
 
 const cloneAnimationPayload = <T,>(payload: T): T => {
   const structuredCloneFn = (
@@ -29,19 +67,43 @@ const cloneAnimationPayload = <T,>(payload: T): T => {
 const sanitizedAnimationCache = new WeakMap<object, any>();
 
 const matchesWhite = (value: unknown): value is number[] => {
+  if (!Array.isArray(value) || value.length < 3) {
+    return false;
+  }
+
+  const normalized = [...value];
+
+  if (normalized.length === 3) {
+    normalized.push(1);
+  }
+
+  const [r, g, b, a] = normalized;
+
   return (
-    Array.isArray(value) &&
-    value.length >= 4 &&
-    value[0] === WHITE_RGBA[0] &&
-    value[1] === WHITE_RGBA[1] &&
-    value[2] === WHITE_RGBA[2] &&
-    value[3] === WHITE_RGBA[3]
+    (componentIsWhite(r) && componentIsWhite(g) && componentIsWhite(b) && componentIsOpaque(a)) ||
+    (Array.isArray(value) &&
+      value.length >= 4 &&
+      ((value[0] === WHITE_RGBA[0] &&
+        value[1] === WHITE_RGBA[1] &&
+        value[2] === WHITE_RGBA[2] &&
+        value[3] === WHITE_RGBA[3]) ||
+        (value[0] === WHITE_RGBA_255[0] &&
+          value[1] === WHITE_RGBA_255[1] &&
+          value[2] === WHITE_RGBA_255[2] &&
+          value[3] === WHITE_RGBA_255[3]))
+    )
   );
 };
 
 const setAlphaTransparent = (rgba: number[]) => {
   const clone = [...rgba];
-  clone[3] = 0;
+
+  if (clone.length >= 4) {
+    clone[3] = 0;
+  } else {
+    clone.push(0);
+  }
+
   return clone;
 };
 
@@ -141,8 +203,51 @@ const sanitizeLayer = (layer: any): any => {
 
   const nextLayer: Record<string, any> = { ...layer };
 
+  let sanitizedShapes: any[] | undefined;
   if (Array.isArray(nextLayer.shapes)) {
-    nextLayer.shapes = sanitizeShapes(nextLayer.shapes);
+    sanitizedShapes = sanitizeShapes(nextLayer.shapes);
+    nextLayer.shapes = sanitizedShapes;
+  }
+
+  if (layer.ty === 1) {
+    const solidColor = typeof layer.sc === "string" ? layer.sc.toLowerCase() : "";
+
+    if (solidColor === "#fff" || solidColor === "#ffffff") {
+      return null;
+    }
+
+    if (Array.isArray(sanitizedShapes) && sanitizedShapes.length === 0) {
+      return null;
+    }
+
+    const opacityKey = nextLayer?.ks?.o;
+    if (opacityKey && typeof opacityKey === "object") {
+      if (typeof opacityKey.k === "number" && componentIsOpaque(opacityKey.k)) {
+        nextLayer.ks = {
+          ...nextLayer.ks,
+          o: {
+            ...opacityKey,
+            k: 0,
+          },
+        };
+      } else if (Array.isArray(opacityKey.k)) {
+        nextLayer.ks = {
+          ...nextLayer.ks,
+          o: {
+            ...opacityKey,
+            k: opacityKey.k.map((entry: any) => {
+              if (entry && typeof entry === "object" && componentIsOpaque(entry.s?.[0])) {
+                return {
+                  ...entry,
+                  s: [0],
+                };
+              }
+              return entry;
+            }),
+          },
+        };
+      }
+    }
   }
 
   if (Array.isArray(nextLayer.it)) {
@@ -157,7 +262,9 @@ const sanitizeLayer = (layer: any): any => {
 };
 
 const sanitizeLayers = (layers: any[]): any[] => {
-  return layers.map((layer) => sanitizeLayer(layer));
+  return layers
+    .map((layer) => sanitizeLayer(layer))
+    .filter((layer) => layer !== null && layer !== undefined);
 };
 
 const sanitizeAnimationData = (data: any) => {
@@ -252,8 +359,8 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
   frameStyle,
   stripBackground = true,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [animationUrl, setAnimationUrl] = useState<string>("");
+  const hostRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<AnimationItem | null>(null);
 
   const sanitizedData = useMemo(() => {
     if (!animationData) {
@@ -268,130 +375,128 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
   }, [animationData, stripBackground]);
 
   useEffect(() => {
-    if (!sanitizedData) {
-      setAnimationUrl("");
-      return undefined;
+    if (typeof window === "undefined") {
+      return;
     }
-    // Create a Blob URL for the animation data
-    const blob = new Blob([JSON.stringify(sanitizedData)], {
-      type: "application/json",
+
+    let teardownListeners: (() => void) | null = null;
+
+    const cleanupInstance = () => {
+      if (teardownListeners) {
+        teardownListeners();
+        teardownListeners = null;
+      }
+
+      if (animationRef.current) {
+        animationRef.current.destroy();
+        animationRef.current = null;
+      }
+
+      if (hostRef.current) {
+        hostRef.current.innerHTML = "";
+        hostRef.current.style.background = "transparent";
+      }
+    };
+
+    if (!sanitizedData || !hostRef.current) {
+      cleanupInstance();
+      return;
+    }
+
+    let isActive = true;
+
+    void import("lottie-web").then(({ default: lottie }) => {
+      if (!isActive || !hostRef.current) {
+        return;
+      }
+
+      cleanupInstance();
+
+      const instance = lottie.loadAnimation({
+        container: hostRef.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        animationData: sanitizedData,
+        rendererSettings: {
+          preserveAspectRatio: "xMidYMid meet",
+          clearCanvas: true,
+          progressiveLoad: true,
+          hideOnTransparent: true,
+        },
+      });
+
+      animationRef.current = instance;
+
+      const enforceTransparency = () => {
+        const host = hostRef.current;
+        if (!host) {
+          return;
+        }
+
+        host.style.background = "transparent";
+
+        if (!stripBackground) {
+          return;
+        }
+
+        host.querySelectorAll<HTMLElement>("*").forEach((element) => {
+          if (!element.style) {
+            return;
+          }
+
+          if (element.style.fill && element.style.fill.includes("255, 255, 255")) {
+            element.style.fill = "transparent";
+          }
+
+          if (element.style.stroke && element.style.stroke.includes("255, 255, 255")) {
+            element.style.stroke = "transparent";
+          }
+
+          if (
+            element.style.background &&
+            element.style.background.includes("255, 255, 255")
+          ) {
+            element.style.background = "transparent";
+          }
+
+          if (
+            element.style.backgroundColor &&
+            element.style.backgroundColor.includes("255, 255, 255")
+          ) {
+            element.style.backgroundColor = "transparent";
+          }
+        });
+      };
+
+      const events: AnimationEventName[] = [
+        "config_ready",
+        "data_ready",
+        "DOMLoaded",
+        "loopComplete",
+      ];
+
+      events.forEach((eventName) => {
+        instance.addEventListener(eventName, enforceTransparency);
+      });
+
+      teardownListeners = () => {
+        events.forEach((eventName) => {
+          instance.removeEventListener(eventName, enforceTransparency);
+        });
+      };
+
+      enforceTransparency();
     });
-    const url = URL.createObjectURL(blob);
-    setAnimationUrl(url);
 
     return () => {
-      URL.revokeObjectURL(url);
+      isActive = false;
+      cleanupInstance();
     };
-  }, [sanitizedData]);
-
-  // Enhanced HTML to render Lottie with better quality and performance
-  const transparencyScript = stripBackground
-    ? `
-        <script>
-          const ensureTransparent = (player) => {
-            if (!player) {
-              return;
-            }
-
-            const setTransparent = (node) => {
-              if (!node || !node.style) {
-                return;
-              }
-
-              if (node.style.background && node.style.background.includes("255, 255, 255")) {
-                node.style.background = "transparent";
-              }
-
-              if (node.style.backgroundColor && node.style.backgroundColor.includes("255, 255, 255")) {
-                node.style.backgroundColor = "transparent";
-              }
-
-              const computed = window.getComputedStyle(node);
-              if (computed && computed.backgroundColor === "rgb(255, 255, 255)") {
-                node.style.background = "transparent";
-                node.style.backgroundColor = "transparent";
-              }
-            };
-
-            const apply = () => {
-              try {
-                setTransparent(player);
-                player.style.background = "transparent";
-
-                if (player.shadowRoot) {
-                  player.shadowRoot.querySelectorAll('*').forEach((el) => {
-                    setTransparent(el);
-                  });
-                }
-              } catch (error) {
-                // Ignore shadow DOM access errors
-              }
-            };
-
-            apply();
-
-            ["load", "ready", "rendered"].forEach((eventName) => {
-              player.addEventListener(eventName, apply);
-            });
-
-            if (window.MutationObserver) {
-              const observer = new MutationObserver(() => apply());
-              observer.observe(player, { attributes: true, childList: true, subtree: true });
-            }
-          };
-
-          window.addEventListener("DOMContentLoaded", () => {
-            const player = document.querySelector("lottie-player");
-            ensureTransparent(player);
-          });
-        </script>
-      `
-    : "";
-
-  const iframeContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-        <style>
-          body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: transparent !important;
-          }
-          lottie-player {
-            width: 100%;
-            height: 100%;
-            background: transparent !important;
-          }
-          lottie-player::part(container) {
-            background: transparent !important;
-          }
-          lottie-player::part(animation) {
-            background: transparent !important;
-          }
-        </style>
-      </head>
-      <body>
-        <lottie-player
-          autoplay
-          loop
-          mode="normal"
-          speed="1"
-          direction="1"
-          src="${animationUrl}"
-          background="transparent"
-          style="width: 100%; height: 100%;"
-        ></lottie-player>
-        ${transparencyScript}
-      </body>
-    </html>
-  `;
+  }, [sanitizedData, stripBackground]);
 
   return (
     <div
-      ref={containerRef}
       className={className}
       style={{
         width: typeof width === "number" ? `${width}px` : width,
@@ -399,21 +504,18 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
         backgroundColor: "transparent",
       }}
     >
-      {animationUrl && (
-        <iframe
-          srcDoc={iframeContent}
-          allow="autoplay"
-          loading="lazy"
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "none",
-            backgroundColor: "transparent",
-            ...frameStyle,
-          }}
-          title="Lottie Animation"
-        />
-      )}
+      <div
+        ref={hostRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "transparent",
+          ...frameStyle,
+        }}
+      />
     </div>
   );
 };

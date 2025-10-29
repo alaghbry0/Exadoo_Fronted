@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { Search } from "lucide-react";
 
 import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/utils";
 import {
   colors,
   radius,
@@ -19,6 +20,8 @@ interface HomeSearchBarProps {
   onChange: (value: string) => void;
   placeholder?: string;
   ariaLabel?: string;
+  containerClassName?: string;
+  containerStyle?: CSSProperties;
 }
 
 export function HomeSearchBar({
@@ -26,6 +29,8 @@ export function HomeSearchBar({
   onChange,
   placeholder = "Enter the search word",
   ariaLabel = "بحث في الخدمات",
+  containerClassName,
+  containerStyle,
 }: HomeSearchBarProps) {
   const inputStyles: CSSProperties & Record<string, string | number> = {
     backgroundColor: colors.bg.primary,
@@ -38,11 +43,12 @@ export function HomeSearchBar({
 
   return (
     <div
-      className="px-4"
+      className={cn("px-4", containerClassName)}
       style={{
         backgroundColor: colors.bg.secondary,
         paddingTop: semanticSpacing.component.xl,
         paddingBottom: semanticSpacing.component.xl,
+        ...containerStyle,
       }}
     >
       <div className="relative">
