@@ -6,5 +6,3 @@ export {
   PageLayoutComponentsProvider,
   usePageLayoutComponents,
 } from "./PageLayoutContext";
-export { default as Section, type SectionProps } from "./Section";
-export { default as Stack, type StackProps } from "./Stack";

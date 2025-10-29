@@ -57,6 +57,7 @@ import {
   gradients,
   shadowClasses,
   shadows,
+  spacing,
   withAlpha,
 } from "@/styles/tokens";
 
@@ -331,7 +332,13 @@ const ShopComponent = () => {
           }}
         >
           <PageLayout maxWidth="2xl">
-            <section className="pt-20 pb- text-center">
+            <section
+              style={{
+                paddingBlockStart: spacing[20],
+                paddingBlockEnd: spacing[16],
+                textAlign: "center",
+              }}
+            >
               <div className="relative z-10 max-w-4xl mx-auto px-6">
                 <motion.h1
                   {...shopSignalsAnimations.heroTitle}
