@@ -52,6 +52,10 @@ import { EmptyState } from "@/shared/components/common/EmptyState";
 import { LazyLoad } from "@/shared/components/common/LazyLoad";
 import { SubscriptionCardSkeleton } from "@/shared/components/skeletons/SubscriptionCardSkeleton";
 import {
+  shopSignalsAnimations,
+  shopSignalsTransitions,
+} from "@/styles/animations/shop-signals";
+import {
   colors,
   gradients,
   shadowClasses,
@@ -134,6 +138,14 @@ const ShopComponent = () => {
     left: false,
     right: false,
   });
+
+  const focusRingStyle = {
+    "--tw-ring-color": colors.border.focus,
+  } as React.CSSProperties;
+
+  const brandRingStyle = {
+    "--tw-ring-color": colors.brand.primary,
+  } as React.CSSProperties;
 
   const {
     data: groupsData,
@@ -325,9 +337,7 @@ const ShopComponent = () => {
             <section className="pt-20 pb- text-center">
               <div className="relative z-10 max-w-4xl mx-auto px-6">
                 <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
+                  {...shopSignalsAnimations.heroTitle}
                   className="text-4xl md:text-5xl font-bold mb-4 leading-tight"
                   style={{ color: colors.text.primary }}
                 >
@@ -340,12 +350,18 @@ const ShopComponent = () => {
                   واستثمر بذكاء مع خبرائنا
                 </motion.h1>
                 <motion.div
+                  {...shopSignalsAnimations.heroSubtitle}
                   className="max-w-2xl mx-auto"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                  <div className="h-1.5 bg-gradient-to-r from-primary-500/80 to-transparent w-1/3 mx-auto mb-6 rounded-full"></div>
+                  <div
+                    className="h-1.5 w-1/3 mx-auto mb-6 rounded-full"
+                    style={{
+                      backgroundImage: `linear-gradient(90deg, ${withAlpha(
+                        colors.brand.primary,
+                        0.85,
+                      )} 0%, transparent 100%)`,
+                    }}
+                  />
                   <p
                     className="text-lg leading-relaxed"
                     style={{ color: colors.text.secondary }}
@@ -361,7 +377,10 @@ const ShopComponent = () => {
                 className="absolute inset-0 flex items-center"
                 aria-hidden="true"
               >
-                <div className="w-full border-t border-gray-200" />
+                <div
+                  className="w-full border-t"
+                  style={{ borderColor: colors.border.default }}
+                />
               </div>
               <div className="relative flex justify-center">
                 <span
@@ -385,17 +404,16 @@ const ShopComponent = () => {
                   <AnimatePresence>
                     {showScrollButtons.left && (
                       <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        {...shopSignalsAnimations.scrollButton}
                         onClick={() => scrollTabs("left")}
                         className={cn(
-                          "absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                          "absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2",
                           shadowClasses.button,
                         )}
                         style={{
                           backgroundColor: withAlpha(colors.bg.elevated, 0.85),
                           color: colors.text.secondary,
+                          ...focusRingStyle,
                         }}
                       >
                         <ChevronRight className="w-5 h-5" />
@@ -415,11 +433,9 @@ const ShopComponent = () => {
                         key={group.id ?? "all"}
                         onClick={() => handleGroupSelect(group.id)}
                         className={cn(
-                          "flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                          "flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2",
                           shadowClasses.button,
-                          selectedGroupId === group.id
-                            ? "text-white"
-                            : "hover:brightness-110",
+                          selectedGroupId !== group.id && "hover:brightness-110",
                         )}
                         style={{
                           background:
@@ -430,6 +446,7 @@ const ShopComponent = () => {
                             selectedGroupId === group.id
                               ? colors.text.inverse
                               : colors.text.secondary,
+                          ...focusRingStyle,
                         }}
                       >
                         <group.icon className="w-4 h-4" />
@@ -441,17 +458,16 @@ const ShopComponent = () => {
                   <AnimatePresence>
                     {showScrollButtons.right && (
                       <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        {...shopSignalsAnimations.scrollButton}
                         onClick={() => scrollTabs("right")}
                         className={cn(
-                          "absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                          "absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm transition-all duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2",
                           shadowClasses.button,
                         )}
                         style={{
                           backgroundColor: withAlpha(colors.bg.elevated, 0.85),
                           color: colors.text.secondary,
+                          ...focusRingStyle,
                         }}
                       >
                         <ChevronLeft className="w-5 h-5" />
@@ -470,8 +486,7 @@ const ShopComponent = () => {
                   {subscriptions.length === 0 ? (
                     <div className="md:col-span-2 lg:col-span-3">
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        {...shopSignalsAnimations.emptyState}
                         className={cn(
                           componentVariants.card.elevated,
                           "text-center py-16",
@@ -533,25 +548,18 @@ const ShopComponent = () => {
                         >
                           <motion.div
                             key={`${sub.id}-${selectedGroupId}`}
-                            layout
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              delay: index * 0.1,
-                              type: "spring",
-                              stiffness: 200,
-                              damping: 25,
-                            }}
+                            {...shopSignalsAnimations.subscriptionCard(index)}
                           >
                             <Card
                               className={cn(
                                 "h-full flex flex-col transition-all duration-300 group text-center backdrop-blur-sm rounded-2xl border group-hover:-translate-y-2",
                                 shadowClasses.cardInteractive,
-                                sub.isRecommended && "ring-2 ring-primary-500",
+                                sub.isRecommended && "ring-2",
                               )}
                               style={{
                                 backgroundColor: withAlpha(colors.bg.elevated, 0.92),
                                 borderColor: withAlpha(colors.border.default, 0.7),
+                                ...(sub.isRecommended ? brandRingStyle : {}),
                               }}
                             >
                               <CardHeader className="flex flex-col items-center pt-8">
@@ -578,7 +586,10 @@ const ShopComponent = () => {
                                   )}
                                   style={{ background: gradients.brand.primary }}
                                 >
-                                  <CardIcon className="w-8 h-8 text-white" />
+                                  <CardIcon
+                                    className="w-8 h-8"
+                                    style={{ color: colors.text.inverse }}
+                                  />
                                 </div>
                                 <h3
                                   className="text-2xl font-bold"
@@ -629,6 +640,7 @@ const ShopComponent = () => {
                                         background: gradients.status.success,
                                         color: colors.text.inverse,
                                         boxShadow: shadows.colored.success.md,
+                                        ...focusRingStyle,
                                       }}
                                     >
                                       <span className="relative flex items-center justify-center gap-3">
@@ -667,7 +679,8 @@ const ShopComponent = () => {
                                                   [sub.id]: option.id,
                                                 }))
                                               }
-                                              className="relative flex-1 text-sm font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                                              className="relative flex-1 text-sm font-semibold py-2.5 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2"
+                                              style={focusRingStyle}
                                             >
                                               {selectedPlan?.id ===
                                                 option.id && (
@@ -681,11 +694,9 @@ const ShopComponent = () => {
                                                     backgroundColor:
                                                       colors.bg.elevated,
                                                   }}
-                                                  transition={{
-                                                    type: "spring",
-                                                    stiffness: 300,
-                                                    damping: 30,
-                                                  }}
+                                                  transition={
+                                                    shopSignalsTransitions.pillSwitch
+                                                  }
                                                 />
                                               )}
                                               <span
@@ -725,9 +736,7 @@ const ShopComponent = () => {
                                             )}
                                           <motion.div
                                             key={selectedPlan.price}
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ duration: 0.3 }}
+                                            {...shopSignalsAnimations.priceHighlight}
                                           >
                                             <span
                                               className={cn(
@@ -767,9 +776,7 @@ const ShopComponent = () => {
                                           {isTieredDiscount ? (
                                             <motion.div
                                               key="tiered-info-box"
-                                              initial={{ opacity: 0, y: 10 }}
-                                              animate={{ opacity: 1, y: 0 }}
-                                              exit={{ opacity: 0, y: -10 }}
+                                              {...shopSignalsAnimations.tieredDiscountInfo}
                                               className="w-full space-y-2 text-sm rounded-2xl p-3 border"
                                               style={{
                                                 background: withAlpha(
@@ -862,13 +869,18 @@ const ShopComponent = () => {
                                           ) : selectedPlan.hasDiscount ? (
                                             <motion.div
                                               key="standard-info"
-                                              initial={{ opacity: 0 }}
-                                              animate={{ opacity: 1 }}
-                                              exit={{ opacity: 0 }}
+                                              {...shopSignalsAnimations.standardDiscountInfo}
                                             >
                                               <Badge
-                                                variant="destructive"
-                                                className="font-bold"
+                                                variant="secondary"
+                                                className={cn(
+                                                  "font-bold",
+                                                  shadowClasses.button,
+                                                )}
+                                                style={{
+                                                  background: gradients.status.success,
+                                                  color: colors.text.inverse,
+                                                }}
                                               >
                                                 خصم{" "}
                                                 {
@@ -914,6 +926,7 @@ const ShopComponent = () => {
                                         background: gradients.brand.primary,
                                         color: colors.text.inverse,
                                         boxShadow: shadows.colored.primary.lg,
+                                        ...focusRingStyle,
                                       }}
                                       disabled={!selectedPlan}
                                     >

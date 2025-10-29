@@ -1,6 +1,8 @@
 // src/features/home/components/UserHeader.tsx
 "use client";
 
+import { ReactNode } from "react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { useUserStore } from "@/shared/state/zustand/userStore";
 import { cn } from "@/shared/utils";
@@ -12,13 +14,32 @@ import {
   withAlpha,
 } from "@/styles/tokens";
 
-export function UserHeader() {
+type UserHeaderProps = {
+  /**
+   * Custom renderer for the greeting/title. Receives the formatted display name
+   * and should return the full heading contents.
+   */
+  title?: (displayName: string) => ReactNode;
+  /**
+   * Optional subtitle text shown under the title. Defaults to the generic
+   * Exaado tagline when not provided.
+   */
+  subtitle?: ReactNode;
+};
+
+export function UserHeader({ title, subtitle }: UserHeaderProps = {}) {
   const { fullName, photoUrl } = useUserStore();
   const userName = fullName || "User";
   const userInitial = userName.charAt(0).toUpperCase();
 
   const displayName =
     userName.length > 24 ? `${userName.slice(0, 24)}…` : userName;
+
+  const headingContent = title
+    ? title(displayName)
+    : `Hi, ${displayName} 👋`;
+
+  const subtitleContent = subtitle ?? "In Exaado, Your Financial Partner";
 
   return (
     <div
@@ -69,7 +90,7 @@ export function UserHeader() {
                   color: colors.text.primary,
                 }}
               >
-                Hi, {displayName} 👋
+                {headingContent}
               </h1>
               <p
                 className="mt-0.5 text-xs sm:text-[13px]"
@@ -78,7 +99,7 @@ export function UserHeader() {
                   fontFamily: "var(--font-arabic)",
                 }}
               >
-                In Exaado, Your Financial Partner
+                {subtitleContent}
               </p>
             </div>
           </div>

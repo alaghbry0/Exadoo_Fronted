@@ -3,12 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/shared/utils";
-import {
-  colors,
-  componentRadius,
-  shadowClasses,
-  withAlpha,
-} from "@/styles/tokens";
+import { componentRadius, shadowClasses } from "@/styles/tokens";
 
 type ButtonIntent =
   | "primary"
@@ -33,261 +28,76 @@ type ButtonIntentStateTokens = {
 
 type ButtonIntentOverrides = Partial<ButtonIntentStateTokens>;
 
-const buttonIntentTokens: Record<ButtonIntent, ButtonIntentStateTokens> = {
-  primary: {
-    background: "var(--color-primary-500)",
-    foreground: "var(--color-text-inverse)",
-    border: "var(--color-primary-500)",
-    hoverBackground: "var(--color-primary-600)",
-    hoverForeground: "var(--color-text-inverse)",
-    focusRing: "var(--color-border-focus)",
-    disabledBackground: "var(--color-border-disabled)",
-    disabledForeground: "var(--color-text-disabled)",
-    disabledBorder: "var(--color-border-disabled)",
-    shadow: shadowClasses.button,
-  },
-  secondary: {
-    background: "var(--color-bg-secondary)",
-    foreground: "var(--color-text-primary)",
-    border: "var(--color-border-default)",
-    hoverBackground: "var(--color-bg-tertiary)",
-    hoverForeground: "var(--color-text-primary)",
-    focusRing: "var(--color-border-focus)",
-    disabledBackground: "var(--color-bg-tertiary)",
-    disabledForeground: "var(--color-text-disabled)",
-    disabledBorder: "var(--color-border-disabled)",
-    shadow: shadowClasses.button,
-  },
-  destructive: {
-    background: "var(--color-error-500)",
-    foreground: "var(--color-text-inverse)",
-    border: "var(--color-error-500)",
-    hoverBackground: withAlpha(colors.status.error, 0.9),
-    hoverForeground: "var(--color-text-inverse)",
-    focusRing: "var(--color-error-500)",
-    disabledBackground: "var(--color-error-50)",
-    disabledForeground: "var(--color-text-disabled)",
-    disabledBorder: "var(--color-border-disabled)",
-    shadow: shadowClasses.button,
-  },
-  outline: {
-    background: "var(--color-bg-primary)",
-    foreground: "var(--color-text-primary)",
-    border: "var(--color-border-default)",
-    hoverBackground: "var(--color-bg-secondary)",
-    hoverForeground: "var(--color-text-primary)",
-    focusRing: "var(--color-border-focus)",
-    disabledBackground: "var(--color-bg-secondary)",
-    disabledForeground: "var(--color-text-disabled)",
-    disabledBorder: "var(--color-border-disabled)",
-    shadow: shadowClasses.button,
-  },
-  ghost: {
-    background: "transparent",
-    foreground: "var(--color-text-primary)",
-    border: "transparent",
-    hoverBackground: "var(--color-bg-secondary)",
-    hoverForeground: "var(--color-text-primary)",
-    focusRing: "var(--color-border-focus)",
-    disabledBackground: "transparent",
-    disabledForeground: "var(--color-text-disabled)",
-    disabledBorder: "transparent",
-    shadow: shadowClasses.none,
-  },
-  link: {
-    background: "transparent",
-    foreground: "var(--color-text-link)",
-    border: "transparent",
-    hoverBackground: "transparent",
-    hoverForeground: "var(--color-text-link-hover)",
-    focusRing: "var(--color-border-focus)",
-    disabledBackground: "transparent",
-    disabledForeground: "var(--color-text-disabled)",
-    disabledBorder: "transparent",
-    shadow: shadowClasses.none,
-  },
-};
-const toCssVarClass = (variable: string, value: string) =>
-  `[${variable}:${value.replace(/ /g, "_")}]`;
+const buttonIntentDataAttributeClasses = [
+  // Primary
+  "data-[button-intent=primary]:[--button-bg:var(--color-primary-500)]",
+  "data-[button-intent=primary]:[--button-foreground:var(--color-text-inverse)]",
+  "data-[button-intent=primary]:[--button-border:var(--color-primary-500)]",
+  "data-[button-intent=primary]:[--button-hover-bg:var(--color-primary-600)]",
+  "data-[button-intent=primary]:[--button-hover-foreground:var(--color-text-inverse)]",
+  "data-[button-intent=primary]:[--button-focus-ring:var(--color-border-focus)]",
+  "data-[button-intent=primary]:[--button-disabled-bg:var(--color-border-disabled)]",
+  "data-[button-intent=primary]:[--button-disabled-foreground:var(--color-text-disabled)]",
+  "data-[button-intent=primary]:[--button-disabled-border:var(--color-border-disabled)]",
+  // Secondary
+  "data-[button-intent=secondary]:[--button-bg:var(--color-bg-secondary)]",
+  "data-[button-intent=secondary]:[--button-foreground:var(--color-text-primary)]",
+  "data-[button-intent=secondary]:[--button-border:var(--color-border-default)]",
+  "data-[button-intent=secondary]:[--button-hover-bg:var(--color-bg-tertiary)]",
+  "data-[button-intent=secondary]:[--button-hover-foreground:var(--color-text-primary)]",
+  "data-[button-intent=secondary]:[--button-focus-ring:var(--color-border-focus)]",
+  "data-[button-intent=secondary]:[--button-disabled-bg:var(--color-bg-tertiary)]",
+  "data-[button-intent=secondary]:[--button-disabled-foreground:var(--color-text-disabled)]",
+  "data-[button-intent=secondary]:[--button-disabled-border:var(--color-border-disabled)]",
+  // Destructive
+  "data-[button-intent=destructive]:[--button-bg:var(--color-error-500)]",
+  "data-[button-intent=destructive]:[--button-foreground:var(--color-text-inverse)]",
+  "data-[button-intent=destructive]:[--button-border:var(--color-error-500)]",
+  "data-[button-intent=destructive]:[--button-hover-bg:color-mix(in_srgb,_var(--color-error-500)_90%,_transparent)]",
+  "data-[button-intent=destructive]:[--button-hover-foreground:var(--color-text-inverse)]",
+  "data-[button-intent=destructive]:[--button-focus-ring:var(--color-error-500)]",
+  "data-[button-intent=destructive]:[--button-disabled-bg:var(--color-error-50)]",
+  "data-[button-intent=destructive]:[--button-disabled-foreground:var(--color-text-disabled)]",
+  "data-[button-intent=destructive]:[--button-disabled-border:var(--color-border-disabled)]",
+  // Outline
+  "data-[button-intent=outline]:[--button-bg:var(--color-bg-primary)]",
+  "data-[button-intent=outline]:[--button-foreground:var(--color-text-primary)]",
+  "data-[button-intent=outline]:[--button-border:var(--color-border-default)]",
+  "data-[button-intent=outline]:[--button-hover-bg:var(--color-bg-secondary)]",
+  "data-[button-intent=outline]:[--button-hover-foreground:var(--color-text-primary)]",
+  "data-[button-intent=outline]:[--button-focus-ring:var(--color-border-focus)]",
+  "data-[button-intent=outline]:[--button-disabled-bg:var(--color-bg-secondary)]",
+  "data-[button-intent=outline]:[--button-disabled-foreground:var(--color-text-disabled)]",
+  "data-[button-intent=outline]:[--button-disabled-border:var(--color-border-disabled)]",
+  // Ghost
+  "data-[button-intent=ghost]:[--button-bg:transparent]",
+  "data-[button-intent=ghost]:[--button-foreground:var(--color-text-primary)]",
+  "data-[button-intent=ghost]:[--button-border:transparent]",
+  "data-[button-intent=ghost]:[--button-hover-bg:var(--color-bg-secondary)]",
+  "data-[button-intent=ghost]:[--button-hover-foreground:var(--color-text-primary)]",
+  "data-[button-intent=ghost]:[--button-focus-ring:var(--color-border-focus)]",
+  "data-[button-intent=ghost]:[--button-disabled-bg:transparent]",
+  "data-[button-intent=ghost]:[--button-disabled-foreground:var(--color-text-disabled)]",
+  "data-[button-intent=ghost]:[--button-disabled-border:transparent]",
+  // Link
+  "data-[button-intent=link]:[--button-bg:transparent]",
+  "data-[button-intent=link]:[--button-foreground:var(--color-text-link)]",
+  "data-[button-intent=link]:[--button-border:transparent]",
+  "data-[button-intent=link]:[--button-hover-bg:transparent]",
+  "data-[button-intent=link]:[--button-hover-foreground:var(--color-text-link-hover)]",
+  "data-[button-intent=link]:[--button-focus-ring:var(--color-border-focus)]",
+  "data-[button-intent=link]:[--button-disabled-bg:transparent]",
+  "data-[button-intent=link]:[--button-disabled-foreground:var(--color-text-disabled)]",
+  "data-[button-intent=link]:[--button-disabled-border:transparent]",
+] as const;
 
-const buttonIntentVariableClasses: Record<ButtonIntent, string[]> = {
-  primary: [
-    toCssVarClass("--button-bg", buttonIntentTokens.primary.background!),
-    toCssVarClass("--button-foreground", buttonIntentTokens.primary.foreground!),
-    toCssVarClass("--button-border", buttonIntentTokens.primary.border!),
-    toCssVarClass("--button-hover-bg", buttonIntentTokens.primary.hoverBackground!),
-    toCssVarClass(
-      "--button-hover-foreground",
-      buttonIntentTokens.primary.hoverForeground!,
-    ),
-    toCssVarClass("--button-focus-ring", buttonIntentTokens.primary.focusRing!),
-    toCssVarClass(
-      "--button-disabled-bg",
-      buttonIntentTokens.primary.disabledBackground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-foreground",
-      buttonIntentTokens.primary.disabledForeground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-border",
-      buttonIntentTokens.primary.disabledBorder!,
-    ),
-  ],
-  secondary: [
-    toCssVarClass("--button-bg", buttonIntentTokens.secondary.background!),
-    toCssVarClass("--button-foreground", buttonIntentTokens.secondary.foreground!),
-    toCssVarClass("--button-border", buttonIntentTokens.secondary.border!),
-    toCssVarClass(
-      "--button-hover-bg",
-      buttonIntentTokens.secondary.hoverBackground!,
-    ),
-    toCssVarClass(
-      "--button-hover-foreground",
-      buttonIntentTokens.secondary.hoverForeground!,
-    ),
-    toCssVarClass(
-      "--button-focus-ring",
-      buttonIntentTokens.secondary.focusRing!,
-    ),
-    toCssVarClass(
-      "--button-disabled-bg",
-      buttonIntentTokens.secondary.disabledBackground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-foreground",
-      buttonIntentTokens.secondary.disabledForeground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-border",
-      buttonIntentTokens.secondary.disabledBorder!,
-    ),
-  ],
-  destructive: [
-    toCssVarClass("--button-bg", buttonIntentTokens.destructive.background!),
-    toCssVarClass(
-      "--button-foreground",
-      buttonIntentTokens.destructive.foreground!,
-    ),
-    toCssVarClass("--button-border", buttonIntentTokens.destructive.border!),
-    toCssVarClass(
-      "--button-hover-bg",
-      buttonIntentTokens.destructive.hoverBackground!,
-    ),
-    toCssVarClass(
-      "--button-hover-foreground",
-      buttonIntentTokens.destructive.hoverForeground!,
-    ),
-    toCssVarClass(
-      "--button-focus-ring",
-      buttonIntentTokens.destructive.focusRing!,
-    ),
-    toCssVarClass(
-      "--button-disabled-bg",
-      buttonIntentTokens.destructive.disabledBackground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-foreground",
-      buttonIntentTokens.destructive.disabledForeground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-border",
-      buttonIntentTokens.destructive.disabledBorder!,
-    ),
-  ],
-  outline: [
-    toCssVarClass("--button-bg", buttonIntentTokens.outline.background!),
-    toCssVarClass("--button-foreground", buttonIntentTokens.outline.foreground!),
-    toCssVarClass("--button-border", buttonIntentTokens.outline.border!),
-    toCssVarClass(
-      "--button-hover-bg",
-      buttonIntentTokens.outline.hoverBackground!,
-    ),
-    toCssVarClass(
-      "--button-hover-foreground",
-      buttonIntentTokens.outline.hoverForeground!,
-    ),
-    toCssVarClass("--button-focus-ring", buttonIntentTokens.outline.focusRing!),
-    toCssVarClass(
-      "--button-disabled-bg",
-      buttonIntentTokens.outline.disabledBackground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-foreground",
-      buttonIntentTokens.outline.disabledForeground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-border",
-      buttonIntentTokens.outline.disabledBorder!,
-    ),
-  ],
-  ghost: [
-    toCssVarClass("--button-bg", buttonIntentTokens.ghost.background!),
-    toCssVarClass("--button-foreground", buttonIntentTokens.ghost.foreground!),
-    toCssVarClass("--button-border", buttonIntentTokens.ghost.border!),
-    toCssVarClass(
-      "--button-hover-bg",
-      buttonIntentTokens.ghost.hoverBackground!,
-    ),
-    toCssVarClass(
-      "--button-hover-foreground",
-      buttonIntentTokens.ghost.hoverForeground!,
-    ),
-    toCssVarClass("--button-focus-ring", buttonIntentTokens.ghost.focusRing!),
-    toCssVarClass(
-      "--button-disabled-bg",
-      buttonIntentTokens.ghost.disabledBackground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-foreground",
-      buttonIntentTokens.ghost.disabledForeground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-border",
-      buttonIntentTokens.ghost.disabledBorder!,
-    ),
-  ],
-  link: [
-    toCssVarClass("--button-bg", buttonIntentTokens.link.background!),
-    toCssVarClass("--button-foreground", buttonIntentTokens.link.foreground!),
-    toCssVarClass("--button-border", buttonIntentTokens.link.border!),
-    toCssVarClass(
-      "--button-hover-bg",
-      buttonIntentTokens.link.hoverBackground!,
-    ),
-    toCssVarClass(
-      "--button-hover-foreground",
-      buttonIntentTokens.link.hoverForeground!,
-    ),
-    toCssVarClass("--button-focus-ring", buttonIntentTokens.link.focusRing!),
-    toCssVarClass(
-      "--button-disabled-bg",
-      buttonIntentTokens.link.disabledBackground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-foreground",
-      buttonIntentTokens.link.disabledForeground!,
-    ),
-    toCssVarClass(
-      "--button-disabled-border",
-      buttonIntentTokens.link.disabledBorder!,
-    ),
-  ],
-};
-
-const buttonIntentClassMap: Record<ButtonIntent, string> = {
-  primary: cn(buttonIntentVariableClasses.primary, buttonIntentTokens.primary.shadow),
-  secondary: cn(
-    buttonIntentVariableClasses.secondary,
-    buttonIntentTokens.secondary.shadow,
-  ),
-  destructive: cn(
-    buttonIntentVariableClasses.destructive,
-    buttonIntentTokens.destructive.shadow,
-  ),
-  outline: cn(buttonIntentVariableClasses.outline, buttonIntentTokens.outline.shadow),
-  ghost: cn(buttonIntentVariableClasses.ghost, buttonIntentTokens.ghost.shadow),
-  link: cn(buttonIntentVariableClasses.link, buttonIntentTokens.link.shadow),
+const buttonIntentShadowClasses: Record<ButtonIntent, string> = {
+  primary: shadowClasses.button,
+  secondary: shadowClasses.button,
+  destructive: shadowClasses.button,
+  outline: shadowClasses.button,
+  ghost: shadowClasses.none,
+  link: shadowClasses.none,
 };
 
 const createIntentOverrideStyle = (
@@ -333,17 +143,18 @@ const buttonVariants = cva(
     "disabled:bg-[var(--button-disabled-bg)]",
     "disabled:text-[var(--button-disabled-foreground)]",
     "disabled:border-[var(--button-disabled-border)]",
+    ...buttonIntentDataAttributeClasses,
   ),
   {
     variants: {
       intent: {
-        primary: cn(buttonIntentClassMap.primary),
-        secondary: cn(buttonIntentClassMap.secondary),
-        destructive: cn(buttonIntentClassMap.destructive),
-        outline: cn(buttonIntentClassMap.outline),
-        ghost: cn(buttonIntentClassMap.ghost),
+        primary: cn(buttonIntentShadowClasses.primary),
+        secondary: cn(buttonIntentShadowClasses.secondary),
+        destructive: cn(buttonIntentShadowClasses.destructive),
+        outline: cn(buttonIntentShadowClasses.outline),
+        ghost: cn(buttonIntentShadowClasses.ghost),
         link: cn(
-          buttonIntentClassMap.link,
+          buttonIntentShadowClasses.link,
           "underline-offset-4 hover:underline focus-visible:underline",
         ),
       },

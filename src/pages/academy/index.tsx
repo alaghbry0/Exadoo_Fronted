@@ -3,15 +3,12 @@
 
 import { useMemo, useState, useCallback, useDeferredValue } from "react";
 import { AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import AuthPrompt from "@/domains/auth/components/AuthFab";
 import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils";
 import { Search, Bookmark, Layers, Award, BookOpen } from "lucide-react";
 import { useTelegram } from "@/shared/context/TelegramContext";
 import { useAcademyData } from "@/domains/academy/api";
-import { useUserStore } from "@/shared/state/zustand/userStore";
 import {
   MiniCourseCard,
   MiniBundleCard,
@@ -23,12 +20,10 @@ import {
   TopCourseCarousel,
   LatestCourseCard,
 } from "@/domains/academy/components";
-import { HomeSearchBar } from "@/domains/home/components";
+import { HomeSearchBar, UserHeader } from "@/domains/home/components";
 import {
   colors,
   componentRadius,
-  gradients,
-  shadowClasses,
   shadows,
   withAlpha,
 } from "@/styles/tokens";
@@ -182,28 +177,10 @@ export default function AcademyIndex() {
   const handleTab = useCallback((key: "all" | "mine") => setTab(key), []);
 
   const { telegramId: tgId } = useTelegram();
-  
-  // Get user data from store
-  const { fullName, photoUrl } = useUserStore();
-  const userName = fullName || "User";
-  const userInitial = userName.charAt(0).toUpperCase();
-  
-  // State for hiding/showing name
-  const [isNameHidden, setIsNameHidden] = useState(false);
-  
-  const displayName =
-    isNameHidden
-      ? "****"
-      : (userName.length > 24 ? `${userName.slice(0, 24)}…` : userName);
 
   const headingStyle = {
     fontFamily: "var(--font-arabic)",
     color: colors.text.primary,
-  } as const;
-
-  const supportingTextStyle = {
-    fontFamily: "var(--font-arabic)",
-    color: colors.text.secondary,
   } as const;
 
   const navButtonBase = cn(
@@ -218,75 +195,10 @@ export default function AcademyIndex() {
       style={{ backgroundColor: colors.bg.secondary }}
     >
       {/* Header */}
-      <div
-        role="banner"
-        className={cn(
-          "sticky top-0 z-50 border-b pt-[env(safe-area-inset-top)] supports-[backdrop-filter]:backdrop-blur-md backdrop-blur-md",
-          shadowClasses.dropdown,
-        )}
-        style={{
-          backgroundColor: withAlpha(colors.bg.elevated, 0.92),
-          borderColor: withAlpha(colors.border.default, 0.7),
-          boxShadow: shadows.elevation[1],
-        }}
-      >
-        <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
-            {/* Left: Avatar + Text */}
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <Avatar
-                className="h-11 w-11 sm:h-12 sm:w-12"
-                style={{
-                  boxShadow: `0 0 0 2px ${withAlpha(colors.brand.primary, 0.2)}`,
-                  backgroundColor: withAlpha(colors.brand.primary, 0.08),
-                }}
-              >
-                {/* ✅ صورة افتراضية من public/icon_user.png */}
-                <AvatarImage src={photoUrl || "/icon_user.svg"} alt={displayName} />
-                <AvatarFallback
-                  className="font-semibold"
-                  style={{
-                    backgroundImage: gradients.brand.primary,
-                    color: colors.text.inverse,
-                    fontFamily: "var(--font-arabic)",
-                  }}
-                >
-                  {userInitial}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="min-w-0">
-                <h1
-                  className="truncate text-base font-semibold sm:text-lg"
-                  style={headingStyle}
-                >
-                  {`مرحباً، ${displayName}`}
-                </h1>
-                <p
-                  className="mt-0.5 text-xs sm:text-[13px]"
-                  style={supportingTextStyle}
-                >
-                  رحلتك التعليمية تبدأ من هنا
-                </p>
-              </div>
-            </div>
-
-            {/* Right: Actions */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 transition hover:opacity-80" aria-hidden="true">
-                <Image
-                  src="/logo.png"
-                  alt="Exaado Logo"
-                  width={35}
-                  height={35}
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <UserHeader
+        title={(name) => `مرحباً، ${name}`}
+        subtitle="رحلتك التعليمية تبدأ من هنا"
+      />
 
       {/* Search Bar */}
       <div className="mx-auto max-w-screen-xl">
