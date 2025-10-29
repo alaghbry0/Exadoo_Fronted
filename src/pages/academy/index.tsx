@@ -28,6 +28,7 @@ import {
   colors,
   componentRadius,
   gradients,
+  shadowClasses,
   shadows,
   withAlpha,
 } from "@/styles/tokens";
@@ -219,10 +220,13 @@ export default function AcademyIndex() {
       {/* Header */}
       <div
         role="banner"
-        className="sticky top-0 z-50 pt-[env(safe-area-inset-top)] supports-[backdrop-filter]:backdrop-blur-md backdrop-blur-md"
+        className={cn(
+          "sticky top-0 z-50 border-b pt-[env(safe-area-inset-top)] supports-[backdrop-filter]:backdrop-blur-md backdrop-blur-md",
+          shadowClasses.dropdown,
+        )}
         style={{
           backgroundColor: withAlpha(colors.bg.elevated, 0.92),
-          borderBottom: `1px solid ${withAlpha(colors.border.default, 0.7)}`,
+          borderColor: withAlpha(colors.border.default, 0.7),
           boxShadow: shadows.elevation[1],
         }}
       >
