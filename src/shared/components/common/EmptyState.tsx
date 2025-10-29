@@ -5,14 +5,16 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils";
 import { colors, componentRadius, withAlpha } from "@/styles/tokens";
 
+type EmptyStateAction =
+  | { label: string; onClick: () => void }
+  | (() => ReactNode)
+  | ReactNode;
+
 interface EmptyStateProps {
   icon?: LucideIcon;
   title: string;
   description?: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  action?: EmptyStateAction;
   children?: ReactNode;
 }
 
@@ -23,6 +25,26 @@ export function EmptyState({
   action,
   children,
 }: EmptyStateProps) {
+  const renderAction = () => {
+    if (!action) return null;
+
+    if (typeof action === "function") {
+      return action();
+    }
+
+    if (
+      typeof action === "object" &&
+      action !== null &&
+      "label" in action &&
+      "onClick" in action
+    ) {
+      const { label, onClick } = action as { label: string; onClick: () => void };
+      return <Button onClick={onClick}>{label}</Button>;
+    }
+
+    return action;
+  };
+
   return (
     <div
       className="flex flex-col items-center justify-center py-12 px-4 text-center"
@@ -56,7 +78,7 @@ export function EmptyState({
         </p>
       )}
 
-      {action && <Button onClick={action.onClick}>{action.label}</Button>}
+      {renderAction()}
 
       {children}
     </div>

@@ -6,6 +6,7 @@ import SmartImage from "@/shared/components/common/SmartImage";
 import { showToast } from "@/shared/components/ui/showToast";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Avatar, AvatarImage } from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
 import { componentRadius, shadowClasses } from "@/styles/tokens";
 
 import { cn } from "@/shared/utils";
@@ -114,31 +115,38 @@ export default function ProfileHeader({
           style={{ gap: "var(--profile-space-sm)" }}
         >
           {onPaymentHistoryClick ? (
-            <button
+            <Button
               type="button"
               onClick={onPaymentHistoryClick}
+              density="icon"
+              intent="ghost"
+              aria-label="سجلات الدفعات"
+              title="سجلات الدفعات"
               className={cn(
-                "animate-scale-in transition-transform duration-200 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 touch-manipulation",
+                "animate-scale-in transition-transform duration-200 backdrop-blur-md active:scale-95 touch-manipulation",
                 componentRadius.badge,
-                shadowClasses.buttonElevated,
               )}
+              intentOverrides={{
+                background: "var(--profile-chip-background)",
+                foreground: "var(--profile-chip-text)",
+                hoverBackground: "var(--profile-chip-background)",
+                hoverForeground: "var(--profile-chip-text)",
+                focusRing: "var(--profile-ring-color)",
+                shadow: shadowClasses.buttonElevated,
+              }}
               style={{
                 animationDelay: "0.2s",
-                background: "var(--profile-chip-background)",
-                color: "var(--profile-chip-text)",
+                boxShadow: "var(--profile-chip-shadow)",
                 paddingInline: "var(--profile-chip-padding-inline)",
                 paddingBlock: "var(--profile-chip-padding-block)",
-                boxShadow: "var(--profile-chip-shadow)",
-                "--tw-ring-color": "var(--profile-ring-color)",
-                "--tw-ring-offset-color": "var(--profile-ring-offset-color)",
+                "--button-ring-offset": "var(--profile-ring-offset-color)",
               } as React.CSSProperties}
-              title="سجلات الدفعات"
             >
               <FileText
                 className="h-5 w-5"
                 style={{ color: "var(--profile-chip-text)" }}
               />
-            </button>
+            </Button>
           ) : (
             <span aria-hidden className="inline-flex h-10 w-10" />
           )}

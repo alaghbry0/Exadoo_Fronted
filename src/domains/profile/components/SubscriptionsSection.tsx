@@ -14,8 +14,10 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Subscription, SubChannelLink } from "@/domains/subscriptions/types";
+import { EmptyState } from "@/shared/components/common/EmptyState";
 import {
   Accordion,
   AccordionContent,
@@ -81,6 +83,7 @@ export default function SubscriptionsSection({
   onRefreshClick,
   isRefreshing,
 }: SubscriptionsSectionProps) {
+  const router = useRouter();
   const { ref: sentinelRef, isVisible } = useIntersectionObserver({
     freezeOnceVisible: false,
   });
@@ -154,7 +157,24 @@ export default function SubscriptionsSection({
             </motion.div>
           ) : (
             <motion.div key="subscriptions-empty" layout>
-              <SubscriptionsEmptyState />
+              <EmptyState
+                icon={Star}
+                title="لا توجد لديك اشتراكات"
+                description="يبدو أنك لم تشترك في أي باقة بعد. تصفح باقاتنا وابدأ رحلتك في التداول!"
+                action={() => (
+                  <Button
+                    className={cn(shadowClasses.buttonElevated)}
+                    style={{
+                      backgroundImage:
+                        "var(--profile-subscription-primary-cta-gradient)",
+                      color: "var(--profile-subscription-join-text)",
+                    }}
+                    onClick={() => router.push("/shop")}
+                  >
+                    استعراض الباقات
+                  </Button>
+                )}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -705,54 +725,4 @@ const SubscriptionItem = ({
     </motion.li>
   );
 };
-
-const SubscriptionsEmptyState = () => (
-  <div
-    className={cn(
-      "text-center py-10 px-4 border-2 border-dashed",
-      componentRadius.card,
-    )}
-    style={{
-      backgroundColor: "var(--profile-subscription-empty-bg)",
-      borderColor: "var(--profile-subscription-empty-border)",
-    }}
-  >
-    <div
-      className={cn(
-        "inline-flex items-center justify-center w-16 h-16 mb-5",
-        componentRadius.card,
-      )}
-      style={{
-        backgroundImage: "var(--profile-subscription-empty-icon-gradient)",
-        boxShadow: "var(--profile-subscription-empty-icon-shadow)",
-        color: "var(--profile-subscription-empty-icon-color)",
-      }}
-    >
-      <Star className="w-8 h-8" />
-    </div>
-    <h3
-      className="text-lg font-bold font-arabic"
-      style={{ color: "var(--profile-text-primary)" }}
-    >
-      لا توجد لديك اشتراكات
-    </h3>
-    <p
-      className="mt-2 mb-6 max-w-xs mx-auto"
-      style={{ color: "var(--profile-text-secondary)" }}
-    >
-      يبدو أنك لم تشترك في أي باقة بعد. تصفح باقاتنا وابدأ رحلتك في التداول!
-    </p>
-
-    <Button
-      asChild
-      className={cn(shadowClasses.buttonElevated)}
-      style={{
-        backgroundImage: "var(--profile-subscription-primary-cta-gradient)",
-        color: "var(--profile-subscription-join-text)",
-      }}
-    >
-      <Link href="/shop">استعراض الباقات</Link>
-    </Button>
-  </div>
-);
 
