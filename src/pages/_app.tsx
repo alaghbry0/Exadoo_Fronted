@@ -1,76 +1,29 @@
 // src/pages/_app.tsx
 "use client";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import "@/styles/globals.css";
 import FooterNav from "@/shared/components/layout/FooterNav";
 import SplashScreen from "@/shared/components/common/SplashScreen";
-import { TelegramProvider, useTelegram } from "@/shared/context/TelegramContext";
-import { ThemeProvider } from "@/shared/theme/ThemeProvider";
+import { useTelegram } from "@/shared/context/TelegramContext";
 import { useTariffStore } from "@/shared/state/zustand";
 import { fetchBotWalletAddress } from "@/domains/payments/api";
 import {
   QueryClient,
-  QueryClientProvider,
   useQuery,
   useQueryClient as useTanstackQueryClient,
 } from "@tanstack/react-query";
 import { useUserStore } from "@/shared/state/zustand/userStore";
 import { NotificationToast } from "@/domains/notifications/components/NotificationToast";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { NotificationsProvider } from "@/domains/notifications/context/NotificationsContext";
-import { useNotificationStream } from "@/domains/notifications/hooks/useNotificationStream";
+import { useNotificationStream } from "@/shared/hooks/useNotificationStream";
 import GlobalAuthSheet from "@/domains/auth/components/GlobalAuthSheet";
-import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import logger from "@/infrastructure/logging/logger";
-import { registerServiceWorker } from "@/infrastructure/serviceWorker/registerServiceWorker";
-
-// ===================== startapp helpers =====================
-type StartAppParam = string | null;
-
-const ROUTE_MAP: Record<string, string> = {
-  shop: "/shop",
-  plans: "/plans",
-  profile: "/profile",
-  notifications: "/notifications",
-};
-
-function readStartAppParam(): StartAppParam {
-  const tg = (globalThis as any)?.Telegram?.WebApp;
-  const tgParam =
-    tg?.initDataUnsafe?.start_param ||
-    tg?.initDataUnsafe?.startapp ||
-    tg?.initData?.start_param;
-  if (tgParam && typeof tgParam === "string") return tgParam;
-
-  try {
-    const sp = new URLSearchParams(globalThis.location?.search || "");
-    return (
-      sp.get("startapp") ||
-      sp.get("tgWebAppStartParam") ||
-      sp.get("start_param")
-    );
-  } catch {
-    return null;
-  }
-}
-
-function resolveTargetRoute(startParam: string): string | null {
-  if (ROUTE_MAP[startParam]) return ROUTE_MAP[startParam];
-
-  if (startParam.startsWith("route:")) {
-    const raw = decodeURIComponent(startParam.slice("route:".length));
-    if (raw.startsWith("/")) return raw;
-  }
-
-  const [name, qs] = startParam.split("?");
-  if (ROUTE_MAP[name]) return qs ? `${ROUTE_MAP[name]}?${qs}` : ROUTE_MAP[name];
-
-  return null;
-}
-// ============================================================
+import { AppProviders } from "@/shared/providers";
+import { useServiceWorkerRegistration } from "@/shared/hooks/useServiceWorkerRegistration";
+import { useStartAppNavigation } from "@/shared/hooks/useStartAppNavigation";
 
 export interface NotificationExtraData {
   invite_link?: string | null;
@@ -131,34 +84,7 @@ function AppContent({
   const { setWalletAddress } = useTariffStore();
   const router = useRouter();
   const queryClient = useTanstackQueryClient();
-  const didRouteRef = useRef(false);
-
-  // ===== 1) تطبيع المسار عند الإقلاع =====
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      // في بعض WebView النادر، pathname يطلع '' أو ما يبدأ بـ '/'.
-      let p = window.location.pathname || "/";
-      if (!p.startsWith("/")) p = `/${p}`;
-      if (p === "" || p === "/index" || p === "/index.html") p = "/";
-      // لو الـURL الأصلي جاء بدون سلاش نهائي، المتصفح عادةً يرصد '/'، بس نضمن توحيده:
-      const finalUrl = p + window.location.search + window.location.hash;
-      if (window.location.pathname !== p) {
-        window.history.replaceState({}, "", finalUrl);
-      }
-    } catch {
-      /* no-op */
-    }
-  }, []);
-
-  // ===== 2) تسجيل Service Worker للتحكم في الصور =====
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      registerServiceWorker().catch((err) => {
-        logger.error("Service Worker registration failed", err);
-      });
-    }
-  }, []);
+  useServiceWorkerRegistration();
 
   // ==== إشعارات SSE ====
   useNotificationStream();
@@ -280,34 +206,13 @@ function AppContent({
     isTelegramLoading ||
     (isTelegramApp && !isTelegramReady);
 
-  // ==== توجيه startapp بعد الجاهزية ====
-  useEffect(() => {
-    if (didRouteRef.current) return;
-    const ready = !showSplashScreen && (!isTelegramApp || isTelegramReady);
-    if (!ready) return;
-
-    const raw = readStartAppParam();
-    if (!raw) return;
-
-    const target = resolveTargetRoute(raw);
-    if (!target) return;
-
-    const targetPath = target.split("?")[0] || "/";
-    if (stablePath === targetPath) {
-      didRouteRef.current = true;
-      return;
-    }
-
-    didRouteRef.current = true;
-    router
-      .replace(target)
-      .catch((err) => logger.error("Route replace failed", err));
-
-    try {
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, "", cleanUrl);
-    } catch {}
-  }, [isTelegramApp, isTelegramReady, showSplashScreen, router, stablePath]);
+  useStartAppNavigation({
+    router,
+    isTelegramApp,
+    isTelegramReady,
+    showSplashScreen,
+    stablePath,
+  });
 
   if (showSplashScreen) {
     return <SplashScreen />;
@@ -346,29 +251,22 @@ function AppContent({
 // ===================== MyApp =====================
 function MyApp({ Component, pageProps }: AppProps) {
   const hideFooter = Boolean((Component as any).hideFooter);
+  const tonManifestUrl =
+    process.env.NEXT_PUBLIC_TON_MANIFEST_URL ??
+    "https://exadooo-plum.vercel.app/tonconnect-manifest.json";
 
   return (
     <ErrorBoundary showDetails={process.env.NODE_ENV === "development"}>
-      <ThemeProvider>
-        <TonConnectUIProvider
-          manifestUrl={
-            process.env.NEXT_PUBLIC_TON_MANIFEST_URL ??
-            "https://exadooo-plum.vercel.app/tonconnect-manifest.json"
-          }
-        >
-          <TelegramProvider>
-            <QueryClientProvider client={globalQueryClient}>
-              <NotificationsProvider>
-                <AppContent hideFooter={hideFooter}>
-                  <Component {...pageProps} />
-                </AppContent>
-                <GlobalAuthSheet />
-                <ReactQueryDevtools initialIsOpen={false} />
-              </NotificationsProvider>
-            </QueryClientProvider>
-          </TelegramProvider>
-        </TonConnectUIProvider>
-      </ThemeProvider>
+      <AppProviders
+        queryClient={globalQueryClient}
+        tonManifestUrl={tonManifestUrl}
+      >
+        <AppContent hideFooter={hideFooter}>
+          <Component {...pageProps} />
+        </AppContent>
+        <GlobalAuthSheet />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </AppProviders>
     </ErrorBoundary>
   );
 }
