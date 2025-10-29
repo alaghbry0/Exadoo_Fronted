@@ -11,6 +11,7 @@ import {
   semanticSpacing,
   shadows,
   withAlpha,
+  fontFamily,
 } from "@/styles/tokens";
 
 interface HomeSearchBarProps {
@@ -29,7 +30,7 @@ export function HomeSearchBar({
   const inputStyles: CSSProperties & Record<string, string | number> = {
     backgroundColor: colors.bg.primary,
     borderRadius: radius["2xl"],
-    fontFamily: "var(--font-arabic)",
+    fontFamily: fontFamily.arabic,
     color: colors.text.primary,
     "--placeholder-color": colors.text.tertiary,
     "--focus-ring-color": colors.border.focus,

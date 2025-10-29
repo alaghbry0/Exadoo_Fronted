@@ -4,6 +4,7 @@
  */
 
 import { HelpCircle } from "lucide-react";
+import { colors } from "@/styles/tokens";
 import {
   Accordion,
   AccordionContent,
@@ -14,15 +15,15 @@ import {
 export const FAQSection: React.FC = () => {
   return (
     <section className="py-16 max-w-3xl mx-auto px-4">
-      <div className="text-center mb-10">
-        <HelpCircle 
-          className="mx-auto w-10 h-10 mb-2"
-          style={{ color: "var(--color-text-disabled)" }}
-        />
-        <h2 
-          className="text-3xl font-extrabold font-display"
-          style={{ color: "var(--color-text-primary)" }}
-        >
+        <div className="text-center mb-10">
+          <HelpCircle
+            className="mx-auto w-10 h-10 mb-2"
+            style={{ color: colors.text.disabled }}
+          />
+          <h2
+            className="text-3xl font-extrabold font-display"
+            style={{ color: colors.text.primary }}
+          >
           أسئلة شائعة
         </h2>
       </div>

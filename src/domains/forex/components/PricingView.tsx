@@ -13,6 +13,7 @@ import { FeatureCard } from "./FeatureCard";
 import { PlanCard } from "./PlanCard";
 import { FAQSection } from "./FAQSection";
 import { animations } from "@/styles/animations";
+import { colors, fontFamily } from "@/styles/tokens";
 import type { ForexData } from "@/pages/api/forex";
 import forexAnimation from "@/animations/forex_2.json";
 
@@ -48,10 +49,10 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
   ];
 
   return (
-    <main
-      className="pb-12"
-      style={{ backgroundColor: "var(--color-bg-primary)" }}
-    >
+      <main
+        className="pb-12"
+        style={{ backgroundColor: colors.bg.primary }}
+      >
       <div className="max-w-4xl mx-auto px-4 pt-8">
         {/* Lottie Animation */}
         <motion.div
@@ -71,22 +72,22 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
           {...animations.fadeInUp}
           className="text-center mb-12"
         >
-          <h1
-            className="text-3xl md:text-4xl font-extrabold mb-3"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-arabic)",
-            }}
-          >
+            <h1
+              className="text-3xl md:text-4xl font-extrabold mb-3"
+              style={{
+                color: colors.text.primary,
+                fontFamily: fontFamily.arabic,
+              }}
+            >
             Our Forex Utility Projects !
           </h1>
-          <p
-            className="text-base md:text-lg max-w-2xl mx-auto"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontFamily: "var(--font-arabic)",
-            }}
-          >
+            <p
+              className="text-base md:text-lg max-w-2xl mx-auto"
+              style={{
+                color: colors.text.secondary,
+                fontFamily: fontFamily.arabic,
+              }}
+            >
             Choose between a variety of projects provided by Exaado!
           </p>
         </motion.div>
@@ -102,32 +103,32 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
       </section>
 
       {/* Pricing Plans Section */}
-      <section
-        id="plans"
-        className="py-16 border-y"
-        style={{
-          backgroundColor: "var(--color-bg-secondary)",
-          borderColor: "var(--color-border-default)",
-        }}
-      >
+        <section
+          id="plans"
+          className="py-16 border-y"
+          style={{
+            backgroundColor: colors.bg.secondary,
+            borderColor: colors.border.default,
+          }}
+        >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2
-              className="text-3xl font-extrabold"
-              style={{
-                color: "var(--color-text-primary)",
-                fontFamily: "var(--font-arabic)",
-              }}
-            >
+              <h2
+                className="text-3xl font-extrabold"
+                style={{
+                  color: colors.text.primary,
+                  fontFamily: fontFamily.arabic,
+                }}
+              >
               اختر الخطة التي تناسبك
             </h2>
-            <p
-              className="mt-2"
-              style={{
-                color: "var(--color-text-secondary)",
-                fontFamily: "var(--font-arabic)",
-              }}
-            >
+              <p
+                className="mt-2"
+                style={{
+                  color: colors.text.secondary,
+                  fontFamily: fontFamily.arabic,
+                }}
+              >
               ابدأ تجربتك المجانية أو احصل على وصول كامل اليوم.
             </p>
           </div>
@@ -140,10 +141,10 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
             </div>
           ) : (
             <Card className="rounded-3xl border-dashed sm:col-span-3">
-              <CardContent
-                className="p-8 text-center"
-                style={{ color: "var(--color-text-disabled)" }}
-              >
+                <CardContent
+                  className="p-8 text-center"
+                  style={{ color: colors.text.disabled }}
+                >
                 لا توجد خطط متاحة حاليًا.
               </CardContent>
             </Card>

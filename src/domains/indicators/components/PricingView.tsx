@@ -13,6 +13,7 @@ import { FeatureCard } from "./FeatureCard";
 import { PlanCard } from "./PlanCard";
 import { FAQSection } from "./FAQSection";
 import { animations } from "@/styles/animations";
+import { colors, fontFamily, lineHeight } from "@/styles/tokens";
 import type { IndicatorsData } from "@/pages/api/indicators";
 import indicatorAnimation from "@/animations/buy_indicator.json";
 
@@ -52,10 +53,10 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
   ];
 
   return (
-    <main
-      className="pb-12"
-      style={{ backgroundColor: "var(--color-bg-primary)" }}
-    >
+      <main
+        className="pb-12"
+        style={{ backgroundColor: colors.bg.primary }}
+      >
       <div className="max-w-4xl mx-auto px-4 pt-8">
         {/* Lottie Animation */}
         <motion.div
@@ -75,23 +76,23 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
           {...animations.fadeInUp}
           className="text-center mb-12"
         >
-          <h1
-            className="text-3xl md:text-4xl font-extrabold mb-3"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-arabic)",
-            }}
-          >
+            <h1
+              className="text-3xl md:text-4xl font-extrabold mb-3"
+              style={{
+                color: colors.text.primary,
+                fontFamily: fontFamily.arabic,
+              }}
+            >
             Gann Tool Subscriptions
           </h1>
-          <p
-            className="text-base md:text-lg max-w-2xl mx-auto"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontFamily: "var(--font-arabic)",
-              lineHeight: "1.8",
-            }}
-          >
+            <p
+              className="text-base md:text-lg max-w-2xl mx-auto"
+              style={{
+                color: colors.text.secondary,
+                fontFamily: fontFamily.arabic,
+                lineHeight: lineHeight.relaxed,
+              }}
+            >
             أول وأفضل مؤشر في الوطن العربي لرسم مربع 9 ومربع 144 ومربع 52 🔥
             والجمعة السادسة وأغلب علوم جان
           </p>
@@ -108,26 +109,26 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
       </section>
 
       {/* Pricing Plans Section */}
-      <section
-        id="plans"
-        className="py-16 border-y"
-        style={{
-          backgroundColor: "var(--color-bg-secondary)",
-          borderColor: "var(--color-border-default)",
-        }}
-      >
+        <section
+          id="plans"
+          className="py-16 border-y"
+          style={{
+            backgroundColor: colors.bg.secondary,
+            borderColor: colors.border.default,
+          }}
+        >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 
-              className="text-3xl font-extrabold font-display"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+              <h2
+                className="text-3xl font-extrabold font-display"
+                style={{ color: colors.text.primary }}
+              >
               اختر الخطة التي تناسبك
             </h2>
-            <p 
-              className="mt-2"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
+              <p
+                className="mt-2"
+                style={{ color: colors.text.secondary }}
+              >
               جميع الخطط تمنحك وصولاً كاملاً لجميع الميزات والتحديثات.
             </p>
           </div>
@@ -140,10 +141,10 @@ export const PricingView: React.FC<PricingViewProps> = ({ data }) => {
             </div>
           ) : (
             <Card className="rounded-3xl border-dashed lg:col-span-3">
-              <CardContent 
-                className="p-8 text-center"
-                style={{ color: "var(--color-text-disabled)" }}
-              >
+                <CardContent
+                  className="p-8 text-center"
+                  style={{ color: colors.text.disabled }}
+                >
                 لا توجد خطط متاحة حاليًا.
               </CardContent>
             </Card>

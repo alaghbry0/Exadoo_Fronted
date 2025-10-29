@@ -7,6 +7,7 @@ export const gradients = {
     primaryHover: `linear-gradient(135deg, ${colors.brand.primaryHover} 0%, ${colors.brand.primaryActive} 100%)`,
     primaryActive: `linear-gradient(135deg, ${colors.brand.primaryActive} 0%, ${colors.brand.primaryHover} 100%)`,
     secondary: `linear-gradient(135deg, ${colors.brand.secondary} 0%, ${colors.brand.secondaryHover} 100%)`,
+    cta: `linear-gradient(90deg, ${colors.brand.primary} 0%, ${colors.brand.primaryActive} 100%)`,
     subtle: `linear-gradient(135deg, ${withAlpha(colors.brand.primary, 0.08)} 0%, ${withAlpha(colors.brand.primary, 0.02)} 100%)`,
   },
   surface: {

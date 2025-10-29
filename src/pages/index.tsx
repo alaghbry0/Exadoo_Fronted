@@ -12,7 +12,7 @@ import {
   HomeServiceCard,
 } from "@/domains/home/components";
 import { HOME_SERVICES } from "@/domains/home/data/services";
-import { colors, spacing } from "@/styles/tokens";
+import { colors, spacing, fontFamily } from "@/styles/tokens";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,7 +49,7 @@ export default function Home() {
           <section aria-labelledby="academy-section">
             <div
               className="flex items-center justify-between mb-4 px-4"
-              style={{ fontFamily: "var(--font-arabic)" }}
+              style={{ fontFamily: fontFamily.arabic }}
             >
               <h2
                 id="academy-section"
@@ -79,7 +79,7 @@ export default function Home() {
                 className="text-2xl font-bold"
                 style={{
                   color: colors.text.primary,
-                  fontFamily: "var(--font-arabic)",
+                  fontFamily: fontFamily.arabic,
                 }}
               >
                 Exaado Services

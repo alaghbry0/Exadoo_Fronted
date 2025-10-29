@@ -63,3 +63,11 @@ export const lineHeight = {
   relaxed: "1.625",
   loose: "2",
 } as const;
+
+// Font families
+export const fontFamily = {
+  sans: "var(--font-sans)",
+  arabic: "var(--font-arabic)",
+  display: "var(--font-display, var(--font-sans))",
+  mono: "var(--font-mono, ui-monospace)",
+} as const;

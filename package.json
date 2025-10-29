@@ -15,6 +15,7 @@
     "lighthouse:local": "lighthouse http://localhost:3000 --view --output html --output-path ./lighthouse-report.html",
     "migrate:tokens": "ts-node scripts/migrate-tokens-example.ts",
     "migrate:scan": "ts-node scripts/migrate-tokens-example.ts --scan",
+    "migration:scan:json": "ts-node scripts/migration-dashboard.ts --scan --json",
     "migrate:dry-run": "ts-node scripts/migrate-tokens-example.ts --dry-run",
     "migration:dashboard": "ts-node scripts/migration-dashboard.ts",
     "migration:scan": "ts-node scripts/migration-dashboard.ts --scan",

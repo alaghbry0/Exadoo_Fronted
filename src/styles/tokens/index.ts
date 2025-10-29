@@ -5,7 +5,7 @@
 
 export { colors, colorVars } from "./colors";
 export { spacing, semanticSpacing } from "./spacing";
-export { typography, fontWeight, lineHeight } from "./typography";
+export { typography, fontWeight, lineHeight, fontFamily } from "./typography";
 export { shadows, shadowClasses } from "./shadows";
 export { animations, keyframes } from "./animations";
 export { radius, componentRadius } from "./radius";

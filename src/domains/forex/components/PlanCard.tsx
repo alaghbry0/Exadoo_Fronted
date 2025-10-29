@@ -9,6 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils";
 import { PlanFeature } from "./PlanFeature";
 import type { ForexSubscriptionPlan } from "@/pages/api/forex";
+import { colors, gradients, withAlpha } from "@/styles/tokens";
 
 interface PlanCardProps {
   plan: ForexSubscriptionPlan;
@@ -28,67 +29,65 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
   if (isFree) ctaText = "ابدأ التجربة المجانية";
   else if (isLifetime) ctaText = "احصل على وصول مدى الحياة";
 
-  return (
-    <Card
-      className={cn(
-        "rounded-3xl transition-all duration-300 border h-full flex flex-col",
-        isFeatured
-          ? "shadow-2xl"
-          : "shadow-lg hover:shadow-xl hover:-translate-y-1",
-      )}
-      style={{
-        backgroundColor: isFeatured 
-          ? "var(--color-bg-elevated)" 
-          : "var(--color-bg-secondary)",
-        borderColor: isFeatured
-          ? "rgba(var(--color-primary-500-rgb, 59, 130, 246), 0.5)"
-          : "var(--color-border-default)",
-      }}
-    >
+    return (
+      <Card
+        className={cn(
+          "rounded-3xl transition-all duration-300 border h-full flex flex-col",
+          isFeatured
+            ? "shadow-2xl"
+            : "shadow-lg hover:shadow-xl hover:-translate-y-1",
+        )}
+        style={{
+          backgroundColor: isFeatured ? colors.bg.elevated : colors.bg.secondary,
+          borderColor: isFeatured
+            ? withAlpha(colors.brand.primary, 0.5)
+            : colors.border.default,
+        }}
+      >
       <CardContent className="p-6 md:p-8 flex flex-col h-full relative">
         {isFeatured && (
           <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-            <Badge 
-              className="rounded-full px-4 py-1.5 text-sm font-bold shadow-md border-4"
-              style={{
-                background: "linear-gradient(to right, var(--color-primary-500), var(--color-primary-700))",
-                color: "white",
-                borderColor: "var(--color-bg-elevated)",
-              }}
-            >
+              <Badge
+                className="rounded-full px-4 py-1.5 text-sm font-bold shadow-md border-4"
+                style={{
+                  background: gradients.brand.cta,
+                  color: colors.text.inverse,
+                  borderColor: colors.bg.elevated,
+                }}
+              >
               أفضل قيمة
             </Badge>
           </div>
         )}
         
-        <h4 
-          className="text-2xl font-bold text-center"
-          style={{ color: "var(--color-text-primary)" }}
-        >
+          <h4
+            className="text-2xl font-bold text-center"
+            style={{ color: colors.text.primary }}
+          >
           {plan.name}
         </h4>
         
         <div className="my-6 flex items-baseline justify-center gap-2">
           {isFree ? (
-            <span 
-              className="text-5xl font-extrabold tracking-tight"
-              style={{ color: "var(--color-success-500)" }}
-            >
+              <span
+                className="text-5xl font-extrabold tracking-tight"
+                style={{ color: colors.status.success }}
+              >
               مجاني
             </span>
           ) : (
             <>
-              <span 
-                className="text-5xl font-extrabold tracking-tight"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+                <span
+                  className="text-5xl font-extrabold tracking-tight"
+                  style={{ color: colors.text.primary }}
+                >
                 {fmtUSD(priceNow)}
               </span>
               {hasDiscount && (
-                <span 
-                  className="text-2xl line-through"
-                  style={{ color: "var(--color-text-disabled)" }}
-                >
+                  <span
+                    className="text-2xl line-through"
+                    style={{ color: colors.text.disabled }}
+                  >
                   {fmtUSD(plan.price)}
                 </span>
               )}
@@ -96,10 +95,10 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
           )}
         </div>
         
-        <p 
-          className="font-semibold text-center mb-8"
-          style={{ color: "var(--color-primary-500)" }}
-        >
+          <p
+            className="font-semibold text-center mb-8"
+            style={{ color: colors.brand.primary }}
+          >
           {isFree
             ? "ابدأ تجربتك الآن"
             : isLifetime
@@ -118,17 +117,15 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan }) => {
           </ul>
         </div>
         
-        <Button
-          density="relaxed"
-          className={cn(
-            "mt-8 w-full rounded-xl text-base font-bold shadow-button transition-all duration-300 transform hover:-translate-y-0.5",
-          )}
-          style={{
-            background: isFeatured
-              ? "linear-gradient(to right, var(--color-primary-500), var(--color-primary-700))"
-              : "var(--color-text-primary)",
-            color: "white",
-          }}
+          <Button
+            density="relaxed"
+            className={cn(
+              "mt-8 w-full rounded-xl text-base font-bold shadow-button transition-all duration-300 transform hover:-translate-y-0.5",
+            )}
+            style={{
+              background: isFeatured ? gradients.brand.cta : colors.text.primary,
+              color: colors.text.inverse,
+            }}
           onClick={() => {
             window.dispatchEvent(
               new CustomEvent("open-service-purchase", {

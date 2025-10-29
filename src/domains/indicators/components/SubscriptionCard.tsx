@@ -10,6 +10,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { componentVariants } from "@/shared/components/ui/variants";
 import { cn } from "@/shared/utils";
 import { animations } from "@/styles/animations";
+import { colors, withAlpha } from "@/styles/tokens";
 import Image from "next/image";
 
 interface SubscriptionCardProps {
@@ -31,16 +32,16 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
 }) => {
   return (
     <motion.div {...animations.staggeredFadeIn(index)}>
-      <Card
-        className={cn(
-          componentVariants.card.base,
-          "border-2 transition-all duration-300",
-        )}
-        style={{
-          borderColor: "var(--color-border-default)",
-          backgroundColor: "var(--color-bg-elevated)",
-        }}
-      >
+        <Card
+          className={cn(
+            componentVariants.card.base,
+            "border-2 transition-all duration-300",
+          )}
+          style={{
+            borderColor: colors.border.default,
+            backgroundColor: colors.bg.elevated,
+          }}
+        >
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             {/* Icon */}
@@ -61,46 +62,46 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div>
-                  <p
-                    className="text-sm mb-1"
-                    style={{ color: "var(--color-text-tertiary)" }}
-                  >
+                    <p
+                      className="text-sm mb-1"
+                      style={{ color: colors.text.tertiary }}
+                    >
                     Current Plan :
                   </p>
-                  <h3
-                    className="text-xl font-bold"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
+                    <h3
+                      className="text-xl font-bold"
+                      style={{ color: colors.text.primary }}
+                    >
                     {planName}
                   </h3>
-                  <p
-                    className="text-sm mt-0.5"
-                    style={{ color: "var(--color-text-secondary)" }}
-                  >
+                    <p
+                      className="text-sm mt-0.5"
+                      style={{ color: colors.text.secondary }}
+                    >
                     {planStatus}
                   </p>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="py-1 px-3 text-xs font-semibold border flex-shrink-0"
-                  style={{
-                    backgroundColor: "var(--color-success-50)",
-                    color: "var(--color-success-700)",
-                    borderColor: "var(--color-success-300)",
-                  }}
+                  <Badge
+                    variant="outline"
+                    className="py-1 px-3 text-xs font-semibold border flex-shrink-0"
+                    style={{
+                      backgroundColor: withAlpha(colors.status.success, 0.15),
+                      color: colors.status.success,
+                      borderColor: withAlpha(colors.status.success, 0.4),
+                    }}
                 >
                   <CheckCircle2 className="w-3 h-3 ml-1" aria-hidden="true" />
                   Active
                 </Badge>
               </div>
 
-              <div
-                className="flex items-center gap-2 text-sm pt-3 border-t"
-                style={{
-                  borderColor: "var(--color-border-default)",
-                  color: "var(--color-text-secondary)",
-                }}
-              >
+                <div
+                  className="flex items-center gap-2 text-sm pt-3 border-t"
+                  style={{
+                    borderColor: colors.border.default,
+                    color: colors.text.secondary,
+                  }}
+                >
                 <Calendar className="w-4 h-4" aria-hidden="true" />
                 <span>Started on {startDate}</span>
               </div>

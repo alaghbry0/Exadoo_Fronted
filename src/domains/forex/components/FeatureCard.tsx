@@ -6,6 +6,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils";
 import { componentVariants } from "@/shared/components/ui/variants";
+import { colors, withAlpha } from "@/styles/tokens";
 import type { LucideIcon } from "lucide-react";
 
 interface FeatureCardProps {
@@ -31,27 +32,27 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
         "flex flex-col items-center text-center p-6 transition-all hover:-translate-y-1",
       )}
     >
-      <div 
-        className="p-4 rounded-2xl mb-4"
-        style={{
-          backgroundColor: "var(--color-primary-50)",
-          color: "var(--color-primary-500)",
-        }}
-      >
+        <div
+          className="p-4 rounded-2xl mb-4"
+          style={{
+            backgroundColor: withAlpha(colors.brand.primary, 0.12),
+            color: colors.brand.primary,
+          }}
+        >
         <Icon className="w-8 h-8" />
       </div>
       
-      <h3 
-        className="text-xl font-bold"
-        style={{ color: "var(--color-text-primary)" }}
-      >
+        <h3
+          className="text-xl font-bold"
+          style={{ color: colors.text.primary }}
+        >
         {title}
       </h3>
       
-      <p 
-        className="mt-1 flex-grow"
-        style={{ color: "var(--color-text-secondary)" }}
-      >
+        <p
+          className="mt-1 flex-grow"
+          style={{ color: colors.text.secondary }}
+        >
         {description}
       </p>
     </motion.div>

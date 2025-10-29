@@ -4,7 +4,7 @@ import Link from "next/link";
 import SmartImage from "@/shared/components/common/SmartImage";
 import { motion } from "framer-motion";
 import { Star, ShoppingCart } from "lucide-react";
-import { colors } from "@/styles/tokens";
+import { colors, fontFamily } from "@/styles/tokens";
 
 interface LatestCourseCardProps {
   id: string;
@@ -79,9 +79,9 @@ export const LatestCourseCard = memo(function LatestCourseCard({
           {/* Content */}
           <div className="p-3 flex flex-col flex-grow">
             {/* Title */}
-            <h3 
+            <h3
               className="text-sm font-bold text-gray-900 mb-1.5 line-clamp-2 leading-tight"
-              style={{ fontFamily: 'var(--font-arabic)' }}
+              style={{ fontFamily: fontFamily.arabic }}
               title={title}
             >
               {title}

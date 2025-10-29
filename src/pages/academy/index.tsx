@@ -26,6 +26,7 @@ import {
   componentRadius,
   shadows,
   withAlpha,
+  fontFamily,
 } from "@/styles/tokens";
 
 /* =========================
@@ -178,10 +179,10 @@ export default function AcademyIndex() {
 
   const { telegramId: tgId } = useTelegram();
 
-  const headingStyle = {
-    fontFamily: "var(--font-arabic)",
-    color: colors.text.primary,
-  } as const;
+    const headingStyle = {
+      fontFamily: fontFamily.arabic,
+      color: colors.text.primary,
+    } as const;
 
   const navButtonBase = cn(
     "flex flex-col items-center gap-1.5 px-6 py-2 transition-all",
@@ -529,7 +530,7 @@ export default function AcademyIndex() {
             <Layers size={22} aria-hidden="true" />
             <span
               className="text-xs font-semibold"
-              style={{ fontFamily: "var(--font-arabic)" }}
+              style={{ fontFamily: fontFamily.arabic }}
             >
               Home
             </span>
@@ -550,7 +551,7 @@ export default function AcademyIndex() {
             <Bookmark size={22} aria-hidden="true" />
             <span
               className="text-xs font-semibold"
-              style={{ fontFamily: "var(--font-arabic)" }}
+              style={{ fontFamily: fontFamily.arabic }}
             >
               My Courses
             </span>

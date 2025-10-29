@@ -3,6 +3,7 @@ import { memo } from "react";
 import Link from "next/link";
 import SmartImage from "@/shared/components/common/SmartImage";
 import { motion } from "framer-motion";
+import { fontFamily } from "@/styles/tokens";
 
 interface CategoryCardProps {
   id: string;
@@ -44,9 +45,9 @@ export const CategoryCard = memo(function CategoryCard({
           
           {/* Category Name */}
           <div className="bg-white py-2.5 px-2">
-            <p 
-              className="text-center text-xs sm:text-sm font-bold text-gray-900 truncate" 
-              style={{ fontFamily: 'var(--font-arabic)' }}
+            <p
+              className="text-center text-xs sm:text-sm font-bold text-gray-900 truncate"
+              style={{ fontFamily: fontFamily.arabic }}
               title={name}
             >
               {name}

@@ -11,7 +11,7 @@ import { cn } from "@/shared/utils";
 import { componentVariants } from "@/shared/components/ui/variants";
 import SmartImage from "@/shared/components/common/SmartImage";
 import { formatPrice } from "../utils/helpers";
-import { colors } from "@/styles/tokens";
+import { colors, fontFamily } from "@/styles/tokens";
 
 const cardHoverVariant = {
   whileHover: { scale: 1.02 },
@@ -94,7 +94,7 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
             <div className="flex-1 text-right min-w-0">
               <h3
                 className="text-sm font-bold mb-1.5 line-clamp-2"
-                style={{ color: colors.text.primary, fontFamily: 'var(--font-arabic)' }}
+                style={{ color: colors.text.primary, fontFamily: fontFamily.arabic }}
                 title={title}
               >
                 {title}
@@ -108,7 +108,7 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
           {/* Description */}
           <p
             className="text-[11px] leading-relaxed text-right mb-4 line-clamp-3"
-            style={{ color: colors.text.secondary, fontFamily: 'var(--font-arabic)' }}
+            style={{ color: colors.text.secondary, fontFamily: fontFamily.arabic }}
             dir="rtl"
           >
             {(desc || "").replace(/\\r\\n/g, " ")}
@@ -121,7 +121,7 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
                 key={index} 
                 className="flex items-center gap-2 text-xs" 
                 dir="rtl" 
-                style={{ color: colors.text.secondary, fontFamily: 'var(--font-arabic)' }}
+                style={{ color: colors.text.secondary, fontFamily: fontFamily.arabic }}
               >
                 {feature.available ? (
                   <Check className="text-green-500 flex-shrink-0" size={16} aria-hidden="true" />
@@ -136,7 +136,7 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
           {/* CTA Button */}
           <button
             className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 font-semibold text-sm transition-colors mt-auto"
-            style={{ fontFamily: 'var(--font-arabic)' }}
+            style={{ fontFamily: fontFamily.arabic }}
             onClick={(e) => {
               e.preventDefault();
               window.location.href = `/academy/bundle/${id}`;

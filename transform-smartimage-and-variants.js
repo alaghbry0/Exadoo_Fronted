@@ -238,9 +238,9 @@ module.exports = function transformer(fileInfo, api, options) {
 
   // Ensure needed imports if changed
   if (changed) {
-    ensureImport(j, root, '@/components/ui/variants', ['componentVariants', 'mergeVariants']);
+    ensureImport(j, root, '@/shared/components/ui/variants', ['componentVariants', 'mergeVariants']);
     ensureImport(j, root, '@/lib/utils', ['cn']);
   }
-
   return changed ? root.toSource({ quote: 'single', trailingComma: true }) : null;
 };
+

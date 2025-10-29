@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { LottieAnimation } from "@/shared/components/common/LottieAnimation";
 import { ProjectCard } from "./ProjectCard";
 import { animations } from "@/styles/animations";
-import { colors } from "@/styles/tokens";
+import { colors, lineHeight, spacing, fontFamily } from "@/styles/tokens";
 import type { MyForexSubscription } from "@/pages/api/forex";
 import forexAnimation from "@/animations/utility.json";
 
@@ -35,10 +35,10 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
   );
 
   return (
-    <main
-      className="min-h-screen pb-24 "
-      style={{ backgroundColor: colors.bg.primary }}
-    >
+      <main
+        className="min-h-screen pb-24"
+        style={{ backgroundColor: colors.bg.primary }}
+      >
       <div className="max-w-6xl mx-auto px-4">
         {/* Lottie Animation */}
         <motion.div
@@ -65,21 +65,20 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
         >
           <h1
             className="text-3xl md:text-12xl font-extrabold"
-             style={{
-            position: "relative",
-            bottom: 30, // ارفع العنوان (قابلة للتعديل الدقيقة)
-          
-          }}
-        >
+            style={{
+              position: "relative",
+              bottom: spacing[8],
+              fontFamily: fontFamily.arabic,
+            }}
+          >
             مشاريعنا الخاصة بأدوات الفوركس!
           </h1>
           <p
             className="text-base md:text-lg max-w-2xl mx-auto"
             style={{
-              color: "var(--color-text-secondary)",
-              fontFamily: "var(--font-arabic)",
-              lineHeight: "1.4",
-              
+              color: colors.text.secondary,
+              fontFamily: fontFamily.arabic,
+              lineHeight: lineHeight.snug,
             }}
           >
             اختر من بين مجموعة متنوعة من المشاريع التي تقدمها Exaado!

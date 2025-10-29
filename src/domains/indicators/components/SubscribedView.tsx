@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { LottieAnimation } from "@/shared/components/common/LottieAnimation";
 import { SubscriptionCard } from "./SubscriptionCard";
 import { animations } from "@/styles/animations";
-import { colors } from "@/styles/tokens";
+import { colors, fontFamily, lineHeight, spacing } from "@/styles/tokens";
 import type { IndicatorsData } from "@/pages/api/indicators";
 import indicatorAnimation from "@/animations/buy_indicator.json";
 
@@ -30,19 +30,19 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
   const isLifetime = sub.status === "lifetime";
 
   return (
-    <main
-      className="min-h-screen pb-24 pt-6" // خفّضنا الـ padding شوي فقط
-      style={{ backgroundColor: colors.bg.primary }}
-    >
+      <main
+        className="min-h-screen pb-24 pt-6" // خفّضنا الـ padding شوي فقط
+        style={{ backgroundColor: colors.bg.primary }}
+      >
       <div className="max-w-4xl mx-auto px-4">
         {/* Lottie Animation */}
-        <motion.div
-          {...animations.fadeInUp}
-          className="flex justify-center"
-          style={{
-            position: "relative",
-            top: 60, // نزّل اللوتي (قابلة للتعديل الدقيقة)
-          }}
+          <motion.div
+            {...animations.fadeInUp}
+            className="flex justify-center"
+            style={{
+              position: "relative",
+              top: spacing[12], // نزّل اللوتي (قابلة للتعديل الدقيقة)
+            }}
         >
           <LottieAnimation
             animationData={indicatorAnimation}
@@ -56,33 +56,32 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
         </motion.div>
 
         {/* Header */}
-        <motion.div
-          {...animations.fadeInUp}
-          className="text-center"
-          style={{
-            position: "relative",
-            bottom: 50, // ارفع العنوان (قابلة للتعديل الدقيقة)
-          
-          }}
-        >
-          <h1
-            className="text-3xl md:text-4xl font-extrabold"
+          <motion.div
+            {...animations.fadeInUp}
+            className="text-center"
             style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-arabic)",
-              marginBottom: 4, // قلّل/زِد حسب مزاجك
+              position: "relative",
+              bottom: spacing[12], // ارفع العنوان (قابلة للتعديل الدقيقة)
             }}
           >
+            <h1
+              className="text-3xl md:text-4xl font-extrabold"
+              style={{
+                color: colors.text.primary,
+                fontFamily: fontFamily.arabic,
+                marginBottom: spacing[3], // قلّل/زِد حسب مزاجك
+              }}
+            >
             Gann Tool Subscriptions
           </h1>
-          <p
-            className="text-base md:text-lg max-w-2xl mx-auto"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontFamily: "var(--font-arabic)",
-              lineHeight: "1.6",
-            }}
-          >
+            <p
+              className="text-base md:text-lg max-w-2xl mx-auto"
+              style={{
+                color: colors.text.secondary,
+                fontFamily: fontFamily.arabic,
+                lineHeight: lineHeight.relaxed,
+              }}
+            >
             أول وأفضل مؤشر في الوطن العربي لرسم مربع 9 ومربع 144 ومربع 52 🔥
             والجمعة السادسة وأغلب علوم جان
           </p>

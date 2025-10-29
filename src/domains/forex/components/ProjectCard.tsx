@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { componentVariants } from "@/shared/components/ui/variants";
 import { cn } from "@/shared/utils";
 import { animations } from "@/styles/animations";
+import { colors } from "@/styles/tokens";
 
 interface ProjectCardProps {
   id: string;
@@ -36,8 +37,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           "group border-2 transition-all duration-300",
         )}
         style={{
-          borderColor: "var(--color-border-default)",
-          backgroundColor: "var(--color-bg-elevated)",
+          borderColor: colors.border.default,
+          backgroundColor: colors.bg.elevated,
         }}
       >
         <CardContent className="p-6">
@@ -45,7 +46,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             {/* Icon */}
             <div
               className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-purple-200 flex items-center justify-center"
-              style={{ backgroundColor: "var(--color-primary-500)" }}
+              style={{ backgroundColor: colors.brand.primary }}
             >
               {icon ? (
                 <img
@@ -65,19 +66,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h3
                   className="text-xl font-bold truncate"
-                  style={{ color: "var(--color-text-primary)" }}
+                  style={{ color: colors.text.primary }}
                 >
                   {title}
                 </h3>
                 <ChevronLeft
                   className="flex-shrink-0 w-5 h-5 transition-transform group-hover:-translate-x-1"
-                  style={{ color: "var(--color-text-tertiary)" }}
+                  style={{ color: colors.text.tertiary }}
                   aria-hidden="true"
                 />
               </div>
               <p
                 className="text-sm leading-relaxed line-clamp-3"
-                style={{ color: "var(--color-text-secondary)" }}
+                style={{ color: colors.text.secondary }}
               >
                 {description}
               </p>
@@ -91,7 +92,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold hover:underline transition"
-                      style={{ color: "var(--color-primary-500)" }}
+                      style={{ color: colors.brand.primary }}
                     >
                       تحميل اللوحة
                     </a>
@@ -102,7 +103,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold hover:underline transition"
-                      style={{ color: "var(--color-primary-500)" }}
+                      style={{ color: colors.brand.primary }}
                     >
                       دليل التثبيت
                     </a>

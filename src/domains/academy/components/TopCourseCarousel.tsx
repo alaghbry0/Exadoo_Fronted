@@ -3,6 +3,7 @@ import { useState, memo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SmartImage from "@/shared/components/common/SmartImage";
 import Link from "next/link";
+import { fontFamily } from "@/styles/tokens";
 
 interface TopCourse {
   id: string;
@@ -126,17 +127,17 @@ export const TopCourseCarousel = memo(function TopCourseCarousel({
             {/* Content - Left Side with Centered Alignment */}
             <div className="flex-1 text-white text-left order-1 min-w-0 flex flex-col justify-center gap-1.5">
               {/* Title - Full Display */}
-              <h2 
-                className="text-lg sm:text-xl font-bold leading-tight" 
-                style={{ fontFamily: 'var(--font-arabic)' }}
+              <h2
+                className="text-lg sm:text-xl font-bold leading-tight"
+                style={{ fontFamily: fontFamily.arabic }}
               >
                 {currentCourse.title}
               </h2>
               
               {/* Subtitle - Truncated with ... */}
-              <p 
-                className="text-sm sm:text-base font-medium opacity-90 truncate" 
-                style={{ fontFamily: 'var(--font-arabic)' }}
+              <p
+                className="text-sm sm:text-base font-medium opacity-90 truncate"
+                style={{ fontFamily: fontFamily.arabic }}
                 title={currentCourse.subtitle}
               >
                 {currentCourse.subtitle}

@@ -12,6 +12,7 @@ import {
   shadowClasses,
   shadows,
   withAlpha,
+  fontFamily,
 } from "@/styles/tokens";
 
 type UserHeaderProps = {
@@ -75,7 +76,7 @@ export function UserHeader({ title, subtitle }: UserHeaderProps = {}) {
                 style={{
                   backgroundImage: gradients.brand.primary,
                   color: colors.text.inverse,
-                  fontFamily: "var(--font-arabic)",
+                  fontFamily: fontFamily.arabic,
                 }}
               >
                 {userInitial}
@@ -86,7 +87,7 @@ export function UserHeader({ title, subtitle }: UserHeaderProps = {}) {
               <h1
                 className="truncate text-base font-semibold sm:text-lg"
                 style={{
-                  fontFamily: "var(--font-arabic)",
+                  fontFamily: fontFamily.arabic,
                   color: colors.text.primary,
                 }}
               >
@@ -96,7 +97,7 @@ export function UserHeader({ title, subtitle }: UserHeaderProps = {}) {
                 className="mt-0.5 text-xs sm:text-[13px]"
                 style={{
                   color: colors.text.secondary,
-                  fontFamily: "var(--font-arabic)",
+                  fontFamily: fontFamily.arabic,
                 }}
               >
                 {subtitleContent}

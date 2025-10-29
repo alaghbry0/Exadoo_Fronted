@@ -7,7 +7,14 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { LottieAnimation } from "@/shared/components/common/LottieAnimation";
 import { cn } from "@/shared/utils";
-import { colors, radius, spacing, shadowClasses } from "@/styles/tokens";
+import {
+  colors,
+  radius,
+  spacing,
+  shadowClasses,
+  withAlpha,
+  fontFamily,
+} from "@/styles/tokens";
 
 interface HomeServiceCardProps {
   title: string;
@@ -43,7 +50,7 @@ export function HomeServiceCard({
         borderRadius: radius["2xl"],
         outline: "none",
         boxShadow: isFocused
-          ? "0 0 0 4px rgba(9, 97, 245, 0.2)"
+          ? `0 0 0 4px ${withAlpha(colors.brand.primary, 0.2)}`
           : undefined,
         transition: "box-shadow 0.2s ease-out",
       }}
@@ -85,10 +92,10 @@ export function HomeServiceCard({
                 {isSignalsCard && (
                   <>
                     {/* Red Glow Effect */}
-                    <div 
+                    <div
                       className="absolute inset-0 rounded-full opacity-30 animate-pulse"
                       style={{
-                        background: "radial-gradient(circle, rgba(255, 0, 0, 0.4) 0%, rgba(255, 0, 0, 0.1) 50%, transparent 100%)",
+                        background: `radial-gradient(circle, ${withAlpha(colors.status.error, 0.4)} 0%, ${withAlpha(colors.status.error, 0.1)} 50%, transparent 100%)`,
                         width: "120px",
                         height: "120px",
                         top: "50%",
@@ -98,10 +105,10 @@ export function HomeServiceCard({
                       }}
                     />
                     {/* Additional Glow Layer */}
-                    <div 
+                    <div
                       className="absolute inset-0 rounded-full opacity-20"
                       style={{
-                        background: "radial-gradient(circle, rgba(255, 0, 0, 0.6) 0%, rgba(255, 0, 0, 0.2) 40%, transparent 80%)",
+                        background: `radial-gradient(circle, ${withAlpha(colors.status.error, 0.6)} 0%, ${withAlpha(colors.status.error, 0.2)} 40%, transparent 80%)`,
                         width: "160px",
                         height: "160px",
                         top: "50%",
@@ -115,10 +122,10 @@ export function HomeServiceCard({
                 
                 {/* Special Effects for Forex Card */}
                 {isForexCard && (
-                  <div 
+                  <div
                     className="absolute inset-0 rounded-full opacity-10"
                     style={{
-                      background: "radial-gradient(circle, rgba(43, 108, 176, 0.3) 0%, rgba(43, 108, 176, 0.1) 50%, transparent 100%)",
+                      background: `radial-gradient(circle, ${withAlpha(colors.brand.primary, 0.3)} 0%, ${withAlpha(colors.brand.primary, 0.1)} 50%, transparent 100%)`,
                       width: "100px",
                       height: "100px",
                       top: "50%",
@@ -133,7 +140,7 @@ export function HomeServiceCard({
               <div
                 className="w-20 h-20 rounded-full flex items-center justify-center"
                 style={{
-                  backgroundColor: `${colors.brand.primary}15`,
+                  backgroundColor: withAlpha(colors.brand.primary, 0.08),
                 }}
               >
                 <Icon
@@ -150,7 +157,7 @@ export function HomeServiceCard({
               className="text-xl font-bold mb-2"
               style={{
                 color: colors.text.primary,
-                fontFamily: "var(--font-arabic)",
+                fontFamily: fontFamily.arabic,
               }}
             >
               {title}
@@ -159,7 +166,7 @@ export function HomeServiceCard({
               className="text-sm leading-relaxed"
               style={{
                 color: colors.text.secondary,
-                fontFamily: "var(--font-arabic)",
+                fontFamily: fontFamily.arabic,
               }}
             >
               {description}
