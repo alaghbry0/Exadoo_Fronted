@@ -189,7 +189,6 @@ export default function AcademyIndex() {
       color: colors.text.primary,
     } as const;
 
-<<<<<<< ours
   const bottomNavTokens = {
     containerBackground: withAlpha(colors.bg.elevated, 0.95),
     containerBorder: withAlpha(colors.border.default, 0.7),
@@ -207,10 +206,6 @@ export default function AcademyIndex() {
 
   const navTriggerBase = cn(
     "flex flex-col items-center gap-1.5 px-6 py-2 text-xs font-semibold transition-all",
-=======
-  const navButtonBase = cn(
-    "flex flex-col items-center gap-1.5 px-6 py-2 transition-all",
->>>>>>> theirs
     componentRadius.button,
     shadowClasses.button,
   );
