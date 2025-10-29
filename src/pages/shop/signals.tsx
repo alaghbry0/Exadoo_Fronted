@@ -373,17 +373,9 @@ const ShopComponent = () => {
                       type="single"
                       variant="outline"
                       size="lg"
-                      value={
-                        selectedGroupId === null
-                          ? "all"
-                          : String(selectedGroupId)
-                      }
+                      value={selectedGroupId ? String(selectedGroupId) : ""}
                       onValueChange={(value) => {
-                        if (!value || value === "all") {
-                          setSelectedGroupId(null);
-                          return;
-                        }
-                        setSelectedGroupId(Number(value));
+                        setSelectedGroupId(value ? Number(value) : null);
                       }}
                       className="flex w-max items-center gap-2 md:gap-4 pb-2 pr-4 justify-start lg:justify-center"
                     >
@@ -393,9 +385,7 @@ const ShopComponent = () => {
                       ].map((group) => (
                         <ToggleGroupItem
                           key={group.id ?? "all"}
-                          value={
-                            group.id === null ? "all" : String(group.id)
-                          }
+                          value={group.id ? String(group.id) : ""}
                           className="font-semibold"
                         >
                           <group.icon className="h-4 w-4" />

@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  forwardRef,
-} from "react";
+import React, { useEffect, useMemo, useState, forwardRef } from "react";
 import type { CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -33,6 +27,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Progress } from "@/shared/components/ui/progress-custom";
 import { SkeletonLoader } from "@/shared/components/ui/skeleton-loader";
+import { useIntersectionObserver } from "@/shared/hooks/useIntersectionObserver";
 import { cn } from "@/shared/utils";
 import { animations } from "@/styles/animations";
 import { componentRadius, radiusClasses, shadowClasses, colors, gradients, withAlpha } from "@/styles/tokens";
@@ -86,20 +81,15 @@ export default function SubscriptionsSection({
   onRefreshClick,
   isRefreshing,
 }: SubscriptionsSectionProps) {
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastSubscriptionRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isLoadingMore) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMore();
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [isLoadingMore, hasMore, loadMore],
-  );
+  const { ref: sentinelRef, isVisible } = useIntersectionObserver({
+    freezeOnceVisible: false,
+  });
+
+  useEffect(() => {
+    if (isVisible && hasMore && !isLoadingMore) {
+      loadMore();
+    }
+  }, [isVisible, hasMore, isLoadingMore, loadMore]);
 
   return (
     <Card
@@ -157,11 +147,6 @@ export default function SubscriptionsSection({
               {subscriptions.map((subscription, index) => (
                 <SubscriptionCard
                   key={subscription.id}
-                  ref={
-                    index === subscriptions.length - 1
-                      ? lastSubscriptionRef
-                      : undefined
-                  }
                   subscription={subscription}
                   index={index}
                 />
@@ -173,6 +158,7 @@ export default function SubscriptionsSection({
             </motion.div>
           )}
         </AnimatePresence>
+        <div ref={sentinelRef} aria-hidden className="h-px w-full" />
         {isLoadingMore && (
           <div className="mt-4">
             <SkeletonLoader />
