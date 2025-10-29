@@ -12,8 +12,21 @@ const WHITE_RGBA: [number, number, number, number] = [1, 1, 1, 1];
 
 type LottieColorValue = number[] | Record<string, any> | Array<any>;
 
-const cloneAnimationPayload = (payload: any) =>
-  JSON.parse(JSON.stringify(payload));
+const cloneAnimationPayload = <T,>(payload: T): T => {
+  const structuredCloneFn = (
+    globalThis as typeof globalThis & {
+      structuredClone?: <Value,>(value: Value) => Value;
+    }
+  ).structuredClone;
+
+  if (typeof structuredCloneFn === "function") {
+    return structuredCloneFn(payload);
+  }
+
+  return JSON.parse(JSON.stringify(payload));
+};
+
+const sanitizedAnimationCache = new WeakMap<object, any>();
 
 const matchesWhite = (value: unknown): value is number[] => {
   return (
@@ -94,7 +107,9 @@ const sanitizeShape = (shape: any): any => {
   const nextShape: Record<string, any> = { ...shape };
 
   if (nextShape.ty === "fl" || nextShape.ty === "st") {
-    if (nextShape.c) {
+    if (Array.isArray(nextShape.c)) {
+      nextShape.c = sanitizeColorKey(nextShape.c);
+    } else if (nextShape.c && typeof nextShape.c === "object") {
       nextShape.c = {
         ...nextShape.c,
         k: sanitizeColorKey(nextShape.c.k ?? nextShape.c),
@@ -146,24 +161,76 @@ const sanitizeLayers = (layers: any[]): any[] => {
 };
 
 const sanitizeAnimationData = (data: any) => {
+  if (!data || typeof data !== "object") {
+    return data;
+  }
+
+  const cached = sanitizedAnimationCache.get(data as object);
+  if (cached) {
+    return cached;
+  }
+
   const payload = cloneAnimationPayload(data);
+
+  if (Array.isArray(payload.assets)) {
+    payload.assets = payload.assets.map((asset: any) => {
+      if (!asset || typeof asset !== "object") {
+        return asset;
+      }
+
+      const nextAsset: Record<string, any> = { ...asset };
+
+      if (Array.isArray(nextAsset.layers)) {
+        nextAsset.layers = sanitizeLayers(nextAsset.layers);
+      }
+
+      return nextAsset;
+    });
+  }
 
   if (Array.isArray(payload.layers)) {
     payload.layers = sanitizeLayers(payload.layers);
   }
 
   if (Array.isArray(payload.assets)) {
-    payload.assets = payload.assets.map((asset: any) => {
-      if (asset && Array.isArray(asset.layers)) {
-        return {
-          ...asset,
-          layers: sanitizeLayers(asset.layers),
-        };
+    const assetsById = new Map<string, any>();
+
+    payload.assets.forEach((asset: any) => {
+      if (asset && typeof asset === "object" && typeof asset.id === "string") {
+        assetsById.set(asset.id, asset);
+      }
+    });
+
+    const ensurePrecompSanitized = (layer: any) => {
+      if (!layer || typeof layer !== "object") {
+        return;
       }
 
-      return asset;
+      if (typeof layer.refId === "string" && assetsById.has(layer.refId)) {
+        const targetAsset = assetsById.get(layer.refId);
+
+        if (targetAsset && Array.isArray(targetAsset.layers)) {
+          targetAsset.layers = sanitizeLayers(targetAsset.layers);
+        }
+      }
+
+      if (Array.isArray(layer.layers)) {
+        layer.layers = sanitizeLayers(layer.layers);
+      }
+    };
+
+    if (Array.isArray(payload.layers)) {
+      payload.layers.forEach((layer: any) => ensurePrecompSanitized(layer));
+    }
+
+    payload.assets.forEach((asset: any) => {
+      if (Array.isArray(asset.layers)) {
+        asset.layers.forEach((layer: any) => ensurePrecompSanitized(layer));
+      }
     });
   }
+
+  sanitizedAnimationCache.set(data as object, payload);
 
   return payload;
 };

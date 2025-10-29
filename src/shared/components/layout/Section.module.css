@@ -1,0 +1,33 @@
+.section {
+  width: 100%;
+}
+
+.withPaddingBlock {
+  padding-block: var(--section-padding-block, 0);
+}
+
+.withPaddingInline {
+  padding-inline: var(--section-padding-inline, 0);
+}
+
+.withBackground {
+  background: var(--section-background);
+}
+
+.withForeground {
+  color: var(--section-foreground);
+}
+
+.rounded {
+  border-radius: var(--section-radius, 0);
+}
+
+.withBorder {
+  border-width: var(--section-border-width, 0);
+  border-style: solid;
+  border-color: var(--section-border-color, transparent);
+}
+
+.fullWidth {
+  width: 100%;
+}

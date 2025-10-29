@@ -15,6 +15,7 @@ import {
   profileHeaderRootStyle,
   profileHeaderStackStyle,
 } from "./ProfileTokens";
+import { Button } from "@/shared/components/ui/button";
 
 // --- دالة مساعدة للتحقق من رابط الصورة ---
 export function getValidPhotoUrl(
@@ -94,31 +95,29 @@ export default function ProfileHeader({
       >
         <div className="flex items-start justify-between">
           {onPaymentHistoryClick ? (
-            <button
+            <Button
               type="button"
               onClick={onPaymentHistoryClick}
+              intent="secondary"
+              density="compact"
+              aria-label="عرض سجل المدفوعات"
               className={cn(
-                "animate-scale-in transition-transform duration-200 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 touch-manipulation",
+                "animate-scale-in transition-transform duration-200 backdrop-blur-md active:scale-95 touch-manipulation font-arabic",
                 componentRadius.badge,
                 shadowClasses.buttonElevated,
               )}
-              style={{
-                animationDelay: "0.2s",
+              intentOverrides={{
                 background: "var(--profile-chip-background)",
-                color: "var(--profile-chip-text)",
-                paddingInline: "var(--profile-chip-padding-inline)",
-                paddingBlock: "var(--profile-chip-padding-block)",
-                boxShadow: "var(--profile-chip-shadow)",
-                "--tw-ring-color": "var(--profile-ring-color)",
-                "--tw-ring-offset-color": "var(--profile-ring-offset-color)",
-              } as React.CSSProperties}
-              title="سجلات الدفعات"
+                foreground: "var(--profile-chip-text)",
+                hoverBackground: "var(--profile-chip-background)",
+                hoverForeground: "var(--profile-chip-text-strong)",
+                focusRing: "var(--profile-ring-color)",
+                border: "transparent",
+              }}
             >
-              <FileText
-                className="h-5 w-5"
-                style={{ color: "var(--profile-chip-text)" }}
-              />
-            </button>
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              <span>سجل المدفوعات</span>
+            </Button>
           ) : (
             <div />
           )}
