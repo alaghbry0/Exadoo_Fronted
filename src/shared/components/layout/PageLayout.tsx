@@ -8,10 +8,10 @@ import {
   type HTMLAttributes,
 } from "react";
 
+import FooterNav from "@/shared/components/layout/FooterNav";
 import { Navbar, type NavbarProps } from "@/shared/components/layout/Navbar";
 import { cn } from "@/shared/utils";
 
-import FooterNavEnhanced from "./FooterNavEnhanced";
 import { PageLayoutSlot, usePageLayoutComponents } from "./PageLayoutContext";
 
 type PageLayoutProps = {
@@ -28,7 +28,7 @@ type PageLayoutProps = {
 } & Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
 
 const DEFAULT_NAVBAR: PageLayoutSlot = Navbar;
-const DEFAULT_FOOTER: PageLayoutSlot = FooterNavEnhanced;
+const DEFAULT_FOOTER: PageLayoutSlot = FooterNav;
 
 export default function PageLayout({
   children,

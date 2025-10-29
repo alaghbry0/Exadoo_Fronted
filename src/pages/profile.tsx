@@ -9,13 +9,9 @@ import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { getUserSubscriptions } from "@/domains/subscriptions/api";
 import { useRouter } from "next/navigation";
 import { Toaster } from "@/shared/components/ui/toaster";
-import { AlertTriangle, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import PageLayout from "@/shared/components/layout/PageLayout";
-import { colors, componentRadius, semanticSpacing, shadowClasses, withAlpha } from "@/styles/tokens";
-import { cn } from "@/shared/utils/cn";
+import { semanticSpacing } from "@/styles/tokens";
 import { showToast } from "@/shared/components/ui/showToast";
+import { ProfilePageContainer, ProfileStateCard } from "@/domains/profile/components/ProfileLayout";
 
 export default function Profile() {
   const {
@@ -84,91 +80,12 @@ export default function Profile() {
 
   // --- شاشة تحميل جديدة وأكثر جاذبية ---
   if (isLoading) {
-    return (
-      <div
-        dir="rtl"
-        className="min-h-screen font-arabic flex items-center justify-center"
-        style={{
-          backgroundColor: colors.bg.primary,
-          color: colors.text.primary,
-          padding: semanticSpacing.layout.md,
-        }}
-      >
-        <PageLayout maxWidth="md">
-          <Card
-            className={cn("w-full", shadowClasses.card)}
-            style={{
-              background: colors.bg.elevated,
-              borderColor: colors.border.default,
-            }}
-          >
-            <CardContent
-              className="flex flex-col items-center justify-center text-center"
-              style={{ gap: semanticSpacing.component.lg, padding: semanticSpacing.section.sm }}
-            >
-              <Loader2
-                className="h-12 w-12 animate-spin"
-                style={{ color: colors.brand.primary }}
-              />
-              <p className="font-semibold" style={{ color: colors.text.secondary }}>
-                جارٍ تحميل ملفك الشخصي...
-              </p>
-            </CardContent>
-          </Card>
-        </PageLayout>
-      </div>
-    );
+    return <ProfileStateCard variant="loading" />;
   }
 
   // --- شاشة خطأ محسّنة ---
   if (isError) {
-    return (
-      <div
-        dir="rtl"
-        className="min-h-screen font-arabic flex items-center justify-center"
-        style={{
-          backgroundColor: colors.bg.primary,
-          color: colors.text.primary,
-          padding: semanticSpacing.layout.md,
-        }}
-      >
-        <PageLayout maxWidth="md">
-          <Card
-            className={cn("w-full text-center", shadowClasses.card)}
-            style={{
-              background: colors.bg.elevated,
-              borderColor: colors.border.default,
-            }}
-          >
-            <CardHeader className="flex flex-col items-center gap-4 text-center">
-              <div
-                className={cn("flex h-12 w-12 items-center justify-center", componentRadius.badge)}
-                style={{
-                  background: withAlpha(colors.status.error, 0.12),
-                  color: colors.status.error,
-                }}
-              >
-                <AlertTriangle className="h-6 w-6" />
-              </div>
-              <CardTitle style={{ color: colors.status.error }}>
-                حدث خطأ
-              </CardTitle>
-            </CardHeader>
-            <CardContent
-              className="flex flex-col items-center"
-              style={{ gap: semanticSpacing.component.lg, padding: semanticSpacing.section.sm }}
-            >
-              <p style={{ color: colors.text.secondary }}>
-                فشل تحميل بياناتك. يرجى المحاولة مرة أخرى.
-              </p>
-              <Button onClick={() => refetch()} density="relaxed" className="font-arabic">
-                إعادة المحاولة
-              </Button>
-            </CardContent>
-          </Card>
-        </PageLayout>
-      </div>
-    );
+    return <ProfileStateCard variant="error" onRetry={() => refetch()} />;
   }
 
   // --- العرض النهائي للصفحة مع كل التحسينات ---
@@ -176,46 +93,36 @@ export default function Profile() {
     <>
       <Toaster />
       <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
-        <div
-          dir="rtl"
-          className="min-h-screen font-arabic"
-          style={{
-            backgroundColor: colors.bg.primary,
-            color: colors.text.primary,
-            paddingBlock: semanticSpacing.section.sm,
-          }}
-        >
-          <PageLayout maxWidth="2xl">
-            <section
-              className="w-full"
-              style={{
-                display: "grid",
-                gap: semanticSpacing.section.sm,
-              }}
+        <ProfilePageContainer>
+          <section
+            className="w-full"
+            style={{
+              display: "grid",
+              gap: semanticSpacing.section.sm,
+            }}
+          >
+            <ProfileHeader
+              fullName={fullName}
+              username={telegramUsername}
+              profilePhoto={photoUrl}
+              telegramId={telegramId}
+              onPaymentHistoryClick={goToPaymentHistory}
+            />
+            <div
+              className="mx-auto w-full max-w-4xl"
+              style={{ paddingBlock: semanticSpacing.section.sm }}
             >
-              <ProfileHeader
-                fullName={fullName}
-                username={telegramUsername}
-                profilePhoto={photoUrl}
-                telegramId={telegramId}
-                onPaymentHistoryClick={goToPaymentHistory}
+              <SubscriptionsSection
+                subscriptions={subscriptions || []}
+                loadMore={loadMoreHandler}
+                hasMore={!!hasNextPage}
+                isLoadingMore={isFetchingNextPage}
+                isRefreshing={isRefreshing}
+                onRefreshClick={handleRefresh}
               />
-              <div
-                className="w-full max-w-4xl mx-auto"
-                style={{ paddingBlock: semanticSpacing.section.sm }}
-              >
-                <SubscriptionsSection
-                  subscriptions={subscriptions || []}
-                  loadMore={loadMoreHandler}
-                  hasMore={!!hasNextPage}
-                  isLoadingMore={isFetchingNextPage}
-                  isRefreshing={isRefreshing}
-                  onRefreshClick={handleRefresh}
-                />
-              </div>
-            </section>
-          </PageLayout>
-        </div>
+            </div>
+          </section>
+        </ProfilePageContainer>
       </TonConnectUIProvider>
     </>
   );

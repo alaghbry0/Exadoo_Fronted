@@ -8,7 +8,7 @@ vi.mock("@/shared/components/layout/NavbarEnhanced", () => ({
   default: () => <nav data-testid="default-navbar">Default Navbar</nav>,
 }));
 
-vi.mock("@/shared/components/layout/FooterNavEnhanced", () => ({
+vi.mock("@/shared/components/layout/FooterNav", () => ({
   default: () => <footer data-testid="default-footer">Default Footer</footer>,
 }));
 
