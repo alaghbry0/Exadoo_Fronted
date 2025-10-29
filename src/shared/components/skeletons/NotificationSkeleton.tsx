@@ -1,34 +1,74 @@
-import React from "react";
+import type { CSSProperties } from "react";
+
+import { animations, colors, radius, spacing } from "@/styles/tokens";
+
+const baseSkeletonStyle: CSSProperties = {
+  backgroundColor: colors.bg.tertiary,
+  borderRadius: radius.md,
+};
+
+const createLine = (width: string, height: string): CSSProperties => ({
+  ...baseSkeletonStyle,
+  width,
+  height,
+});
 
 export function NotificationSkeleton() {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 animate-pulse">
-      {/* Icon Skeleton */}
-      <div className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-full flex-shrink-0" />
+    <div
+      className={animations.presets.pulse}
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: spacing[4],
+        padding: spacing[4],
+        borderRadius: radius.xl,
+        backgroundColor: colors.bg.elevated,
+        border: `1px solid ${colors.border.default}`,
+      }}
+      aria-label="إشعار قيد التحميل"
+    >
+      <div
+        style={{
+          width: spacing[10],
+          height: spacing[10],
+          borderRadius: radius.full,
+          backgroundImage: `linear-gradient(135deg, ${colors.bg.secondary}, ${colors.bg.tertiary})`,
+          flexShrink: 0,
+        }}
+      />
 
-      <div className="flex-1 space-y-2">
-        {/* Title Skeleton */}
-        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-
-        {/* Content Skeleton */}
-        <div className="space-y-1">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+      <div style={{ flex: 1, display: "grid", gap: spacing[3] }}>
+        <div style={createLine("75%", "1.25rem")} />
+        <div style={{ display: "grid", gap: spacing[2] }}>
+          <div style={createLine("100%", "1rem")} />
+          <div style={createLine("80%", "1rem")} />
         </div>
-
-        {/* Time Skeleton */}
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+        <div style={createLine("6rem", "0.75rem")} />
       </div>
 
-      {/* Badge Skeleton */}
-      <div className="w-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0" />
+      <div
+        style={{
+          width: spacing[2],
+          height: spacing[2],
+          borderRadius: radius.full,
+          backgroundColor: colors.bg.tertiary,
+          flexShrink: 0,
+        }}
+      />
     </div>
   );
 }
 
 export function NotificationListSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="space-y-3">
+    <div
+      style={{
+        display: "grid",
+        gap: spacing[3],
+      }}
+      aria-label="قائمة إشعارات قيد التحميل"
+    >
       {Array.from({ length: count }).map((_, i) => (
         <NotificationSkeleton key={i} />
       ))}

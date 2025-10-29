@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { SkeletonGrid } from "@/shared/components/skeletons/SkeletonGrid";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils";
 import {
@@ -145,17 +146,12 @@ export function SubscriptionCardSkeleton() {
 
 export function SubscriptionGridSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <div
-      className="grid"
-      style={{
-        gap: spacing[8],
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      }}
-      aria-label="شبكة بطاقات الاشتراك قيد التحميل"
-    >
-      {Array.from({ length: count }).map((_, index) => (
-        <SubscriptionCardSkeleton key={index} />
-      ))}
-    </div>
+    <SkeletonGrid
+      count={count}
+      minItemWidth={280}
+      gap={spacing[8]}
+      ariaLabel="شبكة بطاقات الاشتراك قيد التحميل"
+      renderItem={index => <SubscriptionCardSkeleton key={index} />}
+    />
   );
 }

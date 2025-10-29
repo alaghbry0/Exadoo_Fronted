@@ -89,19 +89,6 @@ import {
 
 There must be **one** Skeleton primitive and **one** EmptyState primitive project‑wide.
 
-### Modals
-
-All billing modals must unify under `PurchaseModal` with strategy‑based logic:
-
-| Previous                    | Replaced With   |
-| --------------------------- | --------------- |
-| `TradingPanelPurchaseModal` | `PurchaseModal` |
-| `AcademyPurchaseModal`      | `PurchaseModal` |
-| `ExchangePaymentModal`      | `PurchaseModal` |
-| `SubscriptionModal`         | `PurchaseModal` |
-
----
-
 ## 5. Hooks & Utilities
 
 | Concern   | Canonical Hook       |
@@ -117,8 +104,6 @@ Billing SSE must be unified into a single client: `@/domains/billing/sse.ts`.
 ## 6. Pages & Navigation
 
 The app should open on **/shop** by default (mobile‑first entrypoint).
-
-Academy `Top Courses` should render **inside** `background_banner.svg` as its content container.
 
 Shared card/rail patterns must be used across both Shop and Academy.
 
@@ -143,8 +128,7 @@ Shared card/rail patterns must be used across both Shop and Academy.
 ## 9. Migration Phases (Execution Roadmap)
 
 1. **UI Canonicalization** (merge Navbar, Skeleton/Empty, unify imports)
-2. **PurchaseModal unification** + `usePaymentIntent`
-3. Tokens rollout — remove all tailwind color/border/dark classes
+2. Tokens rollout — remove all tailwind color/border/dark classes
 4. Page structure cleanup (Shop first, Academy rails unified)
 5. Hooks unification (Toast, Clipboard, SmartImage)
 6. A11y/RTL refinements

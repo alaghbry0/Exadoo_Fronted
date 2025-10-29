@@ -1,3 +1,4 @@
+import { SkeletonGrid } from "@/shared/components/skeletons/SkeletonGrid";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils";
 import { colors, spacing, radius, componentRadius, shadowClasses } from "@/styles/tokens";
@@ -133,17 +134,12 @@ interface GridSkeletonProps {
 export const GridSkeleton = ({ count = 4, variant = "mixed" }: GridSkeletonProps) => {
   if (variant === "half") {
     return (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
-          gap: spacing[4],
-        }}
-      >
-        {Array.from({ length: count }).map((_, index) => (
-          <HalfCardSkeleton key={index} />
-        ))}
-      </div>
+      <SkeletonGrid
+        count={count}
+        minItemWidth="16rem"
+        gap={spacing[4]}
+        renderItem={index => <HalfCardSkeleton key={index} />}
+      />
     );
   }
 
@@ -160,17 +156,12 @@ export const GridSkeleton = ({ count = 4, variant = "mixed" }: GridSkeletonProps
   return (
     <div style={{ display: "grid", gap: spacing[4] }}>
       <WideCardSkeleton />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
-          gap: spacing[4],
-        }}
-      >
-        {[0, 1].map(index => (
-          <HalfCardSkeleton key={index} />
-        ))}
-      </div>
+      <SkeletonGrid
+        count={2}
+        minItemWidth="16rem"
+        gap={spacing[4]}
+        renderItem={index => <HalfCardSkeleton key={index} />}
+      />
     </div>
   );
 };

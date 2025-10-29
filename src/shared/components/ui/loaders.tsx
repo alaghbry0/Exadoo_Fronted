@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 
+import { SkeletonGrid } from "@/shared/components/skeletons/SkeletonGrid";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils";
@@ -75,17 +76,12 @@ interface GridSkeletonProps {
 
 export function GridSkeleton({ count = 6 }: GridSkeletonProps) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: spacing[4],
-        gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
-      }}
-    >
-      {Array.from({ length: count }).map((_, index) => (
-        <CardSkeleton key={index} />
-      ))}
-    </div>
+    <SkeletonGrid
+      count={count}
+      minItemWidth="16rem"
+      gap={spacing[4]}
+      renderItem={index => <CardSkeleton key={index} />}
+    />
   );
 }
 

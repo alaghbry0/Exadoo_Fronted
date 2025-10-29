@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { SkeletonGrid } from "@/shared/components/skeletons/SkeletonGrid";
 import { cn } from "@/shared/utils";
 import {
   animations,
@@ -125,17 +126,12 @@ export function CourseSkeleton() {
 
 export function CourseGridSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div
-      className="grid"
-      style={{
-        gap: spacing[6],
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      }}
-      aria-label="شبكة دورات قيد التحميل"
-    >
-      {Array.from({ length: count }).map((_, index) => (
-        <CourseSkeleton key={index} />
-      ))}
-    </div>
+    <SkeletonGrid
+      count={count}
+      minItemWidth={280}
+      gap={spacing[6]}
+      ariaLabel="شبكة دورات قيد التحميل"
+      renderItem={index => <CourseSkeleton key={index} />}
+    />
   );
 }
