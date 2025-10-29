@@ -3,8 +3,8 @@
  * بطاقة حزمة تعليمية مصغرة
  */
 
-import React from "react";
-import Link from "next/link";
+import React, { KeyboardEvent, MouseEvent, useCallback } from "react";
+import { useRouter } from "next/router";
 import { Check, RefreshCw, X } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -54,6 +54,35 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
   freeSessionsCount,
   priority,
 }) => {
+  const router = useRouter();
+
+  const navigateToBundle = useCallback(() => {
+    void router.push(`/academy/bundle/${id}`);
+  }, [id, router]);
+
+  const handleCardClick = useCallback(() => {
+    navigateToBundle();
+  }, [navigateToBundle]);
+
+  const handleCardKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        navigateToBundle();
+      }
+    },
+    [navigateToBundle],
+  );
+
+  const handleCtaClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      navigateToBundle();
+    },
+    [navigateToBundle],
+  );
+
   const hasAccessTo3Levels = Number(subCategoryId || 0) >= 2;
   const sessionsCount = Number(freeSessionsCount || 0);
   const hasFreeSessions = sessionsCount > 0;
@@ -70,23 +99,23 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
   ];
 
   return (
-    <Link
-      href={`/academy/bundle/${id}`}
-      prefetch
-      className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-      style={{ outlineColor: academyCardTokens.surface.focusRing }}
+    <MotionCard
+      {...cardHoverVariant}
+      role="link"
+      tabIndex={0}
+      aria-label={`عرض تفاصيل الحزمة ${title}`}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      className={cn(
+        "h-full min-h-[320px] max-h-[320px] w-full cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+        academyCardClassNames.interactive,
+      )}
+      style={{
+        background: academyCardTokens.surface.background,
+        borderColor: academyCardTokens.surface.border,
+        outlineColor: academyCardTokens.surface.focusRing,
+      }}
     >
-      <MotionCard
-        {...cardHoverVariant}
-        className={cn(
-          "h-full min-h-[320px] max-h-[320px] w-full cursor-pointer",
-          academyCardClassNames.interactive,
-        )}
-        style={{
-          background: academyCardTokens.surface.background,
-          borderColor: academyCardTokens.surface.border,
-        }}
-      >
         <CardHeader className="flex flex-row items-start gap-3 px-5 pb-0 pt-5" dir="rtl">
           <div
             className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full"
@@ -159,14 +188,20 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
         </CardContent>
 
         <CardFooter className="mt-auto w-full px-5 pb-5 pt-4">
-          <Button intent="primary" fullWidth asChild style={{ fontFamily: fontFamily.arabic }}>
+          <Button
+            intent="primary"
+            fullWidth
+            type="button"
+            onClick={handleCtaClick}
+            style={{ fontFamily: fontFamily.arabic }}
+            aria-label={`ابدأ الحزمة ${title}`}
+          >
             <span className="flex items-center justify-center gap-2">
               <RefreshCw size={16} aria-hidden="true" />
               <span>{formatPrice(price)}</span>
             </span>
           </Button>
         </CardFooter>
-      </MotionCard>
-    </Link>
+    </MotionCard>
   );
 };

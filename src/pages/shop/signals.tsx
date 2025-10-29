@@ -16,7 +16,6 @@ const SubscriptionModal = dynamic(
 );
 
 import React from "react";
-import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getSubscriptionTypes,
@@ -286,17 +285,16 @@ const ShopComponent = () => {
   const hasError = !!(groupsError || typesError || plansError);
 
   return (
-    <TonConnectUIProvider manifestUrl="https://exadooo-plum.vercel.app/tonconnect-manifest.json">
-      <QueryBoundary isLoading={initialLoading} isError={hasError}>
-        <div
-          dir="rtl"
-          className="min-h-screen font-arabic flex flex-col"
-          style={{
-            backgroundColor: colors.bg.secondary,
-            color: colors.text.primary,
-          }}
-        >
-          <PageLayout maxWidth="2xl">
+    <QueryBoundary isLoading={initialLoading} isError={hasError}>
+      <div
+        dir="rtl"
+        className="min-h-screen font-arabic flex flex-col"
+        style={{
+          backgroundColor: colors.bg.secondary,
+          color: colors.text.primary,
+        }}
+      >
+        <PageLayout maxWidth="2xl">
             <section
               style={{
                 paddingBlockStart: spacing[20],
@@ -916,7 +914,6 @@ const ShopComponent = () => {
           </PageLayout>
         </div>
       </QueryBoundary>
-    </TonConnectUIProvider>
   );
 };
 

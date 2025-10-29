@@ -1,5 +1,5 @@
 // src/components/academy/LatestCourseCard.tsx
-import { memo } from "react";
+import { memo, useCallback, MouseEvent } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ShoppingCart, Star } from "lucide-react";
@@ -20,6 +20,7 @@ import {
   academyCardClassNames,
   academyCardTokens,
 } from "./styles/presets";
+import { useCartActions } from "@/shared/hooks/useCartActions";
 
 interface LatestCourseCardProps {
   id: string;
@@ -50,6 +51,23 @@ export const LatestCourseCard = memo(function LatestCourseCard({
   rating = 0,
   priority,
 }: LatestCourseCardProps) {
+  const { addItemToCart } = useCartActions();
+
+  const handleAddToCart = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      addItemToCart({
+        id,
+        title,
+        price,
+        type: "course",
+      });
+    },
+    [addItemToCart, id, price, title],
+  );
+
   const renderStars = () =>
     Array.from({ length: 5 }).map((_, index) => {
       const isActive = index < rating;
@@ -154,11 +172,9 @@ export const LatestCourseCard = memo(function LatestCourseCard({
           <Button
             intent="secondary"
             density="icon"
+            type="button"
             aria-label="إضافة إلى السلة"
-            onClick={(event) => {
-              event.preventDefault();
-              // Add to cart logic placeholder
-            }}
+            onClick={handleAddToCart}
           >
             <ShoppingCart aria-hidden="true" size={18} />
           </Button>
