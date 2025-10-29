@@ -76,6 +76,9 @@ export function HomeServiceCard({
                   width="80px"
                   height="80px"
                   className="z-10 relative"
+                  frameStyle={{
+                    backgroundColor: colors.bg.elevated,
+                  }}
                 />
                 
                 {/* Special Effects for Signals Card */}

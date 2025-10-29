@@ -93,7 +93,7 @@ export const colorVars = `
   .dark {
     /* Text */
     --color-text-primary: #f8fafc;
-    --color-text-secondary: #d7e2f0; /* maintains 6.9:1 contrast on #1f2937 */
+    --color-text-secondary: #d7e2f0; /* maintains 6.3:1 contrast on #1f2a3a */
     --color-text-tertiary: #aebad0;
     --color-text-disabled: #556070;
     --color-text-inverse: #1a1a1a;
@@ -101,20 +101,20 @@ export const colorVars = `
     --color-text-link-hover: #93c5fd;
 
     /* Background */
-    --color-bg-primary: #111827;
-    --color-bg-secondary: #1f2937;
-    --color-bg-tertiary: #273445;
-    --color-bg-elevated: #1c2534;
+    --color-bg-primary: #161f2e;
+    --color-bg-secondary: #1f2a3a;
+    --color-bg-tertiary: #263347;
+    --color-bg-elevated: #1c293a;
     --color-bg-overlay: rgba(0, 0, 0, 0.7);
     --color-bg-inverse: #ffffff;
-    --color-bg-gradient-primary: linear-gradient(180deg, #111827 0%, #1f2937 100%);
-    --color-bg-gradient-elevated: linear-gradient(180deg, #1c2534 0%, #273445 100%);
+    --color-bg-gradient-primary: linear-gradient(180deg, #161f2e 0%, #1f2a3a 100%);
+    --color-bg-gradient-elevated: linear-gradient(180deg, #1c293a 0%, #263347 100%);
 
     /* Border */
-    --color-border-default: #2a3648;
-    --color-border-hover: #3a455a;
+    --color-border-default: #253247;
+    --color-border-hover: #31415a;
     --color-border-focus: #60a5fa;
-    --color-border-disabled: #1a2331;
+    --color-border-disabled: #1b2434;
     --color-border-error: #f87171;
   }
 `;

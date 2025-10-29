@@ -7,6 +7,8 @@ import { Button } from "@/shared/components/ui/button";
 import { useRouter } from "next/router";
 import { ArrowLeft } from "lucide-react";
 import { TableSkeleton } from "@/shared/components/common/LoadingStates";
+import { colors, shadowClasses, withAlpha, componentRadius } from "@/styles/tokens";
+import { cn } from "@/shared/utils";
 
 type Payment = {
   tx_hash: string;
@@ -61,12 +63,23 @@ export default function PaymentHistory() {
 
   if (isLoading && payments.length === 0) {
     return (
-      <div className="container mx-auto p-4 min-h-[60vh]">
+      <div
+        className="container mx-auto p-4 min-h-[60vh]"
+        style={{
+          backgroundColor: colors.bg.primary,
+          color: colors.text.primary,
+        }}
+      >
         <div className="flex items-center mb-6">
           <Button intent="ghost" density="icon" className="rounded-full" disabled>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>
+          <h1
+            className="text-2xl font-bold flex-1 text-center"
+            style={{ color: colors.text.primary }}
+          >
+            السجل
+          </h1>
         </div>
         <TableSkeleton rows={5} />
       </div>
@@ -74,7 +87,13 @@ export default function PaymentHistory() {
   }
 
   return (
-    <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
+    <div
+      className="container mx-auto p-4 min-h-screen"
+      style={{
+        backgroundColor: colors.bg.primary,
+        color: colors.text.primary,
+      }}
+    >
       <div className="flex items-center mb-6">
         <Button
           onClick={handleGoBack}
@@ -84,7 +103,12 @@ export default function PaymentHistory() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-2xl font-bold flex-1 text-center">السجل</h1>
+        <h1
+          className="text-2xl font-bold flex-1 text-center"
+          style={{ color: colors.text.primary }}
+        >
+          السجل
+        </h1>
       </div>
 
       <InfiniteScroll
@@ -94,21 +118,49 @@ export default function PaymentHistory() {
         loader={
           <div className="p-6 space-y-4">
             {[...Array(2)].map((_, i) => (
-              <div key={i} className="p-4 bg-white rounded-lg shadow space-y-3">
+              <div
+                key={i}
+                className={cn(
+                  "p-4 space-y-3 border",
+                  componentRadius.card,
+                  shadowClasses.card,
+                )}
+                style={{
+                  backgroundColor: withAlpha(colors.bg.elevated, 0.96),
+                  borderColor: colors.border.default,
+                }}
+              >
                 <div className="flex justify-between">
-                  <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+                  <div
+                    className="h-4 rounded w-1/4 animate-pulse"
+                    style={{ backgroundColor: withAlpha(colors.bg.elevated, 0.6) }}
+                  />
+                  <div
+                    className="h-4 rounded w-1/3 animate-pulse"
+                    style={{ backgroundColor: withAlpha(colors.bg.elevated, 0.6) }}
+                  />
                 </div>
                 <div className="flex justify-between">
-                  <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+                  <div
+                    className="h-4 rounded w-1/4 animate-pulse"
+                    style={{ backgroundColor: withAlpha(colors.bg.elevated, 0.6) }}
+                  />
+                  <div
+                    className="h-4 rounded w-1/3 animate-pulse"
+                    style={{ backgroundColor: withAlpha(colors.bg.elevated, 0.6) }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         }
         endMessage={
-          <p className="text-center my-4 text-gray-500">لا توجد سجلات أخرى.</p>
+          <p
+            className="text-center my-4"
+            style={{ color: colors.text.secondary }}
+          >
+            لا توجد سجلات أخرى.
+          </p>
         }
       >
         {payments.map((payment) => (

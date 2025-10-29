@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { LottieAnimation } from "@/shared/components/common/LottieAnimation";
 import { ProjectCard } from "./ProjectCard";
 import { animations } from "@/styles/animations";
+import { colors } from "@/styles/tokens";
 import type { MyForexSubscription } from "@/pages/api/forex";
 import forexAnimation from "@/animations/utility.json";
 
@@ -36,7 +37,7 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
   return (
     <main
       className="min-h-screen pb-24 "
-      style={{ backgroundColor: "var(--color-bg-primary)" }}
+      style={{ backgroundColor: colors.bg.primary }}
     >
       <div className="max-w-6xl mx-auto px-4">
         {/* Lottie Animation */}
@@ -51,6 +52,9 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
             width="80%"
             height={350}
             className="max-w-md"
+            frameStyle={{
+              backgroundColor: colors.bg.primary,
+            }}
           />
         </motion.div>
 

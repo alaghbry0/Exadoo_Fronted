@@ -6,13 +6,14 @@
  * @component مشترك - يستخدم في forex و indicators وأي صفحة أخرى
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 interface LottieAnimationProps {
   animationData: any;
   className?: string;
   width?: number | string;
   height?: number | string;
+  frameStyle?: CSSProperties;
 }
 
 export const LottieAnimation: React.FC<LottieAnimationProps> = ({
@@ -20,6 +21,7 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
   className = "",
   width = 300,
   height = 300,
+  frameStyle,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [animationUrl, setAnimationUrl] = useState<string>("");
@@ -84,10 +86,14 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
       {animationUrl && (
         <iframe
           srcDoc={iframeContent}
+          allow="autoplay"
+          loading="lazy"
           style={{
             width: "100%",
             height: "100%",
             border: "none",
+            backgroundColor: "transparent",
+            ...frameStyle,
           }}
           title="Lottie Animation"
         />

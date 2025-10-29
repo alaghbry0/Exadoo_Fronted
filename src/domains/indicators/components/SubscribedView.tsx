@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { LottieAnimation } from "@/shared/components/common/LottieAnimation";
 import { SubscriptionCard } from "./SubscriptionCard";
 import { animations } from "@/styles/animations";
+import { colors } from "@/styles/tokens";
 import type { IndicatorsData } from "@/pages/api/indicators";
 import indicatorAnimation from "@/animations/buy_indicator.json";
 
@@ -29,9 +30,9 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
   const isLifetime = sub.status === "lifetime";
 
   return (
-     <main
+    <main
       className="min-h-screen pb-24 pt-6" // خفّضنا الـ padding شوي فقط
-      style={{ backgroundColor: "var(--color-bg-primary)" }}
+      style={{ backgroundColor: colors.bg.primary }}
     >
       <div className="max-w-4xl mx-auto px-4">
         {/* Lottie Animation */}
@@ -48,6 +49,9 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
             width="40%"
             height={300}
             className="max-w-sm"
+            frameStyle={{
+              backgroundColor: colors.bg.primary,
+            }}
           />
         </motion.div>
 

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useMemo } from "react";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils";
+import { colors, withAlpha } from "@/styles/tokens";
 
 type BackMode = "always" | "fallback" | "replace";
 
@@ -120,6 +122,52 @@ const BackHeader: React.FC<BackHeaderProps> = ({
     typeof window !== "undefined" ? window.history.length <= 1 : false;
   const shouldShowLocalBtn = !(hideWhenNoHistory && noHistory);
 
+  const headerStyles = useMemo<CSSProperties>(() => {
+    const styles: CSSProperties = {};
+
+    if (sticky) {
+      styles.top = topOffsetPx;
+    }
+
+    (styles as Record<string, string | number>)["--header-bg"] = withAlpha(
+      colors.bg.elevated,
+      0.82,
+    );
+    (styles as Record<string, string | number>)[
+      "--header-bg-supports"
+    ] = withAlpha(colors.bg.elevated, 0.68);
+    (styles as Record<string, string | number>)[
+      "--header-border-color"
+    ] = withAlpha(colors.border.default, 0.7);
+
+    return styles;
+  }, [sticky, topOffsetPx]);
+
+  const logoButtonStyles = useMemo<CSSProperties>(
+    () =>
+      ({
+        "--header-logo-hover-bg": withAlpha(colors.bg.secondary, 0.55),
+        color: colors.text.primary,
+      }) as CSSProperties,
+    [],
+  );
+
+  const dividerStyle = useMemo<CSSProperties>(
+    () =>
+      ({
+        background: `linear-gradient(90deg, transparent 0%, ${withAlpha(
+          colors.border.default,
+          0.6,
+        )} 50%, transparent 100%)`,
+      }) as CSSProperties,
+    [],
+  );
+
+  const backButtonOverrides = useMemo(
+    () => ({ hoverBackground: withAlpha(colors.bg.secondary, 0.5) }),
+    [],
+  );
+
   return (
     <div
       dir="ltr"
@@ -127,11 +175,12 @@ const BackHeader: React.FC<BackHeaderProps> = ({
       className={cn(
         sticky && "sticky z-40",
         "top-0",
-        "backdrop-blur-md border-b border-gray-200/70",
-        "bg-white/70 supports-[backdrop-filter]:bg-white/50",
+        "backdrop-blur-md border-b",
+        "bg-[color:var(--header-bg)] supports-[backdrop-filter]:bg-[color:var(--header-bg-supports)]",
+        "border-[color:var(--header-border-color)]",
         className,
       )}
-      style={{ top: sticky ? topOffsetPx : undefined }}
+      style={headerStyles}
     >
       <div className="mx-auto max-w-7xl px-3">
         <div className="relative flex h-14 items-center">
@@ -144,11 +193,12 @@ const BackHeader: React.FC<BackHeaderProps> = ({
                 density="icon"
                 onClick={handleBack}
                 aria-label="رجوع"
+                intentOverrides={backButtonOverrides}
               >
                 <ChevronLeft
                   size={32}
                   strokeWidth={2.5}
-                  className="text-blue-600"
+                  className="text-[var(--color-text-primary)]"
                 />
               </Button>
             )}
@@ -162,7 +212,15 @@ const BackHeader: React.FC<BackHeaderProps> = ({
                   type="button"
                   onClick={onLogoClick ?? (() => router.push("/"))}
                   aria-label="الانتقال للصفحة الرئيسية"
-                  className="flex items-center gap-2 rounded-xl px-2 py-1 transition hover:bg-gray-100/60"
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl px-2 py-1 transition",
+                    "hover:bg-[color:var(--header-logo-hover-bg)]",
+                    "focus-visible:outline-none focus-visible:ring-2",
+                    "focus-visible:ring-[color:var(--color-border-focus)]",
+                    "focus-visible:ring-offset-2",
+                    "focus-visible:ring-offset-[color:var(--color-bg-primary)]",
+                  )}
+                  style={logoButtonStyles}
                 >
                   <Image
                     src={logoSrc}
@@ -175,12 +233,12 @@ const BackHeader: React.FC<BackHeaderProps> = ({
                   {(title || subtitle) && (
                     <div className="text-center">
                       {title && (
-                        <div className="leading-tight text-sm font-extrabold text-gray-900 md:text-base">
+                        <div className="leading-tight text-sm font-extrabold text-[var(--color-text-primary)] md:text-base">
                           {title}
                         </div>
                       )}
                       {subtitle && (
-                        <div className="-mt-0.5 text-[11px] text-gray-500 md:text-xs">
+                        <div className="-mt-0.5 text-[11px] text-[var(--color-text-secondary)] md:text-xs">
                           {subtitle}
                         </div>
                       )}
@@ -191,12 +249,12 @@ const BackHeader: React.FC<BackHeaderProps> = ({
               {!centerLogo && (title || subtitle) && (
                 <div className="text-center">
                   {title && (
-                    <div className="leading-tight text-sm font-extrabold text-gray-900 md:text-base">
+                    <div className="leading-tight text-sm font-extrabold text-[var(--color-text-primary)] md:text-base">
                       {title}
                     </div>
                   )}
                   {subtitle && (
-                    <div className="-mt-0.5 text-[11px] text-gray-500 md:text-xs">
+                    <div className="-mt-0.5 text-[11px] text-[var(--color-text-secondary)] md:text-xs">
                       {subtitle}
                     </div>
                   )}
@@ -214,7 +272,7 @@ const BackHeader: React.FC<BackHeaderProps> = ({
         </div>
       </div>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+      <div className="h-px" style={dividerStyle} aria-hidden="true" />
     </div>
   );
 };
