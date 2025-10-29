@@ -227,32 +227,27 @@ export default function TradingPanelPurchaseModal() {
               borderTop: `1px solid ${withAlpha(colors.brand.primary, 0.2)}`,
             }}
           >
-            <Button
-              onClick={onChooseMethod}
-<<<<<<< ours
-              size="lg"
-              className={cn(
-                "w-full h-14 font-bold",
-                shadowClasses.buttonElevated,
-                "token-interactive",
-              )}
-              style={{
-                "--token-bg": gradients.brand.primary,
-                "--token-bg-hover": gradients.brand.primaryHover,
-                "--token-bg-active": gradients.brand.primaryActive,
-                "--token-fg": colors.text.inverse,
-                "--token-shadow": shadows.colored.primary.md,
-                "--token-shadow-hover": shadows.colored.primary.lg,
-                "--token-shadow-active": shadows.colored.primary.md,
-                "--token-transform-hover": "translateY(-0.1875rem)",
-                "--token-transform-active": "translateY(-0.0625rem)",
-              } as React.CSSProperties}
-=======
-              density="relaxed"
-              className="w-full h-14 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-bold"
->>>>>>> theirs
-              disabled={loading}
-            >
+          <Button
+            onClick={onChooseMethod}
+            size="lg"
+            className={cn(
+              "w-full h-14 font-bold",
+              shadowClasses.buttonElevated,
+              "token-interactive",
+            )}
+            style={{
+              "--token-bg": gradients.brand.primary,
+              "--token-bg-hover": gradients.brand.primaryHover,
+              "--token-bg-active": gradients.brand.primaryActive,
+              "--token-fg": colors.text.inverse,
+              "--token-shadow": shadows.colored.primary.md,
+              "--token-shadow-hover": shadows.colored.primary.lg,
+              "--token-shadow-active": shadows.colored.primary.md,
+              "--token-transform-hover": "translateY(-0.1875rem)",
+              "--token-transform-active": "translateY(-0.0625rem)",
+            } as React.CSSProperties}
+            disabled={loading}
+          >
               {loading && paymentStatus === "processing_usdt" ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : priceInfo.isFree ? (
