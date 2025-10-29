@@ -44,10 +44,7 @@ import {
 } from "lucide-react";
 import { useTelegram } from "@/shared/context/TelegramContext";
 import PageLayout from "@/shared/components/layout/PageLayout";
-import {
-  GridSkeleton,
-  PageLoader,
-} from "@/shared/components/common/LoadingStates";
+import { GridSkeleton, PageLoader } from "@/shared/components/ui/loaders";
 import { EmptyState } from "@/shared/components/common/EmptyState";
 import { LazyLoad } from "@/shared/components/common/LazyLoad";
 import { SubscriptionCardSkeleton } from "@/shared/components/skeletons/SubscriptionCardSkeleton";

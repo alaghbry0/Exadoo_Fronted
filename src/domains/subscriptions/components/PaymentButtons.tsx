@@ -1,7 +1,7 @@
 // PaymentButtons.tsx
 "use client";
 import { motion } from "framer-motion";
-import { Spinner } from "@/shared/components/common/Spinner";
+import { Spinner } from "@/shared/components/ui/spinner";
 import { cn } from "@/shared/utils";
 import {
   colors,

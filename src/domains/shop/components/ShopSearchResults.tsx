@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { UnifiedResult } from "@/domains/shop/search/unifiedSearch";
-import { HalfCardSkeleton, WideCardSkeleton } from "@/shared/components/common/SkeletonLoaders";
+import { HalfCardSkeleton, WideCardSkeleton } from "@/shared/components/ui/skeleton-loaders";
 import { colors, radius, spacing, typography } from "@/styles/tokens";
 
 import type { ShopServiceMeta } from "../data/services";

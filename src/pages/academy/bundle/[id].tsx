@@ -18,7 +18,7 @@ const AcademyPurchaseModal = dynamic(
   { ssr: false },
 );
 import PageLayout from "@/shared/components/layout/PageLayout";
-import { PageLoader } from "@/shared/components/common/LoadingStates";
+import { PageLoader } from "@/shared/components/ui/loaders";
 import { EmptyState } from "@/shared/components/common/EmptyState";
 import { 
   ArrowLeft, 

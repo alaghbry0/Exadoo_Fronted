@@ -6,7 +6,7 @@ import { useTelegram } from "@/shared/context/TelegramContext";
 import { Button } from "@/shared/components/ui/button";
 import { useRouter } from "next/router";
 import { ArrowLeft } from "lucide-react";
-import { TableSkeleton } from "@/shared/components/common/LoadingStates";
+import { TableSkeleton } from "@/shared/components/ui/loaders";
 import { colors, shadowClasses, withAlpha, componentRadius } from "@/styles/tokens";
 import { cn } from "@/shared/utils";
 

@@ -6,7 +6,7 @@ import {
   isValidElement,
 } from "react";
 
-import { Navbar, type NavbarProps } from "@/components/ui/navbar";
+import { Navbar, type NavbarProps } from "@/shared/components/layout/Navbar";
 import { cn } from "@/shared/utils";
 
 import FooterNavEnhanced from "./FooterNavEnhanced";

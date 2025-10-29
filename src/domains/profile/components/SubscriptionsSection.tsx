@@ -23,7 +23,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress-custom";
-import { SkeletonLoader } from "@/shared/components/common/SkeletonLoader";
+import { SkeletonLoader } from "@/shared/components/ui/skeleton-loader";
 import { animations } from "@/styles/animations";
 import {
   colors,
