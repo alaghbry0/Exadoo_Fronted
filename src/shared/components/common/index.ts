@@ -3,5 +3,5 @@ export * from "./LoadingStates";
 export * from "./EmptyState";
 export * from "./EnhancedCard";
 export * from "./Breadcrumbs";
-export { default as LazyLoad } from "./LazyLoad";
-export { default as LottieAnimation } from "./LottieAnimation";
+export * from "./LazyLoad";
+export * from "./LottieAnimation";

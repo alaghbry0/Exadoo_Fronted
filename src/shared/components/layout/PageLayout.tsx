@@ -74,13 +74,16 @@ export default function PageLayout({
   );
 }
 
-function renderSlot<P extends object>(slot?: PageLayoutSlot, props?: P) {
+function renderSlot(slot?: PageLayoutSlot, props?: object) {
   if (!slot) return null;
 
   if (isValidElement(slot)) {
-    return props ? cloneElement(slot, props) : slot;
+    return props ? cloneElement(slot, props as any) : slot;
   }
 
-  const SlotComponent = slot as ComponentType<P>;
-  return <SlotComponent {...props} />;
+  const SlotComponent = slot as ComponentType<any>;
+  if (props) {
+    return <SlotComponent {...(props as any)} />;
+  }
+  return <SlotComponent />;
 }

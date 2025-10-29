@@ -144,7 +144,7 @@ export function Navbar({
               className={navLinkClass}
             >
               <span className="flex items-center gap-2">
-                {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
+                {Icon && <Icon className="h-4 w-4" aria-hidden />}
                 {label}
               </span>
             </Link>
@@ -172,7 +172,7 @@ export function Navbar({
                 aria-label="الإشعارات"
                 className="flex h-full w-full items-center justify-center"
               >
-                <Bell className="h-5 w-5" aria-hidden="true" />
+                <Bell className="h-5 w-5" aria-hidden />
                 {unreadCount > 0 && (
                   <Badge
                     variant="outline"
@@ -201,7 +201,7 @@ export function Navbar({
                   "md:hidden",
                 )}
               >
-                {mobileMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+                {mobileMenuOpen ? <X aria-hidden /> : <Menu aria-hidden />}
               </Button>
             </SheetTrigger>
             <SheetContent
@@ -245,10 +245,10 @@ export function Navbar({
                     )}
                   >
                     <span className="flex items-center gap-3">
-                      {Icon && <Icon className="h-5 w-5" aria-hidden="true" />}
+                      {Icon && <Icon className="h-5 w-5" aria-hidden />}
                       {label}
                     </span>
-                    <span aria-hidden="true">›</span>
+                    <span aria-hidden>›</span>
                   </Link>
                 ))}
               </nav>

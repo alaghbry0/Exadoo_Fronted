@@ -4,7 +4,6 @@
 import type { CSSProperties } from "react";
 import { Search } from "lucide-react";
 
-
 import { Input } from "@/shared/components/ui/input";
 import {
   colors,
@@ -12,7 +11,6 @@ import {
   semanticSpacing,
   shadows,
   withAlpha,
-  shadowClasses
 } from "@/styles/tokens";
 
 interface HomeSearchBarProps {
@@ -28,7 +26,7 @@ export function HomeSearchBar({
   placeholder = "Enter the search word",
   ariaLabel = "بحث في الخدمات",
 }: HomeSearchBarProps) {
-  const inputStyles: CSSProperties = {
+  const inputStyles: CSSProperties & Record<string, string | number> = {
     backgroundColor: colors.bg.primary,
     borderRadius: radius["2xl"],
     fontFamily: "var(--font-arabic)",
@@ -51,20 +49,17 @@ export function HomeSearchBar({
           className="absolute left-4 top-1/2 transform -translate-y-1/2"
           style={{ color: colors.text.tertiary }}
           size={22}
-          aria-hidden="true"
+          aria-hidden
         />
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-placeholder={placeholder}
+          placeholder={placeholder}
           aria-label={ariaLabel}
           className="h-14 w-full pl-12 pr-4 py-0 text-base font-normal"
           style={{
-            borderRadius: radius["2xl"],
+            ...inputStyles,
             boxShadow: shadows.elevation[2],
-            backgroundColor: colors.bg.primary,
-            color: colors.text.primary,
-            fontFamily: "var(--font-arabic)",
             borderColor: withAlpha(colors.border.default, 0.9),
           }}
         />

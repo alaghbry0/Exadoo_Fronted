@@ -1,11 +1,21 @@
 import { motion } from "framer-motion";
+import type { CSSProperties } from "react";
 
-export const Spinner = ({ className }: { className?: string }) => (
-  <div className={`flex items-center justify-center ${className}`}>
+import { cn } from "@/shared/utils";
+import { colors } from "@/styles/tokens";
+
+interface SpinnerProps {
+  className?: string;
+  style?: CSSProperties;
+}
+
+export const Spinner = ({ className, style }: SpinnerProps) => (
+  <div className={cn("flex items-center justify-center", className)}>
     <motion.svg
       animate={{ rotate: 360 }}
       transition={{ repeat: Infinity, ease: "linear", duration: 1 }}
-      className="h-8 w-8 text-blue-500"
+      className="h-8 w-8"
+      style={{ color: colors.brand.primary, ...style }}
       viewBox="0 0 50 50"
     >
       <circle

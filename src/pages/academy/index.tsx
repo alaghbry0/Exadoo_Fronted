@@ -293,6 +293,7 @@ export default function AcademyIndex() {
                           <SectionHeader
                             icon={Bookmark}
                             title="دوراتي"
+                            count={mine.courses.length}
                             id="my-courses"
                           />
                           <HScroll>
@@ -319,6 +320,7 @@ export default function AcademyIndex() {
                           <SectionHeader
                             icon={Award}
                             title="حزمي المسجلة"
+                            count={mine.bundles.length}
                             id="my-bundles"
                           />
                           <HScroll>

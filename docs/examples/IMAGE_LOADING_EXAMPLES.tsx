@@ -8,9 +8,8 @@
  */
 
 import SmartImage from '@/shared/components/common/SmartImage';
-import { LazyLoad } from '@/components/common/LazyLoad';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LazyLoad } from '@/shared/components/common/LazyLoad';
+import { Card } from '@/shared/components/ui/card';
 
 // ==========================================
 // مثال 1: Product Card مع صورة lazy loading

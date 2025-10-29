@@ -7,7 +7,7 @@ import {
   shadowClasses,
 } from "@/styles/tokens";
 
-const inputCssVariables: React.CSSProperties = {
+const inputCssVariables: Record<string, string> = {
   "--input-bg": colors.bg.primary,
   "--input-fg": colors.text.primary,
   "--input-border": colors.border.default,
@@ -40,7 +40,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           "file:bg-[var(--input-file-bg)] file:text-[var(--input-file-text)]",
           className,
         )}
-        style={{ ...inputCssVariables, ...style }}
+        style={{ ...inputCssVariables, ...style } as React.CSSProperties}
         ref={ref}
         {...props}
       />

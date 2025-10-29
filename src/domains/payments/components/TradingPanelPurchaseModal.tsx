@@ -229,7 +229,6 @@ export default function TradingPanelPurchaseModal() {
           >
           <Button
             onClick={onChooseMethod}
-            size="lg"
             className={cn(
               "w-full h-14 font-bold",
               shadowClasses.buttonElevated,

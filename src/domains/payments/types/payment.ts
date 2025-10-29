@@ -1,4 +1,7 @@
-import type { SubscriptionPlan } from "@/domains/subscriptions/types";
+import type {
+  SubscriptionPlan,
+  SubscriptionOption,
+} from "@/domains/subscriptions/types";
 
 export type PaymentStatus =
   | "idle"
@@ -13,11 +16,5 @@ export type PaymentStatus =
   | "exchange_success";
 
 export interface SubscriptionPlanExtended extends SubscriptionPlan {
-  selectedOption: {
-    id: number;
-    price: string;
-    duration: string;
-    telegramStarsPrice: number;
-  };
-  features: string[];
+  selectedOption: SubscriptionOption;
 }

@@ -107,10 +107,10 @@ const createIntentOverrideStyle = (
     return undefined;
   }
 
-  const cssVars: React.CSSProperties = {};
+  const cssVars: Record<string, string> = {};
   const assignVar = (name: string, value?: string) => {
     if (value) {
-      cssVars[name as any] = value;
+      cssVars[name] = value;
     }
   };
 
@@ -124,7 +124,7 @@ const createIntentOverrideStyle = (
   assignVar("--button-disabled-foreground", overrides.disabledForeground);
   assignVar("--button-disabled-border", overrides.disabledBorder);
 
-  return cssVars;
+  return cssVars as React.CSSProperties;
 };
 
 const buttonVariants = cva(

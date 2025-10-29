@@ -34,7 +34,7 @@ export default function ProfileDesignDemoPage() {
         paddingBlock: semanticSpacing.section.md,
       }}
     >
-      <PageLayout maxWidth="4xl" className="px-0">
+      <PageLayout maxWidth="full" className="px-0">
         <div
           style={{
             display: "flex",

@@ -1,10 +1,9 @@
 import * as React from "react";
 import { cn } from "@/shared/utils";
 
-interface ProgressProps {
+interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number;
   max?: number;
-  className?: string;
   indicatorClassName?: string;
 }
 
