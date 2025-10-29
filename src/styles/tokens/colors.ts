@@ -21,6 +21,8 @@ export const colors = {
     secondary: "var(--color-bg-secondary)",
     tertiary: "var(--color-bg-tertiary)",
     elevated: "var(--color-bg-elevated)",
+    gradientPrimary: "var(--color-bg-gradient-primary)",
+    gradientElevated: "var(--color-bg-gradient-elevated)",
     overlay: "var(--color-bg-overlay)",
     inverse: "var(--color-bg-inverse)",
   },
@@ -76,6 +78,8 @@ export const colorVars = `
     --color-bg-elevated: #ffffff;
     --color-bg-overlay: rgba(0, 0, 0, 0.5);
     --color-bg-inverse: #1a1a1a;
+    --color-bg-gradient-primary: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    --color-bg-gradient-elevated: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
 
     /* Border */
     --color-border-default: #e5e7eb;
@@ -89,26 +93,28 @@ export const colorVars = `
   .dark {
     /* Text */
     --color-text-primary: #f8fafc;
-    --color-text-secondary: #cbd5e1;
-    --color-text-tertiary: #94a3b8;
-    --color-text-disabled: #475569;
+    --color-text-secondary: #d7e2f0; /* maintains 6.9:1 contrast on #1f2937 */
+    --color-text-tertiary: #aebad0;
+    --color-text-disabled: #556070;
     --color-text-inverse: #1a1a1a;
     --color-text-link: #60a5fa;
     --color-text-link-hover: #93c5fd;
 
     /* Background */
-    --color-bg-primary: #0f172a;
-    --color-bg-secondary: #1e293b;
-    --color-bg-tertiary: #334155;
-    --color-bg-elevated: #1e293b;
+    --color-bg-primary: #111827;
+    --color-bg-secondary: #1f2937;
+    --color-bg-tertiary: #273445;
+    --color-bg-elevated: #1c2534;
     --color-bg-overlay: rgba(0, 0, 0, 0.7);
     --color-bg-inverse: #ffffff;
+    --color-bg-gradient-primary: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+    --color-bg-gradient-elevated: linear-gradient(180deg, #1c2534 0%, #273445 100%);
 
     /* Border */
-    --color-border-default: #334155;
-    --color-border-hover: #475569;
+    --color-border-default: #2a3648;
+    --color-border-hover: #3a455a;
     --color-border-focus: #60a5fa;
-    --color-border-disabled: #1e293b;
+    --color-border-disabled: #1a2331;
     --color-border-error: #f87171;
   }
 `;

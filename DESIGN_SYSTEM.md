@@ -93,6 +93,10 @@ colors.text.secondary    // النص الثانوي
 // الخلفيات
 colors.bg.primary        // الخلفية الرئيسية
 colors.bg.secondary      // الخلفية الثانوية
+colors.bg.tertiary       // الخلفية الثالثة (أقسام فرعية)
+colors.bg.elevated       // البطاقات المرتفعة
+colors.bg.gradientPrimary  // تدرج الخلفية العامة (Hero)
+colors.bg.gradientElevated // تدرج البطاقات المميزة
 
 // الحدود
 colors.border.default    // الحدود الافتراضية
@@ -101,6 +105,8 @@ colors.border.default    // الحدود الافتراضية
 colors.status.success    // نجاح
 colors.status.error      // خطأ
 ```
+
+> **الوضع الداكن المحدث:** الخلفيات (`#111827`, `#1f2937`, `#273445`, `#1c2534`) تم اختيارها لضمان تباين ≥ 4.5:1 للنصوص الثانوية. استخدم التدرجات الجديدة لتوفير عمق بصري بدون التضحية بقابلية القراءة. راجع `docs/DARK_MODE_GUIDE.md` لشرح مفصل ونسب التباين.
 
 ### المسافات (8-point grid)
 ```tsx

@@ -12,6 +12,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
+import ThemeToggle from "@/shared/components/common/ThemeToggle";
 import { cn } from "@/shared/utils";
 import {
   colors,
@@ -44,6 +45,7 @@ export interface NavbarProps {
 const DEFAULT_LINKS: NavbarLink[] = [
   { href: "/shop", label: "المتجر" },
   { href: "/academy", label: "الأكاديمية" },
+  { href: "/settings/customization", label: "التخصيص" },
   { href: "/profile", label: "حسابي" },
 ];
 
@@ -155,6 +157,14 @@ export function Navbar({
             `gap-[${semanticSpacing.component.md}]`,
           )}
         >
+          <div className="hidden md:flex">
+            <ThemeToggle
+              showLabels={false}
+              showStatusText={false}
+              className="shadow-none"
+            />
+          </div>
+
           {showNotifications && (
             <Button intent="ghost" density="icon" className="relative" asChild>
               <Link

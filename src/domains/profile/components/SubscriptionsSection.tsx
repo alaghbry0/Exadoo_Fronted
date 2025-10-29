@@ -1,5 +1,4 @@
 "use client";
-import { componentVariants, mergeVariants } from "@/shared/components/ui/variants";
 import React, {
   useState,
   useCallback,
@@ -7,7 +6,8 @@ import React, {
   forwardRef,
   useMemo,
 } from "react";
-import { motion, AnimatePresence, type Transition } from "framer-motion";
+import type { CSSProperties } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap,
   RefreshCcw,
@@ -24,29 +24,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress-custom";
 import { SkeletonLoader } from "@/shared/components/common/SkeletonLoader";
-
-// ✨ تعديل: 1. إضافة إعدادات الأنيميشن الجديدة
-// Advanced spring config for natural motion
-const expansionSpring: Transition = {
-  type: "spring",
-  damping: 25, // More resistance = less bouncy
-  stiffness: 200, // Faster snap
-  mass: 0.5, // Lightweight feel
-};
-
-// Staggered child animations
-const linkItemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.05, // Cascading delay
-      ...expansionSpring,
-    },
-  }),
-  exit: { opacity: 0, y: -10 },
-};
+import { animations } from "@/styles/animations";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  shadows,
+  radiusClasses,
+  shadowClasses,
+  withAlpha,
+} from "@/styles/tokens";
 
 const calculateLinkRelevance = (link: SubChannelLink) => {
   const engagementScore = link.views ? Math.log10(link.views + 1) : 0;
@@ -67,24 +54,38 @@ type SubscriptionsSectionProps = {
   isRefreshing: boolean;
 };
 type StatusType = "نشط" | "منتهي" | "unknown";
-const statusStyles: Record<
+
+type ProgressStyle = CSSProperties & {
+  "--subscription-progress-indicator"?: string;
+};
+
+type ToggleButtonStyle = CSSProperties & {
+  "--subscription-toggle-hover"?: string;
+};
+
+type LinkCardStyle = CSSProperties & {
+  "--link-card-icon-color"?: string;
+  "--link-card-icon-hover"?: string;
+};
+
+const statusTokens: Record<
   StatusType,
-  { bg: string; text: string; border: string }
+  { background: string; color: string; border: string }
 > = {
   نشط: {
-    bg: "bg-green-100",
-    text: "text-green-800",
-    border: "border-green-200",
+    background: withAlpha(colors.status.success, 0.16),
+    color: colors.status.success,
+    border: withAlpha(colors.status.success, 0.35),
   },
   منتهي: {
-    bg: "bg-amber-100",
-    text: "text-amber-800",
-    border: "border-amber-200",
+    background: withAlpha(colors.status.warning, 0.18),
+    color: colors.status.warning,
+    border: withAlpha(colors.status.warning, 0.35),
   },
   unknown: {
-    bg: "bg-gray-100",
-    text: "text-gray-800",
-    border: "border-gray-200",
+    background: withAlpha(colors.bg.secondary, 0.6),
+    color: colors.text.secondary,
+    border: withAlpha(colors.border.default, 0.9),
   },
 };
 
@@ -112,13 +113,36 @@ export default function SubscriptionsSection({
   );
 
   return (
-    <Card className="w-full shadow-lg border-gray-200/80 bg-white/70 backdrop-blur-sm rounded-2xl">
+    <Card
+      className={cn(
+        "w-full border backdrop-blur-sm transition-shadow duration-300",
+        componentRadius.card,
+        shadowClasses.card,
+      )}
+      style={{
+        backgroundColor: withAlpha(colors.bg.elevated, 0.75),
+        borderColor: withAlpha(colors.border.default, 0.85),
+      }}
+    >
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center shadow-md">
-            <Package className="w-5 h-5 text-white" />
+          <div
+            className={cn(
+              "flex h-10 w-10 items-center justify-center",
+              radiusClasses.sm,
+            )}
+            style={{
+              backgroundImage: gradients.brand.primary,
+              boxShadow: shadows.elevation[3],
+              color: colors.text.inverse,
+            }}
+          >
+            <Package className="h-5 w-5" />
           </div>
-          <CardTitle className="text-xl font-bold text-gray-800 font-arabic">
+          <CardTitle
+            className="text-xl font-bold font-arabic"
+            style={{ color: colors.text.primary }}
+          >
             اشتراكاتي
           </CardTitle>
         </div>
@@ -167,37 +191,56 @@ export default function SubscriptionsSection({
 
 // ✨ تعديل: 2. تحديث بطاقة الرابط بالتأثيرات الجديدة
 const LinkCard = ({ channel }: { channel: SubChannelLink }) => {
+  const linkStyles = React.useMemo<LinkCardStyle>(() => ({
+    background: withAlpha(colors.bg.secondary, 0.65),
+    borderColor: withAlpha(colors.border.default, 0.8),
+    color: colors.text.primary,
+    "--link-card-icon-color": colors.text.tertiary,
+    "--link-card-icon-hover": colors.brand.primary,
+  }), []);
+
   return (
-    // تم دمج تأثيرات الحركة هنا، مع إزالة الحركة من الوسم <a> الداخلي لمنع التعارض
     <motion.div
       layout
-      whileHover={{
-        scale: 1.03,
-        y: -3,
-        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-      }}
-      whileTap={{
-        scale: 0.97,
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-      }}
-      transition={expansionSpring}
+      whileHover={animations.subscriptionLinkCard.whileHover}
+      whileTap={animations.subscriptionLinkCard.whileTap}
+      transition={animations.subscriptionLinkCard.transition}
     >
       <a
         href={channel.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="block group p-3 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm transition-shadow duration-300 border border-gray-200 hover:border-primary-300 hover:shadow-lg"
+        className={cn(
+          "group block border p-3 transition-all duration-300",
+          componentRadius.card,
+          shadowClasses.card,
+        )}
+        style={linkStyles}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-500/10 rounded-lg flex items-center justify-center">
-            <LinkIcon className="w-5 h-5 text-primary-600" />
+          <div
+            className={cn(
+              "flex h-10 w-10 items-center justify-center",
+              radiusClasses.sm,
+            )}
+            style={{
+              backgroundColor: withAlpha(colors.brand.primary, 0.12),
+              color: colors.brand.primary,
+            }}
+          >
+            <LinkIcon className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-gray-800 truncate">
+            <h4
+              className="font-semibold truncate"
+              style={{ color: colors.text.primary }}
+            >
               {channel.name}
             </h4>
           </div>
-          <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
+          <ArrowUpRight
+            className="h-4 w-4 text-[color:var(--link-card-icon-color)] transition-colors group-hover:text-[color:var(--link-card-icon-hover)]"
+          />
         </div>
       </a>
     </motion.div>
@@ -217,7 +260,7 @@ const SubscriptionItem = ({
 
   const currentStatus: StatusType =
     sub.status === "نشط" || sub.status === "منتهي" ? sub.status : "unknown";
-  const styles = statusStyles[currentStatus];
+  const statusTheme = statusTokens[currentStatus];
   const showSupportButton =
     sub.status === "نشط" &&
     sub.start_date &&
@@ -248,38 +291,74 @@ const SubscriptionItem = ({
 
   const hasSubChannels = sub.status === "نشط" && sortedLinks.length > 0;
 
+  const progressStyles = React.useMemo<ProgressStyle>(() => ({
+    backgroundColor: withAlpha(colors.bg.secondary, 0.55),
+    "--subscription-progress-indicator":
+      sub.status === "نشط" ? colors.brand.primary : colors.status.warning,
+  }), [sub.status]);
+
+  const toggleStyles = React.useMemo<ToggleButtonStyle>(() => ({
+    color: colors.text.primary,
+    borderColor: withAlpha(colors.border.default, 0.6),
+    backgroundColor: withAlpha(colors.bg.secondary, isExpanded ? 0.32 : 0.18),
+    "--subscription-toggle-hover": withAlpha(colors.bg.secondary, 0.35),
+  }), [isExpanded]);
+
   return (
     <motion.li
-      className="bg-white border border-gray-200/90 rounded-xl p-4 shadow-sm transition-all hover:border-primary-300 hover:shadow-md"
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { delay: index * 0.07 } },
+      className={cn(
+        "p-4 border transition-colors duration-300",
+        componentRadius.card,
+        shadowClasses.card,
+      )}
+      style={{
+        backgroundColor: withAlpha(colors.bg.elevated, 0.92),
+        borderColor: withAlpha(colors.border.default, 0.85),
       }}
+      variants={animations.subscriptionItem}
       initial="hidden"
       animate="visible"
-      exit="hidden"
+      exit="exit"
       layout
+      custom={index}
     >
       <div className="flex justify-between items-start gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-800 text-base line-clamp-1 font-arabic">
+          <h3
+            className="font-semibold text-base line-clamp-1 font-arabic"
+            style={{ color: colors.text.primary }}
+          >
             {sub.name}
           </h3>
-          <p className="text-gray-500 text-sm mt-1">{sub.expiry}</p>
+          <p className="mt-1 text-sm" style={{ color: colors.text.secondary }}>
+            {sub.expiry}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <span
             className={cn(
-              "text-xs px-3 py-1 rounded-full font-medium",
-              styles.bg,
-              styles.text,
-              styles.border,
+              "text-xs px-3 py-1 border font-medium",
+              componentRadius.badge,
             )}
+            style={{
+              backgroundColor: statusTheme.background,
+              color: statusTheme.color,
+              borderColor: statusTheme.border,
+            }}
           >
             {sub.status}
           </span>
           {showSupportButton && (
-            <span className="bg-primary-100 text-primary-800 text-[10px] px-2 py-0.5 rounded-full font-semibold">
+            <span
+              className={cn(
+                "text-[10px] px-2 py-0.5 font-semibold",
+                componentRadius.badge,
+              )}
+              style={{
+                backgroundColor: withAlpha(colors.brand.primary, 0.18),
+                color: colors.brand.primary,
+              }}
+            >
               جديد
             </span>
           )}
@@ -287,16 +366,18 @@ const SubscriptionItem = ({
       </div>
 
       <div className="mt-4 space-y-2">
-        <div className="flex justify-between text-xs text-gray-500">
+        <div
+          className="flex justify-between text-xs"
+          style={{ color: colors.text.secondary }}
+        >
           <span>التقدم</span>
           <span>{Math.round(sub.progress || 0)}%</span>
         </div>
         <Progress
           value={sub.progress || 0}
           className="h-2"
-          indicatorClassName={
-            sub.status === "نشط" ? "bg-primary-500" : "bg-amber-400"
-          }
+          style={progressStyles}
+          indicatorClassName="bg-[var(--subscription-progress-indicator)]"
         />
       </div>
 
@@ -305,17 +386,28 @@ const SubscriptionItem = ({
         <div className="mt-4">
           <motion.button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-100 transition-colors"
-            whileTap={{ scale: 0.98 }} // Tactile feedback
+            className={cn(
+              "w-full flex justify-between items-center p-2 text-start transition-colors duration-200 border",
+              radiusClasses.sm,
+              "hover:bg-[var(--subscription-toggle-hover)]",
+            )}
+            style={toggleStyles}
+            whileTap={animations.subscriptionToggle.whileTap}
           >
-            <span className="text-sm font-semibold text-primary-600">
+            <span
+              className="text-sm font-semibold"
+              style={{ color: colors.brand.primary }}
+            >
               القنوات الاضافيه ({sortedLinks.length})
             </span>
             <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={expansionSpring}
+              variants={animations.subscriptionToggleIcon}
+              animate={isExpanded ? "open" : "collapsed"}
             >
-              <ChevronDown className="h-5 w-5 text-primary-600" />
+              <ChevronDown
+                className="h-5 w-5"
+                style={{ color: colors.brand.primary }}
+              />
             </motion.div>
           </motion.button>
 
@@ -325,45 +417,19 @@ const SubscriptionItem = ({
                 initial="collapsed"
                 animate="open"
                 exit="collapsed"
-                variants={{
-                  open: {
-                    height: "auto",
-                    opacity: 1,
-                    transition: {
-                      ...expansionSpring,
-                      staggerChildren: 0.05, // Stagger effect
-                    },
-                  },
-                  collapsed: {
-                    height: 0,
-                    opacity: 0,
-                    transition: {
-                      ...expansionSpring,
-                      staggerChildren: 0.02,
-                      staggerDirection: -1,
-                    },
-                  },
-                }}
+                variants={animations.subscriptionAccordion}
                 className="overflow-hidden"
               >
                 <motion.div
                   className="pt-3 grid grid-cols-1 md:grid-cols-2 gap-3"
-                  variants={{
-                    open: { transition: { staggerChildren: 0.1 } },
-                    collapsed: {
-                      transition: {
-                        staggerChildren: 0.05,
-                        staggerDirection: -1,
-                      },
-                    },
-                  }}
+                  variants={animations.subscriptionLinkGrid}
                 >
                   <AnimatePresence>
                     {sortedLinks.map((channel, i) => (
                       <motion.div
                         key={channel.link}
                         custom={i}
-                        variants={linkItemVariants}
+                        variants={animations.subscriptionLinkItem}
                         initial="hidden"
                         animate="visible"
                         exit="exit"
@@ -381,7 +447,10 @@ const SubscriptionItem = ({
       )}
 
       {(showJoinButton || showSupportButton) && (
-        <div className="mt-4 border-t border-gray-200/80 pt-4 flex items-center justify-end gap-3 flex-wrap">
+        <div
+          className="mt-4 border-t pt-4 flex items-center justify-end gap-3 flex-wrap"
+          style={{ borderColor: withAlpha(colors.border.default, 0.75) }}
+        >
           {showSupportButton && (
             <Button
               intent="outline"
@@ -399,7 +468,11 @@ const SubscriptionItem = ({
             <Button
               asChild
               density="compact"
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm hover:shadow-lg transition-shadow"
+              className={cn(shadowClasses.buttonElevated)}
+              style={{
+                backgroundImage: gradients.status.success,
+                color: colors.text.inverse,
+              }}
             >
               <a
                 href={sub.invite_link!}
@@ -420,25 +493,47 @@ const SubscriptionItem = ({
 const NoSubscriptionsMessage = forwardRef<HTMLDivElement>((props, ref) => (
   <div
     ref={ref}
-    className="text-center py-10 px-4 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50"
+    className={cn(
+      "text-center py-10 px-4 border-2 border-dashed",
+      componentRadius.card,
+    )}
+    style={{
+      backgroundColor: withAlpha(colors.bg.secondary, 0.6),
+      borderColor: withAlpha(colors.border.default, 0.75),
+    }}
   >
     <div
       className={cn(
-        componentVariants.card.elevated,
-        "inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 mb-5",
+        "inline-flex items-center justify-center w-16 h-16 mb-5",
+        componentRadius.card,
       )}
+      style={{
+        backgroundImage: gradients.brand.primary,
+        boxShadow: shadows.elevation[4],
+        color: colors.text.inverse,
+      }}
     >
-      <Star className="w-8 h-8 text-white" />
+      <Star className="w-8 h-8" />
     </div>
-    <h3 className="text-lg font-bold text-gray-800 font-arabic">
+    <h3
+      className="text-lg font-bold font-arabic"
+      style={{ color: colors.text.primary }}
+    >
       لا توجد لديك اشتراكات
     </h3>
-    <p className="text-gray-500 mt-2 mb-6 max-w-xs mx-auto">
+    <p
+      className="mt-2 mb-6 max-w-xs mx-auto"
+      style={{ color: colors.text.secondary }}
+    >
       يبدو أنك لم تشترك في أي باقة بعد. تصفح باقاتنا وابدأ رحلتك في التداول!
     </p>
     <Button
       asChild
-      className="bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg hover:shadow-primary-500/30"
+      className={cn(shadowClasses.buttonElevated)}
+      style={{
+        backgroundImage: gradients.brand.primary,
+        color: colors.text.inverse,
+      }}
     >
       <Link href="/shop">استعراض الباقات</Link>
     </Button>

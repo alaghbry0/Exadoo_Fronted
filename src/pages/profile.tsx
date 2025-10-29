@@ -13,6 +13,8 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import PageLayout from "@/shared/components/layout/PageLayout";
+import { colors, componentRadius, semanticSpacing, shadowClasses, withAlpha } from "@/styles/tokens";
+import { cn } from "@/shared/utils/cn";
 
 export default function Profile() {
   const {
@@ -81,11 +83,37 @@ export default function Profile() {
   // --- شاشة تحميل جديدة وأكثر جاذبية ---
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-        <Loader2 className="w-12 h-12 text-primary-500 animate-spin" />
-        <p className="mt-4 text-gray-600 font-semibold font-arabic">
-          جارٍ تحميل ملفك الشخصي...
-        </p>
+      <div
+        dir="rtl"
+        className="min-h-screen font-arabic flex items-center justify-center"
+        style={{
+          backgroundColor: colors.bg.primary,
+          color: colors.text.primary,
+          padding: semanticSpacing.layout.md,
+        }}
+      >
+        <PageLayout maxWidth="md">
+          <Card
+            className={cn("w-full", shadowClasses.card)}
+            style={{
+              background: colors.bg.elevated,
+              borderColor: colors.border.default,
+            }}
+          >
+            <CardContent
+              className="flex flex-col items-center justify-center text-center"
+              style={{ gap: semanticSpacing.component.lg, padding: semanticSpacing.section.sm }}
+            >
+              <Loader2
+                className="h-12 w-12 animate-spin"
+                style={{ color: colors.brand.primary }}
+              />
+              <p className="font-semibold" style={{ color: colors.text.secondary }}>
+                جارٍ تحميل ملفك الشخصي...
+              </p>
+            </CardContent>
+          </Card>
+        </PageLayout>
       </div>
     );
   }
@@ -93,26 +121,45 @@ export default function Profile() {
   // --- شاشة خطأ محسّنة ---
   if (isError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <PageLayout maxWidth="2xl">
-          <Card className="w-full max-w-sm text-center shadow-lg">
-            <CardHeader>
-              <div className="mx-auto w-12 h-12 flex items-center justify-center bg-red-100 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+      <div
+        dir="rtl"
+        className="min-h-screen font-arabic flex items-center justify-center"
+        style={{
+          backgroundColor: colors.bg.primary,
+          color: colors.text.primary,
+          padding: semanticSpacing.layout.md,
+        }}
+      >
+        <PageLayout maxWidth="md">
+          <Card
+            className={cn("w-full text-center", shadowClasses.card)}
+            style={{
+              background: colors.bg.elevated,
+              borderColor: colors.border.default,
+            }}
+          >
+            <CardHeader className="flex flex-col items-center gap-4 text-center">
+              <div
+                className={cn("flex h-12 w-12 items-center justify-center", componentRadius.badge)}
+                style={{
+                  background: withAlpha(colors.status.error, 0.12),
+                  color: colors.status.error,
+                }}
+              >
+                <AlertTriangle className="h-6 w-6" />
               </div>
-              <CardTitle className="text-red-700 pt-2 font-arabic">
+              <CardTitle style={{ color: colors.status.error }}>
                 حدث خطأ
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-6 font-arabic">
+            <CardContent
+              className="flex flex-col items-center"
+              style={{ gap: semanticSpacing.component.lg, padding: semanticSpacing.section.sm }}
+            >
+              <p style={{ color: colors.text.secondary }}>
                 فشل تحميل بياناتك. يرجى المحاولة مرة أخرى.
               </p>
-              <Button
-                onClick={() => refetch()}
-                density="relaxed"
-                className="font-arabic"
-              >
+              <Button onClick={() => refetch()} density="relaxed" className="font-arabic">
                 إعادة المحاولة
               </Button>
             </CardContent>
@@ -135,26 +182,43 @@ export default function Profile() {
       />
       <div
         dir="rtl"
-        className="min-h-screen bg-gray-50 text-gray-800 font-arabic"
+        className="min-h-screen font-arabic"
+        style={{
+          backgroundColor: colors.bg.primary,
+          color: colors.text.primary,
+          paddingBlock: semanticSpacing.section.sm,
+        }}
       >
-        <PageLayout maxWidth="2xl">
-          <ProfileHeader
-            fullName={fullName}
-            username={telegramUsername}
-            profilePhoto={photoUrl}
-            telegramId={telegramId}
-            onPaymentHistoryClick={goToPaymentHistory}
-          />
-          {/* إضافة تباعد أفضل للمحتوى الرئيسي */}
-          <div className="px-4 md:px-6 py-8 max-w-4xl mx-auto ">
-            <SubscriptionsSection
-              subscriptions={subscriptions || []}
-              loadMore={loadMoreHandler}
-              hasMore={!!hasNextPage}
-              isLoadingMore={isFetchingNextPage}
-              isRefreshing={isRefreshing}
-              onRefreshClick={handleRefresh}
+        <PageLayout maxWidth="2xl" className="px-0">
+          <div
+            className="w-full"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: semanticSpacing.section.sm,
+              paddingInline: semanticSpacing.layout.sm,
+            }}
+          >
+            <ProfileHeader
+              fullName={fullName}
+              username={telegramUsername}
+              profilePhoto={photoUrl}
+              telegramId={telegramId}
+              onPaymentHistoryClick={goToPaymentHistory}
             />
+            <div
+              className="w-full max-w-4xl mx-auto"
+              style={{ paddingBlock: semanticSpacing.section.sm }}
+            >
+              <SubscriptionsSection
+                subscriptions={subscriptions || []}
+                loadMore={loadMoreHandler}
+                hasMore={!!hasNextPage}
+                isLoadingMore={isFetchingNextPage}
+                isRefreshing={isRefreshing}
+                onRefreshClick={handleRefresh}
+              />
+            </div>
           </div>
         </PageLayout>
       </div>

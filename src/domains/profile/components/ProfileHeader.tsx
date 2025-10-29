@@ -3,6 +3,17 @@ import React, { useMemo } from "react";
 import { User, FileText, Award, Copy, CheckCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import SmartImage from "@/shared/components/common/SmartImage";
+import {
+  colors,
+  componentRadius,
+  gradients,
+  radius,
+  semanticSpacing,
+  shadows,
+  shadowClasses,
+  withAlpha,
+} from "@/styles/tokens";
+import { cn } from "@/shared/utils/cn";
 
 // --- دالة مساعدة للتحقق من رابط الصورة ---
 export function getValidPhotoUrl(
@@ -51,7 +62,12 @@ export default function ProfileHeader({
     try {
       await navigator.clipboard.writeText(telegramId.toString());
       toast.success("تم نسخ المعرف بنجاح!", {
-        icon: <CheckCircle className="w-5 h-5 text-green-500" />,
+        icon: (
+          <CheckCircle
+            className="h-5 w-5"
+            style={{ color: colors.status.success }}
+          />
+        ),
       });
     } catch (err) {
       console.error("فشل نسخ المعرف:", err);
@@ -59,43 +75,103 @@ export default function ProfileHeader({
     }
   };
 
-  return (
-    // --- استخدام تدرج لوني حيوي مع نمط بصري خفيف ---
-    <div className="w-full bg-gradient-to-br from-primary-900 to-primary-500 rounded-b-3xl shadow-lg overflow-hidden relative">
-      {/* طبقة نمط زخرفي (اختياري، يمكنك استبدال الرابط أو حذفه) */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSIxMDAiPgo8cmVjdCB3aWR0aD0iNTYiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDAwMCI+PC9yZWN0Pgo8cGF0aCBkPSJNMjggNjZMMCA1MEwwIDMzTDI4IDE3TDU2IDMzTDU2IDUwTDI4IDY2TDI4IDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+CjxwYXRoIGQ9Ik0yOCAwTDI4IDM0TDAgNTBMMCA2M0wyOCA3OUw1NiA2M0w1NiA1MEwyOCAzNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIyIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-10 pointer-events-none" />
+  const chipPaddingX = semanticSpacing.component.lg;
+  const chipPaddingY = semanticSpacing.component.xs;
+  const chipBackground = withAlpha(colors.bg.primary, 0.16);
+  const chipHoverShadow = shadows.elevation[3];
 
-      <div className="relative pt-5 px-4">
-        {/* أزرار الإجراءات في الأعلى */}
-        <div className="flex justify-between items-start">
-          {/* إضافة حركة بسيطة للزر مع التحقق من وجود الدالة */}
-          {onPaymentHistoryClick && (
+  return (
+    <div
+      className={cn("relative w-full overflow-hidden", shadowClasses.cardHover)}
+      style={{
+        background: gradients.brand.primary,
+        borderRadius: radius["3xl"],
+        color: colors.text.inverse,
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: gradients.effects.neutralSheen,
+          opacity: 0.4,
+        }}
+      />
+
+      <div
+        className="relative"
+        style={{
+          paddingInline: semanticSpacing.layout.sm,
+          paddingBlockStart: semanticSpacing.section.sm,
+          paddingBlockEnd: semanticSpacing.section.sm,
+        }}
+      >
+        <div className="flex items-start justify-between">
+          {onPaymentHistoryClick ? (
             <button
+              type="button"
               onClick={onPaymentHistoryClick}
-              className="animate-scale-in p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md transition-all hover:bg-white/20 active:scale-95 touch-manipulation"
-              style={{ animationDelay: "0.2s" }}
+              className={cn(
+                "animate-scale-in transition-transform duration-200 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 touch-manipulation",
+                componentRadius.badge,
+                shadowClasses.buttonElevated,
+              )}
+              style={{
+                animationDelay: "0.2s",
+                background: chipBackground,
+                color: colors.text.inverse,
+                paddingInline: chipPaddingX,
+                paddingBlock: chipPaddingY,
+                boxShadow: chipHoverShadow,
+                "--tw-ring-color": colors.border.focus,
+                "--tw-ring-offset-color": colors.bg.primary,
+              } as React.CSSProperties}
               title="سجلات الدفعات"
             >
-              <FileText className="w-5 h-5 text-white" />
+              <FileText className="h-5 w-5" style={{ color: colors.text.inverse }} />
             </button>
+          ) : (
+            <div />
           )}
-          {/* عنصر نائب للحفاظ على التنسيق إذا لم يكن الزر موجودًا */}
-          {!onPaymentHistoryClick && <div />}
 
           <div
-            className="animate-scale-in p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-md"
-            style={{ animationDelay: "0.3s" }}
+            className={cn(
+              "animate-scale-in transition-transform duration-200 backdrop-blur-md",
+              componentRadius.badge,
+              shadowClasses.buttonElevated,
+            )}
+            style={{
+              animationDelay: "0.3s",
+              background: chipBackground,
+              color: colors.text.inverse,
+              paddingInline: chipPaddingX,
+              paddingBlock: chipPaddingY,
+              boxShadow: chipHoverShadow,
+            }}
             title="الإنجازات (قريباً)"
           >
-            <Award className="w-5 h-5 text-white/80" />
+            <Award
+              className="h-5 w-5"
+              style={{ color: withAlpha(colors.text.inverse, 0.85) }}
+            />
           </div>
         </div>
 
-        {/* معلومات المستخدم الأساسية */}
-        <div className="px-4 pb-6 pt-2 text-center">
-          {/* الصورة الشخصية */}
+        <div
+          className="text-center"
+          style={{
+            paddingInline: semanticSpacing.layout.sm,
+            paddingBlockStart: semanticSpacing.component.sm,
+          }}
+        >
           <div className="relative inline-block">
-            <div className="w-24 h-24 rounded-full border-4 border-white/80 shadow-lg overflow-hidden bg-slate-700">
+            <div
+              className={cn("h-24 w-24 overflow-hidden", componentRadius.badge)}
+              style={{
+                background: withAlpha(colors.bg.inverse, 0.4),
+                border: `4px solid ${withAlpha(colors.text.inverse, 0.75)}`,
+                boxShadow: shadows.elevation[4],
+              }}
+            >
               <SmartImage
                 src={avatarSrc}
                 alt={`صورة ${fullName}`}
@@ -104,36 +180,85 @@ export default function ProfileHeader({
                 blurType="primary"
                 autoQuality
                 fallbackSrc="/logo.png"
-                className="object-cover w-full h-full"
+                className="h-full w-full object-cover"
                 priority
               />
             </div>
           </div>
 
-          {/* معلومات المستخدم */}
-          <div className="mt-3 space-y-2">
-            <h1 className="text-2xl font-bold text-white text-shadow-sm">
+          <div
+            style={{
+              marginTop: semanticSpacing.component.md,
+              display: "flex",
+              flexDirection: "column",
+              gap: semanticSpacing.component.sm,
+            }}
+          >
+            <h1
+              className="text-2xl font-bold text-shadow-sm"
+              style={{ color: colors.text.inverse }}
+            >
               {fullName}
             </h1>
-            <div className="flex flex-col items-center justify-center gap-2 text-sm">
+            <div
+              className="flex flex-col items-center justify-center"
+              style={{ gap: semanticSpacing.component.sm }}
+            >
               {username && (
-                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-                  <User className="w-4 h-4 text-slate-300" />
-                  <span className="text-slate-200 truncate max-w-[180px] text-sm">
+                <div
+                  className={cn("flex items-center", componentRadius.badge)}
+                  style={{
+                    background: chipBackground,
+                    color: colors.text.inverse,
+                    gap: semanticSpacing.component.sm,
+                    paddingInline: chipPaddingX,
+                    paddingBlock: chipPaddingY,
+                    boxShadow: chipHoverShadow,
+                  }}
+                >
+                  <User
+                    className="h-4 w-4"
+                    style={{ color: withAlpha(colors.text.inverse, 0.85) }}
+                  />
+                  <span
+                    className="truncate text-sm"
+                    style={{
+                      color: withAlpha(colors.text.inverse, 0.92),
+                      maxWidth: "180px",
+                    }}
+                  >
                     @{username}
                   </span>
                 </div>
               )}
               {telegramId && (
                 <button
+                  type="button"
                   onClick={handleCopyId}
-                  className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors group cursor-pointer active:scale-95"
+                  className={cn(
+                    "group flex items-center transition-transform duration-200 active:scale-95",
+                    componentRadius.badge,
+                  )}
+                  style={{
+                    background: chipBackground,
+                    color: withAlpha(colors.text.inverse, 0.92),
+                    gap: semanticSpacing.component.sm,
+                    paddingInline: chipPaddingX,
+                    paddingBlock: chipPaddingY,
+                    boxShadow: chipHoverShadow,
+                  }}
                   title="اضغط لنسخ المعرف"
                 >
-                  <span className="text-slate-300 text-xs font-mono">
+                  <span
+                    className="text-xs font-mono"
+                    style={{ color: withAlpha(colors.text.inverse, 0.82) }}
+                  >
                     ID: {telegramId}
                   </span>
-                  <Copy className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+                  <Copy
+                    className="h-3.5 w-3.5 transition-colors"
+                    style={{ color: withAlpha(colors.text.inverse, 0.7) }}
+                  />
                 </button>
               )}
             </div>
