@@ -1,6 +1,7 @@
 // src/features/home/data/services.ts
 import type { LucideIcon } from "lucide-react";
-import { TrendingUp, BarChart3, Activity } from "lucide-react";
+
+import type { ServiceCardAccent } from "@/shared/components/common/ServiceCardV2";
 
 // Import animations
 import signalsAnimation from "@/animations/signals.json";
@@ -14,6 +15,8 @@ export interface HomeServiceMeta {
   href: string;
   icon?: LucideIcon;
   animationData?: any;
+  accent?: ServiceCardAccent;
+  ctaLabel?: string;
 }
 
 export const HOME_SERVICES: HomeServiceMeta[] = [
@@ -23,6 +26,8 @@ export const HOME_SERVICES: HomeServiceMeta[] = [
     description: "Get real-time crypto signals to boost your trading performance.",
     href: "/shop/signals",
     animationData: signalsAnimation,
+    accent: "primary",
+    ctaLabel: "استكشف الإشارات",
   },
   {
     key: "forex",
@@ -30,6 +35,8 @@ export const HOME_SERVICES: HomeServiceMeta[] = [
     description: "Trade crypto with precision insights and expert-backed strategies.",
     href: "/forex",
     animationData: forexAnimation,
+    accent: "secondary",
+    ctaLabel: "ابدأ رحلة الفوركس",
   },
   {
     key: "indicators",
@@ -37,5 +44,7 @@ export const HOME_SERVICES: HomeServiceMeta[] = [
     description: "Power your crypto trading with advanced Gann-based indicator tools from Exaado's top experts.",
     href: "/indicators",
     animationData: buyIndicatorAnimation,
+    accent: "success",
+    ctaLabel: "تعرّف على المؤشرات",
   },
 ];

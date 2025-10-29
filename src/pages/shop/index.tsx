@@ -20,7 +20,7 @@ import { LockedServiceCard } from "@/domains/shop/components/LockedServiceCard";
 import { ShopHero } from "@/domains/shop/components/ShopHero";
 import { ShopSearchBar } from "@/domains/shop/components/ShopSearchBar";
 import { ShopSearchResults } from "@/domains/shop/components/ShopSearchResults";
-import { ShopSectionHeading } from "@/domains/shop/components/ShopSectionHeading";
+import { SectionHeading } from "@/shared/components/common/SectionHeading";
 import { ShopServicesGrid } from "@/domains/shop/components/ShopServicesGrid";
 import { SHOP_SERVICES } from "@/domains/shop/data/services";
 
@@ -90,7 +90,7 @@ export default function ShopHome() {
                   <AuthPrompt />
 
                   <section aria-labelledby="shop-education">
-                    <ShopSectionHeading
+                    <SectionHeading
                       icon={Sparkles}
                       title="التعليم والتطوير"
                       id="shop-education"
@@ -101,7 +101,7 @@ export default function ShopHome() {
                   </section>
 
                   <section aria-labelledby="shop-services">
-                    <ShopSectionHeading
+                    <SectionHeading
                       icon={Zap}
                       title="أدوات التداول"
                       id="shop-services"

@@ -3,16 +3,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { GraduationCap, LayoutGrid } from "lucide-react";
+
 import PageLayout from "@/shared/components/layout/PageLayout";
+import { Button } from "@/shared/components/ui/button";
+import { EmptyState, LottieAnimation, SectionHeading } from "@/shared/components/common";
 import AcademyHeroCard from "@/domains/academy/components/AcademyHeroCard";
 import AuthPrompt from "@/domains/auth/components/AuthFab";
-import {
-  UserHeader,
-  HomeSearchBar,
-  HomeServiceCard,
-} from "@/domains/home/components";
+import { UserHeader, HomeSearchBar } from "@/domains/home/components";
 import { HOME_SERVICES } from "@/domains/home/data/services";
-import { colors, spacing, fontFamily } from "@/styles/tokens";
+import { ServiceCardV2 } from "@/shared/components/common/ServiceCardV2";
+import { colors, semanticSpacing, spacing } from "@/styles/tokens";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,121 +29,105 @@ export default function Home() {
   return (
     <div
       dir="rtl"
-      className="min-h-screen pb-20"
-      style={{ backgroundColor: colors.bg.secondary }}
+      style={{
+        backgroundColor: colors.bg.secondary,
+        minHeight: "100vh",
+      }}
     >
-      {/* Header */}
       <UserHeader />
 
-      {/* Search Bar */}
       <HomeSearchBar value={searchQuery} onChange={setSearchQuery} />
 
-      <PageLayout maxWidth="2xl">
+      <PageLayout maxWidth="2xl" showNavbar={false}>
         <div
           style={{
             display: "grid",
-            gap: spacing[8],
-            paddingTop: spacing[6],
+            gap: semanticSpacing.section.md,
+            paddingTop: semanticSpacing.section.sm,
+            paddingBottom: semanticSpacing.section.xl,
           }}
         >
-          {/* Exaado Academy Section */}
-          <section aria-labelledby="academy-section">
+          <section aria-labelledby="home-academy">
+            <SectionHeading
+              id="home-academy"
+              title="أكاديمية إكسادو"
+              icon={GraduationCap}
+              action={
+                <Button asChild intent="link" density="compact">
+                  <Link href="/academy">عرض جميع الدروس</Link>
+                </Button>
+              }
+            />
             <div
-              className="flex items-center justify-between mb-4 px-4"
-              style={{ fontFamily: fontFamily.arabic }}
+              style={{
+                marginTop: spacing[4],
+              }}
             >
-              <h2
-                id="academy-section"
-                className="text-2xl font-bold"
-                style={{ color: colors.text.primary }}
-              >
-                Exaado Academy
-              </h2>
-              <Link
-                href="/academy"
-                className="text-sm font-semibold hover:underline"
-                style={{ color: colors.brand.primary }}
-              >
-                View All →
-              </Link>
-            </div>
-            <div className="px-1">
               <AcademyHeroCard />
             </div>
           </section>
 
-          {/* Exaado Services Section */}
-          <section aria-labelledby="services-section">
-            <div className="px-2 mb-2">
-              <h2
-                id="services-section"
-                className="text-2xl font-bold"
-                style={{
-                  color: colors.text.primary,
-                  fontFamily: fontFamily.arabic,
-                }}
-              >
-                Exaado Services
-              </h2>
-            </div>
+          <AuthPrompt />
+
+          <section aria-labelledby="home-services">
+            <SectionHeading
+              id="home-services"
+              title="خدمات إكسادو"
+              icon={LayoutGrid}
+              action={
+                <Button asChild intent="link" density="compact">
+                  <Link href="/shop">تصفح المتجر</Link>
+                </Button>
+              }
+            />
 
             {filteredServices.length > 0 ? (
-              <div className="px-4">
-                {/* First Row: Signals and Forex */}
-                <div
-                  className="mb-4"
-                  style={{
-                    display: "grid",
-                    gap: spacing[4],
-                    gridTemplateColumns: "1fr 1fr",
-                  }}
-                >
-                  {filteredServices
-                    .filter((service) => 
-                      service.key === "signals" || service.key === "forex"
-                    )
-                    .map((service) => (
-                      <HomeServiceCard
-                        key={service.key}
-                        title={service.title}
-                        description={service.description}
-                        href={service.href}
-                        animationData={service.animationData}
-                        icon={service.icon}
-                      />
-                    ))}
-                </div>
-                
-                {/* Second Row: Buy Indicators */}
-                <div>
-                  {filteredServices
-                    .filter((service) => service.key === "indicators")
-                    .map((service) => (
-                      <HomeServiceCard
-                        key={service.key}
-                        title={service.title}
-                        description={service.description}
-                        href={service.href}
-                        animationData={service.animationData}
-                        icon={service.icon}
-                      />
-                    ))}
-                </div>
+              <div
+                style={{
+                  display: "grid",
+                  gap: spacing[6],
+                  marginTop: spacing[4],
+                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                }}
+              >
+                {filteredServices.map((service) => (
+                  <ServiceCardV2
+                    key={service.key}
+                    title={service.title}
+                    description={service.description}
+                    href={service.href}
+                    accent={service.accent}
+                    ctaLabel={service.ctaLabel}
+                    layout="wide"
+                    rightSlot={
+                      service.animationData ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <LottieAnimation
+                            animationData={service.animationData}
+                            width="120px"
+                            height="120px"
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : undefined
+                    }
+                  />
+                ))}
               </div>
             ) : (
-              <div
-                className="text-center py-12 px-4"
-                style={{ color: colors.text.secondary }}
-              >
-                <p>لا توجد خدمات تطابق البحث</p>
+              <div style={{ marginTop: spacing[6] }}>
+                <EmptyState
+                  title="لا توجد خدمات مطابقة"
+                  description="جرّب البحث بكلمات مفتاحية مختلفة أو تصفح جميع خدماتنا."
+                />
               </div>
             )}
           </section>
-
-          {/* Auth Prompt */}
-          <div className="px-4">
-            <AuthPrompt />
-          </div>
         </div>
       </PageLayout>
     </div>
