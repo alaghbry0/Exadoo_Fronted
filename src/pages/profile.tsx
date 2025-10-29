@@ -8,13 +8,14 @@ import SubscriptionsSection from "@/domains/profile/components/SubscriptionsSect
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { getUserSubscriptions } from "@/domains/subscriptions/api";
 import { useRouter } from "next/navigation";
-import { toast, Toaster } from "react-hot-toast";
+import { Toaster } from "@/shared/components/ui/toaster";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import PageLayout from "@/shared/components/layout/PageLayout";
 import { colors, componentRadius, semanticSpacing, shadowClasses, withAlpha } from "@/styles/tokens";
 import { cn } from "@/shared/utils/cn";
+import { showToast } from "@/shared/components/ui/showToast";
 
 export default function Profile() {
   const {
@@ -65,10 +66,11 @@ export default function Profile() {
     setIsRefreshing(true);
     try {
       await refetch();
-      // يمكنك إضافة رسالة نجاح هنا إذا أردت
-      // toast.success('تم تحديث البيانات بنجاح');
     } catch {
-      toast.error("فشل تحديث البيانات، يرجى المحاولة مرة أخرى");
+      showToast.error({
+        title: "تعذّر تحديث البيانات",
+        description: "يرجى المحاولة مرة أخرى بعد لحظات.",
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -171,57 +173,52 @@ export default function Profile() {
 
   // --- العرض النهائي للصفحة مع كل التحسينات ---
   return (
-    <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
-      <Toaster
-        position="bottom-center"
-        toastOptions={{
-          className: "font-arabic", // تطبيق الخط العربي على كل التنبيهات
-          success: { duration: 3000 },
-          error: { duration: 4000 },
-        }}
-      />
-      <div
-        dir="rtl"
-        className="min-h-screen font-arabic"
-        style={{
-          backgroundColor: colors.bg.primary,
-          color: colors.text.primary,
-          paddingBlock: semanticSpacing.section.sm,
-        }}
-      >
-        <PageLayout maxWidth="2xl" className="px-0">
-          <div
-            className="w-full"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: semanticSpacing.section.sm,
-              paddingInline: semanticSpacing.layout.sm,
-            }}
-          >
-            <ProfileHeader
-              fullName={fullName}
-              username={telegramUsername}
-              profilePhoto={photoUrl}
-              telegramId={telegramId}
-              onPaymentHistoryClick={goToPaymentHistory}
-            />
+    <>
+      <Toaster />
+      <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
+        <div
+          dir="rtl"
+          className="min-h-screen font-arabic"
+          style={{
+            backgroundColor: colors.bg.primary,
+            color: colors.text.primary,
+            paddingBlock: semanticSpacing.section.sm,
+          }}
+        >
+          <PageLayout maxWidth="2xl" className="px-0">
             <div
-              className="w-full max-w-4xl mx-auto"
-              style={{ paddingBlock: semanticSpacing.section.sm }}
+              className="w-full"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: semanticSpacing.section.sm,
+                paddingInline: semanticSpacing.layout.sm,
+              }}
             >
-              <SubscriptionsSection
-                subscriptions={subscriptions || []}
-                loadMore={loadMoreHandler}
-                hasMore={!!hasNextPage}
-                isLoadingMore={isFetchingNextPage}
-                isRefreshing={isRefreshing}
-                onRefreshClick={handleRefresh}
+              <ProfileHeader
+                fullName={fullName}
+                username={telegramUsername}
+                profilePhoto={photoUrl}
+                telegramId={telegramId}
+                onPaymentHistoryClick={goToPaymentHistory}
               />
+              <div
+                className="w-full max-w-4xl mx-auto"
+                style={{ paddingBlock: semanticSpacing.section.sm }}
+              >
+                <SubscriptionsSection
+                  subscriptions={subscriptions || []}
+                  loadMore={loadMoreHandler}
+                  hasMore={!!hasNextPage}
+                  isLoadingMore={isFetchingNextPage}
+                  isRefreshing={isRefreshing}
+                  onRefreshClick={handleRefresh}
+                />
+              </div>
             </div>
-          </div>
-        </PageLayout>
-      </div>
-    </TonConnectUIProvider>
+          </PageLayout>
+        </div>
+      </TonConnectUIProvider>
+    </>
   );
 }

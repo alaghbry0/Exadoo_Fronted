@@ -6,7 +6,167 @@
  * @component مشترك - يستخدم في forex و indicators وأي صفحة أخرى
  */
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+
+const WHITE_RGBA: [number, number, number, number] = [1, 1, 1, 1];
+
+type LottieColorValue = number[] | Record<string, any> | Array<any>;
+
+const cloneAnimationPayload = (payload: any) =>
+  JSON.parse(JSON.stringify(payload));
+
+const matchesWhite = (value: unknown): value is number[] => {
+  return (
+    Array.isArray(value) &&
+    value.length >= 4 &&
+    value[0] === WHITE_RGBA[0] &&
+    value[1] === WHITE_RGBA[1] &&
+    value[2] === WHITE_RGBA[2] &&
+    value[3] === WHITE_RGBA[3]
+  );
+};
+
+const setAlphaTransparent = (rgba: number[]) => {
+  const clone = [...rgba];
+  clone[3] = 0;
+  return clone;
+};
+
+const sanitizeColorKey = (colorKey: LottieColorValue): LottieColorValue => {
+  if (!colorKey) {
+    return colorKey;
+  }
+
+  if (matchesWhite(colorKey as number[])) {
+    return setAlphaTransparent(colorKey as number[]);
+  }
+
+  if (Array.isArray(colorKey)) {
+    return colorKey.map((entry) => {
+      if (matchesWhite(entry)) {
+        return setAlphaTransparent(entry);
+      }
+
+      if (entry && typeof entry === "object") {
+        const nextEntry = { ...entry } as Record<string, any>;
+
+        if (nextEntry.s && matchesWhite(nextEntry.s)) {
+          nextEntry.s = setAlphaTransparent(nextEntry.s);
+        }
+
+        if (nextEntry.e && matchesWhite(nextEntry.e)) {
+          nextEntry.e = setAlphaTransparent(nextEntry.e);
+        }
+
+        if (nextEntry.k) {
+          nextEntry.k = sanitizeColorKey(nextEntry.k);
+        }
+
+        return nextEntry;
+      }
+
+      return entry;
+    });
+  }
+
+  if (typeof colorKey === "object") {
+    const nextKey = { ...(colorKey as Record<string, any>) };
+    if (nextKey.k) {
+      nextKey.k = sanitizeColorKey(nextKey.k);
+    }
+    if (nextKey.s && matchesWhite(nextKey.s)) {
+      nextKey.s = setAlphaTransparent(nextKey.s);
+    }
+    if (nextKey.e && matchesWhite(nextKey.e)) {
+      nextKey.e = setAlphaTransparent(nextKey.e);
+    }
+    return nextKey;
+  }
+
+  return colorKey;
+};
+
+const sanitizeShape = (shape: any): any => {
+  if (!shape || typeof shape !== "object") {
+    return shape;
+  }
+
+  const nextShape: Record<string, any> = { ...shape };
+
+  if (nextShape.ty === "fl" || nextShape.ty === "st") {
+    if (nextShape.c) {
+      nextShape.c = {
+        ...nextShape.c,
+        k: sanitizeColorKey(nextShape.c.k ?? nextShape.c),
+      };
+    }
+  }
+
+  if (Array.isArray(nextShape.it)) {
+    nextShape.it = sanitizeShapes(nextShape.it);
+  }
+
+  if (Array.isArray(nextShape.shapes)) {
+    nextShape.shapes = sanitizeShapes(nextShape.shapes);
+  }
+
+  return nextShape;
+};
+
+const sanitizeShapes = (shapes: any[]): any[] => {
+  return shapes
+    .map((shape) => sanitizeShape(shape))
+    .filter((shape) => shape !== null && shape !== undefined);
+};
+
+const sanitizeLayer = (layer: any): any => {
+  if (!layer || typeof layer !== "object") {
+    return layer;
+  }
+
+  const nextLayer: Record<string, any> = { ...layer };
+
+  if (Array.isArray(nextLayer.shapes)) {
+    nextLayer.shapes = sanitizeShapes(nextLayer.shapes);
+  }
+
+  if (Array.isArray(nextLayer.it)) {
+    nextLayer.it = sanitizeShapes(nextLayer.it);
+  }
+
+  if (Array.isArray(nextLayer.layers)) {
+    nextLayer.layers = sanitizeLayers(nextLayer.layers);
+  }
+
+  return nextLayer;
+};
+
+const sanitizeLayers = (layers: any[]): any[] => {
+  return layers.map((layer) => sanitizeLayer(layer));
+};
+
+const sanitizeAnimationData = (data: any) => {
+  const payload = cloneAnimationPayload(data);
+
+  if (Array.isArray(payload.layers)) {
+    payload.layers = sanitizeLayers(payload.layers);
+  }
+
+  if (Array.isArray(payload.assets)) {
+    payload.assets = payload.assets.map((asset: any) => {
+      if (asset && Array.isArray(asset.layers)) {
+        return {
+          ...asset,
+          layers: sanitizeLayers(asset.layers),
+        };
+      }
+
+      return asset;
+    });
+  }
+
+  return payload;
+};
 
 interface LottieAnimationProps {
   animationData: any;
@@ -28,13 +188,25 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [animationUrl, setAnimationUrl] = useState<string>("");
 
-  useEffect(() => {
+  const sanitizedData = useMemo(() => {
     if (!animationData) {
+      return null;
+    }
+
+    if (!stripBackground) {
+      return animationData;
+    }
+
+    return sanitizeAnimationData(animationData);
+  }, [animationData, stripBackground]);
+
+  useEffect(() => {
+    if (!sanitizedData) {
       setAnimationUrl("");
       return undefined;
     }
     // Create a Blob URL for the animation data
-    const blob = new Blob([JSON.stringify(animationData)], {
+    const blob = new Blob([JSON.stringify(sanitizedData)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -43,7 +215,7 @@ export const LottieAnimation: React.FC<LottieAnimationProps> = ({
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [animationData]);
+  }, [sanitizedData]);
 
   // Enhanced HTML to render Lottie with better quality and performance
   const transparencyScript = stripBackground

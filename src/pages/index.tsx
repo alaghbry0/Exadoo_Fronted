@@ -109,8 +109,8 @@ export default function Home() {
                         >
                           <LottieAnimation
                             animationData={service.animationData}
-                            width="120px"
-                            height="120px"
+                            width="80px"
+                            height="80px"
                             className="object-contain"
                           />
                         </div>

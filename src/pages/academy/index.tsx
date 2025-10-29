@@ -5,6 +5,7 @@ import { useMemo, useState, useCallback, useDeferredValue } from "react";
 import { AnimatePresence } from "framer-motion";
 import AuthPrompt from "@/domains/auth/components/AuthFab";
 import { Button } from "@/shared/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { cn } from "@/shared/utils";
 import { Search, Bookmark, Layers, Award, BookOpen } from "lucide-react";
 import { useTelegram } from "@/shared/context/TelegramContext";
@@ -24,6 +25,7 @@ import {
   colors,
   componentRadius,
   shadows,
+  shadowClasses,
   withAlpha,
   fontFamily,
   spacing,
@@ -187,10 +189,40 @@ export default function AcademyIndex() {
       color: colors.text.primary,
     } as const;
 
+<<<<<<< ours
+  const bottomNavTokens = {
+    containerBackground: withAlpha(colors.bg.elevated, 0.95),
+    containerBorder: withAlpha(colors.border.default, 0.7),
+    activeBackground: withAlpha(colors.brand.primary, 0.12),
+    activeShadow: shadows.colored.primary.sm,
+    inactiveShadow: "none",
+  } as const;
+
+  const bottomNavSurfaceStyle = {
+    backgroundColor: bottomNavTokens.containerBackground,
+    borderTop: `1px solid ${bottomNavTokens.containerBorder}`,
+    boxShadow: shadows.elevation[2],
+    paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${spacing[3]})`,
+  } as const;
+
+  const navTriggerBase = cn(
+    "flex flex-col items-center gap-1.5 px-6 py-2 text-xs font-semibold transition-all",
+=======
   const navButtonBase = cn(
     "flex flex-col items-center gap-1.5 px-6 py-2 transition-all",
+>>>>>>> theirs
     componentRadius.button,
+    shadowClasses.button,
   );
+
+  const getTriggerStyle = (isActive: boolean) =>
+    ({
+      color: isActive ? colors.brand.primary : colors.text.secondary,
+      backgroundColor: isActive
+        ? bottomNavTokens.activeBackground
+        : "transparent",
+      boxShadow: isActive ? bottomNavTokens.activeShadow : bottomNavTokens.inactiveShadow,
+    }) as const;
 
   return (
     <div
@@ -209,7 +241,7 @@ export default function AcademyIndex() {
         <HomeSearchBar
           value={q}
           onChange={setQ}
-          placeholder="Enter Course Name"
+          placeholder="ابحث عن دورة"
           ariaLabel="بحث في محتوى الأكاديمية"
         />
       </div>
@@ -364,7 +396,7 @@ export default function AcademyIndex() {
                   {filteredData.topCourses.length > 0 && (
                     <section aria-labelledby="top-courses-carousel" className="mb-8">
                       <h2 className="mb-4 text-2xl font-bold" style={headingStyle}>
-                        Top Courses
+                        أفضل الدورات
                       </h2>
                       
                       <TopCourseCarousel
@@ -385,7 +417,7 @@ export default function AcademyIndex() {
                   {filteredData.categories.length > 0 && (
                     <section aria-labelledby="categories" className="mb-8">
                       <h2 className="mb-6 text-2xl font-bold" style={headingStyle}>
-                        Course Categories :
+                        تصنيفات الدورات
                       </h2>
                       
                       <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
@@ -406,7 +438,7 @@ export default function AcademyIndex() {
                   {filteredData.topBundles.length > 0 && (
                     <section aria-labelledby="latest-bundles" className="mb-8">
                       <h2 className="mb-5 text-2xl font-bold" style={headingStyle}>
-                        Latest Bundles 🔥
+                        أحدث الباقات 🔥
                       </h2>
                       
                       <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
@@ -434,7 +466,7 @@ export default function AcademyIndex() {
                   {filteredData.highlightCourses.length > 0 && (
                     <section aria-labelledby="latest-courses" className="mb-8">
                       <h2 className="mb-6 text-2xl font-bold" style={headingStyle}>
-                        Latest Courses
+                        أحدث الدورات
                       </h2>
                       
                       <div className="overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
@@ -520,57 +552,43 @@ export default function AcademyIndex() {
 
       {/* Bottom Navigation */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 px-4 py-2 backdrop-blur-xl"
-        style={{
-          backgroundColor: withAlpha(colors.bg.elevated, 0.95),
-          borderTop: `1px solid ${withAlpha(colors.border.default, 0.7)}`,
-          boxShadow: shadows.elevation[2],
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)",
-        }}
+        className="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 backdrop-blur-xl"
+        style={bottomNavSurfaceStyle}
       >
-        <div className="mx-auto flex max-w-2xl items-center justify-around">
-          <button
-            className={navButtonBase}
-            style={{
-              color: tab === "all" ? colors.brand.primary : colors.text.secondary,
-              backgroundColor:
-                tab === "all" ? withAlpha(colors.brand.primary, 0.12) : "transparent",
-              boxShadow: tab === "all" ? shadows.colored.primary.sm : "none",
-            }}
-            onClick={() => handleTab("all")}
-            aria-label="الصفحة الرئيسية"
-            aria-current={tab === "all" ? "page" : undefined}
+        <Tabs
+          value={tab}
+          onValueChange={(value) => handleTab(value as "all" | "mine")}
+          aria-label="التنقل داخل محتوى الأكاديمية"
+        >
+          <TabsList
+            className={cn(
+              "mx-auto flex h-auto w-full max-w-2xl items-center justify-around gap-3 bg-transparent p-0",
+              shadowClasses.none,
+            )}
           >
-            <Layers size={22} aria-hidden="true" />
-            <span
-              className="text-xs font-semibold"
-              style={{ fontFamily: fontFamily.arabic }}
+            <TabsTrigger
+              value="all"
+              className={navTriggerBase}
+              style={getTriggerStyle(tab === "all")}
+              aria-label="الانتقال إلى الرئيسية"
+              aria-current={tab === "all" ? "page" : undefined}
             >
-              Home
-            </span>
-          </button>
+              <Layers size={22} aria-hidden="true" />
+              <span style={{ fontFamily: fontFamily.arabic }}>الرئيسية</span>
+            </TabsTrigger>
 
-          <button
-            className={navButtonBase}
-            style={{
-              color: tab === "mine" ? colors.brand.primary : colors.text.secondary,
-              backgroundColor:
-                tab === "mine" ? withAlpha(colors.brand.primary, 0.12) : "transparent",
-              boxShadow: tab === "mine" ? shadows.colored.primary.sm : "none",
-            }}
-            onClick={() => handleTab("mine")}
-            aria-label="دوراتي"
-            aria-current={tab === "mine" ? "page" : undefined}
-          >
-            <Bookmark size={22} aria-hidden="true" />
-            <span
-              className="text-xs font-semibold"
-              style={{ fontFamily: fontFamily.arabic }}
+            <TabsTrigger
+              value="mine"
+              className={navTriggerBase}
+              style={getTriggerStyle(tab === "mine")}
+              aria-label="عرض دوراتي"
+              aria-current={tab === "mine" ? "page" : undefined}
             >
-              My Courses
-            </span>
-          </button>
-        </div>
+              <Bookmark size={22} aria-hidden="true" />
+              <span style={{ fontFamily: fontFamily.arabic }}>دوراتي</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
   

@@ -1,19 +1,20 @@
 // ProfileHeader.tsx
 import React, { useMemo } from "react";
-import { User, FileText, Award, Copy, CheckCircle } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { User, FileText, Award, Copy } from "lucide-react";
 import SmartImage from "@/shared/components/common/SmartImage";
+
+import { showToast } from "@/shared/components/ui/showToast";
+import { componentRadius, shadowClasses } from "@/styles/tokens";
+
+
+import { cn } from "@/shared/utils";
 import {
-  colors,
-  componentRadius,
-  gradients,
-  radius,
-  semanticSpacing,
-  shadows,
-  shadowClasses,
-  withAlpha,
-} from "@/styles/tokens";
-import { cn } from "@/shared/utils/cn";
+  profileHeaderContentStyle,
+  profileHeaderInnerStyle,
+  profileHeaderOverlayStyle,
+  profileHeaderRootStyle,
+  profileHeaderStackStyle,
+} from "./ProfileTokens";
 
 // --- دالة مساعدة للتحقق من رابط الصورة ---
 export function getValidPhotoUrl(
@@ -56,54 +57,40 @@ export default function ProfileHeader({
 
   const handleCopyId = async () => {
     if (!telegramId) {
-      toast.error("المعرف غير متوفر للنسخ.");
+      showToast.error({
+        title: "لا يوجد معرف متاح",
+        description: "تعذر العثور على معرف تيليجرام لنسخه.",
+      });
       return;
     }
     try {
       await navigator.clipboard.writeText(telegramId.toString());
-      toast.success("تم نسخ المعرف بنجاح!", {
-        icon: (
-          <CheckCircle
-            className="h-5 w-5"
-            style={{ color: colors.status.success }}
-          />
-        ),
+      showToast.success({
+        title: "تم نسخ المعرف", 
+        description: "يمكنك الآن لصق المعرف في أي مكان تريده.",
       });
     } catch (err) {
       console.error("فشل نسخ المعرف:", err);
-      toast.error("فشل نسخ المعرف. يرجى المحاولة مرة أخرى.");
+      showToast.error({
+        title: "فشل النسخ",
+        description: "يرجى المحاولة مرة أخرى بعد التأكد من أذونات المتصفح.",
+      });
     }
   };
-
-  const chipPaddingX = semanticSpacing.component.lg;
-  const chipPaddingY = semanticSpacing.component.xs;
-  const chipBackground = withAlpha(colors.bg.primary, 0.16);
-  const chipHoverShadow = shadows.elevation[3];
 
   return (
     <div
       className={cn("relative w-full overflow-hidden", shadowClasses.cardHover)}
-      style={{
-        background: gradients.brand.primary,
-        borderRadius: radius["3xl"],
-        color: colors.text.inverse,
-      }}
+      style={profileHeaderRootStyle}
     >
       <div
         className="pointer-events-none absolute inset-0"
-        style={{
-          background: gradients.effects.neutralSheen,
-          opacity: 0.4,
-        }}
+        style={profileHeaderOverlayStyle}
       />
 
       <div
         className="relative"
-        style={{
-          paddingInline: semanticSpacing.layout.sm,
-          paddingBlockStart: semanticSpacing.section.sm,
-          paddingBlockEnd: semanticSpacing.section.sm,
-        }}
+        style={profileHeaderContentStyle}
       >
         <div className="flex items-start justify-between">
           {onPaymentHistoryClick ? (
@@ -117,17 +104,20 @@ export default function ProfileHeader({
               )}
               style={{
                 animationDelay: "0.2s",
-                background: chipBackground,
-                color: colors.text.inverse,
-                paddingInline: chipPaddingX,
-                paddingBlock: chipPaddingY,
-                boxShadow: chipHoverShadow,
-                "--tw-ring-color": colors.border.focus,
-                "--tw-ring-offset-color": colors.bg.primary,
+                background: "var(--profile-chip-background)",
+                color: "var(--profile-chip-text)",
+                paddingInline: "var(--profile-chip-padding-inline)",
+                paddingBlock: "var(--profile-chip-padding-block)",
+                boxShadow: "var(--profile-chip-shadow)",
+                "--tw-ring-color": "var(--profile-ring-color)",
+                "--tw-ring-offset-color": "var(--profile-ring-offset-color)",
               } as React.CSSProperties}
               title="سجلات الدفعات"
             >
-              <FileText className="h-5 w-5" style={{ color: colors.text.inverse }} />
+              <FileText
+                className="h-5 w-5"
+                style={{ color: "var(--profile-chip-text)" }}
+              />
             </button>
           ) : (
             <div />
@@ -141,35 +131,34 @@ export default function ProfileHeader({
             )}
             style={{
               animationDelay: "0.3s",
-              background: chipBackground,
-              color: colors.text.inverse,
-              paddingInline: chipPaddingX,
-              paddingBlock: chipPaddingY,
-              boxShadow: chipHoverShadow,
+              background: "var(--profile-chip-background)",
+              color: "var(--profile-chip-text)",
+              paddingInline: "var(--profile-chip-padding-inline)",
+              paddingBlock: "var(--profile-chip-padding-block)",
+              boxShadow: "var(--profile-chip-shadow)",
             }}
             title="الإنجازات (قريباً)"
           >
             <Award
               className="h-5 w-5"
-              style={{ color: withAlpha(colors.text.inverse, 0.85) }}
+              style={{ color: "var(--profile-chip-text-muted)" }}
             />
           </div>
         </div>
 
         <div
           className="text-center"
-          style={{
-            paddingInline: semanticSpacing.layout.sm,
-            paddingBlockStart: semanticSpacing.component.sm,
-          }}
+          style={profileHeaderInnerStyle}
         >
           <div className="relative inline-block">
             <div
               className={cn("h-24 w-24 overflow-hidden", componentRadius.badge)}
               style={{
-                background: withAlpha(colors.bg.inverse, 0.4),
-                border: `4px solid ${withAlpha(colors.text.inverse, 0.75)}`,
-                boxShadow: shadows.elevation[4],
+                background: "var(--profile-avatar-bg)",
+                borderWidth: "var(--profile-avatar-border-width)",
+                borderColor: "var(--profile-avatar-border-color)",
+                borderStyle: "solid",
+                boxShadow: "var(--profile-avatar-shadow)",
               }}
             >
               <SmartImage
@@ -186,44 +175,37 @@ export default function ProfileHeader({
             </div>
           </div>
 
-          <div
-            style={{
-              marginTop: semanticSpacing.component.md,
-              display: "flex",
-              flexDirection: "column",
-              gap: semanticSpacing.component.sm,
-            }}
-          >
+          <div style={profileHeaderStackStyle}>
             <h1
               className="text-2xl font-bold text-shadow-sm"
-              style={{ color: colors.text.inverse }}
+              style={{ color: "var(--profile-header-text-color)" }}
             >
               {fullName}
             </h1>
             <div
               className="flex flex-col items-center justify-center"
-              style={{ gap: semanticSpacing.component.sm }}
+              style={{ gap: "var(--profile-space-sm)" }}
             >
               {username && (
                 <div
                   className={cn("flex items-center", componentRadius.badge)}
                   style={{
-                    background: chipBackground,
-                    color: colors.text.inverse,
-                    gap: semanticSpacing.component.sm,
-                    paddingInline: chipPaddingX,
-                    paddingBlock: chipPaddingY,
-                    boxShadow: chipHoverShadow,
+                    background: "var(--profile-chip-background)",
+                    color: "var(--profile-chip-text)",
+                    gap: "var(--profile-space-sm)",
+                    paddingInline: "var(--profile-chip-padding-inline)",
+                    paddingBlock: "var(--profile-chip-padding-block)",
+                    boxShadow: "var(--profile-chip-shadow)",
                   }}
                 >
                   <User
                     className="h-4 w-4"
-                    style={{ color: withAlpha(colors.text.inverse, 0.85) }}
+                    style={{ color: "var(--profile-chip-text-muted)" }}
                   />
                   <span
                     className="truncate text-sm"
                     style={{
-                      color: withAlpha(colors.text.inverse, 0.92),
+                      color: "var(--profile-chip-text-strong)",
                       maxWidth: "180px",
                     }}
                   >
@@ -240,24 +222,24 @@ export default function ProfileHeader({
                     componentRadius.badge,
                   )}
                   style={{
-                    background: chipBackground,
-                    color: withAlpha(colors.text.inverse, 0.92),
-                    gap: semanticSpacing.component.sm,
-                    paddingInline: chipPaddingX,
-                    paddingBlock: chipPaddingY,
-                    boxShadow: chipHoverShadow,
+                    background: "var(--profile-chip-background)",
+                    color: "var(--profile-chip-text-strong)",
+                    gap: "var(--profile-space-sm)",
+                    paddingInline: "var(--profile-chip-padding-inline)",
+                    paddingBlock: "var(--profile-chip-padding-block)",
+                    boxShadow: "var(--profile-chip-shadow)",
                   }}
                   title="اضغط لنسخ المعرف"
                 >
                   <span
                     className="text-xs font-mono"
-                    style={{ color: withAlpha(colors.text.inverse, 0.82) }}
+                    style={{ color: "var(--profile-chip-text-soft)" }}
                   >
                     ID: {telegramId}
                   </span>
                   <Copy
                     className="h-3.5 w-3.5 transition-colors"
-                    style={{ color: withAlpha(colors.text.inverse, 0.7) }}
+                    style={{ color: "var(--profile-chip-icon)" }}
                   />
                 </button>
               )}
