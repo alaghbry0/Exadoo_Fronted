@@ -185,14 +185,12 @@ export default function Profile() {
             paddingBlock: semanticSpacing.section.sm,
           }}
         >
-          <PageLayout maxWidth="2xl" className="px-0">
-            <div
+          <PageLayout maxWidth="2xl">
+            <section
               className="w-full"
               style={{
-                display: "flex",
-                flexDirection: "column",
+                display: "grid",
                 gap: semanticSpacing.section.sm,
-                paddingInline: semanticSpacing.layout.sm,
               }}
             >
               <ProfileHeader
@@ -215,7 +213,7 @@ export default function Profile() {
                   onRefreshClick={handleRefresh}
                 />
               </div>
-            </div>
+            </section>
           </PageLayout>
         </div>
       </TonConnectUIProvider>

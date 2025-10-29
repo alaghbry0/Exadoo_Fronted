@@ -4,8 +4,9 @@ import { User, FileText, Award, Copy } from "lucide-react";
 import SmartImage from "@/shared/components/common/SmartImage";
 
 import { showToast } from "@/shared/components/ui/showToast";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Avatar, AvatarImage } from "@/shared/components/ui/avatar";
 import { componentRadius, shadowClasses } from "@/styles/tokens";
-
 
 import { cn } from "@/shared/utils";
 import {
@@ -43,6 +44,19 @@ interface ProfileHeaderProps {
   onPaymentHistoryClick?: () => void;
 }
 
+const ProfileAvatarImage = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<typeof SmartImage>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className="h-full w-full">
+    <SmartImage
+      {...props}
+      className={cn("h-full w-full object-cover", className)}
+    />
+  </div>
+));
+ProfileAvatarImage.displayName = "ProfileAvatarImage";
+
 export default function ProfileHeader({
   fullName = "مستخدم بدون اسم",
   username = "بدون معرف",
@@ -79,8 +93,11 @@ export default function ProfileHeader({
   };
 
   return (
-    <div
-      className={cn("relative w-full overflow-hidden", shadowClasses.cardHover)}
+    <Card
+      className={cn(
+        "relative w-full overflow-hidden border-0 p-0",
+        shadowClasses.cardHover,
+      )}
       style={profileHeaderRootStyle}
     >
       <div
@@ -88,11 +105,14 @@ export default function ProfileHeader({
         style={profileHeaderOverlayStyle}
       />
 
-      <div
-        className="relative"
+      <CardHeader
+        className="relative z-[1] flex w-full items-start justify-between space-y-0 p-0"
         style={profileHeaderContentStyle}
       >
-        <div className="flex items-start justify-between">
+        <div
+          className="flex w-full items-center justify-between"
+          style={{ gap: "var(--profile-space-sm)" }}
+        >
           {onPaymentHistoryClick ? (
             <button
               type="button"
@@ -120,7 +140,7 @@ export default function ProfileHeader({
               />
             </button>
           ) : (
-            <div />
+            <span aria-hidden className="inline-flex h-10 w-10" />
           )}
 
           <div
@@ -145,23 +165,25 @@ export default function ProfileHeader({
             />
           </div>
         </div>
+      </CardHeader>
 
-        <div
-          className="text-center"
-          style={profileHeaderInnerStyle}
-        >
-          <div className="relative inline-block">
-            <div
-              className={cn("h-24 w-24 overflow-hidden", componentRadius.badge)}
-              style={{
-                background: "var(--profile-avatar-bg)",
-                borderWidth: "var(--profile-avatar-border-width)",
-                borderColor: "var(--profile-avatar-border-color)",
-                borderStyle: "solid",
-                boxShadow: "var(--profile-avatar-shadow)",
-              }}
-            >
-              <SmartImage
+      <CardContent
+        className="relative z-[1] flex flex-col items-center space-y-0 p-0 text-center"
+        style={profileHeaderInnerStyle}
+      >
+        <div className="relative inline-flex">
+          <Avatar
+            className={cn("h-24 w-24 overflow-hidden", componentRadius.badge)}
+            style={{
+              background: "var(--profile-avatar-bg)",
+              borderWidth: "var(--profile-avatar-border-width)",
+              borderColor: "var(--profile-avatar-border-color)",
+              borderStyle: "solid",
+              boxShadow: "var(--profile-avatar-shadow)",
+            }}
+          >
+            <AvatarImage asChild>
+              <ProfileAvatarImage
                 src={avatarSrc}
                 alt={`صورة ${fullName}`}
                 width={96}
@@ -169,84 +191,83 @@ export default function ProfileHeader({
                 blurType="primary"
                 autoQuality
                 fallbackSrc="/logo.png"
-                className="h-full w-full object-cover"
                 priority
               />
-            </div>
-          </div>
+            </AvatarImage>
+          </Avatar>
+        </div>
 
-          <div style={profileHeaderStackStyle}>
-            <h1
-              className="text-2xl font-bold text-shadow-sm"
-              style={{ color: "var(--profile-header-text-color)" }}
-            >
-              {fullName}
-            </h1>
-            <div
-              className="flex flex-col items-center justify-center"
-              style={{ gap: "var(--profile-space-sm)" }}
-            >
-              {username && (
-                <div
-                  className={cn("flex items-center", componentRadius.badge)}
+        <div style={profileHeaderStackStyle}>
+          <h1
+            className="text-2xl font-bold text-shadow-sm"
+            style={{ color: "var(--profile-header-text-color)" }}
+          >
+            {fullName}
+          </h1>
+          <div
+            className="flex flex-col items-center justify-center"
+            style={{ gap: "var(--profile-space-sm)" }}
+          >
+            {username && (
+              <div
+                className={cn("flex items-center", componentRadius.badge)}
+                style={{
+                  background: "var(--profile-chip-background)",
+                  color: "var(--profile-chip-text)",
+                  gap: "var(--profile-space-sm)",
+                  paddingInline: "var(--profile-chip-padding-inline)",
+                  paddingBlock: "var(--profile-chip-padding-block)",
+                  boxShadow: "var(--profile-chip-shadow)",
+                }}
+              >
+                <User
+                  className="h-4 w-4"
+                  style={{ color: "var(--profile-chip-text-muted)" }}
+                />
+                <span
+                  className="truncate text-sm"
                   style={{
-                    background: "var(--profile-chip-background)",
-                    color: "var(--profile-chip-text)",
-                    gap: "var(--profile-space-sm)",
-                    paddingInline: "var(--profile-chip-padding-inline)",
-                    paddingBlock: "var(--profile-chip-padding-block)",
-                    boxShadow: "var(--profile-chip-shadow)",
-                  }}
-                >
-                  <User
-                    className="h-4 w-4"
-                    style={{ color: "var(--profile-chip-text-muted)" }}
-                  />
-                  <span
-                    className="truncate text-sm"
-                    style={{
-                      color: "var(--profile-chip-text-strong)",
-                      maxWidth: "180px",
-                    }}
-                  >
-                    @{username}
-                  </span>
-                </div>
-              )}
-              {telegramId && (
-                <button
-                  type="button"
-                  onClick={handleCopyId}
-                  className={cn(
-                    "group flex items-center transition-transform duration-200 active:scale-95",
-                    componentRadius.badge,
-                  )}
-                  style={{
-                    background: "var(--profile-chip-background)",
                     color: "var(--profile-chip-text-strong)",
-                    gap: "var(--profile-space-sm)",
-                    paddingInline: "var(--profile-chip-padding-inline)",
-                    paddingBlock: "var(--profile-chip-padding-block)",
-                    boxShadow: "var(--profile-chip-shadow)",
+                    maxWidth: "180px",
                   }}
-                  title="اضغط لنسخ المعرف"
                 >
-                  <span
-                    className="text-xs font-mono"
-                    style={{ color: "var(--profile-chip-text-soft)" }}
-                  >
-                    ID: {telegramId}
-                  </span>
-                  <Copy
-                    className="h-3.5 w-3.5 transition-colors"
-                    style={{ color: "var(--profile-chip-icon)" }}
-                  />
-                </button>
-              )}
-            </div>
+                  @{username}
+                </span>
+              </div>
+            )}
+            {telegramId && (
+              <button
+                type="button"
+                onClick={handleCopyId}
+                className={cn(
+                  "group flex items-center transition-transform duration-200 active:scale-95",
+                  componentRadius.badge,
+                )}
+                style={{
+                  background: "var(--profile-chip-background)",
+                  color: "var(--profile-chip-text-strong)",
+                  gap: "var(--profile-space-sm)",
+                  paddingInline: "var(--profile-chip-padding-inline)",
+                  paddingBlock: "var(--profile-chip-padding-block)",
+                  boxShadow: "var(--profile-chip-shadow)",
+                }}
+                title="اضغط لنسخ المعرف"
+              >
+                <span
+                  className="text-xs font-mono"
+                  style={{ color: "var(--profile-chip-text-soft)" }}
+                >
+                  ID: {telegramId}
+                </span>
+                <Copy
+                  className="h-3.5 w-3.5 transition-colors"
+                  style={{ color: "var(--profile-chip-icon)" }}
+                />
+              </button>
+            )}
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

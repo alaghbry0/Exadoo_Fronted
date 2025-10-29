@@ -69,6 +69,7 @@ export const profileHeaderContentStyle: CSSProperties = Object.freeze({
 export const profileHeaderInnerStyle: CSSProperties = Object.freeze({
   paddingInline: "var(--profile-header-inner-padding-inline)",
   paddingBlockStart: "var(--profile-header-inner-padding-block-start)",
+  paddingBlockEnd: "var(--profile-header-padding-block-end)",
 });
 
 export const profileHeaderStackStyle: CSSProperties = Object.freeze({
