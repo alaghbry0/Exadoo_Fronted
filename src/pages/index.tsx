@@ -1,6 +1,7 @@
 // src/pages/index.tsx
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import PageLayout from "@/shared/components/layout/PageLayout";
 import AcademyHeroCard from "@/domains/academy/components/AcademyHeroCard";
@@ -57,13 +58,13 @@ export default function Home() {
               >
                 Exaado Academy
               </h2>
-              <a
+              <Link
                 href="/academy"
                 className="text-sm font-semibold hover:underline"
                 style={{ color: colors.brand.primary }}
               >
                 View All →
-              </a>
+              </Link>
             </div>
             <div className="px-1">
               <AcademyHeroCard />

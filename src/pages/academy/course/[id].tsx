@@ -3,16 +3,15 @@
  * صفحة تفاصيل الدورة التعليمية
  */
 
-import React, { useEffect, useMemo, useState, ReactNode } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
-import { 
-  Loader2, 
-  ArrowLeft, 
-  Clipboard, 
-  MessageCircle, 
-  Lock, 
-  Play 
+import {
+  Loader2,
+  ArrowLeft,
+  Clipboard,
+  Lock,
+  Play
 } from "lucide-react";
 import { colors, spacing } from "@/styles/tokens";
 import SmartImage from "@/shared/components/common/SmartImage";
@@ -280,23 +279,47 @@ export default function CourseDetail() {
   );
 
 
-  const progress = useMemo(() => {
-    if (!course || !isEnrolled) return 0;
-    let hash = 0;
-    for (let i = 0; i < course.id.length; i++)
-      hash = (hash * 31 + course.id.charCodeAt(i)) % 997;
-    const normalized = 35 + (hash % 60);
-    return Math.min(100, normalized);
-  }, [course, isEnrolled]);
+  const sections = useMemo(() => {
+    return details?.sections ?? [];
+  }, [details]);
+
+  const simpleLessons = useMemo(() => {
+    if (!course?.description) return [];
+    const lines = course.description.split("\n");
+    const lessonLines = lines.filter((line) =>
+      line.trim().match(/^\d+[.-]/) ||
+      line.trim().match(/^الدرس/) ||
+      line.trim().match(/^الفصل/),
+    );
+    return lessonLines.slice(0, 10);
+  }, [course]);
+
+  const totalHours = useMemo(() => {
+    if (!details?.sections) return "00:00:00";
+    let totalSeconds = 0;
+    details.sections.forEach((section: any) => {
+      if (section.lessons) {
+        section.lessons.forEach((lesson: any) => {
+          if (lesson.duration) {
+            const parts = lesson.duration.split(":");
+            totalSeconds +=
+              parseInt(parts[0] || 0, 10) * 3600 +
+              parseInt(parts[1] || 0, 10) * 60 +
+              parseInt(parts[2] || 0, 10);
+          }
+        });
+      }
+    });
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }, [details]);
 
   // Loading & Error States
   if (isLoading) return <CourseLoadingState />;
   if (isError) return <CourseErrorState message={(error as Error)?.message} />;
   if (!course) return <CourseNotFoundState />;
-
-  const isFree =
-    (course.is_free_course ?? "") === "1" ||
-    course.price?.toLowerCase?.() === "free";
 
   const onEnrollClick = () => {
     if (isEnrolled) {
@@ -317,43 +340,6 @@ export default function CourseDetail() {
   };
 
   // Extract all sections with lessons
-  const sections = useMemo(() => {
-    if (!details?.sections) return [];
-    return details.sections;
-  }, [details]);
-  
-  // Extract simple lessons from description for non-enrolled users
-  const simpleLessons = useMemo(() => {
-    if (!course?.description) return [];
-    const lines = course.description.split('\n');
-    const lessonLines = lines.filter(line => 
-      line.trim().match(/^\d+[.-]/) || 
-      line.trim().match(/^الدرس/) ||
-      line.trim().match(/^الفصل/)
-    );
-    return lessonLines.slice(0, 10); // Show first 10 lesson titles
-  }, [course]);
-
-  // Calculate total hours
-  const totalHours = useMemo(() => {
-    if (!details?.sections) return "00:00:00";
-    let totalSeconds = 0;
-    details.sections.forEach((section: any) => {
-      if (section.lessons) {
-        section.lessons.forEach((lesson: any) => {
-          if (lesson.duration) {
-            const parts = lesson.duration.split(':');
-            totalSeconds += parseInt(parts[0] || 0) * 3600 + parseInt(parts[1] || 0) * 60 + parseInt(parts[2] || 0);
-          }
-        });
-      }
-    });
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  }, [details]);
-
   return (
     <div dir="rtl" className="min-h-screen" style={{ backgroundColor: colors.bg.primary }}>
       {/* Course Header */}

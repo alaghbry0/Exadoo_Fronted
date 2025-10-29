@@ -1,7 +1,5 @@
 
 
-const path = require('path');
-
 const CONTEXT_RULES = [
   { test: /(?:^|\/)(profile|user|account)(?:\/|$)/i, blur: 'primary' },
   { test: /(?:^|\/)(academy|course|lesson)(?:\/|$)/i, blur: 'secondary' },

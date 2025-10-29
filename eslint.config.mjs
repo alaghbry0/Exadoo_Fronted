@@ -10,6 +10,12 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [
+      "public/**",
+      "src/animations/**/*.json",
+    ],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
@@ -23,6 +29,15 @@ const eslintConfig = [
       ],
       "react/no-unescaped-entities": "off",
       "@next/next/no-img-element": "off",
+    },
+  },
+  {
+    files: ["*.js", "scripts/**/*.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ];

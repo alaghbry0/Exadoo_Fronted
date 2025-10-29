@@ -166,4 +166,3 @@ module.exports = function transformer(fileInfo, api) {
 
   return changed ? root.toSource({ quote: 'single', trailingComma: true }) : null;
 };
-س
