@@ -11,6 +11,7 @@ export { MiniBundleCard } from "./MiniBundleCard";
 export { CategoryHeroHeader } from "./CategoryHeroHeader";
 export { LatestCourseCard } from "./LatestCourseCard";
 export { OngoingCourseCard } from "./OngoingCourseCard";
+export { SectionHeader } from "./SectionHeader";
 export { TopCourseCarousel } from "./TopCourseCarousel";
 export { default as AcademyHeroCard } from "./AcademyHeroCard";
 export { default as AcademyPurchaseModal } from "./AcademyPurchaseModal";

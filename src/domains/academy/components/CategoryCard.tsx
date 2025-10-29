@@ -1,9 +1,17 @@
 // src/components/academy/CategoryCard.tsx
 import { memo } from "react";
 import Link from "next/link";
-import SmartImage from "@/shared/components/common/SmartImage";
 import { motion } from "framer-motion";
+
+import SmartImage from "@/shared/components/common/SmartImage";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui";
+import { cn } from "@/shared/utils";
 import { fontFamily } from "@/styles/tokens";
+
+import {
+  academyCardClassNames,
+  academyCardTokens,
+} from "./styles/presets";
 
 interface CategoryCardProps {
   id: string;
@@ -12,6 +20,8 @@ interface CategoryCardProps {
   priority?: boolean;
 }
 
+const MotionCard = motion(Card);
+
 export const CategoryCard = memo(function CategoryCard({
   id,
   name,
@@ -19,16 +29,27 @@ export const CategoryCard = memo(function CategoryCard({
   priority,
 }: CategoryCardProps) {
   return (
-    <Link href={`/academy/category/${id}`} prefetch>
-      <motion.div
+    <Link
+      href={`/academy/category/${id}`}
+      prefetch
+      className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      style={{ outlineColor: academyCardTokens.surface.focusRing }}
+    >
+      <MotionCard
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
-        className="cursor-pointer w-[160px] sm:w-[180px] flex-shrink-0"
+        className={cn(
+          "w-[160px] flex-shrink-0 cursor-pointer sm:w-[180px]",
+          academyCardClassNames.interactive,
+        )}
+        style={{
+          background: academyCardTokens.surface.background,
+          borderColor: academyCardTokens.surface.border,
+        }}
       >
-        <div className="relative rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-          {/* Background Image */}
-          <div className="relative h-32 sm:h-36 overflow-hidden">
+        <CardHeader className="p-0">
+          <div className="relative h-32 w-full sm:h-36">
             <SmartImage
               src={thumbnail || "/image.jpg"}
               alt={name}
@@ -39,22 +60,23 @@ export const CategoryCard = memo(function CategoryCard({
               priority={!!priority}
               lazy={!priority}
             />
-            {/* Subtle overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            <div
+              className="absolute inset-0"
+              style={{ background: academyCardTokens.overlay.image }}
+            />
           </div>
-          
-          {/* Category Name */}
-          <div className="bg-white py-2.5 px-2">
-            <p
-              className="text-center text-xs sm:text-sm font-bold text-gray-900 truncate"
-              style={{ fontFamily: fontFamily.arabic }}
-              title={name}
-            >
-              {name}
-            </p>
-          </div>
-        </div>
-      </motion.div>
+        </CardHeader>
+
+        <CardContent className="flex items-center justify-center px-3 pb-3 pt-2">
+          <p
+            className="truncate text-center text-xs font-bold leading-snug sm:text-sm"
+            style={{ color: academyCardTokens.title, fontFamily: fontFamily.arabic }}
+            title={name}
+          >
+            {name}
+          </p>
+        </CardContent>
+      </MotionCard>
     </Link>
   );
 });

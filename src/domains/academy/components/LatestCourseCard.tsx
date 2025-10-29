@@ -1,10 +1,25 @@
 // src/components/academy/LatestCourseCard.tsx
 import { memo } from "react";
 import Link from "next/link";
-import SmartImage from "@/shared/components/common/SmartImage";
 import { motion } from "framer-motion";
-import { Star, ShoppingCart } from "lucide-react";
-import { colors, fontFamily } from "@/styles/tokens";
+import { ShoppingCart, Star } from "lucide-react";
+
+import SmartImage from "@/shared/components/common/SmartImage";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/shared/components/ui";
+import { cn } from "@/shared/utils";
+import { fontFamily } from "@/styles/tokens";
+
+import {
+  academyCardClassNames,
+  academyCardTokens,
+} from "./styles/presets";
 
 interface LatestCourseCardProps {
   id: string;
@@ -17,12 +32,13 @@ interface LatestCourseCardProps {
   priority?: boolean;
 }
 
-// Format price
 const formatPrice = (value: string) => {
   if (!value) return "";
   const n = Number(value);
-  return isNaN(n) ? value : `${n.toFixed(0)} USDT`;
+  return Number.isNaN(n) ? value : `${n.toFixed(0)} USDT`;
 };
+
+const MotionCard = motion(Card);
 
 export const LatestCourseCard = memo(function LatestCourseCard({
   id,
@@ -34,29 +50,46 @@ export const LatestCourseCard = memo(function LatestCourseCard({
   rating = 0,
   priority,
 }: LatestCourseCardProps) {
-  // Render stars
-  const renderStars = () => {
-    return Array.from({ length: 5 }).map((_, index) => (
-      <Star
-        key={index}
-        size={14}
-        className={index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-        aria-hidden="true"
-      />
-    ));
-  };
+  const renderStars = () =>
+    Array.from({ length: 5 }).map((_, index) => {
+      const isActive = index < rating;
+      const activeColor = academyCardTokens.rating.active;
+      const inactiveColor = academyCardTokens.rating.inactive;
+
+      return (
+        <Star
+          key={index}
+          size={14}
+          strokeWidth={1.5}
+          color={isActive ? activeColor : inactiveColor}
+          fill={isActive ? activeColor : "none"}
+          aria-hidden="true"
+        />
+      );
+    });
 
   return (
-    <Link href={`/academy/course/${id}`} prefetch>
-      <motion.div
+    <Link
+      href={`/academy/course/${id}`}
+      prefetch
+      className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      style={{ outlineColor: academyCardTokens.surface.focusRing }}
+    >
+      <MotionCard
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
-        className="cursor-pointer w-[240px] sm:w-[260px] flex-shrink-0"
+        className={cn(
+          "h-full w-[240px] min-h-[320px] flex-shrink-0 cursor-pointer sm:w-[260px]",
+          academyCardClassNames.interactive,
+        )}
+        style={{
+          background: academyCardTokens.surface.background,
+          borderColor: academyCardTokens.surface.border,
+        }}
       >
-        <div className="overflow-hidden bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col" style={{ minHeight: '320px', maxHeight: '320px' }}>
-          {/* Banner Image */}
-          <div className="relative h-40">
+        <CardHeader className="p-0">
+          <div className="relative h-40 w-full">
             <SmartImage
               src={imageUrl || "/image.jpg"}
               alt={title}
@@ -67,55 +100,70 @@ export const LatestCourseCard = memo(function LatestCourseCard({
               priority={!!priority}
               lazy={!priority}
             />
-            {/* Subtle Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-            
-            {/* Lessons Badge */}
-            <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-bold">
-              {lessonsCount} lessons
-            </div>
-          </div>
-          
-          {/* Content */}
-          <div className="p-3 flex flex-col flex-grow">
-            {/* Title */}
-            <h3
-              className="text-sm font-bold text-gray-900 mb-1.5 line-clamp-2 leading-tight"
-              style={{ fontFamily: fontFamily.arabic }}
-              title={title}
+            <div
+              className="absolute inset-0"
+              style={{ background: academyCardTokens.overlay.image }}
+            />
+
+            <Badge
+              variant="outline"
+              className="absolute right-3 top-3"
+              style={{
+                background: academyCardTokens.badge.background,
+                color: academyCardTokens.badge.foreground,
+                borderColor: "transparent",
+                fontFamily: fontFamily.arabic,
+              }}
             >
-              {title}
-            </h3>
-            
-            {/* Instructor */}
-            <p className="text-xs text-gray-500 mb-1.5">
-              {instructorName}
-            </p>
-            
-            {/* Rating */}
-            <div className="flex items-center gap-1 mb-2">
-              {renderStars()}
-            </div>
-            
-            {/* Footer: Price + Cart */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-200 mt-auto">
-              <span className="text-base font-bold" style={{ color: colors.text.primary }}>
-                {formatPrice(price)}
-              </span>
-              <button
-                className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // Add to cart logic
-                }}
-                aria-label="إضافة إلى السلة"
-              >
-                <ShoppingCart size={18} className="text-blue-600" aria-hidden="true" />
-              </button>
-            </div>
+              {lessonsCount} lessons
+            </Badge>
           </div>
-        </div>
-      </motion.div>
+        </CardHeader>
+
+        <CardContent className="flex flex-1 flex-col px-4 pb-0 pt-4">
+          <h3
+            className="mb-2 text-sm font-bold leading-tight line-clamp-2"
+            style={{ color: academyCardTokens.title, fontFamily: fontFamily.arabic }}
+            title={title}
+          >
+            {title}
+          </h3>
+
+          <p
+            className="mb-3 text-xs"
+            style={{ color: academyCardTokens.meta, fontFamily: fontFamily.arabic }}
+          >
+            {instructorName}
+          </p>
+
+          <div className="mb-3 flex items-center gap-1" aria-label={`التقييم ${rating} من 5`}>
+            {renderStars()}
+          </div>
+        </CardContent>
+
+        <CardFooter
+          className="mt-auto flex w-full items-center justify-between px-4 pb-4 pt-3"
+          style={{ borderTop: `1px solid ${academyCardTokens.surface.border}` }}
+        >
+          <span
+            className="text-base font-bold"
+            style={{ color: academyCardTokens.price }}
+          >
+            {formatPrice(price)}
+          </span>
+          <Button
+            intent="secondary"
+            density="icon"
+            aria-label="إضافة إلى السلة"
+            onClick={(event) => {
+              event.preventDefault();
+              // Add to cart logic placeholder
+            }}
+          >
+            <ShoppingCart aria-hidden="true" size={18} />
+          </Button>
+        </CardFooter>
+      </MotionCard>
     </Link>
   );
 });

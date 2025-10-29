@@ -5,13 +5,25 @@
 
 import React from "react";
 import Link from "next/link";
-import { Check, X, RefreshCw } from "lucide-react";
+import { Check, RefreshCw, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/shared/utils";
-import { componentVariants } from "@/shared/components/ui/variants";
+
 import SmartImage from "@/shared/components/common/SmartImage";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/shared/components/ui";
+import { cn } from "@/shared/utils";
+import { fontFamily } from "@/styles/tokens";
+
 import { formatPrice } from "../utils/helpers";
-import { colors, fontFamily } from "@/styles/tokens";
+import {
+  academyCardClassNames,
+  academyCardTokens,
+} from "./styles/presets";
 
 const cardHoverVariant = {
   whileHover: { scale: 1.02 },
@@ -30,6 +42,8 @@ interface MiniBundleCardProps {
   priority?: boolean;
 }
 
+const MotionCard = motion(Card);
+
 export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
   id,
   title,
@@ -40,13 +54,10 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
   freeSessionsCount,
   priority,
 }) => {
-  // Check if bundle has access to 3 levels
   const hasAccessTo3Levels = Number(subCategoryId || 0) >= 2;
-
   const sessionsCount = Number(freeSessionsCount || 0);
   const hasFreeSessions = sessionsCount > 0;
 
-  // Define features with conditional check
   const features = [
     { text: "الوصول إلى 3 مستويات", available: hasAccessTo3Levels },
     {
@@ -57,96 +68,105 @@ export const MiniBundleCard: React.FC<MiniBundleCardProps> = ({
     },
     { text: "لايفات اسبوعية", available: true },
   ];
+
   return (
     <Link
       href={`/academy/bundle/${id}`}
       prefetch
-      className="block group outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-2xl"
+      className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      style={{ outlineColor: academyCardTokens.surface.focusRing }}
     >
-      <motion.div {...cardHoverVariant}>
-        <div
-          className={cn(
-            componentVariants.card.base,
-            componentVariants.card.elevated,
-            componentVariants.card.interactive,
-            "relative overflow-hidden rounded-2xl backdrop-blur-sm p-5 flex flex-col h-full",
-            "hover:border-blue-500/30",
-          )}
-          style={{ minHeight: '320px', maxHeight: '320px' }}
-        >
-          {/* Header: Image + Title + Price */}
-          <div className="flex items-start gap-3 mb-4" dir="rtl">
-            {/* Circular Image */}
-            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-purple-200">
-              <SmartImage
-                src={img || "/11.png"}
-                alt={title}
-                fill
-                blurType="secondary"
-                className="object-cover"
-                sizes="56px"
-                priority={!!priority}
-                lazy={!priority}
-              />
-            </div>
-            
-            {/* Title + Price */}
-            <div className="flex-1 text-right min-w-0">
-              <h3
-                className="text-sm font-bold mb-1.5 line-clamp-2"
-                style={{ color: colors.text.primary, fontFamily: fontFamily.arabic }}
-                title={title}
-              >
-                {title}
-              </h3>
-              <p className="text-blue-500 text-base font-bold">
-                {formatPrice(price)}
-              </p>
-            </div>
+      <MotionCard
+        {...cardHoverVariant}
+        className={cn(
+          "h-full min-h-[320px] max-h-[320px] w-full cursor-pointer",
+          academyCardClassNames.interactive,
+        )}
+        style={{
+          background: academyCardTokens.surface.background,
+          borderColor: academyCardTokens.surface.border,
+        }}
+      >
+        <CardHeader className="flex flex-row items-start gap-3 px-5 pb-0 pt-5" dir="rtl">
+          <div
+            className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full"
+            style={{
+              boxShadow: `0 0 0 2px ${academyCardTokens.media.ring}`,
+              background: academyCardTokens.surface.background,
+            }}
+          >
+            <SmartImage
+              src={img || "/11.png"}
+              alt={title}
+              fill
+              blurType="secondary"
+              className="object-cover"
+              sizes="56px"
+              priority={!!priority}
+              lazy={!priority}
+            />
           </div>
 
-          {/* Description */}
+          <div className="flex-1 min-w-0 text-right" style={{ fontFamily: fontFamily.arabic }}>
+            <h3
+              className="mb-2 text-sm font-bold leading-tight line-clamp-2"
+              style={{ color: academyCardTokens.title }}
+              title={title}
+            >
+              {title}
+            </h3>
+            <p className="text-base font-semibold" style={{ color: academyCardTokens.price }}>
+              {formatPrice(price)}
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="flex flex-1 flex-col px-5 pb-0 pt-4" dir="rtl">
           <p
-            className="text-[11px] leading-relaxed text-right mb-4 line-clamp-3"
-            style={{ color: colors.text.secondary, fontFamily: fontFamily.arabic }}
-            dir="rtl"
+            className="mb-4 text-[11px] leading-relaxed line-clamp-3"
+            style={{ color: academyCardTokens.subtitle, fontFamily: fontFamily.arabic }}
           >
             {(desc || "").replace(/\\r\\n/g, " ")}
           </p>
 
-          {/* Features List */}
-          <div className="space-y-2 mb-4 flex-grow">
+          <div className="flex flex-col gap-2">
             {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 text-xs" 
-                dir="rtl" 
-                style={{ color: colors.text.secondary, fontFamily: fontFamily.arabic }}
+              <div
+                key={index}
+                className="flex items-center gap-2 text-xs"
+                style={{
+                  color: academyCardTokens.features.text,
+                  fontFamily: fontFamily.arabic,
+                }}
               >
                 {feature.available ? (
-                  <Check className="text-green-500 flex-shrink-0" size={16} aria-hidden="true" />
+                  <Check
+                    size={16}
+                    aria-hidden="true"
+                    style={{ color: academyCardTokens.features.available }}
+                  />
                 ) : (
-                  <X className="text-red-500 flex-shrink-0" size={16} aria-hidden="true" />
+                  <X
+                    size={16}
+                    aria-hidden="true"
+                    style={{ color: academyCardTokens.features.unavailable }}
+                  />
                 )}
                 <span>{feature.text}</span>
               </div>
             ))}
           </div>
+        </CardContent>
 
-          {/* CTA Button */}
-          <button
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 font-semibold text-sm transition-colors mt-auto"
-            style={{ fontFamily: fontFamily.arabic }}
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = `/academy/bundle/${id}`;
-            }}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            <span>{formatPrice(price)}</span>
-          </button>
-        </div>
-      </motion.div>
+        <CardFooter className="mt-auto w-full px-5 pb-5 pt-4">
+          <Button intent="primary" fullWidth asChild style={{ fontFamily: fontFamily.arabic }}>
+            <span className="flex items-center justify-center gap-2">
+              <RefreshCw size={16} aria-hidden="true" />
+              <span>{formatPrice(price)}</span>
+            </span>
+          </Button>
+        </CardFooter>
+      </MotionCard>
     </Link>
   );
 };
