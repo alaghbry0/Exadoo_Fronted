@@ -72,10 +72,12 @@
     display: flex;
     gap: var(--space-7);
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: var(--space-5);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
   }
 
   .hscroll::-webkit-scrollbar {

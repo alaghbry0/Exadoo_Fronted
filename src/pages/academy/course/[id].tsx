@@ -1,6 +1,6 @@
 /**
  * Academy Course Detail Page
- * صفحة تفاصيل الدورة التعليمية
+ * صفحة تفاصيل الدورة التعليمية - محسّنة
  */
 
 import React, { useMemo } from "react";
@@ -8,16 +8,16 @@ import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import {
   Loader2,
-  ArrowLeft,
-  Clipboard,
-  Lock,
-  Play
+  Clock,
+  BookOpen,
+  Award,
+  CheckCircle2
 } from "lucide-react";
-import { colors, spacing } from "@/styles/tokens";
-import SmartImage from "@/shared/components/common/SmartImage";
+import { colors, spacing, componentRadius, shadowClasses, withAlpha } from "@/styles/tokens";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { cn } from "@/shared/utils";
 
 import AuthPrompt from "@/domains/auth/components/AuthFab";
 
@@ -27,6 +27,10 @@ import {
   CourseErrorState,
   CourseNotFoundState,
 } from "@/domains/academy/components";
+
+// Local Components
+import CourseHeader from "./components/CourseHeader";
+import RealCurriculum from "./components/RealCurriculum";
 
 // Dynamic Imports
 const AcademyPurchaseModal = dynamic(
@@ -51,209 +55,8 @@ import { formatPrice } from "@/domains/academy/utils";
 import type { Course } from "@/domains/academy/types";
 
 /* ==============================
-   Sub-Components
+   Helper Functions
 ============================== */
-
-// CourseHeader Component (shared from Bundle)
-interface CourseHeaderProps {
-  title: string;
-  subtitle: string;
-  imageUrl: string;
-  onBack?: () => void;
-}
-
-function CourseHeader({ title, subtitle, imageUrl, onBack }: CourseHeaderProps) {
-  return (
-    <div className="relative h-[400px] rounded-b-3xl overflow-hidden">
-      <div className="absolute inset-0">
-        <SmartImage
-          src={imageUrl}
-          alt={subtitle}
-          fill
-          blurType="secondary"
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
-      </div>
-
-      <button
-        onClick={onBack}
-        className="absolute top-4 left-4 z-10 w-10 h-10 bg-black/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-white transition-all hover:bg-black/30"
-        aria-label="رجوع"
-      >
-        <ArrowLeft size={24} />
-      </button>
-
-      <div className="absolute top-4 right-4 left-16 z-10 text-white text-center">
-        <h1 className="text-xl drop-shadow-lg">{title}</h1>
-      </div>
-
-      <div className="absolute bottom-8 left-0 right-0 text-center text-white z-10">
-        <p className="text-sm opacity-90 drop-shadow-lg">(COURSE)</p>
-      </div>
-
-      <div 
-        className="absolute bottom-6 right-6 rounded-full px-4 py-2 flex items-center shadow-lg z-10"
-        style={{
-          backgroundColor: colors.bg.primary,
-          gap: spacing[2]
-        }}
-      >
-        <span style={{ color: colors.status.error, fontWeight: 600 }}>NEW</span>
-        <span>📚</span>
-      </div>
-    </div>
-  );
-}
-
-// ContentBadge Component
-interface ContentBadgeProps {
-  text: string;
-}
-
-function ContentBadge({ text }: ContentBadgeProps) {
-  return (
-    <div 
-      className="inline-block rounded-full px-4 py-2 mb-3"
-      style={{
-        backgroundColor: colors.bg.secondary,
-        color: colors.text.secondary
-      }}
-    >
-      {text}
-    </div>
-  );
-}
-
-// LessonItem Component
-interface LessonItemProps {
-  title: string;
-  duration: string;
-  isLocked?: boolean;
-  isFree?: boolean;
-  isVideo?: boolean;
-  courseId?: string;
-  lessonId?: string;
-}
-
-function LessonItem({ title, duration, isLocked, isFree, isVideo, courseId, lessonId }: LessonItemProps) {
-  const canWatch = isVideo && !isLocked && courseId && lessonId;
-  
-  return (
-    <div 
-      className="flex items-center justify-between py-4 border-b"
-      style={{ borderColor: colors.border.default }}
-    >
-      <div className="flex items-center flex-1" style={{ gap: spacing[3] }}>
-        <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{
-            backgroundColor: isLocked ? colors.bg.secondary : colors.brand.primary
-          }}
-        >
-          {isLocked ? (
-            <Lock size={18} style={{ color: colors.text.tertiary }} />
-          ) : (
-            <Play size={18} className="text-white" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="truncate" style={{ color: colors.text.primary }}>
-            {title}
-          </p>
-          <div className="flex items-center" style={{ gap: spacing[2] }}>
-            <span className="text-xs" style={{ color: colors.text.tertiary }}>
-              {duration}
-            </span>
-            {isFree && (
-              <span 
-                className="text-xs rounded-full px-2 py-0.5"
-                style={{
-                  backgroundColor: colors.status.success,
-                  color: colors.text.inverse
-                }}
-              >
-                مجاني
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {canWatch && (
-        <a
-          href={`/academy/watch?courseId=${courseId}&lessonId=${lessonId}&lessonTitle=${encodeURIComponent(title)}`}
-          className="text-xs rounded-md border px-3 py-1.5 font-semibold transition-colors flex-shrink-0"
-          style={{
-            borderColor: colors.border.default,
-            color: colors.text.primary
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colors.bg.secondary;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          مشاهدة
-        </a>
-      )}
-      {isLocked && (
-        <span className="text-xs flex-shrink-0" style={{ color: colors.text.tertiary }}>
-          مغلق
-        </span>
-      )}
-    </div>
-  );
-}
-
-// SectionItem Component for organizing lessons
-interface SectionItemProps {
-  title: string;
-  lessons: any[];
-  courseId: string;
-  isEnrolled: boolean;
-}
-
-function SectionItem({ title, lessons, courseId, isEnrolled }: SectionItemProps) {
-  return (
-    <div 
-      className="rounded-xl border overflow-hidden mb-4"
-      style={{ borderColor: colors.border.default }}
-    >
-      <div 
-        className="px-4 py-3 font-bold"
-        style={{
-          backgroundColor: colors.bg.secondary,
-          color: colors.text.primary
-        }}
-      >
-        {title}
-      </div>
-      <div style={{ backgroundColor: colors.bg.primary }}>
-        {lessons.map((lesson, index) => {
-          const isVideo = (lesson.lesson_type || "").toLowerCase() === "video";
-          const locked = !isEnrolled || lesson.user_validity === false;
-          
-          return (
-            <LessonItem
-              key={lesson.id || index}
-              title={lesson.title || `الدرس ${index + 1}`}
-              duration={lesson.duration || "00:00:00"}
-              isLocked={locked}
-              isFree={index === 0 && !isEnrolled}
-              isVideo={isVideo}
-              courseId={courseId}
-              lessonId={lesson.id}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function CourseDetail() {
   const router = useRouter();
@@ -283,16 +86,23 @@ export default function CourseDetail() {
     return details?.sections ?? [];
   }, [details]);
 
-  const simpleLessons = useMemo(() => {
-    if (!course?.description) return [];
-    const lines = course.description.split("\n");
-    const lessonLines = lines.filter((line) =>
-      line.trim().match(/^\d+[.-]/) ||
-      line.trim().match(/^الدرس/) ||
-      line.trim().match(/^الفصل/),
-    );
-    return lessonLines.slice(0, 10);
-  }, [course]);
+  // Find first incomplete lesson
+  const firstIncompleteLesson = useMemo(() => {
+    if (!details?.sections || !isEnrolled) return null;
+    
+    for (const section of details.sections) {
+      for (const lesson of section.lessons || []) {
+        if (lesson.is_completed !== 1 && lesson.user_validity !== false) {
+          return {
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            sectionTitle: section.title
+          };
+        }
+      }
+    }
+    return null;
+  }, [details, isEnrolled]);
 
   const totalHours = useMemo(() => {
     if (!details?.sections) return "00:00:00";
@@ -321,10 +131,33 @@ export default function CourseDetail() {
   if (isError) return <CourseErrorState message={(error as Error)?.message} />;
   if (!course) return <CourseNotFoundState />;
 
+  const handleContinueLearning = () => {
+    if (firstIncompleteLesson) {
+      router.push({
+        pathname: "/academy/watch",
+        query: {
+          courseId: id,
+          lessonId: firstIncompleteLesson.lessonId,
+          lessonTitle: firstIncompleteLesson.lessonTitle,
+        },
+      });
+    } else if (sections.length > 0 && sections[0].lessons?.length > 0) {
+      // إذا لم يوجد درس غير مكتمل، انتقل للدرس الأول
+      const firstLesson = sections[0].lessons[0];
+      router.push({
+        pathname: "/academy/watch",
+        query: {
+          courseId: id,
+          lessonId: firstLesson.id,
+          lessonTitle: firstLesson.title,
+        },
+      });
+    }
+  };
+
   const onEnrollClick = () => {
     if (isEnrolled) {
-      // تنقل داخلي
-      router.push(`/academy/course/${course.id}`);
+      handleContinueLearning();
     } else {
       window.dispatchEvent(
         new CustomEvent("open-subscribe", {
@@ -339,7 +172,6 @@ export default function CourseDetail() {
     }
   };
 
-  // Extract all sections with lessons
   return (
     <div dir="rtl" className="min-h-screen" style={{ backgroundColor: colors.bg.primary }}>
       {/* Course Header */}
@@ -347,111 +179,136 @@ export default function CourseDetail() {
         title={course.title}
         subtitle={course.title}
         imageUrl={course.thumbnail || "/image.jpg"}
+        level={course.level}
+        rating={details?.rating || course.rating}
+        numberOfRatings={details?.number_of_ratings}
+        totalEnrollment={details?.total_enrollment || course.total_enrollment}
+        isNew={details?.is_top_course === "1"}
+        isEnrolled={isEnrolled}
         onBack={() => router.push("/academy")}
+        onContinueLearning={isEnrolled ? handleContinueLearning : undefined}
       />
 
       {/* Content */}
       <div className="px-4 py-6 max-w-2xl mx-auto">
-        {/* Price */}
-        <div className="flex items-center justify-center mb-6" style={{ 
-          gap: spacing[2],
-          color: colors.text.primary 
-        }}>
-          <span className="text-xl">💰</span>
-          <span>سعر الدورة: {formatPrice(course.price)}</span>
+        {/* Quick Stats */}
+        <div 
+          className={cn("p-4 mb-6", componentRadius.card, shadowClasses.card)}
+          style={{
+            backgroundColor: colors.bg.elevated,
+            border: `1px solid ${colors.border.default}`
+          }}
+        >
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div 
+                className="flex items-center justify-center mb-2"
+                style={{ color: colors.brand.primary }}
+              >
+                <BookOpen size={24} aria-hidden="true" />
+              </div>
+              <div 
+                className="text-2xl font-bold"
+                style={{ color: colors.text.primary }}
+              >
+                {course.total_number_of_lessons}
+              </div>
+              <div 
+                className="text-xs"
+                style={{ color: colors.text.tertiary }}
+              >
+                درس
+              </div>
+            </div>
+            
+            <div>
+              <div 
+                className="flex items-center justify-center mb-2"
+                style={{ color: colors.status.warning }}
+              >
+                <Clock size={24} aria-hidden="true" />
+              </div>
+              <div 
+                className="text-2xl font-bold"
+                style={{ color: colors.text.primary }}
+              >
+                {totalHours.split(":")[0]}
+              </div>
+              <div 
+                className="text-xs"
+                style={{ color: colors.text.tertiary }}
+              >
+                ساعة
+              </div>
+            </div>
+            
+            <div>
+              <div 
+                className="flex items-center justify-center mb-2"
+                style={{ color: colors.status.success }}
+              >
+                <Award size={24} aria-hidden="true" />
+              </div>
+              <div 
+                className="text-2xl font-bold"
+                style={{ color: colors.text.primary }}
+              >
+                {formatPrice(course.discounted_price || course.price)}
+              </div>
+              <div 
+                className="text-xs"
+                style={{ color: colors.text.tertiary }}
+              >
+                السعر
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="content" className="mb-6">
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="content">المحتوى</TabsTrigger>
-            <TabsTrigger value="output">المخرجات</TabsTrigger>
-            <TabsTrigger value="requirements">المتطلبات</TabsTrigger>
+        <Tabs defaultValue="curriculum" className="mb-6">
+          <TabsList 
+            className="w-full grid grid-cols-3"
+            style={{
+              backgroundColor: colors.bg.secondary,
+              padding: spacing[1]
+            }}
+          >
+            <TabsTrigger 
+              value="curriculum"
+              className={componentRadius.button}
+            >
+              المنهج
+            </TabsTrigger>
+            <TabsTrigger 
+              value="outcomes"
+              className={componentRadius.button}
+            >
+              المخرجات
+            </TabsTrigger>
+            <TabsTrigger 
+              value="requirements"
+              className={componentRadius.button}
+            >
+              المتطلبات
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="content" className="mt-6">
-            {/* Course Content Card */}
-            <Card className="p-6 mb-6" style={{ backgroundColor: colors.bg.elevated }}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 style={{ color: colors.text.primary }}>محتوى الدورة</h3>
-                <Clipboard size={24} style={{ color: colors.brand.primary }} />
-              </div>
-
-              <div className="space-y-3">
-                <ContentBadge text={`${totalHours} ساعات من الفيديو عند الطلب`} />
-                <ContentBadge text={`${course.total_number_of_lessons} درس`} />
-                <ContentBadge text="فيديوهات عالية الجودة" />
-                <ContentBadge text="وصول مدى الحياة" />
-              </div>
-            </Card>
-
-            {/* Course Content Details - All Lessons */}
-            <div className="mb-6">
-              <h3 className="mb-4" style={{ color: colors.text.primary }}>
-                المنهج الدراسي
-              </h3>
-
-              {/* For enrolled users: show all sections with lessons */}
-              {isEnrolled && sections.length > 0 ? (
-                <div>
-                  {sections.map((section: any) => (
-                    <SectionItem
-                      key={section.id}
-                      title={section.title}
-                      lessons={section.lessons || []}
-                      courseId={id}
-                      isEnrolled={isEnrolled}
-                    />
-                  ))}
-                </div>
-              ) : (
-                /* For non-enrolled users: show simple list */
-                <div 
-                  className="rounded-xl border p-4"
-                  style={{
-                    backgroundColor: colors.bg.primary,
-                    borderColor: colors.border.default
-                  }}
-                >
-                  {simpleLessons.length > 0 ? (
-                    simpleLessons.map((lesson, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center py-3 border-b"
-                        style={{ borderColor: colors.border.default }}
-                      >
-                        <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{
-                            backgroundColor: index === 0 ? colors.brand.primary : colors.bg.secondary,
-                            marginLeft: spacing[3]
-                          }}
-                        >
-                          {index === 0 ? (
-                            <Play size={14} className="text-white" />
-                          ) : (
-                            <Lock size={14} style={{ color: colors.text.tertiary }} />
-                          )}
-                        </div>
-                        <span style={{ color: colors.text.primary }}>
-                          {lesson.trim()}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{ color: colors.text.secondary }}>
-                      {course.total_number_of_lessons} درس متاح بعد التسجيل
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
+          <TabsContent value="curriculum" className="mt-6">
             {/* Description */}
             {course.short_description && (
-              <div className="mb-6">
-                <h3 className="mb-4" style={{ color: colors.text.primary }}>
-                  الوصف
+              <Card 
+                className={cn("p-6 mb-6", componentRadius.card, shadowClasses.card)}
+                style={{ 
+                  backgroundColor: colors.bg.elevated,
+                  border: `1px solid ${colors.border.default}`
+                }}
+              >
+                <h3 
+                  className="mb-3 font-bold text-lg"
+                  style={{ color: colors.text.primary }}
+                >
+                  نظرة عامة
                 </h3>
                 <p 
                   className="leading-relaxed whitespace-pre-line"
@@ -459,36 +316,118 @@ export default function CourseDetail() {
                 >
                   {course.short_description}
                 </p>
-              </div>
+              </Card>
             )}
+
+            {/* Course Curriculum */}
+            <div className="mb-6">
+              <h3 
+                className="mb-4 font-bold text-lg"
+                style={{ color: colors.text.primary }}
+              >
+                المنهج الدراسي
+              </h3>
+
+              {isEnrolled && sections.length > 0 ? (
+                <RealCurriculum
+                  courseId={id}
+                  sections={sections}
+                />
+              ) : (
+                <Card 
+                  className={cn("p-6 text-center", componentRadius.card, shadowClasses.card)}
+                  style={{
+                    backgroundColor: colors.bg.elevated,
+                    border: `1px dashed ${colors.border.default}`
+                  }}
+                >
+                  <div 
+                    className="w-16 h-16 mx-auto mb-4 flex items-center justify-center"
+                    style={{
+                      backgroundColor: withAlpha(colors.brand.primary, 0.1),
+                      borderRadius: componentRadius.full
+                    }}
+                  >
+                    <BookOpen 
+                      size={32} 
+                      style={{ color: colors.brand.primary }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <p 
+                    className="font-semibold mb-2"
+                    style={{ color: colors.text.primary }}
+                  >
+                    {course.total_number_of_lessons} درس متاح
+                  </p>
+                  <p 
+                    className="text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    سجّل في الدورة للوصول إلى جميع الدروس
+                  </p>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
-          <TabsContent value="output" className="mt-6">
-            <Card className="p-6" style={{ backgroundColor: colors.bg.elevated }}>
-              <div className="flex items-center mb-4" style={{ gap: spacing[3] }}>
+          <TabsContent value="outcomes" className="mt-6">
+            <Card 
+              className={cn("p-6", componentRadius.card, shadowClasses.card)}
+              style={{ 
+                backgroundColor: colors.bg.elevated,
+                border: `1px solid ${colors.border.default}`
+              }}
+            >
+              <div className="flex items-center mb-6" style={{ gap: spacing[3] }}>
                 <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: colors.status.warning }}
+                  className={cn(
+                    "w-12 h-12 flex items-center justify-center",
+                    componentRadius.card
+                  )}
+                  style={{ backgroundColor: withAlpha(colors.status.success, 0.15) }}
                 >
-                  <span className="text-white text-xl">🎯</span>
+                  <CheckCircle2 
+                    size={24} 
+                    style={{ color: colors.status.success }}
+                    aria-hidden="true"
+                  />
                 </div>
-                <h3 style={{ color: colors.text.primary }}>ماذا ستتعلم</h3>
+                <h3 
+                  className="font-bold text-lg"
+                  style={{ color: colors.text.primary }}
+                >
+                  ماذا ستتعلم
+                </h3>
               </div>
               
               {course.outcomes && course.outcomes.length > 0 ? (
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ul className="grid grid-cols-1 gap-3">
                   {course.outcomes.map((outcome, index) => (
-                    <li key={index} className="flex items-start" style={{ gap: spacing[2] }}>
+                    <li 
+                      key={index} 
+                      className={cn("flex items-start p-3", componentRadius.button)}
+                      style={{ 
+                        gap: spacing[3],
+                        backgroundColor: colors.bg.secondary
+                      }}
+                    >
                       <span 
-                        className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                        className={cn(
+                          "inline-flex w-6 h-6 mt-0.5 items-center justify-center flex-shrink-0",
+                          componentRadius.full
+                        )}
                         style={{
-                          backgroundColor: `${colors.status.success}25`,
+                          backgroundColor: withAlpha(colors.status.success, 0.2),
                           color: colors.status.success
                         }}
                       >
                         ✓
                       </span>
-                      <span style={{ color: colors.text.secondary }}>
+                      <span 
+                        className="leading-relaxed"
+                        style={{ color: colors.text.primary }}
+                      >
                         {outcome}
                       </span>
                     </li>
@@ -503,31 +442,64 @@ export default function CourseDetail() {
           </TabsContent>
 
           <TabsContent value="requirements" className="mt-6">
-            <Card className="p-6" style={{ backgroundColor: colors.bg.elevated }}>
-              <div className="flex items-center mb-4" style={{ gap: spacing[3] }}>
+            <Card 
+              className={cn("p-6", componentRadius.card, shadowClasses.card)}
+              style={{ 
+                backgroundColor: colors.bg.elevated,
+                border: `1px solid ${colors.border.default}`
+              }}
+            >
+              <div className="flex items-center mb-6" style={{ gap: spacing[3] }}>
                 <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: colors.brand.primary }}
+                  className={cn(
+                    "w-12 h-12 flex items-center justify-center",
+                    componentRadius.card
+                  )}
+                  style={{ backgroundColor: withAlpha(colors.brand.primary, 0.15) }}
                 >
-                  <span className="text-white text-xl">📋</span>
+                  <BookOpen 
+                    size={24} 
+                    style={{ color: colors.brand.primary }}
+                    aria-hidden="true"
+                  />
                 </div>
-                <h3 style={{ color: colors.text.primary }}>المتطلبات</h3>
+                <h3 
+                  className="font-bold text-lg"
+                  style={{ color: colors.text.primary }}
+                >
+                  المتطلبات
+                </h3>
               </div>
               
               {course.requirements && course.requirements.length > 0 ? (
-                <ul className="space-y-3">
+                <ul className="grid grid-cols-1 gap-3">
                   {course.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start" style={{ gap: spacing[2] }}>
+                    <li 
+                      key={index} 
+                      className={cn("flex items-start p-3", componentRadius.button)}
+                      style={{ 
+                        gap: spacing[3],
+                        backgroundColor: colors.bg.secondary
+                      }}
+                    >
                       <span 
-                        className="inline-block w-5 h-5 mt-0.5 rounded-full flex items-center justify-center flex-shrink-0"
+                        className={cn(
+                          "inline-flex w-6 h-6 mt-0.5 items-center justify-center flex-shrink-0",
+                          componentRadius.full
+                        )}
                         style={{
-                          backgroundColor: `${colors.brand.primary}25`,
-                          color: colors.brand.primary
+                          backgroundColor: withAlpha(colors.brand.primary, 0.2),
+                          color: colors.brand.primary,
+                          fontSize: "1.25rem",
+                          fontWeight: "bold"
                         }}
                       >
                         •
                       </span>
-                      <span style={{ color: colors.text.secondary }}>
+                      <span 
+                        className="leading-relaxed"
+                        style={{ color: colors.text.primary }}
+                      >
                         {req}
                       </span>
                     </li>
@@ -548,22 +520,23 @@ export default function CourseDetail() {
 
       {/* Fixed Enroll Button */}
       <div 
-        className="fixed bottom-0 left-0 right-0 p-4 shadow-lg z-20"
+        className={cn("fixed bottom-0 left-0 right-0 p-4 z-20", shadowClasses.modal)}
         style={{ 
-          backgroundColor: colors.bg.primary,
-          borderTop: `1px solid ${colors.border.default}`
+          backgroundColor: withAlpha(colors.bg.primary, 0.98),
+          borderTop: `1px solid ${colors.border.default}`,
+          backdropFilter: "blur(8px)"
         }}
       >
         <div className="max-w-2xl mx-auto">
           <Button 
             onClick={onEnrollClick}
-            className="w-full rounded-xl py-6"
+            className={cn("w-full py-6 font-bold text-lg", componentRadius.button, shadowClasses.button)}
             style={{
               backgroundColor: colors.brand.primary,
               color: colors.text.inverse
             }}
           >
-            {isEnrolled ? "انتقل للدورة" : `سجّل الآن 🔥 - ${formatPrice(course.price)}`}
+            {isEnrolled ? "أكمل التعلم ➡️" : `سجّل الآن 🔥 - ${formatPrice(course.discounted_price || course.price)}`}
           </Button>
         </div>
       </div>

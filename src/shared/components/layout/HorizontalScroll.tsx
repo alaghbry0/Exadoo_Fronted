@@ -91,6 +91,8 @@ export function HorizontalScroll({
     WebkitOverflowScrolling: "touch",
     scrollbarWidth: "none",
     msOverflowStyle: "none",
+    overflowX: "auto" as const,
+    overflowY: "hidden" as const,
   };
 
   return (
