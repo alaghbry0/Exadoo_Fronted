@@ -1,29 +1,13 @@
-/**
- * Design Tokens - نظام الحركات الموحد
- * يوفر animations و transitions متسقة
- */
+import {
+  keyframeDefinitions,
+  motionDurations,
+  motionEasing,
+  reducedMotionStyles,
+} from "./foundation";
 
 export const animations = {
-  // Duration
-  duration: {
-    instant: "0ms",
-    fast: "150ms",
-    normal: "300ms",
-    slow: "500ms",
-    slower: "700ms",
-  },
-
-  // Easing functions
-  easing: {
-    default: "cubic-bezier(0.4, 0, 0.2, 1)",
-    linear: "linear",
-    in: "cubic-bezier(0.4, 0, 1, 1)",
-    out: "cubic-bezier(0, 0, 0.2, 1)",
-    inOut: "cubic-bezier(0.4, 0, 0.2, 1)",
-    spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-  },
-
-  // Preset animations
+  duration: motionDurations,
+  easing: motionEasing,
   presets: {
     fadeIn: "animate-fade-in",
     fadeOut: "animate-fade-out",
@@ -39,125 +23,43 @@ export const animations = {
   },
 } as const;
 
-// CSS Keyframes
-export const keyframes = `
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+const buildKeyframes = () =>
+  Object.entries(keyframeDefinitions)
+    .map(([name, body]) => `@keyframes ${name} {\n${body}\n}`)
+    .join("\n\n");
 
-  @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
+const animationPresetCss = `
+.animate-fade-in {
+  animation: fade-in ${motionDurations.normal} ${motionEasing.out};
+}
 
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+.animate-fade-out {
+  animation: fade-out ${motionDurations.normal} ${motionEasing.out};
+}
 
-  @keyframes slide-down {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+.animate-slide-up {
+  animation: slide-up ${motionDurations.slow} ${motionEasing.out};
+}
 
-  @keyframes slide-left {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
+.animate-slide-down {
+  animation: slide-down ${motionDurations.slow} ${motionEasing.out};
+}
 
-  @keyframes slide-right {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
+.animate-slide-left {
+  animation: slide-left ${motionDurations.slow} ${motionEasing.out};
+}
 
-  @keyframes scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
+.animate-slide-right {
+  animation: slide-right ${motionDurations.slow} ${motionEasing.out};
+}
 
-  @keyframes scale-out {
-    from {
-      opacity: 1;
-      transform: scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-  }
+.animate-scale-in {
+  animation: scale-in ${motionDurations.normal} ${motionEasing.out};
+}
 
-  /* Utility animations */
-  .animate-fade-in {
-    animation: fade-in 300ms ease-out;
-  }
+.animate-scale-out {
+  animation: scale-out ${motionDurations.normal} ${motionEasing.out};
+}
+`.trim();
 
-  .animate-fade-out {
-    animation: fade-out 300ms ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 400ms ease-out;
-  }
-
-  .animate-slide-down {
-    animation: slide-down 400ms ease-out;
-  }
-
-  .animate-slide-left {
-    animation: slide-left 400ms ease-out;
-  }
-
-  .animate-slide-right {
-    animation: slide-right 400ms ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 300ms ease-out;
-  }
-
-  .animate-scale-out {
-    animation: scale-out 300ms ease-out;
-  }
-
-  /* Reduced motion support */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-`;
+export const animationCss = [buildKeyframes(), animationPresetCss, reducedMotionStyles].join("\n\n");

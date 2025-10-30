@@ -1,50 +1,29 @@
-/**
- * Design Tokens - نظام الطباعة الموحد
- * يوفر أحجام وأوزان خطوط متسقة
- */
+import { fontVariables, typographyScale } from "./foundation";
 
-export const typography = {
-  // Display - للعناوين الكبيرة جداً
-  display: {
-    xl: "text-6xl font-bold leading-tight tracking-tight",
-    lg: "text-5xl font-bold leading-tight tracking-tight",
-    md: "text-4xl font-bold leading-tight tracking-tight",
-    sm: "text-3xl font-bold leading-tight",
-  },
-
-  // Heading - للعناوين
-  heading: {
-    xl: "text-2xl font-bold leading-snug",
-    lg: "text-xl font-bold leading-snug",
-    md: "text-lg font-semibold leading-snug",
-    sm: "text-base font-semibold leading-snug",
-    xs: "text-sm font-semibold leading-snug",
-  },
-
-  // Body - للنصوص العادية
-  body: {
-    xl: "text-xl leading-relaxed",
-    lg: "text-lg leading-relaxed",
-    md: "text-base leading-relaxed",
-    sm: "text-sm leading-normal",
-    xs: "text-xs leading-normal",
-  },
-
-  // Label - للتسميات والأزرار
-  label: {
-    lg: "text-sm font-medium leading-none",
-    md: "text-xs font-medium leading-none",
-    sm: "text-xs font-normal leading-none",
-  },
-
-  // Caption - للنصوص الصغيرة
-  caption: {
-    md: "text-xs leading-tight",
-    sm: "text-[0.625rem] leading-tight",
-  },
+const typographyGroupFont = {
+  display: "var(--font-display)",
+  heading: "var(--font-sans)",
+  body: "var(--font-sans)",
+  label: "var(--font-sans)",
+  caption: "var(--font-sans)",
 } as const;
 
-// Font weights
+export const typography = Object.fromEntries(
+  Object.entries(typographyScale).map(([group, variants]) => [
+    group,
+    Object.fromEntries(
+      Object.keys(variants).map((variantKey) => [
+        variantKey,
+        `typo-${group}-${variantKey}`,
+      ]),
+    ),
+  ]),
+) as {
+  [Group in keyof typeof typographyScale]: {
+    [Variant in keyof (typeof typographyScale)[Group]]: string;
+  };
+};
+
 export const fontWeight = {
   light: "300",
   normal: "400",
@@ -71,3 +50,37 @@ export const fontFamily = {
   display: "var(--font-display, var(--font-sans))",
   mono: "var(--font-mono, ui-monospace)",
 } as const;
+
+const buildTypographyCss = () => {
+  return Object.entries(typographyScale)
+    .map(([group, variants]) => {
+      const fontFamily = typographyGroupFont[group as keyof typeof typographyGroupFont];
+
+      return Object.entries(variants)
+        .map(([variant, values]) => {
+          const { fontSize, lineHeight: line, fontWeight: weight, letterSpacing } = values;
+          const declarations = [
+            `  font-family: ${fontFamily};`,
+            `  font-size: ${fontSize};`,
+            `  line-height: ${line};`,
+            `  font-weight: ${weight};`,
+            letterSpacing !== undefined ? `  letter-spacing: ${letterSpacing}em;` : null,
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          return `.typo-${group}-${variant} {\n${declarations}\n}`;
+        })
+        .join("\n\n");
+    })
+    .join("\n\n");
+};
+
+const buildFontVariableCss = () =>
+  Object.entries(fontVariables)
+    .map(([name, value]) => `  ${name}: ${value};`)
+    .join("\n");
+
+export const fontVars = `:root {\n${buildFontVariableCss()}\n}`;
+
+export const typographyCss = buildTypographyCss();

@@ -500,12 +500,12 @@ export default function AcademyIndex() {
 
                       <TopCourseCarousel
                         courses={filteredData.topCourses
-                          .slice(0, 2)
+                          .slice(0, 10)
                           .map((course) => ({
                             id: course.id,
                             title: course.title,
                             subtitle:
-                              course.short_description?.substring(0, 5) ||
+                              course.short_description?.substring(0, 100) ||
                               "دورة تعليمية",
                             description: course.short_description || "",
                             thumbnail: course.thumbnail || "/11.png",

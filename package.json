@@ -10,7 +10,7 @@
     "prepare": "husky",
     "test": "echo \"No tests yet\" && exit 0",
     "analyze": "cross-env ANALYZE=true npm run build",
-    "extract-critical": "node scripts/extract-critical-css.js",
+    "extract-critical": "node -r ts-node/register scripts/generate-style-assets.ts",
     "lighthouse": "lhci autorun",
     "lighthouse:local": "lighthouse http://localhost:3000 --view --output html --output-path ./lighthouse-report.html",
     "migrate:tokens": "ts-node scripts/migrate-tokens-example.ts",

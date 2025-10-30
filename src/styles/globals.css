@@ -1,3 +1,5 @@
+@import "./tokens.css";
+
 /* ================================
    Tailwind base/components/utilities
    ================================ */
@@ -16,8 +18,8 @@
 
   /* Hide scrollbar for IE, Edge and Firefox */
   .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   /* Screen reader only */
@@ -33,6 +35,19 @@
     border-width: 0;
   }
 
+  /* Reveal sr-only utilities on focus (skip links, etc.) */
+  .sr-only:focus,
+  .sr-only:active {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
   .safe-area-bottom-fab {
     bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-fab-offset));
   }
@@ -45,26 +60,6 @@
     background: var(--gradient-glow-ring-neutral);
   }
 
-  .bg-surface-sheen {
-    background: var(--gradient-surface-sheen);
-  }
-
-  .border-glow-ring-primary {
-    border-image: var(--border-glow-ring-primary) 1;
-  }
-
-  .bg-aurora-primary {
-    background: var(--aurora-primary);
-  }
-
-  .bg-aurora-secondary {
-    background: var(--aurora-secondary);
-  }
-
-  .bg-aurora-highlight {
-    background: var(--aurora-highlight);
-  }
-
   .blur-aurora-lg {
     filter: blur(var(--aurora-blur-lg));
   }
@@ -72,451 +67,69 @@
   .blur-aurora-md {
     filter: blur(var(--aurora-blur-md));
   }
-}
 
-/* ==============================================
-   متغيرات ألوان وتدرجات + ظلال (محسّنة)
-   ============================================== */
-:root {
-  /* Primary Colors */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #0084FF;
-  --color-primary-600: #0066CC;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-
-  /* Semantic Colors - Text (WCAG AA Compliant) */
-  --color-text-primary: #0a0a0a;           /* محسّن */
-  --color-text-secondary: #525252;         /* محسّن */
-  --color-text-tertiary: #737373;          /* محسّن */
-  --color-text-disabled: #a3a3a3;
-  --color-text-inverse: #fafafa;
-  --color-text-link: #0066CC;              /* darker */
-  --color-text-link-hover: #0052A3;
-
-  /* Semantic Colors - Background */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f9fafb;
-  --color-bg-tertiary: #f3f4f6;
-  --color-bg-elevated: #ffffff;
-  --color-bg-overlay: rgba(0, 0, 0, 0.5);
-  --color-bg-inverse: #1a1a1a;
-
-  /* Semantic Colors - Border */
-  --color-border-default: #e5e7eb;
-  --color-border-hover: #d1d5db;
-  --color-border-focus: #0084FF;
-  --color-border-disabled: #f3f4f6;
-  --color-border-error: #ef4444;
-
-  /* Semantic Colors - Status */
-  --color-success-50: #ecfdf3;
-  --color-success-500: #16a34a;
-  --color-warning-50: #fffbeb;
-  --color-warning-500: #f59e0b;
-  --color-error-50: #fef2f2;
-  --color-error-500: #ef4444;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0084FF 0%, #0066CC 100%);
-  --gradient-secondary: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
-  --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-  --gradient-glow-ring-primary: radial-gradient(160px 160px at 50% 12%, rgba(0, 132, 255, 0.18), rgba(0, 132, 255, 0));
-  --gradient-glow-ring-neutral: radial-gradient(160px 160px at 50% 12%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
-  --gradient-surface-sheen: linear-gradient(120deg, rgba(15, 23, 42, 0.08), transparent 55%, rgba(15, 23, 42, 0.06));
-  --border-glow-ring-primary: linear-gradient(135deg, rgba(14, 165, 233, 0.6), rgba(59, 130, 246, 0.45));
-  --space-fab-offset: 1.25rem;
-  --aurora-primary: rgba(56, 189, 248, 0.22);
-  --aurora-secondary: rgba(14, 165, 233, 0.18);
-  --aurora-highlight: rgba(191, 219, 254, 0.2);
-  --aurora-blur-lg: 100px;
-  --aurora-blur-md: 90px;
-
-  --gradient-hero: linear-gradient(135deg,
-    rgba(239, 246, 255, 0.8) 0%,
-    rgba(219, 234, 254, 0.6) 35%,
-    rgba(196, 181, 253, 0.4) 100%);
-  --gradient-dark-hero: linear-gradient(135deg,
-    rgba(17, 24, 39, 0.9) 0%,
-    rgba(30, 41, 59, 0.8) 35%,
-    rgba(51, 65, 85, 0.7) 100%);
-
-  /* Shadows */
-  --shadow-soft: 0 4px 20px -2px rgba(0, 132, 255, 0.1);
-  --shadow-medium: 0 8px 25px -5px rgba(0, 132, 255, 0.15);
-  --shadow-strong: 0 20px 40px -12px rgba(0, 132, 255, 0.25);
-  --shadow-glow: 0 0 40px rgba(0, 132, 255, 0.3);
-
-  /* Legacy */
-  --dark-bg-primary: #0f172a;
-  --dark-bg-secondary: #1e293b;
-  --dark-text-primary: #f8fafc;
-  --dark-text-secondary: #cbd5e1;
-}
-
-.dark {
-  --gradient-glow-ring-primary: radial-gradient(160px 160px at 50% 12%, rgba(59, 130, 246, 0.32), rgba(15, 23, 42, 0));
-  --gradient-glow-ring-neutral: radial-gradient(160px 160px at 50% 12%, rgba(148, 163, 184, 0.28), rgba(15, 23, 42, 0));
-  --gradient-surface-sheen: linear-gradient(120deg, rgba(148, 163, 184, 0.16), transparent 55%, rgba(148, 163, 184, 0.12));
-  --border-glow-ring-primary: linear-gradient(135deg, rgba(56, 189, 248, 0.75), rgba(59, 130, 246, 0.55));
-  --aurora-primary: rgba(37, 99, 235, 0.32);
-  --aurora-secondary: rgba(14, 165, 233, 0.28);
-  --aurora-highlight: rgba(148, 163, 184, 0.24);
-}
-
-/* ======================
-   خطوط محلية (كما هي)
-   ====================== */
-@font-face { font-family: 'Almarai'; font-weight: 300; src: url('/fonts/Almarai-Light.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Almarai'; font-weight: 400; src: url('/fonts/Almarai-Regular.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Almarai'; font-weight: 700; src: url('/fonts/Almarai-Bold.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Almarai'; font-weight: 800; src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Outfit';  font-weight: 400; src: url('/fonts/Outfit-Regular.ttf') format('truetype'); font-display: swap; }
-@font-face { font-family: 'Outfit';  font-weight: 500; src: url('/fonts/Outfit-Medium.ttf')  format('truetype'); }
-@font-face { font-family: 'Orlean';  font-weight: 400; src: url('/fonts/Orlean-Regular.otf') format('opentype'); font-display: swap; }
-
-/* ==============================
-   Base layer: خلفيات + سكروول + فوكس
-   ============================== */
-@layer base {
-  body {
-    @apply antialiased;
-    font-family: 'Almarai', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--gradient-hero);
-    transition: background-color 0.3s ease;
-  }
-  .dark body { background: var(--gradient-dark-hero); }
-
-  /* Scrollbar عامة (لغير الأقسام الأفقية) */
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #0084FF, #0066CC);
-    border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
-  }
-  ::-webkit-scrollbar-thumb:hover { background: linear-gradient(45deg, #0066CC, #0052A3); }
-
-  /* Focus States للوصولية */
-  *:focus-visible {
-    outline: 2px solid rgba(0, 132, 255, 0.6);
-    outline-offset: 2px;
-    border-radius: 8px;
-  }
-  .dark *:focus-visible { outline-color: rgba(96, 165, 250, 0.6); }
-}
-
-/* =======================
-   Keyframes (موحّدة ومحسّنة)
-   ======================= */
-/* Basic Animations */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-down {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-left {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slide-right {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes scale-out {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.9); }
-}
-
-/* Legacy Animations */
-@keyframes card-appear {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes shimmer {
-  0%   { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
-}
-
-@keyframes gradient-rotate { 
-  0% { transform: rotate(0deg); } 
-  100% { transform: rotate(360deg); } 
-}
-
-@keyframes pulse-glow { 
-  0% { box-shadow: 0 0 20px rgba(0,132,255,.4);} 
-  100% { box-shadow: 0 0 40px rgba(0,132,255,.8);} 
-}
-
-@keyframes skeleton-shimmer{ 
-  0% { background-position: -400% 0; } 
-  100% { background-position: 400% 0; } 
-}
-
-@keyframes float-gentle { 
-  0%,100% { transform: translateY(0) rotate(0);} 
-  33% { transform: translateY(-10px) rotate(1deg);} 
-  66% { transform: translateY(-5px) rotate(-1deg);} 
-}
-
-@keyframes slide-in-up { 
-  from { transform: translateY(30px); opacity: 0;} 
-  to { transform: translateY(0); opacity: 1;} 
-}
-
-@keyframes slide-in-right { 
-  from { transform: translateX(30px); opacity: 0;} 
-  to { transform: translateX(0); opacity: 1;} 
-}
-
-@keyframes ripple {
-  0% { transform: scale(0); opacity: 0.5; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
-@keyframes featured-glow { 
-  0% { opacity:.6; filter: blur(8px);} 
-  100% { opacity:.9; filter: blur(12px);} 
-}
-
-/* ==============================
-   Components layer
-   ============================== */
-@layer components {
-  /* Glass effect للتبويبات/الهيدرز */
-  .glass-effect {
-    background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-  .dark .glass-effect { background: rgba(10,10,10,0.8); }
-
-  /* بطاقات + ظلال */
-  .enhanced-card {
-    @apply relative overflow-hidden rounded-3xl border backdrop-blur-md transition-all duration-300;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: var(--shadow-soft);
-  }
-  .enhanced-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-strong); }
-  .dark .enhanced-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(71, 85, 105, 0.3); }
-
-  .card-shadow {
-    box-shadow:
-      0 1px 2px 0 rgba(0,0,0,0.03),
-      0 2px 4px 0 rgba(0,0,0,0.02);
-  }
-  .card-shadow-hover {
-    box-shadow:
-      0 4px 6px -1px rgba(0,0,0,0.06),
-      0 10px 15px -3px rgba(0,0,0,0.05),
-      0 0 0 1px rgba(0,132,255,0.05);
-  }
-  .dark .card-shadow {
-    box-shadow:
-      0 1px 2px 0 rgba(0,0,0,0.2),
-      0 2px 4px 0 rgba(0,0,0,0.15);
-  }
-  .dark .card-shadow-hover {
-    box-shadow:
-      0 4px 6px -1px rgba(0,0,0,0.4),
-      0 10px 15px -3px rgba(0,0,0,0.3),
-      0 0 0 1px rgba(96,165,250,0.15);
-  }
-
-  /* أزرار محسّنة */
-  .btn-primary-enhanced {
-    @apply relative px-8 py-4 rounded-2xl font-semibold text-white transition-all duration-300;
-    background: var(--gradient-primary);
-    box-shadow: var(--shadow-medium);
-    overflow: hidden;
-  }
-  .btn-primary-enhanced:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
-  .btn-primary-enhanced::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,.1) 50%, transparent 70%);
-    transform: translateX(-100%); transition: transform .6s ease;
-  }
-  .btn-primary-enhanced:hover::before { transform: translateX(100%); }
-
-  /* شريط البحث */
-  .search-enhanced { @apply relative; }
-  .search-enhanced::before {
-    content: ''; position: absolute; inset: -2px; border-radius: 1.5rem; z-index: -1;
-    background: linear-gradient(45deg, #0084FF, #8B5CF6, #F59E0B, #10B981);
-    opacity: 0; transition: opacity .3s ease; animation: gradient-rotate 3s linear infinite;
-  }
-  .search-enhanced:focus-within::before { opacity: 1; }
-
-  /* صور/لودينغ */
-  .image-zoom { transition: transform .6s cubic-bezier(.4,0,.2,1); }
-  .image-zoom:hover { transform: scale(1.08); }
-
-  .loading-shimmer {
-    animation: shimmer 2s infinite;
-    background: linear-gradient(to right,
-      rgba(226,232,240,0.2) 0%,
-      rgba(226,232,240,0.5) 50%,
-      rgba(226,232,240,0.2) 100%);
-    background-size: 1000px 100%;
-  }
-  .dark .loading-shimmer {
-    background: linear-gradient(to right,
-      rgba(38,38,38,0.2) 0%,
-      rgba(64,64,64,0.5) 50%,
-      rgba(38,38,38,0.2) 100%);
-  }
-
-  /* حالات مميّزة / فلو */
-  .pulse-glow { animation: pulse-glow 2s ease-in-out infinite alternate; }
-  .featured-card { position: relative; }
-  .featured-card::before {
-    content: ''; position: absolute; inset: -2px;
-    background: linear-gradient(45deg, #0084FF, #8B5CF6, #F59E0B);
-    border-radius: inherit; z-index: -1; opacity: .8; filter: blur(8px);
-    animation: featured-glow 3s ease-in-out infinite alternate;
-  }
-  .float-gentle { animation: float-gentle 6s ease-in-out infinite; }
-  .float-gentle:nth-child(2n){ animation-delay: -2s; }
-  .float-gentle:nth-child(3n){ animation-delay: -4s; }
-
-  /* Ripple */
-  .ripple-effect { position: relative; overflow: hidden; }
-  .ripple-effect::after {
-    content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
-    background: rgba(255,255,255,0.3); border-radius: 50%;
-    transform: translate(-50%,-50%) scale(0); pointer-events: none;
-  }
-  .ripple-effect:active::after { animation: ripple .6s ease-out; }
-}
-
-/* ==============================
-   Utilities layer
-   ============================== */
-@layer utilities {
-  /* نص متدرّج */
-  .text-gradient-primary {
-    background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .text-gradient-secondary {
-    background: var(--gradient-secondary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .gradient-text { /* alias للراحة */
-    background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .dark .gradient-text {
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-  }
-
-  /* خلفيات */
-  .bg-gradient-enhanced { background: var(--gradient-hero); }
-  .dark .bg-gradient-enhanced { background: var(--gradient-dark-hero); }
-  .bg-grid-enhanced {
-    background-image:
-      linear-gradient(rgba(0,132,255,0.06) 1px, transparent 1px),
-      linear-gradient(to right, rgba(0,132,255,0.06) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-  .dark .bg-grid-enhanced {
-    background-image:
-      linear-gradient(rgba(139,92,246,0.08) 1px, transparent 1px),
-      linear-gradient(to right, rgba(139,92,246,0.08) 1px, transparent 1px);
-  }
-
-  /* ظلال */
-  .shadow-soft   { box-shadow: var(--shadow-soft); }
-  .shadow-medium { box-shadow: var(--shadow-medium); }
-  .shadow-strong { box-shadow: var(--shadow-strong); }
-  .shadow-glow   { box-shadow: var(--shadow-glow); }
-
-  /* ===== HScroll الجديد: مريح للموبايل ويخفي الشريط ===== */
   .hscroll {
     display: flex;
-    gap: 1.25rem;                /* gap 5 */
+    gap: var(--space-7);
     overflow-x: auto;
-    padding-bottom: 1rem;        /* pb-4 */
+    padding-bottom: var(--space-5);
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;       /* Firefox */
-    -ms-overflow-style: none;    /* Edge legacy */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  .hscroll::-webkit-scrollbar { display: none; } /* WebKit */
 
-  /* سناب لطيف على الموبايل وصارم على الديسكتوب */
-  .hscroll-snap { scroll-snap-type: x proximity; }
-  @media (min-width: 1024px) {
-    .hscroll-snap { scroll-snap-type: x mandatory; }
+  .hscroll::-webkit-scrollbar {
+    display: none;
   }
-  .hscroll-item { flex-shrink: 0; scroll-snap-align: start; }
 
-  /* (اختياري) Snap قديم لو بتحتاجه في أماكن أخرى */
-  .snap-container { 
+  .hscroll-snap {
     scroll-snap-type: x proximity;
-    scroll-padding: 0 16px;
-    -webkit-overflow-scrolling: touch;
   }
-  .snap-item { scroll-snap-align: start; scroll-snap-stop: normal; }
 
-  /* إخفاء سكروول (عامة) */
-  .scrollbar-hide {
-    scrollbar-width: none;      /* Firefox */
-    -ms-overflow-style: none;   /* IE/Edge legacy */
+  @media (min-width: 1024px) {
+    .hscroll-snap {
+      scroll-snap-type: x mandatory;
+    }
   }
-  .scrollbar-hide::-webkit-scrollbar { display: none; } /* WebKit */
+
+  .hscroll-item {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
 
   .token-interactive {
-    --token-bg: transparent;
-    --token-bg-hover: var(--token-bg);
-    --token-bg-active: var(--token-bg-hover);
-    --token-fg: inherit;
-    --token-fg-hover: var(--token-fg);
-    --token-fg-active: var(--token-fg-hover);
+    --token-bg: var(--color-bg-elevated);
+    --token-bg-hover: var(--color-bg-elevated);
+    --token-bg-hover: color-mix(in srgb, var(--color-bg-elevated) 88%, var(--color-primary-500));
+    --token-bg-active: var(--color-bg-elevated);
+    --token-bg-active: color-mix(in srgb, var(--color-bg-elevated) 82%, var(--color-primary-600));
+    --token-fg: var(--color-text-primary);
+    --token-fg-hover: var(--color-text-primary);
+    --token-fg-active: var(--color-text-primary);
     --token-shadow: none;
-    --token-shadow-hover: var(--token-shadow);
-    --token-shadow-active: var(--token-shadow-hover);
-    --token-border-color: transparent;
-    --token-border-color-hover: var(--token-border-color);
-    --token-border-color-active: var(--token-border-color-hover);
+    --token-shadow-hover: none;
+    --token-shadow-active: none;
+    --token-border-color: var(--color-border-default);
+    --token-border-color-hover: var(--color-border-hover);
+    --token-border-color-active: var(--color-border-focus);
     --token-transform-hover: translateY(-0.125rem);
     --token-transform-active: translateY(-0.0625rem);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--space-3);
     background: var(--token-bg);
     color: var(--token-fg);
     box-shadow: var(--token-shadow);
     border-color: var(--token-border-color);
     border-style: solid;
-    border-width: var(--token-border-width, 0px);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    border-width: var(--token-border-width, 1px);
+    border-radius: var(--radius-lg);
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+      background 300ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .token-interactive:hover,
@@ -537,14 +150,15 @@
   }
 
   .token-icon-button {
-    --token-icon-size: 2.5rem;
-    --token-icon-radius: 9999px;
+    --token-icon-size: var(--space-10);
+    --token-icon-radius: var(--radius-full);
     --token-icon-bg: transparent;
-    --token-icon-bg-hover: var(--token-icon-bg);
-    --token-icon-color: inherit;
-    --token-icon-color-hover: var(--token-icon-color);
+    --token-icon-bg-hover: transparent;
+    --token-icon-bg-hover: color-mix(in srgb, var(--color-primary-500) 12%, transparent);
+    --token-icon-color: var(--color-text-primary);
+    --token-icon-color-hover: var(--color-primary-500);
     --token-icon-shadow: none;
-    --token-icon-shadow-hover: var(--token-icon-shadow);
+    --token-icon-shadow-hover: none;
     width: var(--token-icon-size);
     height: var(--token-icon-size);
     display: inline-flex;
@@ -554,7 +168,10 @@
     background: var(--token-icon-bg);
     color: var(--token-icon-color);
     box-shadow: var(--token-icon-shadow);
-    transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    transition: background 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .token-icon-button:hover,
@@ -567,135 +184,63 @@
   .token-icon-button:active {
     transform: scale(0.96);
   }
-
-  /* Animation utilities */
-  .animate-fade-in { animation: fade-in 300ms ease-out; }
-  .animate-fade-out { animation: fade-out 300ms ease-out; }
-  .animate-slide-up { animation: slide-up 400ms ease-out; }
-  .animate-slide-down { animation: slide-down 400ms ease-out; }
-  .animate-slide-left { animation: slide-left 400ms ease-out; }
-  .animate-slide-right { animation: slide-right 400ms ease-out; }
-  .animate-scale-in { animation: scale-in 300ms ease-out; }
-  .animate-scale-out { animation: scale-out 300ms ease-out; }
-
-  /* Typo & transitions */
-  .text-balance { text-wrap: balance; }
-  .transition-smooth { transition: all .3s cubic-bezier(.4,0,.2,1); }
-
-  /* GPU/perf */
-  .gpu-accelerated { transform: translateZ(0); will-change: transform; }
-  .optimized-repaint { contain: layout style paint; }
-
-  /* شِمر/سكليتون موحّد */
-  .skeleton {
-    background: linear-gradient(90deg,
-      rgba(226,232,240,0.6) 25%,
-      rgba(241,245,249,0.8) 50%,
-      rgba(226,232,240,0.6) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  .dark .skeleton {
-    background: linear-gradient(90deg,
-      rgba(38,38,38,0.6) 25%,
-      rgba(64,64,64,0.8) 50%,
-      rgba(38,38,38,0.6) 75%);
-  }
-
-  /* Badges */
-  .badge-glow { box-shadow: 0 0 12px rgba(0, 132, 255, 0.3); }
-  .dark .badge-glow { box-shadow: 0 0 12px rgba(96,165,250,0.3); }
-
-  /* Responsive text */
-  @media (max-width: 640px) {
-    .responsive-text-xl  { font-size: clamp(1.25rem, 4vw, 1.5rem); }
-    .responsive-text-2xl { font-size: clamp(1.5rem, 5vw, 1.875rem); }
-    .responsive-text-4xl { font-size: clamp(2rem, 7vw, 2.5rem); }
-  }
-
-  /* Grid للكورسات */
-  .course-grid-enhanced {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
-    gap: 2rem;
-  }
-  @media (max-width: 640px) {
-    .course-grid-enhanced { grid-template-columns: 1fr; gap: 1.5rem; }
-    .search-enhanced { @apply mx-4; }
-  }
-
-  /* Empty state float */
-  .empty-state-float { animation: float 3s ease-in-out infinite; }
 }
+
+/* ======================
+   خطوط محلية (كما هي)
+   ====================== */
+@font-face { font-family: 'Almarai'; font-weight: 300; src: url('/fonts/Almarai-Light.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Almarai'; font-weight: 400; src: url('/fonts/Almarai-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Almarai'; font-weight: 700; src: url('/fonts/Almarai-Bold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Almarai'; font-weight: 800; src: url('/fonts/Almarai-ExtraBold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Outfit';  font-weight: 400; src: url('/fonts/Outfit-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Outfit';  font-weight: 500; src: url('/fonts/Outfit-Medium.ttf')  format('truetype'); }
+@font-face { font-family: 'Orlean';  font-weight: 400; src: url('/fonts/Orlean-Regular.otf') format('opentype'); font-display: swap; }
 
 /* ==============================
-   Dark mode overrides
+   Base layer: خلفيات + سكروول + فوكس
    ============================== */
-.dark {
-  /* Text Colors - محسّن لـ WCAG */
-  --color-text-primary: #fafafa;           /* #f8fafc → #fafafa (lighter) */
-  --color-text-secondary: #a3a3a3;         /* #cbd5e1 → #a3a3a3 (أفضل contrast) ✅ */
-  --color-text-tertiary: #737373;          /* #94a3b8 → #737373 */
-  --color-text-disabled: #525252;          /* #475569 → #525252 */
-  --color-text-inverse: #0a0a0a;
-  --color-text-link: #60a5fa;
-  --color-text-link-hover: #93c5fd;
+@layer base {
+  body {
+    @apply antialiased;
+    font-family: var(--font-arabic);
+    color: var(--color-text-primary);
+    background: var(--gradient-hero);
+    transition: background 300ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-  /* Background Colors - محسّن */
-  --color-bg-primary: #0a0a0a;             /* #0f172a → #0a0a0a (darker) ✅ */
-  --color-bg-secondary: #171717;           /* #1e293b → #171717 (darker) ✅ */
-  --color-bg-tertiary: #262626;            /* #334155 → #262626 */
-  --color-bg-elevated: #171717;            /* #1e293b → #171717 */
-  --color-bg-overlay: rgba(0,0,0,0.7);
-  --color-bg-inverse: #fafafa;
+  /* Scrollbar عامة (لغير الأقسام الأفقية) */
+  ::-webkit-scrollbar {
+    width: var(--space-3);
+    height: var(--space-3);
+  }
 
-  /* Border Colors */
-  --color-border-default: #334155;
-  --color-border-hover: #475569;
-  --color-border-focus: #60a5fa;
-  --color-border-disabled: #1e293b;
-  --color-border-error: #f87171;
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+    background: color-mix(in srgb, var(--color-bg-secondary) 75%, transparent);
+    border-radius: var(--radius-sm);
+  }
 
-  /* Semantic Colors - Status */
-  --color-success-50: rgba(34, 197, 94, 0.12);
-  --color-success-500: #22c55e;
-  --color-warning-50: rgba(250, 204, 21, 0.12);
-  --color-warning-500: #facc15;
-  --color-error-50: rgba(248, 113, 113, 0.14);
-  --color-error-500: #f87171;
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, var(--color-primary-500), var(--color-primary-600));
+    border-radius: var(--radius-sm);
+    border: var(--space-1) solid transparent;
+    background-clip: padding-box;
+  }
 
-  /* Shadows */
-  --shadow-soft:   0 4px 20px -2px rgba(0,0,0,0.3);
-  --shadow-medium: 0 8px 25px -5px rgba(0,0,0,0.4);
-  --shadow-strong: 0 20px 40px -12px rgba(0,0,0,0.5);
-  --shadow-glow:   0 0 40px rgba(139, 92, 246, 0.2);
-}
-.dark .text-gradient-primary {
-  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, var(--color-primary-600), var(--color-primary-700));
+  }
 }
 
 /* ==============================
    Motion preferences
    ============================== */
 @media (prefers-reduced-motion: no-preference) {
-  html { scroll-behavior: smooth; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html {
+    scroll-behavior: smooth;
   }
-  .float-gentle, .pulse-glow, .skeleton { animation: none !important; }
-}
-
-/* ==============================
-   Backdrop blur fallback
-   ============================== */
-@supports not (backdrop-filter: blur(12px)) {
-  .glass-effect { background: rgba(255,255,255,0.95); }
-  .dark .glass-effect { background: rgba(10,10,10,0.95); }
 }
 
 /* ==============================
@@ -725,37 +270,15 @@ html, body {
    Accessibility Utilities
    ================================ */
 
-/* Screen Reader Only - إخفاء العنصر بصرياً مع بقائه متاحاً لـ Screen Readers */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-/* إظهار العنصر عند التركيز (مفيد لـ Skip Links) */
-.sr-only:focus,
-.sr-only:active {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
-}
-
 /* تحسين Focus Indicators - مرئية وواضحة */
 *:focus-visible {
-  outline: 2px solid var(--color-primary-500, #0084FF);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: var(--space-1) solid var(--color-primary-500);
+  outline-offset: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.dark *:focus-visible {
+  outline-color: var(--color-primary-400);
 }
 
 /* إزالة outline للماوس فقط، مع الحفاظ عليه للكيبورد */
@@ -766,37 +289,26 @@ html, body {
 /* تحسين focus للأزرار */
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--color-primary-500, #0084FF);
-  outline-offset: 2px;
+  outline: var(--space-1) solid var(--color-primary-500);
+  outline-offset: var(--space-1);
 }
 
 /* تحسين focus للـ inputs */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--color-primary-500, #0084FF);
+  outline: var(--space-1) solid var(--color-primary-500);
   outline-offset: 0;
-  border-color: var(--color-primary-500, #0084FF);
-}
-
-/* دعم Reduced Motion - تعطيل الحركات للمستخدمين الذين يفضلون ذلك */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+  border-color: var(--color-primary-500);
 }
 
 /* تحسين Contrast في Dark Mode */
 @media (prefers-contrast: high) {
   :root {
-    --color-primary-500: #0099FF;
+    --color-primary-500: var(--color-primary-500);
+    --color-primary-500: color-mix(in srgb, var(--color-primary-500) 80%, var(--color-text-inverse) 20%);
   }
-  
+
   button,
   a {
     border: 2px solid currentColor;
@@ -806,13 +318,13 @@ select:focus-visible {
 /* Skip to Content Link Styling */
 .skip-to-content {
   position: absolute;
-  top: -40px;
+  top: calc(-1 * var(--space-10));
   left: 0;
-  background: var(--color-primary-500, #0084FF);
-  color: white;
-  padding: 8px 16px;
+  background: var(--color-primary-500);
+  color: var(--color-text-inverse);
+  padding: var(--space-3) var(--space-4);
   text-decoration: none;
-  border-radius: 0 0 4px 0;
+  border-radius: 0 0 var(--radius-sm) 0;
   z-index: 100;
   font-weight: 600;
 }
