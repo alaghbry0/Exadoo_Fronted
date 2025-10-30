@@ -41,6 +41,7 @@ import {
   shadows,
   spacing,
   withAlpha,
+  semanticSpacing
 } from "@/styles/tokens";
 
 /* =========================
@@ -375,21 +376,13 @@ export default function AcademyIndex() {
     }) as const;
 
   return (
-    <PageLayout
-      dir="rtl"
-      showNavbar={false}
-      showFooter={false}
-      style={{ backgroundColor: colors.bg.secondary }}
-      mainStyle={{
-        backgroundColor: colors.bg.secondary,
-        paddingBottom: spacing[20],
-      }}
-    >
+     <div dir="rtl" style={{ backgroundColor: colors.bg.secondary, minHeight: "80vh" }}>
       <UserHeader
         title={(name) => `مرحباً، ${name}`}
         subtitle="رحلتك التعليمية تبدأ من هنا"
       />
 
+      {/* Search Bar */}
       <div className="mx-auto max-w-screen-xl">
         <HomeSearchBar
           value={q}
@@ -398,10 +391,26 @@ export default function AcademyIndex() {
           ariaLabel="بحث في محتوى الأكاديمية"
         />
       </div>
+      
+      <PageLayout
+        dir="rtl"
+        maxWidth="2xl"
+        showNavbar={false}
+        style={{ backgroundColor: colors.bg.secondary }}
+        mainProps={{ dir: "rtl" }}
+        mainStyle={{
+          backgroundColor: colors.bg.secondary,
+          paddingTop: semanticSpacing.section.none,
+          paddingBottom: semanticSpacing.section.md,
+        }}
+      >
+      
 
-      <div style={{ display: "grid", gap: spacing[10] }}>
-        <div aria-live="polite" style={{ display: "grid", gap: spacing[6] }}>
-          {isLoading ? (
+      <div>
+
+        {/* Loading / Error */}
+        <div aria-live="polite">
+          {isLoading && (
             <section
               style={{
                 display: "grid",
@@ -415,19 +424,16 @@ export default function AcademyIndex() {
                   width: "10rem",
                   borderRadius: radius.xl,
                   backgroundColor: colors.bg.secondary,
-                  marginBottom: spacing[6],
+                  marginBottom: spacing[7],
                 }}
               />
-              <HorizontalScroll
-                ariaLabel="قائمة دورات قيد التحميل"
-                bottomPadding="md"
-              >
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <AcademyCardSkeleton key={index} />
+              <HorizontalScroll ariaLabel="قائمة دورات قيد التحميل" bottomPadding="md">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <AcademyCardSkeleton key={i} />
                 ))}
               </HorizontalScroll>
             </section>
-          ) : null}
+          )}
 
           {isError ? (
             <Card
@@ -597,6 +603,7 @@ export default function AcademyIndex() {
         </Tabs>
       </div>
     </PageLayout>
+    </div>
   );
 }
 
