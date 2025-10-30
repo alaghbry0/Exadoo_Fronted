@@ -24,7 +24,7 @@ export default function IndicatorsPage() {
           color: colors.text.primary,
         }}
       >
-      <BackHeader backTo="/shop" backMode="always" />
+      <BackHeader backTo="/" backMode="always" />
 
         {isLoading && (
           <div

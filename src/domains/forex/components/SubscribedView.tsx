@@ -49,7 +49,7 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
         >
           <LottieAnimation
             animationData={forexAnimation}
-            width="80%"
+            width="70%"
             height={350}
             className="max-w-md"
             frameStyle={{

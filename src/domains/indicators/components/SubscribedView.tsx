@@ -41,12 +41,12 @@ export const SubscribedView: React.FC<SubscribedViewProps> = ({ sub }) => {
             className="flex justify-center"
             style={{
               position: "relative",
-              top: spacing[12], // نزّل اللوتي (قابلة للتعديل الدقيقة)
+              top: spacing[2], // نزّل اللوتي (قابلة للتعديل الدقيقة)
             }}
         >
           <LottieAnimation
             animationData={indicatorAnimation}
-            width="40%"
+            width="30%"
             height={300}
             className="max-w-sm"
             frameStyle={{

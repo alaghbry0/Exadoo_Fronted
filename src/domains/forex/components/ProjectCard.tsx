@@ -88,7 +88,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 <div className="mt-4 flex gap-3 text-sm">
                   {downloadLink && (
                     <a
-                      href={downloadLink}
+                     // href={downloadLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold hover:underline transition"
@@ -99,7 +99,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   )}
                   {setupGuideLink && (
                     <a
-                      href={setupGuideLink}
+                     // href={setupGuideLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold hover:underline transition"

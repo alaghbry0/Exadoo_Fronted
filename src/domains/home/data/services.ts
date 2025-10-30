@@ -23,7 +23,7 @@ export const HOME_SERVICES: HomeServiceMeta[] = [
   {
     key: "signals",
     title: "Exaado Signals",
-    description: "Get real-time crypto signals to boost your trading performance.",
+    description: "إشارات لحظية مدروسة تعزز قراراتك وتقلل الضوضاء.",
     href: "/shop/signals",
     animationData: signalsAnimation,
     accent: "primary",
@@ -32,7 +32,7 @@ export const HOME_SERVICES: HomeServiceMeta[] = [
   {
     key: "forex",
     title: "Exaado Forex",
-    description: "Trade crypto with precision insights and expert-backed strategies.",
+    description:  "تحكم كامل في صفقاتك مع لوحات Exaado للتداول. نفّذ أوامرك بنقرة واحدة، أدر مخاطرك بفعالية، وركز على الأهم: تحقيق الأرباح.",
     href: "/forex",
     animationData: forexAnimation,
     accent: "secondary",
@@ -41,7 +41,7 @@ export const HOME_SERVICES: HomeServiceMeta[] = [
   {
     key: "indicators",
     title: "Exaado Buy Indicators",
-    description: "Power your crypto trading with advanced Gann-based indicator tools from Exaado's top experts.",
+    description: "حزمة مؤشرات متقدمة (Gann-based) بأداء مُثبت وتجربة سلسة.",
     href: "/indicators",
     animationData: buyIndicatorAnimation,
     accent: "success",

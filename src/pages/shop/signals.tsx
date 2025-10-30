@@ -321,7 +321,7 @@ const ShopComponent = () => {
                   className="max-w-2xl mx-auto"
                 >
                   <div
-                    className="h-1.5 w-1/3 mx-auto mb-6 rounded-full"
+                    className="h-1.5 w-1/3 mx-auto mb-0 rounded-full"
                     style={{
                       backgroundImage: `linear-gradient(90deg, ${withAlpha(
                         colors.brand.primary,
@@ -370,6 +370,7 @@ const ShopComponent = () => {
                 <div className="container mx-auto px-4 relative">
                   <ScrollArea type="scroll" className="-mx-4 px-4">
                     <ToggleGroup
+                    
                       type="single"
                       variant="outline"
                       size="lg"
@@ -377,7 +378,7 @@ const ShopComponent = () => {
                       onValueChange={(value) => {
                         setSelectedGroupId(value ? Number(value) : null);
                       }}
-                      className="flex w-max items-center gap-2 md:gap-4 pb-2 pr-4 justify-start lg:justify-center"
+                       className="flex w-max flex-row-reverse items-center gap-2 md:gap-4 pb-2 pr-4  justify-start lg:justify-center"
                     >
                       {[
                         { id: null, name: "الكل", icon: Layers },

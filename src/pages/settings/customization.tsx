@@ -22,10 +22,13 @@ export default function CustomizationPage() {
         />
       </Head>
 
-      <PageLayout maxWidth="xl">
+      <PageLayout 
+        maxWidth="2xl"
+        showFooter={false}>
         <div
           dir="rtl"
           className="flex flex-col"
+          
           style={{
             color: colors.text.primary,
             gap: semanticSpacing.section.sm,
