@@ -40,6 +40,7 @@ export interface NavbarProps {
   showNotifications?: boolean;
   className?: string;
   mobileMenuLabel?: string;
+  direction?: "ltr" | "rtl";
 }
 
 const DEFAULT_LINKS: NavbarLink[] = [
@@ -58,12 +59,16 @@ export function Navbar({
   showNotifications = true,
   className,
   mobileMenuLabel = "القائمة",
+  direction = "ltr",
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const unreadCount = Math.max(0, notificationCount || 0);
+  const isRTL = direction === "rtl";
 
   const logoContent = logo ?? (
-    <div className="flex items-center gap-2">
+    <div
+      className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}
+    >
       <Image
         src="/logo.png"
         alt="Exaado"
@@ -93,6 +98,7 @@ export function Navbar({
 
   return (
     <header
+      dir={direction}
       className={cn(
         "sticky top-0 z-50 w-full border-b backdrop-blur-md supports-[backdrop-filter]:bg-transparent",
         shadowClasses.card,
@@ -106,6 +112,7 @@ export function Navbar({
       <nav
         className={cn(
           "mx-auto flex h-16 w-full items-center justify-between",
+          isRTL ? "flex-row-reverse" : "flex-row",
           "max-w-screen-2xl",
           `px-[${semanticSpacing.layout.sm}]`,
           `md:px-[${semanticSpacing.layout.md}]`,
@@ -132,6 +139,7 @@ export function Navbar({
           className={cn(
             "hidden md:flex items-center",
             `gap-[${semanticSpacing.component.lg}]`,
+            isRTL && "md:flex-row-reverse",
           )}
         >
           {links.map(({ href, label, isExternal, icon: Icon, onClick }) => (
@@ -155,6 +163,7 @@ export function Navbar({
           className={cn(
             "flex items-center",
             `gap-[${semanticSpacing.component.md}]`,
+            isRTL && "flex-row-reverse",
           )}
         >
           <div className="hidden md:flex">
@@ -177,10 +186,19 @@ export function Navbar({
                   <Badge
                     variant="outline"
                     className={cn(
-                      "absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center p-0 text-xs border-0",
+                      "absolute flex h-5 w-5 items-center justify-center p-0 text-xs border-0",
                       componentRadius.badge,
                       `bg-[${colors.status.error}] text-[${colors.text.inverse}]`,
                     )}
+                    style={{
+                      top: `calc(-1 * ${semanticSpacing.component.xs})`,
+                      insetInlineStart: isRTL
+                        ? undefined
+                        : `calc(-1 * ${semanticSpacing.component.xs})`,
+                      insetInlineEnd: isRTL
+                        ? `calc(-1 * ${semanticSpacing.component.xs})`
+                        : undefined,
+                    }}
                     aria-label={`عدد الإشعارات غير المقروءة: ${unreadCount}`}
                   >
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -205,12 +223,14 @@ export function Navbar({
               </Button>
             </SheetTrigger>
             <SheetContent
-              side="right"
+              side={isRTL ? "left" : "right"}
+              dir={direction}
               className={cn(
                 componentRadius.modal,
                 `bg-[${colors.bg.primary}]`,
                 `text-[${colors.text.primary}]`,
-                `border-l border-[${withAlpha(colors.border.default, 0.6)}]`,
+                isRTL ? "border-r" : "border-l",
+                `border-[${withAlpha(colors.border.default, 0.6)}]`,
                 "w-[320px] sm:w-[360px]",
               )}
             >

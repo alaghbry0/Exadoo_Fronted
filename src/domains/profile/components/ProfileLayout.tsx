@@ -29,10 +29,15 @@ export function ProfilePageContainer({ children }: ProfilePageContainerProps) {
       style={{
         backgroundColor: colors.bg.primary,
         color: colors.text.primary,
-        paddingBlock: semanticSpacing.section.sm,
       }}
     >
-      <PageLayout maxWidth="2xl">{children}</PageLayout>
+      <PageLayout
+        maxWidth="2xl"
+        mainStyle={{ paddingBlock: semanticSpacing.section.sm }}
+       
+      >
+        {children}
+      </PageLayout>
     </div>
   );
 }

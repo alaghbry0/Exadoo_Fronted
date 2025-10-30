@@ -1,41 +1,47 @@
 // src/pages/academy/index.tsx
 "use client";
 
-import { useMemo, useState, useCallback, useDeferredValue } from "react";
-import { AnimatePresence } from "framer-motion";
-import AuthPrompt from "@/domains/auth/components/AuthFab";
-import { Button } from "@/shared/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { cn } from "@/shared/utils";
-import { Search, Bookmark, Layers, Award, BookOpen } from "lucide-react";
-import { useTelegram } from "@/shared/context/TelegramContext";
-import { useAcademyData } from "@/domains/academy/api";
 import {
-  MiniCourseCard,
-  MiniBundleCard,
+  useMemo,
+  useState,
+  useCallback,
+  useDeferredValue,
+  type ReactNode,
+} from "react";
+import { AnimatePresence } from "framer-motion";
+import { AlertCircle, Award, BookOpen, Bookmark, Layers, Search } from "lucide-react";
+
+import { useAcademyData } from "@/domains/academy/api";
+import AuthPrompt from "@/domains/auth/components/AuthFab";
+import {
+  AcademyRailSection,
   CategoryCard,
-  TopCourseCarousel,
   LatestCourseCard,
+  MiniBundleCard,
+  MiniCourseCard,
+  TopCourseCarousel,
 } from "@/domains/academy/components";
 import { HomeSearchBar, UserHeader } from "@/domains/home/components";
+import { EmptyState, SectionHeading } from "@/shared/components/common";
 import {
   HorizontalScroll,
   PageLayout,
   buildCountBadge,
 } from "@/shared/components/layout";
-import { SectionHeading } from "@/shared/components/common";
+import { Badge, Card, Tabs, TabsList, TabsTrigger, Button, AcademyCardSkeleton } from "@/shared/components/ui";
+import { useTelegram } from "@/shared/context/TelegramContext";
+import { cn } from "@/shared/utils";
 import {
+  animations,
   colors,
   componentRadius,
-  shadows,
-  shadowClasses,
-  withAlpha,
   fontFamily,
-  spacing,
   radius,
-  animations,
+  shadowClasses,
+  shadows,
+  spacing,
+  withAlpha,
 } from "@/styles/tokens";
-import { AcademyCardSkeleton } from "@/shared/components/ui/skeleton-loaders";
 
 /* =========================
    Types
@@ -89,9 +95,16 @@ function normalizeArabic(input: string) {
     .trim();
 }
 
+const BOTTOM_TABS = [
+  { value: "all", label: "الرئيسية", icon: Layers, ariaLabel: "الانتقال إلى الرئيسية" },
+  { value: "mine", label: "دوراتي", icon: Bookmark, ariaLabel: "عرض دوراتي" },
+] as const;
 
-
-
+const SEARCH_SUGGESTIONS = [
+  "تحليل فني",
+  "مبتدئ",
+  "مجاني",
+] as const;
 
 
 
@@ -183,6 +196,150 @@ export default function AcademyIndex() {
     };
   }, [data]);
 
+  const mySections = useMemo(() => {
+    const sections: ReactNode[] = [];
+
+    if (mine.courses.length > 0) {
+      sections.push(
+        <AcademyRailSection<CourseItem>
+          key="my-courses"
+          id="my-courses"
+          title="دوراتي"
+          icon={Bookmark}
+          action={buildCountBadge(mine.courses.length)}
+          items={mine.courses}
+          renderItem={(course, index) => (
+            <MiniCourseCard
+              id={course.id}
+              title={course.title}
+              desc={course.short_description}
+              price={course.discounted_price || course.price}
+              lessons={course.total_number_of_lessons}
+              level={course.level}
+              img={course.thumbnail}
+              free={isFreeCourse(course)}
+              priority={index === 0}
+            />
+          )}
+          scrollProps={{ bottomPadding: "lg" }}
+        />,
+      );
+    }
+
+    if (mine.bundles.length > 0) {
+      sections.push(
+        <AcademyRailSection<BundleItem>
+          key="my-bundles"
+          id="my-bundles"
+          title="حزمي المسجلة"
+          icon={Award}
+          action={buildCountBadge(mine.bundles.length)}
+          items={mine.bundles}
+          renderItem={(bundle, index) => (
+            <MiniBundleCard
+              id={bundle.id}
+              title={bundle.title}
+              desc={bundle.description}
+              price={bundle.price}
+              img={bundle.image || bundle.cover_image}
+              subCategoryId={bundle.sub_category_id}
+              freeSessionsCount={bundle.free_sessions_count}
+              priority={index === 0}
+            />
+          )}
+          scrollProps={{ bottomPadding: "lg", itemClassName: "w-[280px]" }}
+        />,
+      );
+    }
+
+    return sections;
+  }, [mine]);
+
+  const featuredSections = useMemo(() => {
+    const sections: ReactNode[] = [];
+
+    if (filteredData.categories.length > 0) {
+      sections.push(
+        <AcademyRailSection<CategoryItem>
+          key="categories"
+          id="categories"
+          title="تصنيفات الدورات"
+          icon={Layers}
+          items={filteredData.categories.slice(0, 6)}
+          renderItem={(category, index) => (
+            <CategoryCard
+              {...category}
+              priority={index === 0}
+            />
+          )}
+          scrollProps={{ gap: "sm", bottomPadding: "lg", itemClassName: "w-auto" }}
+        />,
+      );
+    }
+
+    if (filteredData.topBundles.length > 0) {
+      sections.push(
+        <AcademyRailSection<BundleItem>
+          key="latest-bundles"
+          id="latest-bundles"
+          title="أحدث الباقات 🔥"
+          icon={Award}
+          items={filteredData.topBundles}
+          renderItem={(bundle, index) => (
+            <MiniBundleCard
+              id={bundle.id}
+              title={bundle.title}
+              desc={bundle.description}
+              price={bundle.price}
+              img={bundle.image || bundle.cover_image}
+              subCategoryId={bundle.sub_category_id}
+              freeSessionsCount={bundle.free_sessions_count}
+              priority={index === 0}
+            />
+          )}
+          scrollProps={{ gap: "md", bottomPadding: "lg", itemClassName: "w-[280px]" }}
+        />,
+      );
+    }
+
+    if (filteredData.highlightCourses.length > 0) {
+      sections.push(
+        <AcademyRailSection<CourseItem>
+          key="latest-courses"
+          id="latest-courses"
+          title="أحدث الدورات"
+          icon={BookOpen}
+          items={filteredData.highlightCourses.slice(0, 6)}
+          renderItem={(course, index) => (
+            <LatestCourseCard
+              id={course.id}
+              title={course.title}
+              lessonsCount={course.total_number_of_lessons}
+              imageUrl={course.thumbnail}
+              price={course.discounted_price || course.price}
+              instructorName={course.instructor_name}
+              rating={course.rating}
+              priority={index === 0}
+            />
+          )}
+          scrollProps={{ gap: "sm", bottomPadding: "lg", itemClassName: "w-auto" }}
+        />,
+      );
+    }
+
+    return sections;
+  }, [filteredData]);
+
+  const showContent = Boolean(data) && !isLoading && !isError;
+  const showMyEmptyState = mine.courses.length === 0 && mine.bundles.length === 0;
+
+  const resolvedErrorMessage =
+    error && typeof error === "object" && "message" in error
+      ? String((error as { message?: string }).message ?? "حدث خطأ غير متوقع")
+      : error
+      ? String(error)
+      : "حدث خطأ غير متوقع";
+
   const handleTab = useCallback((key: "all" | "mine") => setTab(key), []);
 
   const bottomNavTokens = {
@@ -212,7 +369,9 @@ export default function AcademyIndex() {
       backgroundColor: isActive
         ? bottomNavTokens.activeBackground
         : "transparent",
-      boxShadow: isActive ? bottomNavTokens.activeShadow : bottomNavTokens.inactiveShadow,
+      boxShadow: isActive
+        ? bottomNavTokens.activeShadow
+        : bottomNavTokens.inactiveShadow,
     }) as const;
 
   return (
@@ -226,13 +385,11 @@ export default function AcademyIndex() {
         paddingBottom: spacing[20],
       }}
     >
-      {/* Header */}
       <UserHeader
         title={(name) => `مرحباً، ${name}`}
         subtitle="رحلتك التعليمية تبدأ من هنا"
       />
 
-      {/* Search Bar */}
       <div className="mx-auto max-w-screen-xl">
         <HomeSearchBar
           value={q}
@@ -242,11 +399,9 @@ export default function AcademyIndex() {
         />
       </div>
 
-      <div>
-
-        {/* Loading / Error */}
-        <div aria-live="polite">
-          {isLoading && (
+      <div style={{ display: "grid", gap: spacing[10] }}>
+        <div aria-live="polite" style={{ display: "grid", gap: spacing[6] }}>
+          {isLoading ? (
             <section
               style={{
                 display: "grid",
@@ -260,299 +415,138 @@ export default function AcademyIndex() {
                   width: "10rem",
                   borderRadius: radius.xl,
                   backgroundColor: colors.bg.secondary,
-                  marginBottom: spacing[7],
+                  marginBottom: spacing[6],
                 }}
               />
-              <HorizontalScroll ariaLabel="قائمة دورات قيد التحميل" bottomPadding="md">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <AcademyCardSkeleton key={i} />
+              <HorizontalScroll
+                ariaLabel="قائمة دورات قيد التحميل"
+                bottomPadding="md"
+              >
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <AcademyCardSkeleton key={index} />
                 ))}
               </HorizontalScroll>
             </section>
-          )}
-          {isError && (
-            <div
-              className="rounded-3xl border p-8 text-center"
+          ) : null}
+
+          {isError ? (
+            <Card
+              aria-live="assertive"
               style={{
-                borderColor: colors.status.error,
-                backgroundColor: withAlpha(colors.status.error, 0.1),
-                color: colors.status.error,
+                backgroundColor: withAlpha(colors.status.error, 0.08),
+                borderColor: withAlpha(colors.status.error, 0.32),
               }}
             >
-              حدث خطأ: {(error as Error)?.message}
-            </div>
-          )}
+              <EmptyState
+                icon={AlertCircle}
+                title="تعذر تحميل المحتوى"
+                description={resolvedErrorMessage}
+              />
+            </Card>
+          ) : null}
         </div>
 
-        {/* Content */}
-        {data && !isLoading && !isError && (
+        {showContent ? (
           <AnimatePresence mode="wait">
-            <div
-              key={tab}
-              className="space-y-12"
-            >
+            <div key={tab} className="space-y-12">
               {tab === "mine" ? (
-                <section className="space-y-10">
-                  {/* Empty mine */}
-                  {mine.courses.length === 0 && mine.bundles.length === 0 ? (
-                    <div className="mx-auto max-w-lg no-print">
-                      <div
-                        className="rounded-3xl border border-dashed p-10 text-center"
+                showMyEmptyState ? (
+                  <Card
+                    className="mx-auto max-w-lg border border-dashed"
+                    style={{
+                      borderColor: withAlpha(colors.border.default, 0.6),
+                      backgroundColor: colors.bg.elevated,
+                    }}
+                  >
+                    <EmptyState
+                      icon={BookOpen}
+                      title="لم تشترك في أي محتوى بعد"
+                      description={`اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى"`}
+                    >
+                      <Button
+                        className="gap-2"
                         style={{
-                          borderColor: colors.border.default,
-                          backgroundColor: colors.bg.elevated,
+                          backgroundColor: colors.brand.primary,
+                          color: colors.text.inverse,
+                          marginTop: spacing[4],
                         }}
+                        onClick={() => setTab("all")}
                       >
-                        <div
-                          className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-                          style={{ backgroundColor: withAlpha(colors.brand.primary, 0.12) }}
-                        >
-                          <BookOpen className="h-8 w-8" style={{ color: colors.brand.primary }} />
-                        </div>
-                        <p className="mb-2 text-lg font-bold" style={{ color: colors.text.primary }}>
-                          لم تشترك في أي محتوى بعد
-                        </p>
-                        <p className="mb-6 text-sm" style={{ color: colors.text.secondary }}>
-                          اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب
-                          "جميع المحتوى"
-                        </p>
-                        <Button
-                          className="rounded-xl px-6 py-2.5"
-                          style={{
-                            backgroundColor: colors.brand.primary,
-                            color: colors.text.inverse,
-                          }}
-                          onClick={() => setTab("all")}
-                        >
-                          <Layers className="ml-2 h-4 w-4" />
-                          استكشف الدورات الآن
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {mine.courses.length > 0 && (
-                        <section aria-labelledby="my-courses">
-                          <SectionHeading
-                            id="my-courses"
-                            icon={Bookmark}
-                            title="دوراتي"
-                            action={buildCountBadge(mine.courses.length)}
-                          />
-                          <HorizontalScroll
-                            ariaLabel="قائمة الدورات المسجلة"
-                            bottomPadding="lg"
-                          >
-                            {mine.courses.map((c, i) => (
-                              <MiniCourseCard
-                                key={c.id}
-                                id={c.id}
-                                title={c.title}
-                                desc={c.short_description}
-                                price={c.discounted_price || c.price}
-                                lessons={c.total_number_of_lessons}
-                                level={c.level}
-                                img={c.thumbnail}
-                                free={isFreeCourse(c)}
-                                priority={i === 0}
-                              />
-                            ))}
-                          </HorizontalScroll>
-                        </section>
-                      )}
-
-                      {mine.bundles.length > 0 && (
-                        <section aria-labelledby="my-bundles">
-                          <SectionHeading
-                            id="my-bundles"
-                            icon={Award}
-                            title="حزمي المسجلة"
-                            action={buildCountBadge(mine.bundles.length)}
-                          />
-                          <HorizontalScroll
-                            ariaLabel="قائمة الحزم المسجلة"
-                            bottomPadding="lg"
-                            itemClassName="w-[280px]"
-                          >
-                            {mine.bundles.map((b, i) => (
-                              <MiniBundleCard
-                                key={b.id}
-                                id={b.id}
-                                title={b.title}
-                                desc={b.description}
-                                price={b.price}
-                                img={b.image || b.cover_image}
-                                subCategoryId={b.sub_category_id}
-                                freeSessionsCount={b.free_sessions_count}
-                                priority={i === 0}
-                              />
-                            ))}
-                          </HorizontalScroll>
-                        </section>
-                      )}
-                    </>
-                  )}
-                </section>
+                        <Layers size={16} aria-hidden="true" />
+                        استكشف الدورات الآن
+                      </Button>
+                    </EmptyState>
+                  </Card>
+                ) : (
+                  <div className="space-y-10">{mySections}</div>
+                )
               ) : (
                 <>
-                  {/* Top Courses Carousel with Auto-Scroll */}
-                  {filteredData.topCourses.length > 0 && (
-                    <section aria-labelledby="top-courses-carousel" className="mb-8">
-                      <div style={{ marginBottom: spacing[4] }}>
-                        <SectionHeading
-                          id="top-courses-carousel"
-                          title="أفضل الدورات"
-                        />
-                      </div>
+                  {filteredData.topCourses.length > 0 ? (
+                    <section
+                      aria-labelledby="top-courses-carousel"
+                      style={{ display: "grid", gap: spacing[4] }}
+                    >
+                      <SectionHeading
+                        id="top-courses-carousel"
+                        title="أفضل الدورات"
+                      />
 
                       <TopCourseCarousel
-                        courses={filteredData.topCourses.slice(0, 5).map((c) => ({
-                          id: c.id,
-                          title: c.title,
-                          subtitle: c.short_description?.substring(0, 50) || "دورة تعليمية",
-                          description: c.short_description || "",
-                          thumbnail: c.thumbnail || '/11.png',
-                        }))}
-                        autoScroll={true}
+                        courses={filteredData.topCourses
+                          .slice(0, 2)
+                          .map((course) => ({
+                            id: course.id,
+                            title: course.title,
+                            subtitle:
+                              course.short_description?.substring(0, 5) ||
+                              "دورة تعليمية",
+                            description: course.short_description || "",
+                            thumbnail: course.thumbnail || "/11.png",
+                          }))}
+                        autoScroll
                         interval={7000}
                       />
                     </section>
-                  )}
+                  ) : null}
 
-                  {/* Course Categories */}
-                  {filteredData.categories.length > 0 && (
-                    <section aria-labelledby="categories" className="mb-8">
-                      <div style={{ marginBottom: spacing[6] }}>
-                        <SectionHeading id="categories" title="تصنيفات الدورات" />
-                      </div>
+                  {featuredSections}
 
-                      <HorizontalScroll
-                        ariaLabel="قائمة تصنيفات الدورات"
-                        gap="sm"
-                        bottomPadding="lg"
-                        itemClassName="w-auto"
-                      >
-                        {filteredData.categories.slice(0, 6).map((cat, i) => (
-                          <CategoryCard
-                            key={cat.id}
-                            {...cat}
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HorizontalScroll>
-                    </section>
-                  )}
-
-                  {/* Latest Bundles */}
-                  {filteredData.topBundles.length > 0 && (
-                    <section aria-labelledby="latest-bundles" className="mb-8">
-                      <div style={{ marginBottom: spacing[7] }}>
-                        <SectionHeading id="latest-bundles" title="أحدث الباقات 🔥" />
-                      </div>
-
-                      <HorizontalScroll
-                        ariaLabel="قائمة أحدث الباقات"
-                        gap="md"
-                        bottomPadding="lg"
-                        itemClassName="w-[280px]"
-                      >
-                        {filteredData.topBundles.map((b, i) => (
-                          <MiniBundleCard
-                            key={b.id}
-                            id={b.id}
-                            title={b.title}
-                            desc={b.description}
-                            price={b.price}
-                            img={b.image || b.cover_image}
-                            subCategoryId={b.sub_category_id}
-                            freeSessionsCount={b.free_sessions_count}
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HorizontalScroll>
-                    </section>
-                  )}
-
-                  {/* Latest Courses */}
-                  {filteredData.highlightCourses.length > 0 && (
-                    <section aria-labelledby="latest-courses" className="mb-8">
-                      <div style={{ marginBottom: spacing[6] }}>
-                        <SectionHeading id="latest-courses" title="أحدث الدورات" />
-                      </div>
-
-                      <HorizontalScroll
-                        ariaLabel="قائمة أحدث الدورات"
-                        gap="sm"
-                        bottomPadding="lg"
-                        itemClassName="w-auto"
-                      >
-                        {filteredData.highlightCourses.slice(0, 6).map((c, i) => (
-                          <LatestCourseCard
-                            key={c.id}
-                            id={c.id}
-                            title={c.title}
-                            lessonsCount={c.total_number_of_lessons}
-                            imageUrl={c.thumbnail}
-                            price={c.discounted_price || c.price}
-                            instructorName={c.instructor_name}
-                            rating={c.rating}
-                            priority={i === 0}
-                          />
-                        ))}
-                      </HorizontalScroll>
-                    </section>
-                  )}
-
-                  {/* Empty search state */}
                   {isSearching &&
-                    filteredData.topCourses.length === 0 &&
-                    filteredData.categories.length === 0 &&
-                    filteredData.topBundles.length === 0 &&
-                    filteredData.highlightCourses.length === 0 && (
-                      <div className="mx-auto max-w-lg">
-                        <div
-                          className="rounded-3xl border border-dashed p-10 text-center"
-                          style={{
-                            borderColor: colors.border.default,
-                            backgroundColor: colors.bg.elevated,
-                          }}
-                        >
-                          <div
-                            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-                            style={{ backgroundColor: colors.bg.secondary }}
-                            aria-hidden="true"
-                          >
-                            <Search className="h-8 w-8" style={{ color: colors.text.tertiary }} aria-hidden="true" />
-                          </div>
-                          <p className="mb-2 text-lg font-bold" style={{ color: colors.text.primary }}>
-                            لا توجد نتائج
-                          </p>
-                          <p className="mb-4 text-sm" style={{ color: colors.text.secondary }}>
-                            جرّب كلمات أبسط أو تصنيفات مختلفة
-                          </p>
-                          <div className="flex flex-wrap justify-center gap-2">
-                            <span
-                              className="rounded-full px-3 py-1.5 text-xs font-medium"
-                              style={{ backgroundColor: colors.bg.secondary, color: colors.text.secondary }}
+                  filteredData.topCourses.length === 0 &&
+                  filteredData.categories.length === 0 &&
+                  filteredData.topBundles.length === 0 &&
+                  filteredData.highlightCourses.length === 0 ? (
+                    <Card
+                      className="mx-auto max-w-lg border border-dashed"
+                      style={{
+                        borderColor: withAlpha(colors.border.default, 0.6),
+                        backgroundColor: colors.bg.elevated,
+                      }}
+                    >
+                      <EmptyState
+                        icon={Search}
+                        title="لا توجد نتائج"
+                        description="جرّب كلمات أبسط أو تصنيفات مختلفة"
+                      >
+                        <div className="mt-6 flex flex-wrap justify-center gap-2">
+                          {SEARCH_SUGGESTIONS.map((suggestion) => (
+                            <Badge
+                              key={suggestion}
+                              variant="secondary"
+                              className="px-3 py-1.5 text-xs font-medium"
+                              style={{
+                                backgroundColor: colors.bg.secondary,
+                                color: colors.text.secondary,
+                              }}
                             >
-                              تحليل فني
-                            </span>
-                            <span
-                              className="rounded-full px-3 py-1.5 text-xs font-medium"
-                              style={{ backgroundColor: colors.bg.secondary, color: colors.text.secondary }}
-                            >
-                              مبتدئ
-                            </span>
-                            <span
-                              className="rounded-full px-3 py-1.5 text-xs font-medium"
-                              style={{ backgroundColor: colors.bg.secondary, color: colors.text.secondary }}
-                            >
-                              مجاني
-                            </span>
-                          </div>
+                              {suggestion}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
-                    )}
+                      </EmptyState>
+                    </Card>
+                  ) : null}
                 </>
               )}
 
@@ -561,10 +555,9 @@ export default function AcademyIndex() {
               </div>
             </div>
           </AnimatePresence>
-        )}
+        ) : null}
       </div>
 
-      {/* Bottom Navigation */}
       <div
         className="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 backdrop-blur-xl"
         style={bottomNavSurfaceStyle}
@@ -580,30 +573,30 @@ export default function AcademyIndex() {
               shadowClasses.none,
             )}
           >
-            <TabsTrigger
-              value="all"
-              className={navTriggerBase}
-              style={getTriggerStyle(tab === "all")}
-              aria-label="الانتقال إلى الرئيسية"
-              aria-current={tab === "all" ? "page" : undefined}
-            >
-              <Layers size={22} aria-hidden="true" />
-              <span style={{ fontFamily: fontFamily.arabic }}>الرئيسية</span>
-            </TabsTrigger>
+            {BOTTOM_TABS.map((tabConfig) => {
+              const Icon = tabConfig.icon;
+              const isActive = tab === tabConfig.value;
 
-            <TabsTrigger
-              value="mine"
-              className={navTriggerBase}
-              style={getTriggerStyle(tab === "mine")}
-              aria-label="عرض دوراتي"
-              aria-current={tab === "mine" ? "page" : undefined}
-            >
-              <Bookmark size={22} aria-hidden="true" />
-              <span style={{ fontFamily: fontFamily.arabic }}>دوراتي</span>
-            </TabsTrigger>
+              return (
+                <TabsTrigger
+                  key={tabConfig.value}
+                  value={tabConfig.value}
+                  className={navTriggerBase}
+                  style={getTriggerStyle(isActive)}
+                  aria-label={tabConfig.ariaLabel}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon size={22} aria-hidden="true" />
+                  <span style={{ fontFamily: fontFamily.arabic }}>
+                    {tabConfig.label}
+                  </span>
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </Tabs>
       </div>
     </PageLayout>
   );
 }
+
