@@ -15,7 +15,7 @@ export { SectionHeader } from "./SectionHeader";
 export { TopCourseCarousel } from "./TopCourseCarousel";
 export { default as AcademyHeroCard } from "./AcademyHeroCard";
 export { default as AcademyPurchaseModal } from "./AcademyPurchaseModal";
-export { AcademyRailSection } from "./AcademyRailSection";
+
 
 // Course Components
 export { CourseLoadingState } from "./CourseLoadingState";
