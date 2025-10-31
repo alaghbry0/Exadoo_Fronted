@@ -7,7 +7,6 @@ import React from "react";
 import { ArrowLeft, Star, Users, Award } from "lucide-react";
 import SmartImage from "@/shared/components/common/SmartImage";
 import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
 import { colors, spacing, componentRadius, shadowClasses, withAlpha } from "@/styles/tokens";
 import { cn } from "@/shared/utils";
 
@@ -51,8 +50,7 @@ export default function CourseHeader({
   };
 
   return (
-    <div className="relative h-[420px] rounded-b-3xl overflow-hidden">
-      {/* Background Image */}
+    <div className="relative h-[400px] rounded-b-3xl overflow-hidden">
       <div className="absolute inset-0">
         <SmartImage
           src={imageUrl}
@@ -63,6 +61,9 @@ export default function CourseHeader({
           sizes="100vw"
           priority
         />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
+
+        
         {/* Gradient Overlay */}
         <div 
           className="absolute inset-0"
@@ -187,31 +188,8 @@ export default function CourseHeader({
             className="flex items-center flex-wrap"
             style={{ gap: spacing[3] }}
           >
-            <Badge
-              className={cn("font-semibold", shadowClasses.cardElevated)}
-              style={{
-                backgroundColor: colors.status.success,
-                color: colors.text.inverse,
-                padding: `${spacing[2]} ${spacing[4]}`
-              }}
-            >
-              <Award size={16} className="ml-1" aria-hidden="true" />
-              مشترك
-            </Badge>
+           
 
-            {onContinueLearning && (
-              <Button
-                onClick={onContinueLearning}
-                className={cn("font-semibold", shadowClasses.cardElevated)}
-                style={{
-                  backgroundColor: colors.brand.primary,
-                  color: colors.text.inverse,
-                  padding: `${spacing[2]} ${spacing[4]}`
-                }}
-              >
-                تابع من حيث توقفت ➜
-              </Button>
-            )}
           </div>
         )}
       </div>
