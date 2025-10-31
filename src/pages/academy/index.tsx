@@ -26,9 +26,11 @@ import {
 import { SectionHeading } from "@/shared/components/common";
 import {
   colors,
+  componentRadius,
   shadows,
   shadowClasses,
   withAlpha,
+  fontFamily,
   spacing,
   radius,
   animations,
@@ -88,89 +90,12 @@ function normalizeArabic(input: string) {
     .trim();
 }
 
-/* =========================
-   Top Mini Tabs (بديل الشريط السفلي)
-========================= */
-function TopMiniTabs({
-  tab,
-  onChange,
-}: {
-  tab: "all" | "mine";
-  onChange: (v: "all" | "mine") => void;
-}) {
-  return (
-    <div
-      className="sticky top-0 z-30 px-4"
-      style={{
-        backgroundColor: colors.bg.secondary,
-        backdropFilter: "saturate(120%) blur(10px)",
-        WebkitBackdropFilter: "saturate(120%) blur(10px)",
-        borderBottom: `1px solid ${withAlpha(colors.border.default, 0.6)}`,
-        paddingTop: `calc(${spacing[3]} + env(safe-area-inset-top, 0px))`,
-        paddingBottom: spacing[3],
-      }}
-      aria-label="التبديل داخل الأكاديمية"
-      dir="rtl"
-    >
-      <Tabs value={tab} onValueChange={(v) => onChange(v as "all" | "mine")}>
-        <TabsList
-          className={cn(
-            "mx-auto flex w-full max-w-2xl items-center gap-2 rounded-2xl p-1",
-            shadowClasses.none,
-          )}
-          style={{
-            backgroundColor: withAlpha(colors.bg.elevated, 0.7),
-            border: `1px solid ${withAlpha(colors.border.default, 0.7)}`,
-          }}
-        >
-          <TabsTrigger
-            value="all"
-            className={cn(
-              "h-9 flex-1 rounded-xl px-3 text-sm font-semibold transition-all",
-              "data-[state=active]:shadow",
-            )}
-            style={{
-              color: tab === "all" ? colors.brand.primary : colors.text.secondary,
-              backgroundColor:
-                tab === "all"
-                  ? withAlpha(colors.brand.primary, 0.12)
-                  : "transparent",
-              boxShadow: tab === "all" ? shadows.colored.primary.sm : "none",
-            }}
-            aria-current={tab === "all" ? "page" : undefined}
-          >
-            <span className="inline-flex items-center gap-2">
-              <Layers size={18} aria-hidden="true" />
-              الرئيسية
-            </span>
-          </TabsTrigger>
 
-          <TabsTrigger
-            value="mine"
-            className={cn(
-              "h-9 flex-1 rounded-xl px-3 text-sm font-semibold transition-all",
-              "data-[state=active]:shadow",
-            )}
-            style={{
-              color: tab === "mine" ? colors.brand.primary : colors.text.secondary,
-              backgroundColor:
-                tab === "mine"
-                  ? withAlpha(colors.brand.primary, 0.12)
-                  : "transparent",
-              boxShadow: tab === "mine" ? shadows.colored.primary.sm : "none",
-            }}
-            aria-current={tab === "mine" ? "page" : undefined}
-          >
-            <span className="inline-flex items-center gap-2">
-              <Bookmark size={18} aria-hidden="true" />
-              دوراتي
-            </span>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-    </div>
-  );
-}
+
+
+
+
+
 
 /* =========================
    Page
@@ -261,6 +186,36 @@ export default function AcademyIndex() {
 
   const handleTab = useCallback((key: "all" | "mine") => setTab(key), []);
 
+  const bottomNavTokens = {
+    containerBackground: withAlpha(colors.bg.elevated, 0.95),
+    containerBorder: withAlpha(colors.border.default, 0.7),
+    activeBackground: withAlpha(colors.brand.primary, 0.12),
+    activeShadow: shadows.colored.primary.sm,
+    inactiveShadow: "none",
+  } as const;
+
+  const bottomNavSurfaceStyle = {
+    backgroundColor: bottomNavTokens.containerBackground,
+    borderTop: `1px solid ${bottomNavTokens.containerBorder}`,
+    boxShadow: shadows.elevation[2],
+    paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${spacing[3]})`,
+  } as const;
+
+  const navTriggerBase = cn(
+    "flex flex-col items-center gap-1.5 px-6 py-2 text-xs font-semibold transition-all",
+    componentRadius.button,
+    shadowClasses.button,
+  );
+
+  const getTriggerStyle = (isActive: boolean) =>
+    ({
+      color: isActive ? colors.brand.primary : colors.text.secondary,
+      backgroundColor: isActive
+        ? bottomNavTokens.activeBackground
+        : "transparent",
+      boxShadow: isActive ? bottomNavTokens.activeShadow : bottomNavTokens.inactiveShadow,
+    }) as const;
+
   return (
     <div dir="rtl" style={{ backgroundColor: colors.bg.secondary, minHeight: "80vh" }}>
       <UserHeader
@@ -277,9 +232,7 @@ export default function AcademyIndex() {
           ariaLabel="بحث في محتوى الأكاديمية"
         />
       </div>
-
-      {/* تبويبات علوية بدل الشريط السفلي */}
-      <TopMiniTabs tab={tab} onChange={handleTab} />
+      
 
       <PageLayout
         dir="rtl"
@@ -293,6 +246,7 @@ export default function AcademyIndex() {
           paddingBottom: semanticSpacing.section.md,
         }}
       >
+
         {/* Loading / Error */}
         <div aria-live="polite">
           {isLoading && (
@@ -336,7 +290,10 @@ export default function AcademyIndex() {
         {/* Content */}
         {data && !isLoading && !isError && (
           <AnimatePresence mode="wait">
-            <div key={tab} className="space-y-12">
+            <div
+              key={tab}
+              className="space-y-12"
+            >
               {tab === "mine" ? (
                 <section className="space-y-10">
                   {/* Empty mine */}
@@ -445,7 +402,10 @@ export default function AcademyIndex() {
                   {filteredData.topCourses.length > 0 && (
                     <section aria-labelledby="top-courses-carousel" className="mb-8">
                       <div style={{ marginBottom: spacing[4] }}>
-                        <SectionHeading id="top-courses-carousel" title="أفضل الدورات" />
+                        <SectionHeading
+                          id="top-courses-carousel"
+                          title="أفضل الدورات"
+                        />
                       </div>
 
                       <TopCourseCarousel
@@ -454,7 +414,7 @@ export default function AcademyIndex() {
                           title: c.title,
                           subtitle: c.short_description?.substring(0, 50) || "دورة تعليمية",
                           description: c.short_description || "",
-                          thumbnail: c.thumbnail || "/11.png",
+                          thumbnail: c.thumbnail || '/11.png',
                         }))}
                         autoScroll={true}
                         interval={7000}
@@ -476,7 +436,11 @@ export default function AcademyIndex() {
                         itemClassName="w-auto"
                       >
                         {filteredData.categories.slice(0, 6).map((cat, i) => (
-                          <CategoryCard key={cat.id} {...cat} priority={i === 0} />
+                          <CategoryCard
+                            key={cat.id}
+                            {...cat}
+                            priority={i === 0}
+                          />
                         ))}
                       </HorizontalScroll>
                     </section>
@@ -601,7 +565,50 @@ export default function AcademyIndex() {
             </div>
           </AnimatePresence>
         )}
-      </PageLayout>
-    </div>
+      
+
+      {/* Bottom Navigation */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 backdrop-blur-xl"
+        style={bottomNavSurfaceStyle}
+      >
+        <Tabs
+          value={tab}
+          onValueChange={(value) => handleTab(value as "all" | "mine")}
+          aria-label="التنقل داخل محتوى الأكاديمية"
+        >
+          <TabsList
+            className={cn(
+              "mx-auto flex h-auto w-full max-w-2xl items-center justify-around gap-3 bg-transparent p-0",
+              shadowClasses.none,
+            )}
+          >
+            <TabsTrigger
+              value="all"
+              className={navTriggerBase}
+              style={getTriggerStyle(tab === "all")}
+              aria-label="الانتقال إلى الرئيسية"
+              aria-current={tab === "all" ? "page" : undefined}
+            >
+              <Layers size={22} aria-hidden="true" />
+              <span style={{ fontFamily: fontFamily.arabic }}>الرئيسية</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="mine"
+              className={navTriggerBase}
+              style={getTriggerStyle(tab === "mine")}
+              aria-label="عرض دوراتي"
+              aria-current={tab === "mine" ? "page" : undefined}
+            >
+              <Bookmark size={22} aria-hidden="true" />
+              <span style={{ fontFamily: fontFamily.arabic }}>دوراتي</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    </PageLayout>
+     </div>
+
   );
 }
