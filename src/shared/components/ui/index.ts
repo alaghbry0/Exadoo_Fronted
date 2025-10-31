@@ -30,7 +30,7 @@ export * from "./navigation-menu";
 export * from "./pagination";
 export * from "./popover";
 export * from "./progress";
-export * from "./progress-custom";
+export { GradientProgress } from "./progress-custom";
 export * from "./radio-group";
 export * from "./resizable";
 export * from "./scroll-area";
@@ -39,15 +39,21 @@ export * from "./separator";
 export * from "./sheet";
 export * from "./skeleton";
 export * from "./skeleton-loader";
-export * from "./skeleton-loaders";
+export {
+  HalfCardSkeleton,
+  WideCardSkeleton,
+  AcademyCardSkeleton,
+  CompositeSkeletonGrid,
+  SearchSkeleton,
+} from "./skeleton-loaders";
 export * from "./slider";
-export * from "./sonner";
+export { SonnerToaster } from "./sonner";
 export * from "./spinner";
 export * from "./switch";
 export * from "./table";
 export * from "./tabs";
 export * from "./textarea";
-export * from "./toaster";
+export { ToastViewportProvider } from "./toaster";
 export * from "./toggle";
 export * from "./toggle-group";
 export * from "./tooltip";

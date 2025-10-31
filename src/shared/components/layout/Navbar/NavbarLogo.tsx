@@ -1,8 +1,13 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/shared/utils";
 import { colors, gradients } from "@/styles/tokens";
+
+type FocusRingStyles = CSSProperties & {
+  "--tw-ring-color": string;
+  "--tw-ring-offset-color": string;
+};
 
 interface NavbarLogoProps {
   href: string;
@@ -41,11 +46,9 @@ export function NavbarLogo({ href, logo, isRTL }: NavbarLogoProps) {
       className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-md transition-opacity hover:opacity-90"
       style={{
         color: colors.text.primary,
-        // @ts-ignore - CSS variable
         "--tw-ring-color": colors.border.focus,
-        // @ts-ignore - CSS variable
         "--tw-ring-offset-color": colors.bg.primary,
-      }}
+      } as FocusRingStyles}
       aria-label="العودة إلى الصفحة الرئيسية"
     >
       {logoContent}

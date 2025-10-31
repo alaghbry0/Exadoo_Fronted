@@ -1,13 +1,13 @@
 import * as React from "react";
 import { cn } from "@/shared/utils";
 
-interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
+interface GradientProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number;
   max?: number;
   indicatorClassName?: string;
 }
 
-const Progress: React.FC<ProgressProps> = ({
+const GradientProgress: React.FC<GradientProgressProps> = ({
   value,
   max = 100,
   className,
@@ -38,6 +38,6 @@ const Progress: React.FC<ProgressProps> = ({
   );
 };
 
-Progress.displayName = "Progress";
+GradientProgress.displayName = "GradientProgress";
 
-export { Progress };
+export { GradientProgress };

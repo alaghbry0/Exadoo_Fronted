@@ -73,9 +73,9 @@ function AcademyHeroCard({ className }: AcademyHeroCardProps) {
                 Exaado Academy
               </h2>
               <p className="text-white/90 text-sm md:text-base lg:text-lg font-medium">
-                Unlock Pro Trading Skills
+                أطلق العنان لمهاراتك في التداول
                 <br />
-                with Exaado Academy 🎯
+                مع أكاديمية إكسادو 🎯
               </p>
             </div>
 

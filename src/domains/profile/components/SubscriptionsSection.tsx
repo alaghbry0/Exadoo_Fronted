@@ -27,7 +27,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
-import { Progress } from "@/shared/components/ui/progress-custom";
+import { GradientProgress } from "@/shared/components/ui/progress-custom";
 import { SkeletonLoader } from "@/shared/components/ui/skeleton-loader";
 import { useIntersectionObserver } from "@/shared/hooks/useIntersectionObserver";
 import { cn } from "@/shared/utils";
@@ -306,7 +306,7 @@ const SubscriptionCard = forwardRef<HTMLDivElement, {
               <span>التقدم</span>
               <span>{Math.round(subscription.progress || 0)}%</span>
             </div>
-            <Progress
+            <GradientProgress
               value={subscription.progress || 0}
               className="h-2"
               style={progressStyles}

@@ -7,7 +7,7 @@ export const colorVariables: ColorVariableConfig = {
   "--color-text-secondary": { light: "#525252", dark: "#d7e2f0" },
   "--color-text-tertiary": { light: "#737373", dark: "#aebad0" },
   "--color-text-disabled": { light: "#a3a3a3", dark: "#556070" },
-  "--color-text-inverse": { light: "#fafafa", dark: "#1a1a1a" },
+  "--color-text-inverse": { light: "#fafafa", dark: "#fafafa" },
   "--color-text-link": { light: "#0066cc", dark: "#60a5fa" },
   "--color-text-link-hover": { light: "#0052a3", dark: "#93c5fd" },
 
@@ -43,8 +43,8 @@ export const colorVariables: ColorVariableConfig = {
   "--color-primary-800": { light: "#1e40af", dark: "#1e40af" },
   "--color-primary-900": { light: "#1e3a8a", dark: "#1e3a8a" },
 
-  "--color-secondary-500": { light: "#8b5cf6", dark: "#8b5cf6" },
-  "--color-secondary-600": { light: "#7c3aed", dark: "#7c3aed" },
+  "--color-secondary-500": { light: "#16a34a", dark: "#16a34a" },
+  "--color-secondary-600": { light: "#129140", dark: "#129140" },
 
   "--color-success-50": { light: "#ecfdf3", dark: "rgba(34, 197, 94, 0.12)" },
   "--color-success-500": { light: "#16a34a", dark: "#22c55e" },

@@ -4,11 +4,11 @@ import { Toaster as Sonner } from "sonner";
 
 import { useThemeController } from "@/shared/theme/ThemeProvider";
 
-type ToasterProps = React.ComponentProps<typeof Sonner>;
+type SonnerToasterProps = React.ComponentProps<typeof Sonner>;
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const SonnerToaster = ({ ...props }: SonnerToasterProps) => {
   const { theme = "system", currentTheme, isMounted } = useThemeController();
-  const sonnerTheme: ToasterProps["theme"] = !isMounted
+  const sonnerTheme: SonnerToasterProps["theme"] = !isMounted
     ? "system"
     : theme === "system"
       ? "system"
@@ -34,4 +34,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
-export { Toaster };
+export { SonnerToaster };

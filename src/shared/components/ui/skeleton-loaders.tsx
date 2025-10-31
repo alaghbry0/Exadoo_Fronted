@@ -126,12 +126,15 @@ export const AcademyCardSkeleton = () => (
   </Card>
 );
 
-interface GridSkeletonProps {
+interface CompositeSkeletonGridProps {
   count?: number;
   variant?: "half" | "wide" | "mixed";
 }
 
-export const GridSkeleton = ({ count = 4, variant = "mixed" }: GridSkeletonProps) => {
+export const CompositeSkeletonGrid = ({
+  count = 4,
+  variant = "mixed",
+}: CompositeSkeletonGridProps) => {
   if (variant === "half") {
     return (
       <SkeletonGrid
@@ -169,6 +172,6 @@ export const GridSkeleton = ({ count = 4, variant = "mixed" }: GridSkeletonProps
 export const SearchSkeleton = () => (
   <div style={{ display: "grid", gap: spacing[4] }}>
     <SkeletonBlock width="12rem" height="1rem" />
-    <GridSkeleton count={3} variant="mixed" />
+    <CompositeSkeletonGrid count={3} variant="mixed" />
   </div>
 );

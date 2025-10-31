@@ -8,7 +8,7 @@ import SubscriptionsSection from "@/domains/profile/components/SubscriptionsSect
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { getUserSubscriptions } from "@/domains/subscriptions/api";
 import { useRouter } from "next/navigation";
-import { Toaster } from "@/shared/components/ui/toaster";
+import { ToastViewportProvider } from "@/shared/components/ui/toaster";
 import { semanticSpacing } from "@/styles/tokens";
 import { showToast } from "@/shared/components/ui/showToast";
 import { ProfilePageContainer, ProfileStateCard } from "@/domains/profile/components/ProfileLayout";
@@ -91,7 +91,7 @@ export default function Profile() {
   // --- العرض النهائي للصفحة مع كل التحسينات ---
   return (
     <>
-      <Toaster />
+      <ToastViewportProvider />
       <TonConnectUIProvider manifestUrl="https://raw.githubusercontent.com/AliRaheem-ExaDoo/aib-manifest/main/tonconnect-manifest.json">
         <ProfilePageContainer>
           <section

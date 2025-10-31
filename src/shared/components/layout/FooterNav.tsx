@@ -7,9 +7,9 @@ import { motion, type Variants } from "framer-motion";
 import { cn } from "@/shared/utils";
 import { Home, Bell, GraduationCap, User } from "lucide-react";
 
-type NavItem = { path: string; icon: React.ElementType; label: string };
+export type FooterNavItem = { path: string; icon: React.ElementType; label: string };
 
-const DEFAULT_NAV_ITEMS: NavItem[] = [
+const DEFAULT_NAV_ITEMS: FooterNavItem[] = [
   { path: "/shop/signals", icon: Bell, label: "الإشارات" },
   { path: "/", icon: Home, label: "الرئيسية" },
   { path: "/academy", icon: GraduationCap, label: "الأكاديمية" },
@@ -21,13 +21,15 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
  * - نستقبل currentPath من _app.tsx لتفادي مشاكل الهيدرشن مع usePathname في مشروع Pages Router.
  * - لو ما وصل currentPath لأي سبب، نستخدم router.asPath وننظفه (بدون كويري/هاش).
  */
+export interface FooterNavProps {
+  items?: FooterNavItem[];
+  currentPath?: string;
+}
+
 export default function FooterNav({
   items = DEFAULT_NAV_ITEMS,
   currentPath,
-}: {
-  items?: NavItem[];
-  currentPath?: string;
-}) {
+}: FooterNavProps) {
   const router = useRouter();
 
   // مسار مستقر + fallback آمن

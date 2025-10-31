@@ -16,7 +16,7 @@ import {
   HomeServicesSection,
 } from "@/domains/home/components";
 import { HOME_SERVICES } from "@/domains/home/data/services";
-import { colors, semanticSpacing } from "@/styles/tokens";
+import { colors, semanticSpacing, spacing } from "@/styles/tokens";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,7 +42,7 @@ export default function Home() {
         mainProps={{ dir: "rtl" }}
         mainStyle={{
           backgroundColor: colors.bg.secondary,
-          paddingTop: semanticSpacing.section.none,
+          paddingTop: spacing[0],
           paddingBottom: semanticSpacing.section.md,
         }}
       >

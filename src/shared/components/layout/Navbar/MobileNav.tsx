@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -10,6 +10,11 @@ import {
 import { cn } from "@/shared/utils";
 import { colors, componentRadius, semanticSpacing, withAlpha } from "@/styles/tokens";
 import type { NavbarLink } from "./types";
+
+type FocusRingStyles = CSSProperties & {
+  "--tw-ring-color": string;
+  "--tw-ring-offset-color": string;
+};
 
 interface MobileNavProps {
   links: NavbarLink[];
@@ -83,11 +88,9 @@ export function MobileNav({
               style={{
                 backgroundColor: withAlpha(colors.bg.secondary, 0.3),
                 color: colors.text.primary,
-                // @ts-ignore - CSS variable
                 "--tw-ring-color": colors.border.focus,
-                // @ts-ignore - CSS variable
                 "--tw-ring-offset-color": colors.bg.primary,
-              }}
+              } as FocusRingStyles}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = withAlpha(
                   colors.bg.secondary,

@@ -1,7 +1,13 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { cn } from "@/shared/utils";
 import { colors, semanticSpacing } from "@/styles/tokens";
 import type { NavbarLink } from "./types";
+
+type FocusRingStyles = CSSProperties & {
+  "--tw-ring-color": string;
+  "--tw-ring-offset-color": string;
+};
 
 interface DesktopNavProps {
   links: NavbarLink[];
@@ -13,6 +19,12 @@ interface DesktopNavProps {
  * Hidden on mobile, visible on md+ screens
  */
 export function DesktopNav({ links, isRTL }: DesktopNavProps) {
+  const linkBaseStyles: FocusRingStyles = {
+    color: colors.text.secondary,
+    "--tw-ring-color": colors.border.focus,
+    "--tw-ring-offset-color": colors.bg.primary,
+  };
+
   return (
     <div
       className={cn(
@@ -29,13 +41,7 @@ export function DesktopNav({ links, isRTL }: DesktopNavProps) {
           rel={isExternal ? "noopener noreferrer" : undefined}
           onClick={onClick}
           className="text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-md px-2 py-1"
-          style={{
-            color: colors.text.secondary,
-            // @ts-ignore - CSS variable
-            "--tw-ring-color": colors.border.focus,
-            // @ts-ignore - CSS variable
-            "--tw-ring-offset-color": colors.bg.primary,
-          }}
+          style={linkBaseStyles}
           onMouseEnter={(e) => {
             e.currentTarget.style.color = colors.brand.primaryHover;
           }}
