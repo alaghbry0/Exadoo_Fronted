@@ -3,9 +3,11 @@
 import { cn } from "@/shared/utils";
 import {
   colors,
+  componentRadius,
   gradients,
   shadowClasses,
   shadows,
+  spacing,
   withAlpha,
 } from "@/styles/tokens";
 
@@ -18,7 +20,16 @@ import {
 } from "@/shared/components/ui/sheet";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
-import { X, Loader2, ShieldCheck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  X,
+  Loader2,
+  ShieldCheck,
+  CheckCircle,
+  Timer,
+  BadgePercent,
+  Sparkles,
+} from "lucide-react";
 import { UsdtPaymentMethodModal } from "./UsdtPaymentMethodModal";
 import { ExchangePaymentModal } from "@/domains/payments/components/ExchangePaymentModal";
 import { PaymentSuccessModal } from "./PaymentSuccessModal";
@@ -91,6 +102,62 @@ export default function IndicatorsPurchaseModal() {
     const n = Number(base);
     return { isFree, priceNum: isNaN(n) ? 0 : n, priceStr: fmt(base) };
   }, [payload]);
+
+  const originalPriceLabel = useMemo(() => {
+    if (!payload || priceInfo.isFree) return null;
+    if (!payload.plan.discounted_price) return null;
+    return fmt(payload.plan.price);
+  }, [payload, priceInfo.isFree]);
+
+  const computedDiscountPercentage = useMemo(() => {
+    if (!payload || !payload.plan.discounted_price) return null;
+    const original = Number(payload.plan.price);
+    const discounted = Number(payload.plan.discounted_price);
+    if (Number.isNaN(original) || Number.isNaN(discounted) || original <= discounted)
+      return null;
+    return Math.round(((original - discounted) / original) * 100);
+  }, [payload]);
+
+  const durationLabel = useMemo(() => {
+    if (!payload?.plan.duration_in_months) return "مدى الحياة";
+    if (payload.plan.duration_in_months === "0") return "وصول مدى الحياة";
+    const months = Number(payload.plan.duration_in_months);
+    if (Number.isNaN(months)) return payload.plan.duration_in_months;
+    return months === 1 ? "شهر واحد" : `${months} أشهر`;
+  }, [payload?.plan.duration_in_months]);
+
+  const metaItems = useMemo(() => {
+    const items: { icon: LucideIcon; title: string; description: string }[] = [
+      {
+        icon: Timer,
+        title: "صلاحية الوصول",
+        description: durationLabel,
+      },
+      {
+        icon: Sparkles,
+        title: "إشعارات ذكية",
+        description: "تنبيهات فورية وإعدادات محسّنة للمتداولين",
+      },
+    ];
+
+    if (computedDiscountPercentage) {
+      items.splice(1, 0, {
+        icon: BadgePercent,
+        title: "خصم مميز",
+        description: `وفر ${computedDiscountPercentage}% عند الاشتراك الآن`,
+      });
+    }
+
+    if (priceInfo.isFree) {
+      items[0] = {
+        icon: Sparkles,
+        title: "الوصول المجاني",
+        description: "استفد من كامل حزمة المؤشرات بلا أي تكلفة",
+      };
+    }
+
+    return items;
+  }, [computedDiscountPercentage, durationLabel, priceInfo.isFree]);
 
   const onChooseMethod = useCallback(() => {
     if (!payload) return;
@@ -171,30 +238,106 @@ export default function IndicatorsPurchaseModal() {
             <div className="space-y-8 p-4 pt-6 pb-12 text-right">
               <div
                 className={cn(
-                  "rounded-2xl p-6 text-center relative overflow-hidden",
+                  "p-6 text-center relative overflow-hidden",
+                  componentRadius.card,
                   shadowClasses.cardElevated,
+                  `text-[${colors.text.inverse}]`,
                 )}
-                style={{
-                  background: gradients.brand.primary,
-                  color: colors.text.inverse,
-                }}
+                style={{ backgroundImage: gradients.brand.primary }}
               >
                 <div
-                  className="absolute -top-4 -right-4 w-24 h-24 rounded-full"
-                  style={{ background: withAlpha(colors.bg.inverse, 0.15) }}
+                  className="absolute inset-0"
+                  style={{
+                    background: `radial-gradient(circle at top, ${withAlpha(colors.bg.inverse, 0.18)} 0%, transparent 60%)`,
+                  }}
                 />
-                <div
-                  className="absolute -bottom-8 -left-2 w-32 h-32 rounded-full"
-                  style={{ background: withAlpha(colors.bg.inverse, 0.12) }}
-                />
-                <p className="font-medium mb-1 z-10 relative" style={{ color: withAlpha(colors.text.inverse, 0.8) }}>
-                  خطة المؤشرات
-                </p>
-                <div className="flex items-baseline justify-center gap-2 z-10 relative">
-                  <span className="text-5xl font-extrabold tracking-tight">
-                    {priceInfo.isFree ? "مجاني" : priceInfo.priceStr}
+                <div className="relative z-10 flex flex-col items-center gap-4">
+                  <span
+                    className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
+                    style={{
+                      backgroundColor: withAlpha(colors.bg.inverse, 0.22),
+                      letterSpacing: "0.2em",
+                    }}
+                  >
+                    Indicators Bundle
                   </span>
+                  <div className="space-y-2">
+                    <p className="font-medium" style={{ color: withAlpha(colors.text.inverse, 0.85) }}>
+                      مجموعة المؤشرات الذكية للمتداولين المحترفين
+                    </p>
+                    <div className="flex items-baseline justify-center gap-3">
+                      {!priceInfo.isFree && originalPriceLabel && (
+                        <span
+                          className="text-2xl font-medium line-through"
+                          style={{ color: withAlpha(colors.text.inverse, 0.55) }}
+                        >
+                          {originalPriceLabel}
+                        </span>
+                      )}
+                      <span className="text-5xl font-extrabold tracking-tight">
+                        {priceInfo.isFree ? "مجاني" : priceInfo.priceStr}
+                      </span>
+                    </div>
+                  </div>
+                  {!priceInfo.isFree && computedDiscountPercentage && (
+                    <div
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+                      style={{
+                        background: colors.bg.primary,
+                        color: colors.brand.primary,
+                      }}
+                    >
+                      <BadgePercent className="w-4 h-4" />
+                      وفر {computedDiscountPercentage}% مع هذا العرض المحدود
+                    </div>
+                  )}
+                  {priceInfo.isFree && (
+                    <div
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+                      style={{
+                        background: withAlpha(colors.status.success, 0.14),
+                        color: colors.text.inverse,
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      وصول مجاني بالكامل
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                style={{
+                  background: colors.bg.elevated,
+                  borderRadius: componentRadius.card,
+                  padding: spacing[4],
+                  border: `1px solid ${withAlpha(colors.border.default, 0.55)}`,
+                }}
+              >
+                {metaItems.map(({ icon: Icon, title, description }) => (
+                  <div key={title} className="flex items-center gap-3 text-right">
+                    <span
+                      className="flex items-center justify-center rounded-full"
+                      style={{
+                        width: spacing[7],
+                        height: spacing[7],
+                        backgroundColor: withAlpha(colors.brand.primary, 0.12),
+                        color: colors.brand.primary,
+                      }}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold" style={{ color: colors.text.primary }}>
+                        {title}
+                      </p>
+                      <p className="text-xs" style={{ color: colors.text.secondary }}>
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div
@@ -214,10 +357,42 @@ export default function IndicatorsPurchaseModal() {
                   <span className="ml-2">ما الذي ستحصل عليه؟</span>
                 </h4>
                 <ul className="space-y-3 text-sm" style={{ color: colors.text.secondary }}>
-                  <li>وصول كامل لحزمة مؤشرات Exaado (Invite-only)</li>
-                  <li>تحديثات مجانية مستقبلية</li>
-                  <li>دعم فني عبر تيليجرام</li>
+                  {[
+                    "وصول كامل لحزمة مؤشرات Exaado (Invite-only)",
+                    "تحديثات وتحسينات مجانية مستقبلية",
+                    "قوالب جاهزة واستراتيجيات مثبتة",
+                    "دعم فني متخصص عبر تيليجرام",
+                  ].map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <CheckCircle
+                        className="w-5 h-5 flex-shrink-0"
+                        style={{ color: colors.status.success }}
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
                 </ul>
+              </div>
+
+              <div
+                className="flex items-center gap-3 p-4 rounded-2xl"
+                style={{
+                  background: withAlpha(colors.brand.primary, 0.08),
+                  border: `1px solid ${withAlpha(colors.brand.primary, 0.2)}`,
+                }}
+              >
+                <ShieldCheck
+                  className="w-6 h-6 flex-shrink-0"
+                  style={{ color: colors.brand.primary }}
+                />
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: colors.text.primary }}>
+                    حماية كاملة للدفع
+                  </p>
+                  <p className="text-xs" style={{ color: colors.text.secondary }}>
+                    عمليات USDT تتم عبر قنواتنا الرسمية مع متابعة فورية لحالة الاشتراك.
+                  </p>
+                </div>
               </div>
             </div>
           </ScrollArea>

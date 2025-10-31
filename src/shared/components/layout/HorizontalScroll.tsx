@@ -1,4 +1,10 @@
-import { Children, type CSSProperties, type ReactNode } from "react";
+// src/shared/components/layout/HorizontalScroll.tsx
+import {
+  Children,
+  isValidElement,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 import { cn } from "@/shared/utils";
 import {
@@ -68,7 +74,6 @@ export function HorizontalScroll({
   ariaLabel = "قائمة أفقية قابلة للتمرير",
 }: HorizontalScrollProps) {
   const count = Children.count(children);
-
   if (count === 0) return null;
 
   const paddingValue = paddingMap[padding] ?? paddingMap.md;
@@ -78,54 +83,84 @@ export function HorizontalScroll({
   const containerStyle: CSSProperties = {
     paddingInline: paddingValue,
   };
-
   if (paddingValue !== "0") {
     containerStyle.marginInline = `-${paddingValue}`;
   }
 
   const listStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "nowrap",
     gap: gapValue,
     paddingBottom: bottomPaddingValue,
     justifyContent: align === "center" ? "center" : "flex-start",
+    overflowX: "auto",
+    overflowY: "hidden",
     scrollSnapType: snap ? ("x proximity" as const) : undefined,
     WebkitOverflowScrolling: "touch",
+    // مهم لتمرير اللمس الأفقي حتى لو الأب يحدّد pan-y:
+    touchAction: "pan-x",
+    // تحسين سلوك الإفراط في السحب:
+    overscrollBehaviorX: "contain",
+    // إخفاء السكروول:
     scrollbarWidth: "none",
     msOverflowStyle: "none",
-    overflowX: "auto" as const,
-    overflowY: "hidden" as const,
   };
+
+  function onWheelToHorizontal(e: React.WheelEvent<HTMLDivElement>) {
+    // حوّل عجلة الفأرة لأفقي بدون preventDefault (لتجنّب تحذير passive)
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      const el = e.currentTarget;
+      const dir = getComputedStyle(el).direction as "rtl" | "ltr";
+      const delta = dir === "rtl" ? -e.deltaY : e.deltaY;
+      el.scrollLeft += delta;
+      // لا تستدعِ preventDefault هنا — هذا كان سبب التحذير
+    }
+  }
 
   return (
     <div className={className} style={containerStyle}>
       <div
-        className={cn(
-          "hscroll hide-scrollbar",
-          snap && "hscroll-snap",
-          listClassName,
-        )}
+        className={cn(listClassName)}
         role={role}
         aria-label={ariaLabel}
         style={listStyle}
+        onWheel={onWheelToHorizontal}
       >
-        {Children.map(children, (child, index) => (
-          <div
-            key={index}
-            className={cn("hscroll-item", itemClassName)}
-            role={role === "list" ? "listitem" : undefined}
-          >
-            {child}
-          </div>
-        ))}
+        {Children.map(children, (child, index) => {
+          const key =
+            isValidElement(child) && child.key != null ? child.key : index;
+
+          return (
+            <div
+              key={key as any}
+              className={cn(itemClassName)}
+              role={role === "list" ? "listitem" : undefined}
+              style={{
+                flex: "0 0 auto",
+                scrollSnapAlign: snap ? ("start" as const) : undefined,
+              }}
+            >
+              {child}
+            </div>
+          );
+        })}
+
+        {/* مسافة مريحة في نهاية الشريط */}
         <div
-          className="hscroll-item"
           aria-hidden="true"
           style={{
+            flex: "0 0 auto",
             width: spacing[3],
             backgroundColor: "transparent",
             borderColor: "transparent",
           }}
         />
       </div>
+
+      <style jsx>{`
+        div::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   );
 }

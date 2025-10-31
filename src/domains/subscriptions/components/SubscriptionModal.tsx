@@ -14,6 +14,7 @@ import {
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import type { LucideIcon } from "lucide-react";
 import {
   X,
   Loader2,
@@ -21,6 +22,9 @@ import {
   ShieldCheck,
   ScrollText,
   Sparkles,
+  Timer,
+  BadgePercent,
+  Crown,
 } from "lucide-react";
 import type { ModalPlanData } from "@/domains/subscriptions/types";
 import { useTelegram } from "@/shared/context/TelegramContext";
@@ -35,6 +39,7 @@ import {
   componentRadius,
   gradients,
   shadowClasses,
+  spacing,
   withAlpha,
 } from "@/styles/tokens";
 
@@ -135,6 +140,39 @@ const SubscriptionModal = ({
     plan.termsAndConditions.length > 0
   );
   const isTrial = !!plan?.selectedOption?.isTrial;
+  const hasDiscount =
+    !isTrial &&
+    plan?.selectedOption?.hasDiscount &&
+    plan.selectedOption?.originalPrice;
+  const durationLabel = isTrial
+    ? plan?.selectedOption?.trialDurationDays
+      ? `${plan.selectedOption.trialDurationDays} يوم`
+      : plan?.selectedOption?.duration
+    : plan?.selectedOption?.duration;
+  const discountLabel = hasDiscount
+    ? `وفر ${plan.selectedOption.discountPercentage}%`
+    : "سعر ثابت";
+  const planMetaItems = [
+    {
+      icon: Timer,
+      title: "مدة الاشتراك",
+      description: durationLabel,
+    },
+    !isTrial && {
+      icon: BadgePercent,
+      title: "العرض الحالي",
+      description: discountLabel,
+    },
+    isTrial && {
+      icon: Crown,
+      title: "فترة التجربة",
+      description: "ابدأ الآن بدون دفع مقدم",
+    },
+  ].filter(Boolean) as {
+    icon: LucideIcon;
+    title: string;
+    description?: string | null;
+  }[];
   const handleClaimTrial = async () => {
     if (!plan?.selectedOption?.id || !telegramId) return;
     try {
@@ -214,7 +252,7 @@ const SubscriptionModal = ({
           </SheetHeader>
 
           <ScrollArea className="flex-1">
-            <div className="space-y-8 p-4 pt-6 pb-24 text-right">
+            <div className="space-y-8 p-4 pt-6 pb-12 text-right">
               {/* Price / Trial hero card */}
               <div
                 className={cn(
@@ -226,102 +264,84 @@ const SubscriptionModal = ({
                 style={{ backgroundImage: gradients.brand.primary }}
               >
                 <div
-                  className="absolute -top-4 -right-4 w-24 h-24 rounded-full"
-                  style={{ backgroundColor: withAlpha(colors.bg.inverse, 0.1) }}
+                  className="absolute inset-0"
+                  style={{
+                    background: `radial-gradient(circle at top, ${withAlpha(colors.bg.inverse, 0.16)} 0%, transparent 55%)`,
+                  }}
                 />
                 <div
-                  className="absolute -bottom-8 -left-2 w-32 h-32 rounded-full"
-                  style={{ backgroundColor: withAlpha(colors.bg.inverse, 0.1) }}
-                />
-
-                {/* العنوان يتغير حسب كونها تجربة أم لا */}
-                <p
-                  className="font-medium mb-1 z-10 relative"
-                  style={{ color: withAlpha(colors.text.inverse, 0.8) }}
+                  className="relative z-10 flex flex-col items-center gap-4"
+                  style={{ color: colors.text.inverse }}
                 >
+                  <span
+                    className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
+                    style={{
+                      backgroundColor: withAlpha(colors.bg.inverse, 0.22),
+                      letterSpacing: "0.2em",
+                    }}
+                  >
+                    {isTrial ? "Free Trial" : "Premium Plan"}
+                  </span>
+                  <div className="space-y-2">
+                    <p
+                      className="font-medium"
+                      style={{ color: withAlpha(colors.text.inverse, 0.85) }}
+                    >
+                      {isTrial
+                        ? `اشترك الآن مجانًا لمدة ${durationLabel}`
+                        : `السعر لخطة ${plan.selectedOption.duration}`}
+                    </p>
+                    <div className="flex items-baseline justify-center gap-3">
+                      {!isTrial &&
+                        plan.selectedOption.hasDiscount &&
+                        plan.selectedOption.originalPrice && (
+                          <span
+                            className="text-2xl font-medium line-through"
+                            style={{ color: withAlpha(colors.text.inverse, 0.55) }}
+                          >
+                            {Number(plan.selectedOption.originalPrice).toFixed(0)}$
+                          </span>
+                        )}
+                      {isTrial ? (
+                        <span className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                          فترة تجريبية
+                        </span>
+                      ) : (
+                        <span className="text-5xl font-extrabold tracking-tight">
+                          {Number(plan.selectedOption.price).toFixed(0)}$
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   {isTrial ? (
-                    <>
-                      {" "}
-                      اشترك الان مجانا لمده{" "}
-                      {plan.selectedOption.trialDurationDays ||
-                        plan.selectedOption.duration}{" "}
-                      {plan.selectedOption.trialDurationDays ? "يوم" : ""}
-                    </>
-                  ) : (
-                    <>السعر لخطة {plan.selectedOption.duration}</>
-                  )}
-                </p>
-
-                {/* السعر/النص الكبير */}
-                <div className="flex items-baseline justify-center gap-2 z-10 relative">
-                  {!isTrial &&
-                    plan.selectedOption.hasDiscount &&
-                    plan.selectedOption.originalPrice && (
-                      <span
-                        className="text-2xl font-medium line-through"
-                        style={{ color: withAlpha(colors.text.inverse, 0.6) }}
-                      >
-                        {Number(plan.selectedOption.originalPrice).toFixed(0)}$
-                      </span>
-                    )}
-
-                  {/* لو تجربة: لا نعرض 0$، بل نص واضح */}
-                  {isTrial ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="text-3xl md:text-5xl font-extrabold tracking-tight">
-                        فترة تجريبية{" "}
-                      </span>
-                      <span
-                        className="text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                        style={{
-                          backgroundColor: withAlpha(colors.bg.inverse, 0.2),
-                          color: colors.text.inverse,
-                        }}
-                      >
-                        Free Trial
-                      </span>
+                    <div
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+                      style={{
+                        background: withAlpha(colors.status.success, 0.14),
+                        color: colors.text.inverse,
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      ابدأ خلال دقيقة واحدة فقط
                     </div>
                   ) : (
-                    <span className="text-5xl font-extrabold tracking-tight">
-                      {Number(plan.selectedOption.price).toFixed(0)}$
-                    </span>
+                    hasDiscount && (
+                      <div
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+                        style={{
+                          background: colors.bg.primary,
+                          color: colors.brand.primary,
+                        }}
+                      >
+                        <BadgePercent className="w-4 h-4" />
+                        وفر {plan.selectedOption.discountPercentage}% الآن
+                      </div>
+                    )
                   )}
                 </div>
-
-                {/* شارة الخصم فقط للخطط المدفوعة */}
-                {!isTrial && plan.selectedOption.hasDiscount && (
-                  <div
-                    className={cn(
-                      "mt-3 inline-block px-3 py-1 rounded-full text-sm font-bold z-10 relative",
-                      shadowClasses.button,
-                    )}
-                    style={{
-                      background: colors.bg.primary,
-                      color: colors.brand.primary,
-                    }}
-                  >
-                    وفر {plan.selectedOption.discountPercentage}% الآن!
-                  </div>
-                )}
-
-                {/* شارة تجربة للوضوح (اختيارية) */}
-                {isTrial && (
-                  <div
-                    className={cn(
-                      "mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold z-10 relative",
-                      shadowClasses.button,
-                    )}
-                    style={{
-                      background: withAlpha(colors.status.success, 0.12),
-                      color: colors.status.success,
-                    }}
-                  >
-                    {plan.selectedOption.trialDurationDays
-                      ? `جرب ${plan.selectedOption.trialDurationDays} يوم مجانًا — بدون دفع`
-                      : "بدون دفع — ابدأ الآن"}
-                  </div>
-                )}
               </div>
+
+           
 
               {/* Features */}
               <div className="space-y-6">
@@ -342,19 +362,21 @@ const SubscriptionModal = ({
                       className="w-5 h-5"
                       style={{ color: colors.brand.primary }}
                     />
+                    
                     <span className="ml-2">ماذا ستحصل عليه؟</span>
+                    
                   </h4>
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <span
-                          className="leading-relaxed text-sm"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {feature}
-                        </span>
-                        <CheckCircle
-                          className="w-5 h-5 flex-shrink-0 ml-3 mt-1"
+                      <li
+                        key={index}
+                        className="flex items-start gap-3"
+                        style={{ color: colors.text.secondary }}
+                      >
+                       
+                        <span className="leading-relaxed text-sm">{feature}</span>
+                         <CheckCircle
+                          className="w-5 h-5 flex-shrink-0"
                           style={{ color: colors.status.success }}
                         />
                       </li>
@@ -387,21 +409,19 @@ const SubscriptionModal = ({
                     <ul className="space-y-3">
                       {plan.termsAndConditions.map(
                         (term: string, index: number) => (
-                          <li
-                            key={index}
-                            className="flex items-start text-right"
-                          >
+                          <li key={index} className="flex gap-3 text-right">
+                           
                             <span
                               className="flex-1 leading-relaxed text-sm"
                               style={{ color: colors.text.secondary }}
                             >
                               {term}
                             </span>
-                            <span
-                              className="mt-1.5 ml-3"
-                              style={{ color: colors.text.secondary }}
+                             <span
+                              className="flex-shrink-0 mt-1 text-sm"
+                              style={{ color: withAlpha(colors.text.secondary, 0.7) }}
                             >
-                              •
+                              {index + 1}.
                             </span>
                           </li>
                         ),
@@ -451,13 +471,14 @@ const SubscriptionModal = ({
 
             {!isTrial ? (
               <div className="grid grid-cols-1 gap-3">
+                {/* التعديل هنا: استخدام لون أساسي صريح للزر الرئيسي */}
                 <Button
                   onClick={goToChooseMethod}
                   density="relaxed"
                   fullWidth
                   className="h-14 text-base font-bold transition-shadow duration-300"
                   intentOverrides={{
-                    background: gradients.brand.primary,
+                    background: colors.brand.primary,
                     hoverBackground: gradients.brand.primaryHover,
                     foreground: colors.text.inverse,
                     hoverForeground: colors.text.inverse,
@@ -481,12 +502,13 @@ const SubscriptionModal = ({
                     density="relaxed"
                     fullWidth
                     className="h-14 text-base font-bold transition-shadow duration-300"
+                    // الزر الثانوي يمكن أن يستخدم لونا أفتح أو مختلف
                     intentOverrides={{
-                      background: gradients.brand.secondary,
-                      hoverBackground: gradients.brand.secondary,
+                      background: withAlpha(colors.brand.secondary, 0.9),
+                      hoverBackground: colors.brand.secondary,
                       foreground: colors.text.inverse,
                       hoverForeground: colors.text.inverse,
-                      shadow: shadowClasses.buttonElevated,
+                      shadow: shadowClasses.button,
                     }}
                     disabled={loading || (hasTerms && !termsAgreed)}
                   >

@@ -14,7 +14,6 @@ import { AlertCircle, Award, BookOpen, Bookmark, Layers, Search } from "lucide-r
 import { useAcademyData } from "@/domains/academy/api";
 import AuthPrompt from "@/domains/auth/components/AuthFab";
 import {
-  AcademyRailSection,
   CategoryCard,
   LatestCourseCard,
   MiniBundleCard,
@@ -43,6 +42,45 @@ import {
   withAlpha,
   semanticSpacing
 } from "@/styles/tokens";
+
+/* =========================
+   Rail (بديل خفيف لـ AcademyRailSection)
+========================= */
+function Rail({
+  id,
+  title,
+  icon: Icon,
+  action,
+  children,
+  ariaLabel,
+  gap = "md",
+  bottomPadding = "lg",
+  itemClassName,
+}: {
+  id: string;
+  title: string;
+  icon?: React.ComponentType<{ size?: number }>;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  ariaLabel?: string;
+  gap?: Parameters<typeof HorizontalScroll>[0]["gap"];
+  bottomPadding?: Parameters<typeof HorizontalScroll>[0]["bottomPadding"];
+  itemClassName?: Parameters<typeof HorizontalScroll>[0]["itemClassName"];
+}) {
+  return (
+    <section aria-labelledby={id} style={{ display: "grid", gap: spacing[4] }}>
+      <SectionHeading id={id} title={title} icon={Icon} action={action} />
+      <HorizontalScroll
+        gap={gap}
+        bottomPadding={bottomPadding}
+        itemClassName={itemClassName}
+        ariaLabel={ariaLabel ?? `قائمة ${title} القابلة للتمرير أفقيًا`}
+      >
+        {children}
+      </HorizontalScroll>
+    </section>
+  );
+}
 
 /* =========================
    Types
@@ -101,14 +139,7 @@ const BOTTOM_TABS = [
   { value: "mine", label: "دوراتي", icon: Bookmark, ariaLabel: "عرض دوراتي" },
 ] as const;
 
-const SEARCH_SUGGESTIONS = [
-  "تحليل فني",
-  "مبتدئ",
-  "مجاني",
-] as const;
-
-
-
+const SEARCH_SUGGESTIONS = ["تحليل فني", "مبتدئ", "مجاني"] as const;
 
 /* =========================
    Page
@@ -122,61 +153,48 @@ export default function AcademyIndex() {
     telegramId || undefined,
   );
 
-  const { topCourses, categories, topBundles, highlightCourses } =
-    useMemo(() => {
-      if (!data)
-        return {
-          topCourses: [],
-          categories: [],
-          topBundles: [],
-          highlightCourses: [],
-        };
-      const allCourses = (data.courses || []) as CourseItem[];
-      const allBundles = (data.bundles || []) as BundleItem[];
+  const { topCourses, categories, topBundles, highlightCourses } = useMemo(() => {
+    if (!data)
+      return { topCourses: [], categories: [], topBundles: [], highlightCourses: [] };
 
-      let tc = ((data.top_course_ids || []) as string[])
-        .map((id) => allCourses.find((c) => c.id === id))
-        .filter(Boolean) as CourseItem[];
-      if (tc.length === 0) tc = allCourses.slice(0, 5);
+    const allCourses = (data.courses || []) as CourseItem[];
+    const allBundles = (data.bundles || []) as BundleItem[];
 
-      let tb = ((data.top_bundle_ids || []) as string[])
-        .map((id) => allBundles.find((b) => b.id === id))
-        .filter(Boolean) as BundleItem[];
-      if (tb.length === 0) tb = allBundles.slice(0, 5);
+    let tc = ((data.top_course_ids || []) as string[])
+      .map((id) => allCourses.find((c) => c.id === id))
+      .filter(Boolean) as CourseItem[];
+    if (tc.length === 0) tc = allCourses.slice(0, 5);
 
-      const topIds = new Set(tc.map((c) => c.id));
-      let hc = ((data.highlight_course_ids || []) as string[])
-        .map((id) => allCourses.find((c) => c.id === id))
-        .filter(Boolean) as CourseItem[];
-      if (hc.length === 0)
-        hc = allCourses.filter((c) => !topIds.has(c.id)).slice(0, 8);
+    let tb = ((data.top_bundle_ids || []) as string[])
+      .map((id) => allBundles.find((b) => b.id === id))
+      .filter(Boolean) as BundleItem[];
+    if (tb.length === 0) tb = allBundles.slice(0, 5);
 
-      return {
-        topCourses: tc,
-        categories: (data.categories || []) as CategoryItem[],
-        topBundles: tb,
-        highlightCourses: hc,
-      };
-    }, [data]);
+    const topIds = new Set(tc.map((c) => c.id));
+    let hc = ((data.highlight_course_ids || []) as string[])
+      .map((id) => allCourses.find((c) => c.id === id))
+      .filter(Boolean) as CourseItem[];
+    if (hc.length === 0) hc = allCourses.filter((c) => !topIds.has(c.id)).slice(0, 8);
 
-  const ql = useMemo(
-    () => normalizeArabic(deferredQuery || ""),
-    [deferredQuery],
-  );
+    return {
+      topCourses: tc,
+      categories: (data.categories || []) as CategoryItem[],
+      topBundles: tb,
+      highlightCourses: hc,
+    };
+  }, [data]);
+
+  const ql = useMemo(() => normalizeArabic(deferredQuery || ""), [deferredQuery]);
   const isSearching = ql.length > 0;
 
   const filteredData = useMemo(() => {
-    if (!isSearching)
-      return { topCourses, categories, topBundles, highlightCourses };
+    if (!isSearching) return { topCourses, categories, topBundles, highlightCourses };
 
     const filterCourse = (c: CourseItem) =>
-      normalizeArabic(`${c.title || ""} ${c.short_description || ""}`).includes(
-        ql,
-      );
+      normalizeArabic(`${c.title || ""} ${c.short_description || ""}`).includes(ql);
     const filterBundle = (b: BundleItem) =>
       normalizeArabic(`${b.title || ""} ${b.description || ""}`).includes(ql);
-    const filterCategory = (c: CategoryItem) =>
-      normalizeArabic(c.name || "").includes(ql);
+    const filterCategory = (c: CategoryItem) => normalizeArabic(c.name || "").includes(ql);
 
     return {
       topCourses: topCourses.filter(filterCourse),
@@ -187,8 +205,7 @@ export default function AcademyIndex() {
   }, [isSearching, ql, topCourses, categories, topBundles, highlightCourses]);
 
   const mine = useMemo(() => {
-    if (!data)
-      return { courses: [] as CourseItem[], bundles: [] as BundleItem[] };
+    if (!data) return { courses: [] as CourseItem[], bundles: [] as BundleItem[] };
     const cset = new Set((data.my_enrollments?.course_ids || []) as string[]);
     const bset = new Set((data.my_enrollments?.bundle_ids || []) as string[]);
     return {
@@ -197,20 +214,24 @@ export default function AcademyIndex() {
     };
   }, [data]);
 
+  // أقسام "دوراتي"
   const mySections = useMemo(() => {
     const sections: ReactNode[] = [];
 
     if (mine.courses.length > 0) {
       sections.push(
-        <AcademyRailSection<CourseItem>
+        <Rail
           key="my-courses"
           id="my-courses"
           title="دوراتي"
           icon={Bookmark}
           action={buildCountBadge(mine.courses.length)}
-          items={mine.courses}
-          renderItem={(course, index) => (
+          ariaLabel="قائمة الدورات المسجلة الخاصة بي"
+          bottomPadding="lg"
+        >
+          {mine.courses.map((course, i) => (
             <MiniCourseCard
+              key={course.id}
               id={course.id}
               title={course.title}
               desc={course.short_description}
@@ -219,25 +240,28 @@ export default function AcademyIndex() {
               level={course.level}
               img={course.thumbnail}
               free={isFreeCourse(course)}
-              priority={index === 0}
+              priority={i === 0}
             />
-          )}
-          scrollProps={{ bottomPadding: "lg" }}
-        />,
+          ))}
+        </Rail>,
       );
     }
 
     if (mine.bundles.length > 0) {
       sections.push(
-        <AcademyRailSection<BundleItem>
+        <Rail
           key="my-bundles"
           id="my-bundles"
           title="حزمي المسجلة"
           icon={Award}
           action={buildCountBadge(mine.bundles.length)}
-          items={mine.bundles}
-          renderItem={(bundle, index) => (
+          ariaLabel="قائمة الحزم المسجلة الخاصة بي"
+          bottomPadding="lg"
+          itemClassName="w-[280px]"
+        >
+          {mine.bundles.map((bundle, i) => (
             <MiniBundleCard
+              key={bundle.id}
               id={bundle.id}
               title={bundle.title}
               desc={bundle.description}
@@ -245,49 +269,54 @@ export default function AcademyIndex() {
               img={bundle.image || bundle.cover_image}
               subCategoryId={bundle.sub_category_id}
               freeSessionsCount={bundle.free_sessions_count}
-              priority={index === 0}
+              priority={i === 0}
             />
-          )}
-          scrollProps={{ bottomPadding: "lg", itemClassName: "w-[280px]" }}
-        />,
+          ))}
+        </Rail>,
       );
     }
 
     return sections;
   }, [mine]);
 
+  // أقسام مميّزة/بحث
   const featuredSections = useMemo(() => {
     const sections: ReactNode[] = [];
 
     if (filteredData.categories.length > 0) {
       sections.push(
-        <AcademyRailSection<CategoryItem>
+        <Rail
           key="categories"
           id="categories"
           title="تصنيفات الدورات"
           icon={Layers}
-          items={filteredData.categories.slice(0, 6)}
-          renderItem={(category, index) => (
-            <CategoryCard
-              {...category}
-              priority={index === 0}
-            />
-          )}
-          scrollProps={{ gap: "sm", bottomPadding: "lg", itemClassName: "w-auto" }}
-        />,
+          ariaLabel="قائمة تصنيفات الدورات في الأكاديمية"
+          gap="sm"
+          bottomPadding="lg"
+          itemClassName="w-auto"
+        >
+          {filteredData.categories.slice(0, 6).map((category, i) => (
+            <CategoryCard key={category.id} {...category} priority={i === 0} />
+          ))}
+        </Rail>,
       );
     }
 
     if (filteredData.topBundles.length > 0) {
       sections.push(
-        <AcademyRailSection<BundleItem>
+        <Rail
           key="latest-bundles"
           id="latest-bundles"
           title="أحدث الباقات 🔥"
           icon={Award}
-          items={filteredData.topBundles}
-          renderItem={(bundle, index) => (
+          ariaLabel="قائمة أحدث الباقات في الأكاديمية"
+          gap="md"
+          bottomPadding="lg"
+          itemClassName="w-[280px]"
+        >
+          {filteredData.topBundles.map((bundle, i) => (
             <MiniBundleCard
+              key={bundle.id}
               id={bundle.id}
               title={bundle.title}
               desc={bundle.description}
@@ -295,24 +324,28 @@ export default function AcademyIndex() {
               img={bundle.image || bundle.cover_image}
               subCategoryId={bundle.sub_category_id}
               freeSessionsCount={bundle.free_sessions_count}
-              priority={index === 0}
+              priority={i === 0}
             />
-          )}
-          scrollProps={{ gap: "md", bottomPadding: "lg", itemClassName: "w-[280px]" }}
-        />,
+          ))}
+        </Rail>,
       );
     }
 
     if (filteredData.highlightCourses.length > 0) {
       sections.push(
-        <AcademyRailSection<CourseItem>
+        <Rail
           key="latest-courses"
           id="latest-courses"
           title="أحدث الدورات"
           icon={BookOpen}
-          items={filteredData.highlightCourses.slice(0, 6)}
-          renderItem={(course, index) => (
+          ariaLabel="قائمة أحدث الدورات في الأكاديمية"
+          gap="sm"
+          bottomPadding="lg"
+          itemClassName="w-auto"
+        >
+          {filteredData.highlightCourses.slice(0, 6).map((course, i) => (
             <LatestCourseCard
+              key={course.id}
               id={course.id}
               title={course.title}
               lessonsCount={course.total_number_of_lessons}
@@ -320,11 +353,10 @@ export default function AcademyIndex() {
               price={course.discounted_price || course.price}
               instructorName={course.instructor_name}
               rating={course.rating}
-              priority={index === 0}
+              priority={i === 0}
             />
-          )}
-          scrollProps={{ gap: "sm", bottomPadding: "lg", itemClassName: "w-auto" }}
-        />,
+          ))}
+        </Rail>,
       );
     }
 
@@ -367,16 +399,12 @@ export default function AcademyIndex() {
   const getTriggerStyle = (isActive: boolean) =>
     ({
       color: isActive ? colors.brand.primary : colors.text.secondary,
-      backgroundColor: isActive
-        ? bottomNavTokens.activeBackground
-        : "transparent",
-      boxShadow: isActive
-        ? bottomNavTokens.activeShadow
-        : bottomNavTokens.inactiveShadow,
+      backgroundColor: isActive ? bottomNavTokens.activeBackground : "transparent",
+      boxShadow: isActive ? bottomNavTokens.activeShadow : bottomNavTokens.inactiveShadow,
     }) as const;
 
   return (
-     <div dir="rtl" style={{ backgroundColor: colors.bg.secondary, minHeight: "80vh" }}>
+    <div dir="rtl" style={{ backgroundColor: colors.bg.secondary, minHeight: "80vh" }}>
       <UserHeader
         title={(name) => `مرحباً، ${name}`}
         subtitle="رحلتك التعليمية تبدأ من هنا"
@@ -391,7 +419,7 @@ export default function AcademyIndex() {
           ariaLabel="بحث في محتوى الأكاديمية"
         />
       </div>
-      
+
       <PageLayout
         dir="rtl"
         maxWidth="2xl"
@@ -404,125 +432,51 @@ export default function AcademyIndex() {
           paddingBottom: semanticSpacing.section.md,
         }}
       >
-      
+        <div>
+          {/* Loading / Error */}
+          <div aria-live="polite">
+            {isLoading && (
+              <section style={{ display: "grid", gap: spacing[8] }}>
+                <div
+                  className={animations.presets.pulse}
+                  style={{
+                    height: "1.75rem",
+                    width: "10rem",
+                    borderRadius: radius.xl,
+                    backgroundColor: colors.bg.secondary,
+                    marginBottom: spacing[7],
+                  }}
+                />
+                <HorizontalScroll ariaLabel="قائمة دورات قيد التحميل" bottomPadding="md">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <AcademyCardSkeleton key={i} />
+                  ))}
+                </HorizontalScroll>
+              </section>
+            )}
 
-      <div>
-
-        {/* Loading / Error */}
-        <div aria-live="polite">
-          {isLoading && (
-            <section
-              style={{
-                display: "grid",
-                gap: spacing[8],
-              }}
-            >
-              <div
-                className={animations.presets.pulse}
+            {isError ? (
+              <Card
+                aria-live="assertive"
                 style={{
-                  height: "1.75rem",
-                  width: "10rem",
-                  borderRadius: radius.xl,
-                  backgroundColor: colors.bg.secondary,
-                  marginBottom: spacing[7],
+                  backgroundColor: withAlpha(colors.status.error, 0.08),
+                  borderColor: withAlpha(colors.status.error, 0.32),
                 }}
-              />
-              <HorizontalScroll ariaLabel="قائمة دورات قيد التحميل" bottomPadding="md">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <AcademyCardSkeleton key={i} />
-                ))}
-              </HorizontalScroll>
-            </section>
-          )}
+              >
+                <EmptyState
+                  icon={AlertCircle}
+                  title="تعذر تحميل المحتوى"
+                  description={resolvedErrorMessage}
+                />
+              </Card>
+            ) : null}
+          </div>
 
-          {isError ? (
-            <Card
-              aria-live="assertive"
-              style={{
-                backgroundColor: withAlpha(colors.status.error, 0.08),
-                borderColor: withAlpha(colors.status.error, 0.32),
-              }}
-            >
-              <EmptyState
-                icon={AlertCircle}
-                title="تعذر تحميل المحتوى"
-                description={resolvedErrorMessage}
-              />
-            </Card>
-          ) : null}
-        </div>
-
-        {showContent ? (
-          <AnimatePresence mode="wait">
-            <div key={tab} className="space-y-12">
-              {tab === "mine" ? (
-                showMyEmptyState ? (
-                  <Card
-                    className="mx-auto max-w-lg border border-dashed"
-                    style={{
-                      borderColor: withAlpha(colors.border.default, 0.6),
-                      backgroundColor: colors.bg.elevated,
-                    }}
-                  >
-                    <EmptyState
-                      icon={BookOpen}
-                      title="لم تشترك في أي محتوى بعد"
-                      description={`اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى"`}
-                    >
-                      <Button
-                        className="gap-2"
-                        style={{
-                          backgroundColor: colors.brand.primary,
-                          color: colors.text.inverse,
-                          marginTop: spacing[4],
-                        }}
-                        onClick={() => setTab("all")}
-                      >
-                        <Layers size={16} aria-hidden="true" />
-                        استكشف الدورات الآن
-                      </Button>
-                    </EmptyState>
-                  </Card>
-                ) : (
-                  <div className="space-y-10">{mySections}</div>
-                )
-              ) : (
-                <>
-                  {filteredData.topCourses.length > 0 ? (
-                    <section
-                      aria-labelledby="top-courses-carousel"
-                      style={{ display: "grid", gap: spacing[4] }}
-                    >
-                      <SectionHeading
-                        id="top-courses-carousel"
-                        title="أفضل الدورات"
-                      />
-
-                      <TopCourseCarousel
-                        courses={filteredData.topCourses
-                          .slice(0, 10)
-                          .map((course) => ({
-                            id: course.id,
-                            title: course.title,
-                            subtitle:
-                              course.short_description?.substring(0, 100) ||
-                              "دورة تعليمية",
-                            description: course.short_description || "",
-                            thumbnail: course.thumbnail || "/11.png",
-                          }))}
-                        autoScroll
-                        interval={7000}
-                      />
-                    </section>
-                  ) : null}
-
-                  {featuredSections}
-
-                  {isSearching &&
-                  filteredData.topCourses.length === 0 &&
-                  filteredData.categories.length === 0 &&
-                  filteredData.topBundles.length === 0 &&
-                  filteredData.highlightCourses.length === 0 ? (
+          {showContent ? (
+            <AnimatePresence mode="wait">
+              <div key={tab} className="space-y-12">
+                {tab === "mine" ? (
+                  showMyEmptyState ? (
                     <Card
                       className="mx-auto max-w-lg border border-dashed"
                       style={{
@@ -531,79 +485,137 @@ export default function AcademyIndex() {
                       }}
                     >
                       <EmptyState
-                        icon={Search}
-                        title="لا توجد نتائج"
-                        description="جرّب كلمات أبسط أو تصنيفات مختلفة"
+                        icon={BookOpen}
+                        title="لم تشترك في أي محتوى بعد"
+                        description={`اكتشف الأكاديمية وابدأ رحلتك التعليمية من خلال تبويب "جميع المحتوى"`}
                       >
-                        <div className="mt-6 flex flex-wrap justify-center gap-2">
-                          {SEARCH_SUGGESTIONS.map((suggestion) => (
-                            <Badge
-                              key={suggestion}
-                              variant="secondary"
-                              className="px-3 py-1.5 text-xs font-medium"
-                              style={{
-                                backgroundColor: colors.bg.secondary,
-                                color: colors.text.secondary,
-                              }}
-                            >
-                              {suggestion}
-                            </Badge>
-                          ))}
-                        </div>
+                        <Button
+                          className="gap-2"
+                          style={{
+                            backgroundColor: colors.brand.primary,
+                            color: colors.text.inverse,
+                            marginTop: spacing[4],
+                          }}
+                          onClick={() => setTab("all")}
+                        >
+                          <Layers size={16} aria-hidden="true" />
+                          استكشف الدورات الآن
+                        </Button>
                       </EmptyState>
                     </Card>
-                  ) : null}
-                </>
-              )}
+                  ) : (
+                    <div className="space-y-10">{mySections}</div>
+                  )
+                ) : (
+                  <>
+                    {filteredData.topCourses.length > 0 ? (
+                      <section
+                        aria-labelledby="top-courses-carousel"
+                        style={{ display: "grid", gap: spacing[4] }}
+                      >
+                        <SectionHeading id="top-courses-carousel" title="أفضل الدورات" />
+                        <TopCourseCarousel
+                          courses={filteredData.topCourses.slice(0, 10).map((course) => ({
+                            id: course.id,
+                            title: course.title,
+                            subtitle:
+                              course.short_description?.substring(0, 100) || "دورة تعليمية",
+                            description: course.short_description || "",
+                            thumbnail: course.thumbnail || "/11.png",
+                          }))}
+                          autoScroll
+                          interval={7000}
+                        />
+                      </section>
+                    ) : null}
 
-              <div className="pt-4">
-                <AuthPrompt />
+                    {featuredSections}
+
+                    {isSearching &&
+                      filteredData.topCourses.length === 0 &&
+                      filteredData.categories.length === 0 &&
+                      filteredData.topBundles.length === 0 &&
+                      filteredData.highlightCourses.length === 0 ? (
+                      <Card
+                        className="mx-auto max-w-lg border border-dashed"
+                        style={{
+                          borderColor: withAlpha(colors.border.default, 0.6),
+                          backgroundColor: colors.bg.elevated,
+                        }}
+                      >
+                        <EmptyState
+                          icon={Search}
+                          title="لا توجد نتائج"
+                          description="جرّب كلمات أبسط أو تصنيفات مختلفة"
+                        >
+                          <div className="mt-6 flex flex-wrap justify-center gap-2">
+                            {SEARCH_SUGGESTIONS.map((suggestion) => (
+                              <Badge
+                                key={suggestion}
+                                variant="secondary"
+                                className="px-3 py-1.5 text-xs font-medium"
+                                style={{
+                                  backgroundColor: colors.bg.secondary,
+                                  color: colors.text.secondary,
+                                }}
+                              >
+                                {suggestion}
+                              </Badge>
+                            ))}
+                          </div>
+                        </EmptyState>
+                      </Card>
+                    ) : null}
+                  </>
+                )}
+
+                <div className="pt-4">
+                  <AuthPrompt />
+                </div>
               </div>
-            </div>
-          </AnimatePresence>
-        ) : null}
-      </div>
+            </AnimatePresence>
+          ) : null}
+        </div>
 
-      <div
-        className="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 backdrop-blur-xl"
-        style={bottomNavSurfaceStyle}
-      >
-        <Tabs
-          value={tab}
-          onValueChange={(value) => handleTab(value as "all" | "mine")}
-          aria-label="التنقل داخل محتوى الأكاديمية"
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 backdrop-blur-xl"
+          style={bottomNavSurfaceStyle}
         >
-          <TabsList
-            className={cn(
-              "mx-auto flex h-auto w-full max-w-2xl items-center justify-around gap-3 bg-transparent p-0",
-              shadowClasses.none,
-            )}
+          <Tabs
+            value={tab}
+            onValueChange={(value) => handleTab(value as "all" | "mine")}
+            aria-label="التنقل داخل محتوى الأكاديمية"
           >
-            {BOTTOM_TABS.map((tabConfig) => {
-              const Icon = tabConfig.icon;
-              const isActive = tab === tabConfig.value;
+            <TabsList
+              className={cn(
+                "mx-auto flex h-auto w-full max-w-2xl items-center justify-around gap-3 bg-transparent p-0",
+                shadowClasses.none,
+              )}
+            >
+              {BOTTOM_TABS.map((tabConfig) => {
+                const Icon = tabConfig.icon;
+                const isActive = tab === tabConfig.value;
 
-              return (
-                <TabsTrigger
-                  key={tabConfig.value}
-                  value={tabConfig.value}
-                  className={navTriggerBase}
-                  style={getTriggerStyle(isActive)}
-                  aria-label={tabConfig.ariaLabel}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <Icon size={22} aria-hidden="true" />
-                  <span style={{ fontFamily: fontFamily.arabic }}>
-                    {tabConfig.label}
-                  </span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-        </Tabs>
-      </div>
-    </PageLayout>
+                return (
+                  <TabsTrigger
+                    key={tabConfig.value}
+                    value={tabConfig.value}
+                    className={navTriggerBase}
+                    style={getTriggerStyle(isActive)}
+                    aria-label={tabConfig.ariaLabel}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <Icon size={22} aria-hidden="true" />
+                    <span style={{ fontFamily: fontFamily.arabic }}>
+                      {tabConfig.label}
+                    </span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
+        </div>
+      </PageLayout>
     </div>
   );
 }
-
