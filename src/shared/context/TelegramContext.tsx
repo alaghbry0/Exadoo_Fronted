@@ -1,9 +1,27 @@
-// TelegramContext.dev.tsx — نسخة متصفح/اختبار (لا تتطلب Telegram WebApp)
-"use client";
+// TelegramContext.tsx (النسخة النهائية المدمجة مع تحديث الحالة عند التركيز)
+'use client';
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useUserStore } from "@/shared/state/zustand/userStore";
+// ملاحظة: قم بتعديل المسار التالي ليشير إلى ملف الخدمات الذي يحتوي على دالة syncUserData
 import { syncUserData } from "@/shared/api/userSync";
+
+// Define types for Telegram Web App objects to avoid using 'any'
+interface TGUser {
+  id: number | string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  photo_url?: string;
+}
+
+interface TGWebApp {
+  ready: () => void;
+  expand: () => void;
+  initDataUnsafe: {
+    user?: TGUser;
+  };
+}
 
 interface TelegramContextType {
   isTelegramReady: boolean;
@@ -19,160 +37,176 @@ const TelegramContext = createContext<TelegramContextType>({
   telegramId: null,
 });
 
-const DEFAULT_TEST_TELEGRAM_ID = "5113997414";
-
-// اختيارياً: السماح بتمرير telegramId عبر كويري بارام أو localStorage
-function resolveTestTelegramId(): string {
-  if (typeof window !== "undefined") {
-    const url = new URL(window.location.href);
-    const qp = url.searchParams.get("tgid");
-    if (qp && /^\d{5,}$/.test(qp)) return qp;
-
-    const ls = window.localStorage.getItem("dev_telegram_id");
-    if (ls && /^\d{5,}$/.test(ls)) return ls;
-  }
-  return DEFAULT_TEST_TELEGRAM_ID;
-}
-
-export const TelegramProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
   const { setUserData, telegramId: contextTelegramId } = useUserStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [isTelegramApp, setIsTelegramApp] = useState(false);
   const [isTelegramReady, setIsTelegramReady] = useState(false);
 
-  // وضع الاختبار الخالص: لا نحاول استخدام Telegram SDK إطلاقًا.
+  // useEffect الأول: لتهيئة SDK والمزامنة الأولية
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      console.log("🚫 Running on server, skipping Telegram SDK initialization.");
+      setIsLoading(false);
+      return;
+    }
+
     let isMounted = true;
 
-    const bootDevMode = async () => {
-      try {
-        const testId = resolveTestTelegramId();
-        console.log("🧪 DEV MODE: Booting with mocked Telegram ID:", testId);
+    const initializeTelegram = async () => {
+      console.log("🚀 Starting Telegram initialization process...");
+      const MAX_ATTEMPTS = 10;
+      const RETRY_DELAY_MS = 300;
+      let tg: TGWebApp | undefined;
 
-        // 1) حفظ بيانات المستخدم الأساسية في المتجر
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        if (window.Telegram?.WebApp) {
+          tg = window.Telegram.WebApp as unknown as TGWebApp;
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      }
+
+      if (!tg) {
+        if (isMounted) {
+          console.error("❌ Telegram SDK not found. Assuming not in Telegram environment.");
+          setIsTelegramApp(false);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        console.log("✅ Telegram WebApp SDK found!");
+        setIsTelegramApp(true);
+        tg.ready();
+      }
+
+      let user: TGUser | undefined;
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        if (tg.initDataUnsafe?.user?.id) {
+            user = tg.initDataUnsafe.user;
+            break;
+        }
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      }
+
+      if (!user) {
+        if (isMounted) {
+            console.error("❌ Failed to get user data from Telegram SDK.");
+            setIsLoading(false);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        console.log("✅ Telegram User Data Fetched Successfully:", user);
+
         setUserData({
-          telegramId: testId,
-          telegramUsername: "dev_user",
-          fullName: "Dev Tester",
-          photoUrl: null,
+          telegramId: user.id.toString(),
+          telegramUsername: user.username || null,
+          fullName: `${user.first_name || ""} ${user.last_name || ""}`.trim() || null,
+          photoUrl: user.photo_url || null,
           joinDate: null,
         });
 
-        // 2) مزامنة أولية مع الباكند (اختياري لكنها مفيدة لتوحيد السلوك)
         try {
-          console.log("🔄 [DEV] Syncing user data with backend...");
+          console.log("🔄 Syncing user data with backend...");
           await syncUserData({
-            telegramId: testId,
-            telegramUsername: "dev_user",
-            fullName: "Dev Tester",
+            telegramId: user.id.toString(),
+            telegramUsername: user.username || null,
+            fullName: `${user.first_name || ""} ${user.last_name || ""}`.trim() || null
           });
-          console.log("✅ [DEV] Sync successful.");
-        } catch (e) {
-          console.warn("⚠️ [DEV] Sync failed (continuing in dev):", e);
-        }
+          console.log("✅ Sync successful.");
 
-        // 3) فحص حالة الربط isLinked مثل السلوك الحقيقي
-        try {
-          console.log("🔗 [DEV] Checking link status...");
-          const resp = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(
-              testId,
-            )}`,
-          );
+          console.log("🔗 Checking user link status (initial check)...");
+          const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${user.id}`);
           if (resp.ok) {
             const data = await resp.json();
             if (data.linked) {
-              console.log("✅ [DEV] User is linked. Gmail:", data.gmail);
+              console.log("✅ User is linked. Gmail:", data.gmail);
               setUserData({ isLinked: true, gmail: data.gmail });
             } else {
-              console.log("ℹ️ [DEV] User is NOT linked.");
+              console.log("ℹ️ User is not linked.");
               setUserData({ isLinked: false, gmail: null });
             }
           } else {
-            console.warn(
-              "⚠️ [DEV] Link check failed:",
-              resp.status,
-              resp.statusText,
-            );
+            console.warn("⚠️ Failed to check link status. Response:", resp.statusText);
           }
-        } catch (e) {
-          console.warn("⚠️ [DEV] Error checking link status:", e);
+        } catch (err) {
+          console.error("❌ Error during post-init sync/check:", err);
         }
 
-        if (!isMounted) return;
         setIsTelegramReady(true);
         setIsLoading(false);
-        console.log(
-          "🚀 [DEV] Ready. App can render Services Hub gated by isLinked.",
-        );
-      } catch (e) {
-        console.error("❌ [DEV] Unexpected boot error:", e);
-        if (!isMounted) return;
-        setIsTelegramReady(true);
-        setIsLoading(false);
+        tg.expand();
       }
     };
 
-    bootDevMode();
+    initializeTelegram();
 
     return () => {
       isMounted = false;
-      console.log("🧹 TelegramProvider (dev) unmounted. Cleanup complete.");
+      console.log("🧹 TelegramProvider (init) unmounted. Cleanup complete.");
     };
   }, [setUserData]);
 
-  // إعادة فحص حالة الربط عند العودة للنافذة/التركيز — نفس منطقك الحالي
+
+  // ======================================================
+  // بداية الكود الجديد الذي تم إضافته
+  // useEffect الثاني: للتحقق من حالة الربط عند عودة المستخدم للتطبيق
+  // ======================================================
   useEffect(() => {
     const checkLink = async () => {
+      // لا تقم بتنفيذ أي شيء إذا لم يكن هناك معرف تيليجرام بعد
       if (!contextTelegramId) return;
 
-      console.log("🔄 [DEV] Re-checking link status on focus/visibility...");
+      console.log('🔄 Re-checking link status on focus/visibility change...');
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${encodeURIComponent(
-            contextTelegramId,
-          )}`,
-        );
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/linked?telegramId=${contextTelegramId}`);
         if (!res.ok) {
-          console.warn("⚠️ [DEV] Re-check failed with HTTP error.");
+          console.warn('⚠️ Re-check failed, server responded with error.');
           return;
         }
         const data = await res.json();
         if (data.linked) {
-          console.log("✅ [DEV] Link status: linked.");
+          console.log('✅ Link status re-checked: User is linked.');
           setUserData({ isLinked: true, gmail: data.gmail });
         } else {
-          console.log("ℹ️ [DEV] Link status: NOT linked.");
+          console.log('ℹ️ Link status re-checked: User is NOT linked.');
           setUserData({ isLinked: false, gmail: null });
         }
       } catch (e) {
-        console.error("❌ [DEV] Error re-checking link status:", e);
+        console.error('❌ Error re-checking link status:', e);
       }
     };
 
+    // دالة للتحقق عند تغيير حالة الظهور
     const onVisibility = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === 'visible') {
         checkLink();
       }
     };
 
-    window.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", checkLink);
+    // إضافة المستمعين للأحداث
+    window.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', checkLink);
 
+    // دالة التنظيف لإزالة المستمعين عند إلغاء تحميل المكون
     return () => {
-      window.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", checkLink);
-      console.log("🧹 [DEV] Event listeners for focus/visibility removed.");
+      window.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', checkLink);
+      console.log("🧹 Event listeners for focus/visibility removed.");
     };
-  }, [contextTelegramId, setUserData]);
+  }, [contextTelegramId, setUserData]); // يعتمد على معرف تيليجرام ودالة تحديث الحالة
+  // ======================================================
+  // نهاية الكود الجديد
+  // ======================================================
 
   const value: TelegramContextType = {
     isTelegramReady,
     isLoading,
-    isTelegramApp: false, // ثابت: هذه نسخة متصفح/اختبار
+    isTelegramApp,
     telegramId: contextTelegramId,
   };
 
@@ -190,3 +224,4 @@ export const useTelegram = () => {
   }
   return context;
 };
+
