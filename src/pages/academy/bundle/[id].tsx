@@ -104,16 +104,7 @@ function CourseHeader({ title, subtitle, imageUrl, onBack }: CourseHeaderProps) 
         <p className="text-sm opacity-90 drop-shadow-lg">(BUNDLE)</p>
       </div>
 
-      <div 
-        className="absolute bottom-6 right-6 rounded-full px-4 py-2 flex items-center shadow-lg z-10"
-        style={{
-          backgroundColor: colors.bg.primary,
-          gap: spacing[2]
-        }}
-      >
-        <span style={{ color: colors.status.error, fontWeight: 600 }}>NEW</span>
-        <span>👨‍🎓</span>
-      </div>
+      
     </div>
   );
 }

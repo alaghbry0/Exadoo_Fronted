@@ -294,82 +294,31 @@ export default function CourseDetail() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="curriculum" className="mt-6">
-            {/* Description */}
-            {course.short_description && (
-              <Card 
-                className={cn("p-6 mb-6", componentRadius.card, shadowClasses.card)}
-                style={{ 
-                  backgroundColor: colors.bg.elevated,
-                  border: `1px solid ${colors.border.default}`
-                }}
-              >
-                <h3 
-                  className="mb-3 font-bold text-lg"
-                  style={{ color: colors.text.primary }}
-                >
-                  نظرة عامة
-                </h3>
-                <p 
-                  className="leading-relaxed whitespace-pre-line"
-                  style={{ color: colors.text.secondary }}
-                >
-                  {course.short_description}
-                </p>
-              </Card>
-            )}
-
-            {/* Course Curriculum */}
-            <div className="mb-6">
-              <h3 
-                className="mb-4 font-bold text-lg"
-                style={{ color: colors.text.primary }}
-              >
-                المنهج الدراسي
-              </h3>
-
-              {isEnrolled && sections.length > 0 ? (
-                <RealCurriculum
-                  courseId={id}
-                  sections={sections}
-                />
-              ) : (
-                <Card 
-                  className={cn("p-6 text-center", componentRadius.card, shadowClasses.card)}
-                  style={{
-                    backgroundColor: colors.bg.elevated,
-                    border: `1px dashed ${colors.border.default}`
-                  }}
-                >
-                  <div 
-                    className="w-16 h-16 mx-auto mb-4 flex items-center justify-center"
-                    style={{
-                      backgroundColor: withAlpha(colors.brand.primary, 0.1),
-                      borderRadius: componentRadius.full
-                    }}
-                  >
-                    <BookOpen 
-                      size={32} 
-                      style={{ color: colors.brand.primary }}
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <p 
-                    className="font-semibold mb-2"
-                    style={{ color: colors.text.primary }}
-                  >
-                    {course.total_number_of_lessons} درس متاح
-                  </p>
-                  <p 
-                    className="text-sm"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    سجّل في الدورة للوصول إلى جميع الدروس
-                  </p>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
+         <TabsContent value="curriculum" className="mt-6">
+  {/* Description */}
+  {course.short_description && (
+    <Card 
+      className={cn("p-6 mb-6", componentRadius.card, shadowClasses.card)}
+      style={{ 
+        backgroundColor: colors.bg.elevated,
+        border: `1px solid ${colors.border.default}`
+      }}
+    >
+      <h3 
+        className="mb-3 font-bold text-lg"
+        style={{ color: colors.text.primary }}
+      >
+        نظرة عامة
+      </h3>
+      <p 
+        className="leading-relaxed whitespace-pre-line"
+        style={{ color: colors.text.secondary }}
+      >
+        {course.short_description}
+      </p>
+    </Card>
+  )}
+</TabsContent>
 
           <TabsContent value="outcomes" className="mt-6">
             <Card 
@@ -513,9 +462,62 @@ export default function CourseDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+        
+
+        {/* ===== Shared Curriculum (always shown) ===== */}
+<div className="mb-6">
+  <h3 
+    className="mb-4 font-bold text-lg"
+    style={{ color: colors.text.primary }}
+  >
+    المنهج الدراسي
+  </h3>
+
+  {isEnrolled && sections.length > 0 ? (
+    <RealCurriculum
+      courseId={id}
+      sections={sections}
+    />
+  ) : (
+    <Card 
+      className={cn("p-6 text-center", componentRadius.card, shadowClasses.card)}
+      style={{
+        backgroundColor: colors.bg.elevated,
+        border: `1px dashed ${colors.border.default}`
+      }}
+    >
+      <div 
+        className="w-16 h-16 mx-auto mb-4 flex items-center justify-center"
+        style={{
+          backgroundColor: withAlpha(colors.brand.primary, 0.1),
+          borderRadius: componentRadius.full
+        }}
+      >
+        <BookOpen 
+          size={32} 
+          style={{ color: colors.brand.primary }}
+          aria-hidden="true"
+        />
+      </div>
+      <p 
+        className="font-semibold mb-2"
+        style={{ color: colors.text.primary }}
+      >
+        {course.total_number_of_lessons} درس متاح
+      </p>
+      <p 
+        className="text-sm"
+        style={{ color: colors.text.secondary }}
+      >
+        سجّل في الدورة للوصول إلى جميع الدروس
+      </p>
+    </Card>
+  )}
+</div>
 
         {/* Spacer for fixed button */}
-        <div className="h-24"></div>
+       <div className="h-24"></div>
+       
       </div>
 
       {/* Fixed Enroll Button */}
@@ -536,7 +538,7 @@ export default function CourseDetail() {
               color: colors.text.inverse
             }}
           >
-            {isEnrolled ? "أكمل التعلم ➡️" : `سجّل الآن 🔥 - ${formatPrice(course.discounted_price || course.price)}`}
+            {isEnrolled ? "أكمل المشاهدة ➡️" : `سجّل الآن 🔥 - ${formatPrice(course.discounted_price || course.price)}`}
           </Button>
         </div>
       </div>

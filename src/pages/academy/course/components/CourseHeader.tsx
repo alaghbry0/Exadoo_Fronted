@@ -50,149 +50,64 @@ export default function CourseHeader({
   };
 
   return (
-    <div className="relative h-[400px] rounded-b-3xl overflow-hidden">
-      <div className="absolute inset-0">
-        <SmartImage
-          src={imageUrl}
-          alt={subtitle}
-          fill
-          blurType="secondary"
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
+    
+        <div className="relative h-[400px] rounded-b-3xl overflow-hidden">
+          <div className="absolute inset-0">
+            <SmartImage
+              src={imageUrl}
+              alt={subtitle}
+              fill
+              blurType="secondary"
+              className="object-cover"
+              sizes="100vw"
+              priority
+              lazy
+              
+              loaderType="skeleton"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
+          </div>
+    
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 z-10 w-10 h-10 bg-black/20 backdrop-blur-sm rounded-lg flex items-center justify-center text-white transition-all hover:bg-black/30"
+            aria-label="رجوع"
+          >
+            <ArrowLeft size={24} />
+          </button>
 
-        
-        {/* Gradient Overlay */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to bottom, ${withAlpha(colors.bg.primary, 0.4)} 0%, transparent 30%, transparent 60%, ${withAlpha(colors.bg.primary, 0.85)} 100%)`
-          }}
-        />
-      </div>
-
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className={cn(
-          "absolute top-4 left-4 z-10 w-10 h-10 backdrop-blur-md flex items-center justify-center text-white transition-all",
-          componentRadius.button,
-          shadowClasses.button
-        )}
-        style={{
-          backgroundColor: withAlpha(colors.bg.primary, 0.3)
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = withAlpha(colors.bg.primary, 0.5);
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = withAlpha(colors.bg.primary, 0.3);
-        }}
-        aria-label="رجوع"
-      >
-        <ArrowLeft size={24} />
-      </button>
-
-      {/* Top Badges */}
+          {/* Top Badges */}
       <div 
         className="absolute top-4 right-4 z-10 flex items-center"
         style={{ gap: spacing[2] }}
       >
-        {isNew && (
-          <Badge
-            className={cn("font-bold", shadowClasses.cardElevated)}
+        
+      </div>
+    
+          <div className="absolute top-4 right-4 left-16 z-10 text-white text-center">
+            <h1 className="text-xl drop-shadow-lg">{title}</h1>
+          </div>
+    
+          <div className="absolute bottom-8 left-0 right-0 text-center text-white z-10">
+            <p className="text-sm opacity-90 drop-shadow-lg">(COURSE)</p>
+          </div>
+      
+    
+         
+           {isNew && (
+             <div 
+            className="absolute bottom-6 right-6 rounded-full px-4 py-2 flex items-center shadow-lg z-10"
             style={{
-              backgroundColor: colors.status.error,
-              color: colors.text.inverse,
-              padding: `${spacing[1]} ${spacing[3]}`
+              backgroundColor: colors.bg.primary,
+              gap: spacing[2]
             }}
           >
-            NEW
-          </Badge>
+         <span style={{ color: colors.status.error, fontWeight: 600 }}>NEW</span>
+         </div>
         )}
-        
-        <Badge
-          className={cn("font-semibold", shadowClasses.cardElevated)}
-          style={{
-            backgroundColor: levelColors[level] || colors.brand.primary,
-            color: colors.text.inverse,
-            padding: `${spacing[1]} ${spacing[3]}`
-          }}
-        >
-          {levelLabels[level] || level}
-        </Badge>
-      </div>
-
-      {/* Bottom Content */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 px-6 pb-6">
-        {/* Title */}
-        <h1 
-          className="text-2xl font-bold mb-3 drop-shadow-lg line-clamp-2"
-          style={{ color: colors.text.inverse }}
-        >
-          {title}
-        </h1>
-
-        {/* Social Proof */}
-        <div 
-          className="flex items-center flex-wrap mb-4"
-          style={{ gap: spacing[4] }}
-        >
-          {/* Rating */}
-          {rating > 0 && (
-            <div className="flex items-center" style={{ gap: spacing[1] }}>
-              <Star 
-                size={18} 
-                fill={colors.status.warning}
-                style={{ color: colors.status.warning }}
-                aria-hidden="true"
-              />
-              <span 
-                className="font-semibold"
-                style={{ color: colors.text.inverse }}
-              >
-                {rating.toFixed(1)}
-              </span>
-              <span 
-                className="text-sm"
-                style={{ color: withAlpha(colors.text.inverse, 0.8) }}
-              >
-                ({numberOfRatings})
-              </span>
-            </div>
-          )}
-
-          {/* Enrollment */}
-          {totalEnrollment > 0 && (
-            <div className="flex items-center" style={{ gap: spacing[1] }}>
-              <Users 
-                size={18} 
-                style={{ color: colors.text.inverse }}
-                aria-hidden="true"
-              />
-              <span 
-                className="text-sm font-medium"
-                style={{ color: withAlpha(colors.text.inverse, 0.9) }}
-              >
-                {totalEnrollment} مشترك
-              </span>
-            </div>
-          )}
+          
         </div>
-
-        {/* Enrolled Badge & Continue Button */}
-        {isEnrolled && (
-          <div 
-            className="flex items-center flex-wrap"
-            style={{ gap: spacing[3] }}
-          >
-           
-
-          </div>
-        )}
-      </div>
-    </div>
-  );
+      );
 }
+
+

@@ -85,7 +85,7 @@ export default function CategoryDetail() {
         color: colors.text.primary,
       }}
     >
-      <PageLayout maxWidth="2xl">
+      <PageLayout maxWidth="2xl" showFooter={false}>
         <main className="mx-auto max-w-7xl px-4 pb-20">
           {/* Breadcrumbs */}
           <div className="pt-4 pb-2">
