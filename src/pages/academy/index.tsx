@@ -291,7 +291,7 @@ export default function AcademyIndex() {
         mainProps={{ dir: "rtl" }}
         mainStyle={{
           backgroundColor: colors.bg.secondary,
-          paddingTop: semanticSpacing.section.none,
+          paddingTop: spacing[0],
           paddingBottom: semanticSpacing.section.md,
         }}
       >
